@@ -1,0 +1,76 @@
+﻿/*---------------------*/
+
+
+body {
+    height: 100%;
+    background-color: white; 
+    font-family:  Arial, Helvetica;
+    font-size: 0.8rem;
+}
+
+#blokje{
+    background-color: black;
+    margin: 100px auto 100px auto;
+    padding-right: 80px;
+    width: 613px;
+    height: 400px;
+    position: relative;
+    box-shadow: 5px 15px 50px red;
+    border-radius: 200px;
+}
+h1{
+      background: url(../media/wit2.png) no-repeat top left;
+      height:35px;
+      text-indent: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      line-height: 1px;
+      background-position: center;
+      padding-top: 80px;
+}
+div div{
+    color: white;
+    padding-top: 30px;
+    width: 250px;
+    padding-right: 10px;
+    line-height: 150%;
+    text-align: justify;
+   
+
+}
+#pawsLeft{
+    float: left;
+    padding-left: 80px;
+    background: url(../media/pawsColor4.gif) no-repeat top;
+	/*background-repeat: repeat-x;*/
+	background-size: 60px 20px;
+}
+
+#pawsRight {
+    float: right;
+    text-align: justify;
+    padding-left: 10px;
+    background: url(../media/pawsColor4.gif) no-repeat top;
+	/*background-repeat: repeat-x;*/
+	background-size: 60px 20px;
+}
+
+img{
+    position: absolute;
+    left: -1200px;
+    top: 100px;
+}
+
+
+#number {
+    position: fixed;
+    left: 90%;
+    top: 85%;
+}
+
+
+
+
+
+
+

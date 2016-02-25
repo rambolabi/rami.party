@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+
+
+
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="assets/css/reset.css"/>
+    <link rel="stylesheet" type="text/css" href="assets/css/css.css"/>
+    <link rel="stylesheet" type="text/css" href="assets/css/cssB.css"/>
+    <meta name="author" content="Hidden Moderator" />
+    <meta charset="utf-8" />
+    <title>Miauw <3 psswrd</title>
+</head>
+<body>
+<div id="blokje">
+    <h1>Miauw</h1>
+
+    <div id="paws">
+        <a href="#" onclick="myFunction()" > <img src="images/titan.gif" alt="titan" title="titan"> </a>
+        <p>MIAUW MIAUW MIAUW MIAUW MIAUW MIAUW MIAUW </p>
+        <p>Hmmmm let's try something else</p>
+        <p id="psswrd">miauw</p>
+    </div>
+
+</div>
+<img id="number" src="images/numberThree.gif">
+</body>
+
+
+
+<script type="text/javascript" src="assets/js/jquery-2.1.1.min.js"></script>
+<!--<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>-->
+<script type="text/javascript" src="assets/js/script.js"></script>
+
+
+
+
+</html>
