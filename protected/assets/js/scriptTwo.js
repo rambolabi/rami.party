@@ -1,4 +1,4 @@
-var javaLink = "<a href='http://www.miauw.xyz/url.html'>miauwzzzz</a>";
+var javaLink = "<a href='http://www.miauw.xyz/admin.html'>miauwzzzz</a>";
 
 
 function myFunction() {
