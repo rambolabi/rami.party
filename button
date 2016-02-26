@@ -16,10 +16,10 @@
     <h1>Miauw</h1>
 
     <div id="paws">
-        <a href="#" onclick="myFunction()" > <img src="images/titan.gif" alt="titan" title="titan"> </a>
+        <a href="#" onclick="myFunction()" > <img src="images/numberThree.gif" alt="thirdCat" title="thirdCat"> </a>
         <p>MIAUW MIAUW MIAUW MIAUW MIAUW MIAUW MIAUW </p>
-        <p>Hmmmm let's try something else</p>
-        <p id="psswrd">miauw</p>
+        <p>Don't just click anything, you have been warned</p>
+        <p id="pass">miauw</p>
     </div>
 
 </div>
