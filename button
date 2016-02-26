@@ -12,25 +12,25 @@
     <title>Miauw <3 psswrd</title>
 </head>
 <body>
-<div id="blokje">
-    <h1>Miauw</h1>
+	<div id="blokje">
+		<h1>Miauw</h1>
 
-    <div id="paws">
-        <a href="#" onclick="myFunction()" > <img src="images/numberThree.gif" alt="thirdCat" title="thirdCat"> </a>
-        <p>MIAUW MIAUW MIAUW MIAUW MIAUW MIAUW MIAUW </p>
-        <p>Don't just click anything, you have been warned</p>
-        <p id="pass">miauw</p>
-    </div>
+		<div id="paws">
+			<a href="#" onclick="myFunction()" > <img src="images/numberThree.gif" alt="thirdCat" title="thirdCat"> </a>
+			<p>MIAUW MIAUW MIAUW MIAUW MIAUW MIAUW MIAUW </p>
+			<p>Don't just click anything, you have been warned</p>
+			<p id="psswrd">miauw</p>
+		</div>
 
-</div>
-<img id="number" src="images/numberThree.gif">
+	</div>
+	<img id="number" src="images/numberThree.gif">
 </body>
 
 
 
 <script type="text/javascript" src="assets/js/jquery-2.1.1.min.js"></script>
 <!--<script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>-->
-<script type="text/javascript" src="assets/js/script.js"></script>
+<script type="text/javascript" src="assets/js/scriptTwo.js"></script>
 
 
 

@@ -1,10 +1,9 @@
 var javaLink = "www.miauw.xyz/button";
-var thirdCat = "<a href="www.miauw.comlu.com">miauwzzzz</a>";
 
 
 function myFunction() {
     document.getElementById("psswrd").innerHTML = javaLink;
-	document.getElementById("pass").innerHTML = thirdCat;
+	
 }
 
 
