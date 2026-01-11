@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <!-- Main landing page -->
+  <url>
+    <loc>https://rami.party/</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- The pages you weren't looking for -->
+  <url>
+    <loc>https://rami.party/404</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>always</changefreq>
+    <priority>0.8</priority>
+    <!-- Most visited page, statistically speaking -->
+  </url>
+  
+  <!-- Experimental pages (may or may not exist) -->
+  <url>
+    <loc>https://rami.party/test</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.5</priority>
+    <!-- Schrödinger's page: simultaneously working and broken -->
+  </url>
+  
+  <url>
+    <loc>https://rami.party/demo</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <!-- The void where old projects disappear -->
+  <url>
+    <loc>https://rami.party/archive</loc>
+    <lastmod>2025-12-01</lastmod>
+    <changefreq>never</changefreq>
+    <priority>0.1</priority>
+    <!-- Here lie the abandoned experiments -->
+  </url>
+  
+  <!-- Easter eggs and mysteries -->
+  <url>
+    <loc>https://rami.party/coffee</loc>
+    <lastmod>2026-01-11</lastmod>
+    <changefreq>always</changefreq>
+    <priority>0.9</priority>
+    <!-- I'm a teapot (418) -->
+  </url>
+  
+  <!-- Note: Some URLs may lead to undiscovered territories -->
+  <!-- Warning: Actual page existence not guaranteed -->
+  <!-- "Do or do not, there is no try" - Yoda's Guide to Web Development -->
+  
+</urlset>

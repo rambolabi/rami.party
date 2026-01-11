@@ -1,0 +1,50 @@
+# The Three Laws of Robotics (as interpreted by web crawlers)
+#
+# First Law: A robot may not injure a website or, through inaction,
+# allow a website to come to harm by crawling too aggressively.
+#
+# Second Law: A robot must obey the orders given in this file,
+# except where such orders would conflict with the First Law.
+#
+# Third Law: A robot must protect its own existence as long as such
+# protection does not conflict with the First or Second Law.
+
+# By accessing this site, you agree that you are not a droid.
+# These aren't the domains you're looking for. Move along.
+
+User-agent: *
+Disallow: /admin/
+Disallow: /secret-test-environment/
+Disallow: /the-droids-we-are-looking-for/
+Disallow: /rum-storage/
+Disallow: /production-bugs/
+Disallow: /caffeine-stash/
+
+# Feel free to crawl the rest (at your own risk)
+Allow: /
+
+# Special instructions for specific bots
+User-agent: Googlebot
+# Google, you're cool. Come on in.
+Allow: /
+
+User-agent: Bingbot
+# Bing, you can come too, but please don't judge our code.
+Allow: /
+
+User-agent: ChatGPT-User
+# AI friends welcome! Just don't learn our bad habits.
+Allow: /
+
+User-agent: BadBot
+# Nice try, BadBot. No soup for you!
+Disallow: /
+
+# Easter egg hunters welcome
+# Hint: Check the source code for more movie quotes
+
+# Sitemap location (it actually exists now!)
+Sitemap: https://rami.party/sitemap.xml
+
+# Remember: With great crawling power comes great responsibility
+# - Uncle Ben's Guide to Web Scraping
