@@ -1,0 +1,24 @@
+# Our security policy
+# "With great crawling power comes great responsibility" - Uncle Ben's Guide to Web Scraping
+
+Contact: mailto:contact@compyra.com
+Contact: https://compyra.com
+Expires: 2027-01-11T23:59:59.000Z
+Preferred-Languages: en, nl, fr
+Canonical: https://rami.party/.well-known/security.txt
+
+# Please report security issues responsibly
+# Even though this is a test domain, we appreciate your help
+
+Policy: https://rami.party/SECURITY.md
+
+# Acknowledgments
+Acknowledgments: https://rami.party/SECURITY.md#hall-of-fame
+
+# Additional Notes:
+# - This is a demo/test domain
+# - Pages may spontaneously disappear
+# - The only treasure here is movie quotes
+# - For professional security services, visit compyra.com
+
+# "I find your lack of security... disturbing" - Darth Vader's Security Audit

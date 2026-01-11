@@ -1,0 +1,42 @@
+/*
+__________    _____      _____  .___    __________  _____ __________________________.___.
+\______   \  /  _  \    /     \ |   |   \______   \/  _  \\______   \__    ___/\__  |   |
+ |       _/ /  /_\  \  /  \ /  \|   |    |     ___/  /_\  \|       _/ |    |    /   |   |
+ |    |   \/    |    \/    Y    \   |    |    |  /    |    \    |   \ |    |    \____   |
+ |____|_  /\____|__  /\____|__  /___| /\ |____|  \____|__  /____|_  / |____|    / ______|
+        \/         \/         \/      \/                 \/       \/            \/       
+
+*/
+
+/* TEAM */
+Developer: Rami Labidi
+Site: rami.party
+Location: The Digital Void
+From: Belgium
+
+/* THANKS */
+To caffeine, for keeping the servers running
+To Stack Overflow, for debugging my life
+To all the 404 errors, for keeping things interesting
+
+/* SITE */
+I did an update on: 2026/01/11
+Standards: HTML5, CSS3, Movie Quotes
+Components: Sunset vibes, disappearing pages, questionable decisions
+Software: VS Code, Copilot/Claude (my AI overlords), and hope
+
+/* WARNING */
+This site is a test domain. Pages may:
+- Mysteriously disappear
+- Spontaneously combust
+- Achieve sentience
+- Return 418 (I'm a teapot)
+
+Visit at your own risk. We take no responsibility for:
+- Lost productivity
+- Tummy aches
+- Existential questions about web development
+
+For actual professional services, visit: compyra.com
+For an index of other projects: lebon.info
+For home inspection services: huiskeuring.be
