@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HP System Update</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="hp-logo">HP</div>
+            <div class="title">HP Support Assistant</div>
+        </div>
+        
+        <div class="update-window">
+            <div class="window-title">System Update in Progress</div>
+            
+            <div class="content">
+                <div class="icon">⚙️</div>
+                
+                <h2>Installing Critical Updates</h2>
+                <p class="description">HP is installing important system updates to improve performance and security.</p>
+                
+                <div class="update-info">
+                    <div class="update-item">
+                        <span class="label">Current Update:</span>
+                        <span class="value" id="currentUpdate">HP System Firmware</span>
+                    </div>
+                    <div class="update-item">
+                        <span class="label">Updates Remaining:</span>
+                        <span class="value" id="remaining">7 of 7</span>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">0%</div>
+                </div>
+                
+                <div class="status" id="status">Preparing updates...</div>
+                
+                <div class="warning">
+                    <strong>Important:</strong> Do not turn off your computer or disconnect power during this update.
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">HP Inc. © 2026</div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

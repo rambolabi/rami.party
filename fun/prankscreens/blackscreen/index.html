@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Critical Error</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bsod-container">
+        <div class="sad-face">:(</div>
+        <div class="main-text">
+            <h1>Your device ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</h1>
+        </div>
+        <div class="percentage">
+            <span id="percent">0</span>% complete
+        </div>
+        <div class="error-details">
+            <div class="qr-code">
+                <img src="qr-pattern.png" alt="QR Code" style="width: 100%; height: 100%; display: block;">
+            </div>
+            <div class="error-info">
+                <p>For more information about this issue and possible fixes, visit https://www.windows.com/stopcode</p>
+                <p class="stop-code">Stop code: <span id="stopcode">CRITICAL_PROCESS_DIED</span></p>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

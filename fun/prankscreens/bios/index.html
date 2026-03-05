@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BIOS Update</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="logo">AMERICAN MEGATRENDS</div>
+        <div class="header">BIOS FLASH UTILITY</div>
+        
+        <div class="info-box">
+            <div class="info-line">Current BIOS Version: <span class="value">F.12</span></div>
+            <div class="info-line">New BIOS Version: <span class="value">F.15</span></div>
+            <div class="info-line">Model: <span class="value">Motherboard X570</span></div>
+        </div>
+        
+        <div class="status-section">
+            <div class="status-text">Updating BIOS...</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            <div class="percentage" id="percentage">0%</div>
+        </div>
+        
+        <div class="warning-box">
+            <div class="warning-title">⚠ WARNING ⚠</div>
+            <div class="warning-text">
+                DO NOT turn off or restart your computer<br>
+                DO NOT remove power source<br>
+                Interruption may damage your system
+            </div>
+        </div>
+        
+        <div class="step-info" id="stepInfo">Erasing flash memory...</div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>

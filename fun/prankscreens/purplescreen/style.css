@@ -1,0 +1,96 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #5c2d91;
+    color: #ffffff;
+    font-family: 'Courier New', Courier, monospace;
+    height: 100vh;
+    overflow: hidden;
+    cursor: none;
+}
+
+.kernel-panic {
+    padding: 20px;
+    height: 100vh;
+    overflow: auto;
+}
+
+pre {
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: #ffffff;
+}
+
+@media (max-width: 768px) {
+    pre {
+        font-size: 10px;
+    }
+}
+
+/* Blinking cursor effect */
+body::after {
+    content: '█';
+    position: fixed;
+    bottom: 20px;
+    left: calc(20px + 0ch);
+    animation: blink 1s infinite;
+    font-family: 'Courier New', Courier, monospace;
+}
+
+@keyframes blink {
+    0%, 49% {
+        opacity: 1;
+    }
+    50%, 100% {
+        opacity: 0;
+    }
+}
+
+/* Loading bar styles */
+#loading-container {
+    margin-top: 20px;
+}
+
+.loading-bar-wrapper {
+    margin-bottom: 10px;
+}
+
+.loading-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #3d1f5c;
+    border: 1px solid #ffffff;
+    position: relative;
+    overflow: hidden;
+}
+
+.loading-bar-fill {
+    height: 100%;
+    width: 0%;
+    background-color: #ffffff;
+    transition: width 0.1s linear;
+}
+
+.error-message {
+    color: #ffffff;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    margin-top: 10px;
+    line-height: 1.4;
+}
+
+@media (max-width: 768px) {
+    .error-message {
+        font-size: 10px;
+    }
+    
+    .loading-bar {
+        height: 15px;
+    }
+}

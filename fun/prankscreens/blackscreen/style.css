@@ -1,0 +1,98 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+body {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100vh;
+    overflow: hidden;
+    cursor: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bsod-container {
+    max-width: 800px;
+    padding: 40px;
+    margin: 0 auto;
+}
+
+.sad-face {
+    font-size: 150px;
+    margin-bottom: 40px;
+    font-weight: 300;
+}
+
+.main-text h1 {
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.5;
+    margin-bottom: 50px;
+}
+
+.percentage {
+    font-size: 24px;
+    margin-bottom: 80px;
+    font-weight: 300;
+}
+
+.error-details {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+}
+
+.qr-code {
+    width: 150px;
+    height: 150px;
+    background: white;
+    padding: 10px;
+    flex-shrink: 0;
+}
+
+.error-info {
+    flex: 1;
+}
+
+.error-info p {
+    font-size: 16px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+}
+
+.stop-code {
+    margin-top: 30px;
+    font-weight: 400;
+}
+
+@media (max-width: 768px) {
+    .bsod-container {
+        padding: 20px;
+    }
+    
+    .sad-face {
+        font-size: 100px;
+    }
+    
+    .main-text h1 {
+        font-size: 18px;
+    }
+    
+    .error-details {
+        flex-direction: column;
+    }
+    
+    .qr-code {
+        width: 120px;
+        height: 120px;
+    }
+}

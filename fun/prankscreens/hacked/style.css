@@ -1,0 +1,306 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #000;
+    color: #fff;
+    font-family: Impact, 'Arial Black', sans-serif;
+    min-height: 100vh;
+    overflow: hidden;
+    cursor: none;
+    position: relative;
+}
+
+.flash-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    animation: flashColors 0.3s infinite;
+}
+
+@keyframes flashColors {
+    0% { background: #ff0000; }
+    20% { background: #000000; }
+    40% { background: #ff0000; }
+    60% { background: #ffff00; }
+    80% { background: #000000; }
+    100% { background: #ff0000; }
+}
+
+.container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    text-align: center;
+}
+
+.warning-signs {
+    display: flex;
+    gap: 50px;
+    margin-bottom: 30px;
+}
+
+.warning-icon {
+    font-size: 80px;
+    animation: bounce 0.5s infinite alternate;
+}
+
+.warning-icon:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.warning-icon:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-20px); }
+}
+
+.main-message {
+    margin: 30px 0;
+}
+
+.flash-text {
+    font-size: 8rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    animation: colorFlash 0.2s infinite, shake 0.3s infinite;
+    text-shadow: 
+        0 0 10px #fff,
+        0 0 20px #fff,
+        0 0 30px #fff,
+        0 0 40px #ff0000,
+        0 0 70px #ff0000,
+        0 0 80px #ff0000,
+        0 0 100px #ff0000;
+}
+
+@keyframes colorFlash {
+    0% { color: #ff0000; }
+    25% { color: #ffff00; }
+    50% { color: #ff0000; }
+    75% { color: #ffffff; }
+    100% { color: #ff0000; }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-5px, 5px) rotate(-2deg); }
+    50% { transform: translate(5px, -5px) rotate(2deg); }
+    75% { transform: translate(-5px, -5px) rotate(-1deg); }
+}
+
+.skull-row {
+    display: flex;
+    gap: 30px;
+    margin: 30px 0;
+    font-size: 60px;
+}
+
+.skull-row span {
+    animation: spin 1s linear infinite;
+}
+
+.skull-row span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.skull-row span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.skull-row span:nth-child(4) {
+    animation-delay: 0.6s;
+}
+
+.skull-row span:nth-child(5) {
+    animation-delay: 0.8s;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.alert-messages {
+    margin: 40px 0;
+}
+
+.alert-line {
+    font-size: 2.5rem;
+    margin: 10px 0;
+    animation: fastFlash 0.4s infinite;
+    font-weight: 900;
+}
+
+.alert-line:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.alert-line:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.alert-line:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+.alert-line:nth-child(5) {
+    animation-delay: 0.4s;
+}
+
+@keyframes fastFlash {
+    0%, 49% { opacity: 1; color: #ff0000; }
+    50%, 100% { opacity: 0.5; color: #ffff00; }
+}
+
+.danger-box {
+    margin: 40px 0;
+    padding: 30px;
+    border: 10px solid;
+    border-color: #ff0000;
+    animation: borderFlash 0.3s infinite;
+}
+
+@keyframes borderFlash {
+    0%, 50% { border-color: #ff0000; background: rgba(255, 0, 0, 0.2); }
+    51%, 100% { border-color: #ffff00; background: rgba(255, 255, 0, 0.2); }
+}
+
+.danger-text {
+    font-size: 4rem;
+    font-weight: 900;
+    animation: scaleFlash 0.5s infinite;
+}
+
+.danger-text:nth-child(2) {
+    animation-delay: 0.15s;
+}
+
+.danger-text:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+@keyframes scaleFlash {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+.hacker-info {
+    margin: 40px 0;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 30px;
+    border: 5px solid #ff0000;
+    animation: boxFlash 0.5s infinite;
+}
+
+@keyframes boxFlash {
+    0%, 50% { 
+        border-color: #ff0000;
+        box-shadow: 0 0 50px #ff0000;
+    }
+    51%, 100% { 
+        border-color: #ffff00;
+        box-shadow: 0 0 50px #ffff00;
+    }
+}
+
+.hacker-line {
+    font-size: 2rem;
+    margin: 15px 0;
+    font-weight: 900;
+    animation: colorCycle 1s infinite;
+}
+
+.hacker-line:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.hacker-line:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+@keyframes colorCycle {
+    0% { color: #ff0000; }
+    33% { color: #ffff00; }
+    66% { color: #ffffff; }
+    100% { color: #ff0000; }
+}
+
+.bottom-warnings {
+    display: flex;
+    gap: 50px;
+    margin-top: 30px;
+}
+
+.rotate {
+    animation: rotateWarning 2s linear infinite !important;
+}
+
+@keyframes rotateWarning {
+    from { transform: rotate(0deg) scale(1); }
+    50% { transform: rotate(180deg) scale(1.5); }
+    to { transform: rotate(360deg) scale(1); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .flash-text {
+        font-size: 4rem;
+    }
+    
+    .warning-icon {
+        font-size: 50px;
+    }
+    
+    .skull-row {
+        font-size: 40px;
+        gap: 15px;
+    }
+    
+    .alert-line {
+        font-size: 1.5rem;
+    }
+    
+    .danger-text {
+        font-size: 2.5rem;
+    }
+    
+    .hacker-line {
+        font-size: 1.3rem;
+    }
+}
+
+/* Warning for photosensitive users */
+body::before {
+    content: 'PHOTOSENSITIVE WARNING: FLASHING LIGHTS';
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 12px;
+    z-index: 9999;
+    animation: fadeOut 5s forwards;
+}
+
+@keyframes fadeOut {
+    0%, 80% { opacity: 1; }
+    100% { opacity: 0; pointer-events: none; }
+}

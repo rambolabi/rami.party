@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kernel Panic</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="kernel-panic">
+        <pre id="panic-output">Linux LTS kernel 6.2.0-34-generic on tty1
+
+[    0.000000] Initializing cgroup subsys cpuset
+[    0.000000] Initializing cgroup subsys cpu
+[    0.000000] Initializing cgroup subsys cpuacct
+[    0.000000] Linux version 6.2.0-34-generic
+[    2.847291] Freeing unused kernel memory: 2336K
+[    2.897413] usb 1-1: new high-speed USB device number 2 using ehci-pci
+[    3.124587] random: crng init done
+[    8.453621] ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x0
+[    8.453982] ata1.00: irq_stat 0x40000001
+[    8.454234] ata1.00: failed command: READ FPDMA QUEUED
+[    8.454563] ata1.00: cmd 60/08:00:00:00:00/00:00:00:00:00/40 tag 0 ncq dma 4096 in
+[    8.454901] ata1.00: status: { DRDY ERR }
+[    8.455132] ata1.00: error: { UNC }
+[   12.678934] BUG: unable to handle kernel NULL pointer dereference at 0000000000000000
+[   12.679287] IP: [&lt;ffffffff814a2c43&gt;] ext4_find_entry+0x3c2/0x450
+[   12.679583] PGD 0 
+[   12.679721] Oops: 0000 [#1] SMP 
+[   12.679932] Modules linked in: nvidia(P) drm ip6table_filter ip6_tables...
+[   12.680412] CPU: 2 PID: 1847 Comm: systemd Tainted: P           O 6.2.0-34-generic
+[   12.680789] Hardware name: Generic PC (i440FX + PIIX, 1996)
+[   12.681053] task: ffff88007c8b4800 ti: ffff88007b8ec000 task.ti: ffff88007b8ec000
+[   12.681398] RIP: 0010:[&lt;ffffffff814a2c43&gt;]  [&lt;ffffffff814a2c43&gt;] ext4_find_entry+0x3c2/0x450
+[   12.681834] RSP: 0018:ffff88007b8efce8  EFLAGS: 00010246
+[   12.682089] RAX: 0000000000000000 RBX: 0000000000000000 RCX: 0000000000000000
+[   12.682421] RDX: 0000000000000000 RSI: ffff88007c8b4800 RDI: 0000000000000000
+[   12.682753] RBP: ffff88007b8efd78 R08: 0000000000000000 R09: 0000000000000000
+[   12.683085] R10: 0000000000000000 R11: 0000000000000001 R12: ffff88007cd1c000
+[   12.683417] R13: ffff88007cd1c058 R14: ffff88007b8efd40 R15: 0000000000000000
+[   12.683749] FS:  00007f8e2c8b4780(0000) GS:ffff88007fc80000(0000) knlGS:0000000000000000
+[   12.684121] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   12.684393] CR2: 0000000000000000 CR3: 000000007b8b6000 CR4: 00000000000006e0
+[   12.684725] Stack:
+[   12.684831]  ffff88007cd1c000 0000000000000000 ffff88007b8efd40 ffffffff814a3012
+[   12.685196]  ffff88007b8efd78 0000000000000000 ffff88007cd1c058 ffff88007b8efda8
+[   12.685562]  ffffffff8119e4f1 ffff88007cd1c000 ffff88007b8efda8 0000000000000000
+[   12.685928] Call Trace:
+[   12.686051]  [&lt;ffffffff814a3012&gt;] ? ext4_lookup+0x52/0x160
+[   12.686321]  [&lt;ffffffff8119e4f1&gt;] ? lookup_slow+0xa1/0xc0
+[   12.686583]  [&lt;ffffffff811a0e62&gt;] ? walk_component+0x1b2/0x2e0
+[   12.686863]  [&lt;ffffffff811a11f3&gt;] ? path_lookupat+0x63/0x7f0
+
+Kernel panic - not syncing: Fatal exception
+---[ end Kernel panic - not syncing: Fatal exception ]---
+</pre>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
