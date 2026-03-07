@@ -8,6 +8,15 @@
     user-select: none;
 }
 
+/* Hide fullscreen notification */
+::-webkit-full-screen-ancestor:not(iframe) {
+    display: none !important;
+}
+
+::backdrop {
+    background-color: #000080;
+}
+
 body {
     background-color: #000080;
     color: #C0C0C0;

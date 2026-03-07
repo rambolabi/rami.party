@@ -40,19 +40,33 @@ const statuses = [
     'Finalizing...'
 ];
 
+const almostDoneStatuses = [
+    'Almost done...',
+    'DO NOT reboot before update is finished!',
+    'You should have locked your device...',
+    'Risk of losing data if you stop this process!',
+    'Critical system files being modified...',
+    'Do not turn off your computer!',
+    'Warning: Interruption may cause system failure',
+    'Please wait, this may take several minutes...',
+    'System recovery will not be possible if interrupted'
+];
+
 let currentUpdateIndex = 0;
 let statusIndex = 0;
+let almostDoneStatusIndex = 0;
 
 function updateProgress() {
-    if (progress < 100) {
-        const increment = Math.random() * 2 + 0.5;
-        progress = Math.min(100, progress + increment);
+    if (progress < 99) {
+        // Slower increment for gradual progress (takes ~9-10 minutes to reach 90%)
+        const increment = Math.random() * 0.4 + 0.2;
+        progress = Math.min(99, progress + increment);
         
         progressFill.style.width = progress + '%';
         progressText.textContent = Math.floor(progress) + '%';
         
         // Change update package when hitting certain percentages
-        const newUpdateIndex = Math.floor((progress / 100) * updates.length);
+        const newUpdateIndex = Math.floor((progress / 99) * updates.length);
         if (newUpdateIndex !== currentUpdateIndex && newUpdateIndex < updates.length) {
             currentUpdateIndex = newUpdateIndex;
             currentUpdateElement.textContent = updates[currentUpdateIndex];
@@ -66,11 +80,17 @@ function updateProgress() {
             statusElement.textContent = statuses[statusIndex];
         }
         
-        setTimeout(updateProgress, Math.random() * 400 + 300);
+        // Longer delay between updates (1500-2500ms)
+        setTimeout(updateProgress, Math.random() * 1000 + 1500);
     } else {
-        progressText.textContent = '100%';
-        statusElement.textContent = 'Update complete. Restart required.';
-        remainingElement.textContent = '0 of 7';
+        // Stuck at 99% - cycle through warning messages
+        progressText.textContent = '99%';
+        statusElement.textContent = almostDoneStatuses[almostDoneStatusIndex];
+        almostDoneStatusIndex = (almostDoneStatusIndex + 1) % almostDoneStatuses.length;
+        remainingElement.textContent = '1 of 7';
+        
+        // Keep updating the message every 3-5 seconds
+        setTimeout(updateProgress, Math.random() * 2000 + 3000);
     }
 }
 
