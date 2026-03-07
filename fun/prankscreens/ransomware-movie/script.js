@@ -15,7 +15,7 @@ document.body.style.cursor = 'none';
 
 // Matrix rain effect
 const matrix = document.getElementById('matrix');
-const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+const chars = 'You@Are#weird$If%You^aRE&REading*This-LetMeKnowLol(Greetz)Rami';
 
 function createMatrixRain() {
     const columns = Math.floor(window.innerWidth / 20);

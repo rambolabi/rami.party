@@ -1,0 +1,142 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #000000;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    text-align: center;
+    max-width: 500px;
+    padding: 40px;
+}
+
+.android-logo {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 40px;
+}
+
+.android-logo svg {
+    width: 100%;
+    height: 100%;
+    fill: #3DDC84;
+    filter: drop-shadow(0 0 20px rgba(61, 220, 132, 0.5));
+}
+
+h1 {
+    font-size: 32px;
+    font-weight: 400;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+.update-text {
+    font-size: 18px;
+    color: #b0b0b0;
+    margin-bottom: 60px;
+    font-weight: 300;
+}
+
+.progress-container {
+    margin-bottom: 40px;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #2a2a2a;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 15px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #3DDC84, #00C853);
+    border-radius: 4px;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 10px rgba(61, 220, 132, 0.6);
+}
+
+.progress-percentage {
+    font-size: 48px;
+    font-weight: 300;
+    color: #ffffff;
+    letter-spacing: 2px;
+}
+
+.spinner-container {
+    margin: 40px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #2a2a2a;
+    border-top: 4px solid #3DDC84;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.warning-text {
+    margin-top: 60px;
+}
+
+.warning-text p {
+    font-size: 16px;
+    margin-bottom: 10px;
+    color: #e0e0e0;
+}
+
+.small-text {
+    font-size: 14px;
+    color: #808080;
+    font-weight: 300;
+}
+
+/* Disable text selection */
+body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+/* Fullscreen styles */
+:fullscreen {
+    background: #000000;
+}
+
+:-webkit-full-screen {
+    background: #000000;
+}
+
+:-moz-full-screen {
+    background: #000000;
+}
+
+:-ms-fullscreen {
+    background: #000000;
+}
