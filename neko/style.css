@@ -1,0 +1,1392 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Comic Sans MS', 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text y="28" font-size="28">🐾</text></svg>'), auto;
+}
+
+/* Custom cursors for different states */
+button, a, .clickable {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text y="28" font-size="28">😺</text></svg>'), pointer;
+}
+
+.title-container {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+h1 {
+    color: #764ba2;
+    font-size: 2.5em;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    animation: rainbow 3s infinite;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+@keyframes rainbow {
+    0%, 100% { color: #764ba2; }
+    33% { color: #667eea; }
+    66% { color: #f093fb; }
+}
+
+p {
+    color: #555;
+    font-size: 1.2em;
+    margin: 10px 0;
+    text-align: center;
+}
+
+.collapsible-content {
+    width: 100%;
+    text-align: center;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    transition: all 0.3s;
+}
+
+button {
+    margin: 10px;
+    padding: 12px 24px;
+    font-size: 1.1em;
+    background: linear-gradient(45deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: transform 0.2s;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+button:hover {
+    transform: scale(1.1) rotate(2deg);
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+#playground {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.neko {
+    position: absolute;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text y="28" font-size="28">😸</text></svg>'), grab;
+    user-select: none;
+    pointer-events: all;
+    z-index: 10;
+    transition: transform 0.1s;
+}
+
+.neko:active {
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text y="28" font-size="28">😻</text></svg>'), grabbing;
+    z-index: 100;
+}
+
+.neko-container {
+    position: relative;
+    transform-origin: center;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(5deg); }
+}
+
+/* Chibi Neko Character */
+.neko-body {
+    position: relative;
+    width: 80px;
+    text-align: center;
+}
+
+/* Head */
+.neko-head {
+    width: 60px;
+    height: 60px;
+    background: #ffd6d6;
+    border-radius: 50%;
+    margin: 0 auto;
+    position: relative;
+    border: 3px solid #333;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Blue Hair */
+.neko-hair {
+    position: absolute;
+    top: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 65px;
+    height: 40px;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    border-radius: 50% 50% 0 0;
+    border: 3px solid #333;
+    border-bottom: none;
+    z-index: -1;
+}
+
+.neko-hair::before,
+.neko-hair::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 25px;
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    border-radius: 50%;
+    border: 3px solid #333;
+}
+
+.neko-hair::before {
+    left: -12px;
+    top: 10px;
+}
+
+.neko-hair::after {
+    right: -12px;
+    top: 10px;
+}
+
+/* Cat Ears */
+.neko-ear {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-bottom: 25px solid #4facfe;
+    top: -20px;
+    z-index: 5;
+}
+
+.neko-ear::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 18px solid #ffc0cb;
+    left: -10px;
+    top: 5px;
+}
+
+.neko-ear.left {
+    left: 5px;
+    transform: rotate(-15deg);
+}
+
+.neko-ear.right {
+    right: 5px;
+    transform: rotate(15deg);
+}
+
+/* Eyes */
+.neko-eyes {
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 10px 0;
+}
+
+.neko-eye {
+    width: 12px;
+    height: 16px;
+    background: #333;
+    border-radius: 50%;
+    position: relative;
+    animation: blink 4s infinite;
+}
+
+.neko-eye::before {
+    content: '';
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    background: white;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+}
+
+@keyframes blink {
+    0%, 96%, 100% { height: 16px; }
+    98% { height: 2px; }
+}
+
+/* Closed eyes for dead nekos */
+.neko-eye.closed {
+    height: 2px !important;
+    background: #333;
+    animation: none !important;
+}
+
+.neko-eye.closed::before {
+    display: none;
+}
+
+/* Blush */
+.neko-blush {
+    position: absolute;
+    width: 15px;
+    height: 10px;
+    background: #ffb6c1;
+    border-radius: 50%;
+    opacity: 0.6;
+}
+
+.neko-blush.left {
+    left: 5px;
+    top: 30px;
+}
+
+.neko-blush.right {
+    right: 5px;
+    top: 30px;
+}
+
+/* Mouth */
+.neko-mouth {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 20px;
+    height: 10px;
+    border: 2px solid #333;
+    border-top: none;
+    border-radius: 0 0 50% 50%;
+}
+
+.neko-mouth::before {
+    content: 'w';
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 12px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Body */
+.neko-torso {
+    width: 50px;
+    height: 40px;
+    background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%);
+    border: 3px solid #333;
+    border-radius: 10px;
+    margin: -5px auto 0;
+    position: relative;
+}
+
+/* Paws */
+.neko-paws {
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+}
+
+.neko-paw {
+    width: 15px;
+    height: 12px;
+    background: #ffd6d6;
+    border: 2px solid #333;
+    border-radius: 50% 50% 40% 40%;
+    position: relative;
+}
+
+.neko-paw::before {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #ffb6c1;
+    border-radius: 50%;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Style variations */
+
+/* Shy Type - Pink/Light colors */
+.neko.shy .neko-torso {
+    background: linear-gradient(135deg, #ffc3a0 0%, #ffafbd 100%);
+}
+
+.neko.shy .neko-hair {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.neko.shy .neko-hair::before,
+.neko.shy .neko-hair::after {
+    background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+}
+
+.neko.shy .neko-ear {
+    border-bottom-color: #a8edea;
+}
+
+/* Friendly Type - Orange/Warm colors */
+.neko.friendly .neko-torso {
+    background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+}
+
+.neko.friendly .neko-hair {
+    background: linear-gradient(135deg, #ff9a56 0%, #ffeaa7 100%);
+}
+
+.neko.friendly .neko-hair::before,
+.neko.friendly .neko-hair::after {
+    background: linear-gradient(135deg, #ff9a56 0%, #ffeaa7 100%);
+}
+
+.neko.friendly .neko-ear {
+    border-bottom-color: #ff9a56;
+}
+
+/* Goth Type - Black/Dark colors */
+.neko.goth .neko-torso {
+    background: linear-gradient(135deg, #434343 0%, #000000 100%);
+}
+
+.neko.goth .neko-hair {
+    background: linear-gradient(135deg, #2c003e 0%, #512da8 100%);
+}
+
+.neko.goth .neko-hair::before,
+.neko.goth .neko-hair::after {
+    background: linear-gradient(135deg, #2c003e 0%, #512da8 100%);
+}
+
+.neko.goth .neko-ear {
+    border-bottom-color: #2c003e;
+}
+
+/* Side ears variation */
+.neko.side-ears .neko-ear.left {
+    left: -10px;
+    transform: rotate(-45deg);
+}
+
+.neko.side-ears .neko-ear.right {
+    right: -10px;
+    transform: rotate(45deg);
+}
+
+/* Different eye styles */
+
+/* Closed/Happy eyes */
+.neko.happy-eyes .neko-eye {
+    width: 16px;
+    height: 4px;
+    border-radius: 0;
+    border: 2px solid #333;
+    border-top: none;
+    background: transparent;
+    animation: none;
+}
+
+.neko.happy-eyes .neko-eye::before {
+    display: none;
+}
+
+/* Big sparkly eyes */
+.neko.big-eyes .neko-eye {
+    width: 16px;
+    height: 20px;
+}
+
+.neko.big-eyes .neko-eye::before {
+    width: 6px;
+    height: 6px;
+}
+
+.neko.big-eyes .neko-eye::after {
+    content: '';
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: white;
+    border-radius: 50%;
+    bottom: 3px;
+    right: 3px;
+}
+
+/* Heart eyes */
+.neko.heart-eyes .neko-eye {
+    background: transparent;
+    animation: none;
+}
+
+.neko.heart-eyes .neko-eye::before {
+    content: '💕';
+    position: static;
+    background: transparent;
+    font-size: 14px;
+}
+
+/* Chibi eyes */
+.neko.chibi-eyes .neko-eye {
+    width: 8px;
+    height: 8px;
+    background: #333;
+    border-radius: 50%;
+    animation: none;
+}
+
+.neko.chibi-eyes .neko-eye::before {
+    width: 3px;
+    height: 3px;
+    top: 1px;
+    left: 1px;
+}
+
+/* Behavior indicators */
+.neko.running-away {
+    animation: shake 0.3s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px) rotate(-5deg); }
+    75% { transform: translateX(5px) rotate(5deg); }
+}
+
+.neko.seeking-love .neko-container {
+    animation: wiggle 0.5s ease-in-out infinite, float 3s ease-in-out infinite;
+}
+
+@keyframes wiggle {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-5px) rotate(-3deg); }
+    50% { transform: translateY(0) rotate(0deg); }
+    75% { transform: translateY(-5px) rotate(3deg); }
+}
+
+/* Ferret styles - Long and sleek! */
+.ferret .neko-container {
+    transform: rotate(-90deg);
+    transform-origin: center;
+}
+
+.ferret .neko-body {
+    width: 120px;
+    display: flex;
+    align-items: center;
+}
+
+.ferret .neko-head {
+    width: 35px;
+    height: 30px;
+    border-radius: 50% 50% 40% 40%;
+    background: linear-gradient(135deg, #D4A574 0%, #F5DEB3 100%);
+    position: relative;
+    margin: 0;
+}
+
+.ferret .neko-hair {
+    display: none;
+}
+
+.ferret .neko-ear {
+    position: absolute;
+    width: 12px;
+    height: 10px;
+    background: #C19A6B;
+    border: 2px solid #333;
+    border-radius: 50% 50% 0 0;
+    top: -5px;
+    z-index: 1;
+    border-bottom: none;
+}
+
+.ferret .neko-ear.left {
+    left: 3px;
+    transform: rotate(-20deg);
+}
+
+.ferret .neko-ear.right {
+    right: 3px;
+    transform: rotate(20deg);
+}
+
+.ferret .neko-ear::before {
+    display: none;
+}
+
+.ferret .neko-torso {
+    width: 90px;
+    height: 25px;
+    background: linear-gradient(180deg, #D4A574 0%, #F5DEB3 50%, #FFF8DC 100%);
+    border-radius: 15px;
+    margin: 0;
+    position: relative;
+    left: -10px;
+    border: 3px solid #333;
+}
+
+/* Ferret mask/face markings */
+.ferret .neko-head::after {
+    content: '';
+    position: absolute;
+    width: 25px;
+    height: 12px;
+    background: #8B7355;
+    border-radius: 50%;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0.4;
+}
+
+.ferret .neko-tail {
+    width: 40px;
+    height: 18px;
+    background: linear-gradient(90deg, #D4A574 0%, #8B7355 100%);
+    border: 3px solid #333;
+    border-radius: 0 50% 50% 0;
+    position: absolute;
+    right: -30px;
+    bottom: 3px;
+    transform: rotate(0deg);
+    animation: ferretTailWag 1.2s ease-in-out infinite;
+}
+
+@keyframes ferretTailWag {
+    0%, 100% { transform: rotate(-5deg); }
+    50% { transform: rotate(5deg); }
+}
+
+.ferret .neko-eye {
+    width: 7px;
+    height: 7px;
+    background: #000;
+}
+
+.ferret .neko-eye::before {
+    width: 2px;
+    height: 2px;
+}
+
+.ferret .neko-eyes {
+    padding: 8px 5px 0;
+    justify-content: space-evenly;
+}
+
+.ferret .neko-mouth {
+    bottom: 8px;
+    width: 12px;
+    height: 6px;
+}
+
+.ferret .neko-mouth::before {
+    content: '';
+    display: none;
+}
+
+/* Tiny ferret nose */
+.ferret .neko-mouth::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #333;
+    border-radius: 50%;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.ferret .neko-blush {
+    display: none;
+}
+
+.ferret .neko-paws {
+    display: none;
+}
+
+/* Ferret scuttling animation */
+.ferret.scuttling .neko-container {
+    animation: scuttle 0.3s ease-in-out;
+}
+
+@keyframes scuttle {
+    0%, 100% { transform: rotate(-90deg) translateY(0); }
+    25% { transform: rotate(-90deg) translateY(-3px); }
+    50% { transform: rotate(-90deg) translateY(0); }
+    75% { transform: rotate(-90deg) translateY(-3px); }
+}
+
+/* Collapse button */
+.collapse-btn {
+    background: none;
+    border: none;
+    font-size: 1.5em;
+    cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text y="28" font-size="28">😺</text></svg>'), pointer;
+    padding: 5px;
+    margin: 0;
+    transition: transform 0.3s;
+}
+
+.collapse-btn.collapsed {
+    transform: rotate(180deg);
+}
+
+.title-container {
+    transition: all 0.3s ease-out;
+    max-height: 500px;
+    overflow: hidden;
+}
+
+.title-container.collapsed {
+    max-height: 60px;
+    padding: 10px 20px;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.title-container.collapsed h1 {
+    font-size: 1.5em;
+    margin: 0;
+}
+
+.title-container.collapsed .collapsible-content {
+    display: flex !important;
+    opacity: 1;
+    width: auto;
+    flex-grow: 1;
+    justify-content: flex-end;
+}
+
+.title-container.collapsed .collapsible-content p {
+    display: none;
+}
+
+/* Show neko count even when collapsed */
+.title-container.collapsed .neko-counter {
+    display: block !important;
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #ff6600;
+    margin: 0 15px;
+    white-space: nowrap;
+}
+
+.title-container.collapsed .button-group {
+    margin: 0;
+}
+
+.title-container.collapsed button:not(.collapse-btn) {
+    padding: 8px 16px;
+    font-size: 0.9em;
+    margin: 0 5px;
+}
+
+/* Tail */
+.neko-tail {
+    position: absolute;
+    bottom: 10px;
+    right: -20px;
+    width: 30px;
+    height: 30px;
+    border: 3px solid #333;
+    border-color: transparent #333 transparent transparent;
+    border-radius: 0 50% 50% 0;
+    transform: rotate(-45deg);
+    animation: wagTail 1s ease-in-out infinite;
+}
+
+@keyframes wagTail {
+    0%, 100% { transform: rotate(-45deg); }
+    50% { transform: rotate(-25deg); }
+}
+
+/* Clothing - Skirt */
+.neko-skirt {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 45px;
+    height: 20px;
+    background: linear-gradient(135deg, #ff6b9d 0%, #ffc6d9 100%);
+    border: 2px solid #333;
+    border-radius: 50% 50% 60% 60% / 30% 30% 70% 70%;
+    border-top: none;
+    z-index: -1;
+}
+
+/* Clothing - Shorts */
+.neko-shorts {
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 15px;
+    background: linear-gradient(135deg, #4a90e2 0%, #89c4f4 100%);
+    border: 2px solid #333;
+    border-radius: 5px 5px 40% 40%;
+    border-top: none;
+    z-index: -1;
+}
+
+.neko-shorts::before {
+    content: '';
+    position: absolute;
+    width: 1px;
+    height: 12px;
+    background: #333;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+}
+
+/* Goth skirt - black */
+.neko.goth .neko-skirt {
+    background: linear-gradient(135deg, #2c003e 0%, #512da8 100%);
+}
+
+/* Friendly type gets shorts */
+.neko.friendly .neko-torso {
+    z-index: 1;
+}
+
+/* Shy type gets skirt */
+.neko.shy .neko-torso {
+    z-index: 1;
+}
+
+/* Speech Bubble */
+.neko-speech {
+    position: absolute;
+    top: -40px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    padding: 5px 10px;
+    border-radius: 10px;
+    border: 2px solid #333;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+
+.neko-speech::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 10px solid white;
+}
+
+.neko:hover .neko-speech {
+    opacity: 1;
+}
+
+/* Bouncing animation */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        transform: translateY(-30px) scale(1.05);
+    }
+}
+
+.bouncing {
+    animation: bounce 0.6s ease-in-out;
+}
+
+/* Spinning animation */
+@keyframes spin {
+    from { transform: rotate(0deg) scale(1); }
+    to { transform: rotate(360deg) scale(1.2); }
+}
+
+.spinning {
+    animation: spin 1s linear;
+}
+
+/* Party mode effects */
+.party-mode .neko-container {
+    animation: party 0.5s ease-in-out infinite, float 3s ease-in-out infinite;
+}
+
+@keyframes party {
+    0%, 100% { 
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: hue-rotate(0deg);
+    }
+    25% { 
+        transform: translateY(-20px) rotate(10deg) scale(1.1);
+        filter: hue-rotate(90deg);
+    }
+    50% { 
+        transform: translateY(0) rotate(0deg) scale(1);
+        filter: hue-rotate(180deg);
+    }
+    75% { 
+        transform: translateY(-20px) rotate(-10deg) scale(1.1);
+        filter: hue-rotate(270deg);
+    }
+}
+
+/* Hearts animation */
+.heart {
+    position: absolute;
+    font-size: 20px;
+    animation: floatHeart 2s ease-out forwards;
+    pointer-events: none;
+    z-index: 1000;
+}
+
+@keyframes floatHeart {
+    0% {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Battle Royale Effects */
+.dust-cloud {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    background: 
+        radial-gradient(ellipse 200px 150px at 30% 40%, rgba(210, 180, 140, 0.95) 0%, transparent 50%),
+        radial-gradient(ellipse 180px 140px at 70% 50%, rgba(190, 160, 120, 0.9) 0%, transparent 50%),
+        radial-gradient(ellipse 220px 160px at 50% 60%, rgba(160, 130, 100, 0.95) 0%, transparent 50%),
+        radial-gradient(circle, rgba(139, 69, 19, 0.95) 0%, rgba(210, 180, 140, 0.85) 30%, rgba(255, 228, 196, 0.7) 60%, rgba(255, 255, 255, 0.3) 100%);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 500;
+    animation: dustExpand 0.5s ease-out, dustPulse 0.3s ease-in-out infinite;
+    pointer-events: none;
+    box-shadow: 
+        0 0 100px rgba(139, 69, 19, 0.8),
+        inset 0 0 100px rgba(101, 67, 33, 0.5);
+}
+
+.small-cloud {
+    position: fixed;
+    width: 150px;
+    height: 100px;
+    background: 
+        radial-gradient(ellipse 80px 60px at 40% 50%, rgba(210, 180, 140, 0.8) 0%, transparent 60%),
+        radial-gradient(ellipse 70px 50px at 70% 60%, rgba(190, 160, 120, 0.7) 0%, transparent 60%),
+        radial-gradient(ellipse 60px 45px at 30% 70%, rgba(170, 140, 100, 0.75) 0%, transparent 60%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 450;
+    animation: smallCloudFloat 2s ease-in-out infinite, fadeInOut 8s ease-out;
+    pointer-events: none;
+}
+
+@keyframes smallCloudFloat {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; }
+    20% { opacity: 1; }
+    80% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+@keyframes dustExpand {
+    from {
+        width: 80px;
+        height: 80px;
+        opacity: 0;
+    }
+    to {
+        width: 600px;
+        height: 600px;
+        opacity: 1;
+    }
+}
+
+@keyframes dustPulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+/* Flying battle items */
+.battle-item {
+    position: fixed;
+    font-size: 40px;
+    z-index: 600;
+    animation: itemFly 1.5s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes itemFly {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--fly-x), var(--fly-y)) rotate(var(--fly-rotate));
+        opacity: 0;
+    }
+}
+
+/* Comic text effects */
+.battle-text {
+    position: fixed;
+    font-size: 60px;
+    font-weight: bold;
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    color: #ff0000;
+    text-shadow: 
+        3px 3px 0 #000,
+        -3px -3px 0 #000,
+        3px -3px 0 #000,
+        -3px 3px 0 #000,
+        5px 5px 10px rgba(0, 0, 0, 0.5);
+    z-index: 700;
+    animation: battleTextPop 0.8s ease-out forwards;
+    pointer-events: none;
+    letter-spacing: 3px;
+    transform-origin: center;
+}
+
+@keyframes battleTextPop {
+    0% {
+        transform: translate(-50%, -50%) scale(0) rotate(-10deg);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.3) rotate(5deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0.8) rotate(0deg);
+        opacity: 0;
+    }
+}
+
+/* Neko converging to center */
+.neko.converging {
+    z-index: 400 !important;
+}
+
+/* Neko getting knocked out */
+.neko.knocked-out {
+    animation: knockedOut 1s ease-out forwards;
+    z-index: 300;
+}
+
+@keyframes knockedOut {
+    0% {
+        transform: translate(0, 0) rotate(0deg) scale(1);
+        opacity: 1;
+    }
+    30% {
+        transform: translate(var(--knock-x), var(--knock-y)) rotate(720deg) scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--knock-x), var(--knock-y)) rotate(1080deg) scale(0);
+        opacity: 0;
+    }
+}
+
+/* Battle-Hardened Neko */
+.neko.battle-hardened .neko-torso {
+    background: linear-gradient(135deg, #c9302c 0%, #e74c3c 100%);
+    border-width: 4px;
+}
+
+.neko.battle-hardened .neko-head {
+    border-width: 4px;
+}
+
+/* Scar */
+.battle-scar {
+    position: absolute;
+    width: 25px;
+    height: 3px;
+    background: #8B0000;
+    top: 25px;
+    right: 5px;
+    transform: rotate(-45deg);
+    border-radius: 2px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* One blue eye for battle-hardened */
+.neko.battle-hardened .neko-eye:first-child {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    box-shadow: 0 0 5px #4facfe;
+}
+
+/* Muscular arms */
+.battle-arms {
+    position: absolute;
+    bottom: -5px;
+}
+
+.battle-arm {
+    position: absolute;
+    width: 12px;
+    height: 18px;
+    background: #ffd6d6;
+    border: 2px solid #333;
+    border-radius: 40%;
+}
+
+.battle-arm.left {
+    left: -8px;
+    transform: rotate(-20deg);
+}
+
+.battle-arm.right {
+    right: -8px;
+    transform: rotate(20deg);
+}
+
+/* Champion aura */
+.neko.battle-hardened {
+    filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6));
+    animation: championPulse 2s ease-in-out infinite;
+}
+
+@keyframes championPulse {
+    0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.6)); }
+    50% { filter: drop-shadow(0 0 20px rgba(255, 215, 0, 0.9)); }
+}
+
+/* Counter pulse animation */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+/* Blood spot */
+.blood-spot {
+    position: fixed;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle, rgba(139, 0, 0, 0.8) 0%, rgba(200, 0, 0, 0.6) 40%, rgba(255, 0, 0, 0.2) 100%);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 2s;
+    filter: blur(1px);
+}
+
+.blood-spot::before {
+    content: '';
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: rgba(139, 0, 0, 0.6);
+    border-radius: 50%;
+    top: -5px;
+    left: 10px;
+}
+
+.blood-spot::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    background: rgba(139, 0, 0, 0.5);
+    border-radius: 50%;
+    bottom: -3px;
+    right: 8px;
+}
+
+/* Dodge animations for battle-hardened nekos */
+.neko.dodging-backflip {
+    animation: dodgeBackflip 1s ease-out !important;
+    z-index: 1000 !important;
+}
+
+.neko.dodging-roll {
+    animation: dodgeRoll 1s ease-out !important;
+    z-index: 1000 !important;
+}
+
+@keyframes dodgeBackflip {
+    0% { transform: rotate(0deg) translateY(0); }
+    30% { transform: rotate(-180deg) translateY(-80px); }
+    60% { transform: rotate(-360deg) translateY(-40px); }
+    100% { transform: rotate(-360deg) translateY(0); }
+}
+
+@keyframes dodgeRoll {
+    0% { transform: rotate(0deg) translateX(0); }
+    50% { transform: rotate(360deg) translateX(100px); }
+    100% { transform: rotate(360deg) translateX(0); }
+}
+
+/* Comic-style popup for mocking */
+.comic-popup {
+    position: fixed;
+    font-size: 28px;
+    font-weight: bold;
+    font-family: 'Impact', 'Arial Black', sans-serif;
+    color: #ffff00;
+    background: linear-gradient(135deg, #ff6600, #ff0000);
+    padding: 10px 20px;
+    border: 4px solid #000;
+    border-radius: 10px;
+    text-shadow: 
+        2px 2px 0 #000,
+        -2px -2px 0 #000,
+        2px -2px 0 #000,
+        -2px 2px 0 #000;
+    box-shadow: 
+        0 0 20px rgba(255, 255, 0, 0.8),
+        inset 0 0 10px rgba(255, 255, 255, 0.3);
+    z-index: 999;
+    animation: comicPopBounce 1.5s ease-out forwards;
+    pointer-events: none;
+    letter-spacing: 2px;
+    transform: translate(-50%, -50%) scale(0);
+    transform-origin: center;
+}
+
+@keyframes comicPopBounce {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(-5deg); }
+    50% { transform: translate(-50%, -50%) scale(1.3) rotate(5deg); }
+    70% { transform: translate(-50%, -50%) scale(0.9) rotate(-3deg); }
+    85% { transform: translate(-50%, -50%) scale(1.1) rotate(2deg); }
+    100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; }
+}
+
+/* Angry huffing animation */
+.neko.angry-huff {
+    animation: huffPuff 0.3s ease-in-out infinite !important;
+}
+
+@keyframes huffPuff {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.angry-icons {
+    font-size: 24px;
+    animation: angryBounce 0.5s ease-in-out infinite;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+@keyframes angryBounce {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(1.2); }
+}
+
+/* Floating soul animation */
+.floating-soul {
+    animation: floatUp 4s ease-out forwards;
+    opacity: 1;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.8));
+}
+
+@keyframes floatUp {
+    0% {
+        transform: translate(-50%, -50%) translateY(0) scale(0.5);
+        opacity: 0;
+    }
+    20% {
+        opacity: 1;
+    }
+    80% {
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) translateY(-400px) scale(1.5);
+        opacity: 0;
+    }
+}
+
+/* Welcome Screen Overlay */
+.welcome-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95));
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.5s ease-out;
+    transition: opacity 0.5s;
+    cursor: pointer;
+}
+
+.welcome-container {
+    background: linear-gradient(135deg, #ffffff, #f0f0f0);
+    border-radius: 30px;
+    padding: 50px;
+    box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 0 30px rgba(255, 255, 255, 0.5);
+    max-width: 600px;
+    text-align: center;
+    animation: scaleIn 0.5s ease-out;
+}
+
+.welcome-title {
+    font-size: 48px;
+    font-weight: bold;
+    color: #667eea;
+    text-shadow: 
+        3px 3px 0 #764ba2,
+        -1px -1px 0 #fff;
+    margin: 0 0 30px 0;
+    animation: bounce 1s ease-in-out infinite;
+}
+
+.welcome-message {
+    font-size: 24px;
+    color: #333;
+    margin: 20px 0 30px 0;
+    font-weight: bold;
+    line-height: 1.4;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.welcome-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 30px 0;
+}
+
+.stat-item {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 15px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s;
+}
+
+.stat-item:hover {
+    transform: scale(1.05);
+}
+
+.stat-icon {
+    font-size: 28px;
+}
+
+.stat-label {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.welcome-timer {
+    width: 100%;
+    height: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    overflow: hidden;
+    margin: 20px 0 10px 0;
+}
+
+.timer-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: width 1s linear;
+    box-shadow: 0 0 10px rgba(102, 126, 234, 0.8);
+}
+
+.welcome-hint {
+    font-size: 16px;
+    color: #666;
+    margin: 10px 0 0 0;
+    font-style: italic;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
