@@ -14,8 +14,17 @@ body {
     font-family: 'Courier New', Courier, monospace;
     min-height: 100vh;
     overflow-x: hidden;
+    overflow-y: auto;
     cursor: none;
     position: relative;
+    /* Hide scrollbar for IE, Edge and Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+body::-webkit-scrollbar {
+    display: none;
 }
 
 .matrix-bg {

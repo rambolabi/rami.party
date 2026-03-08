@@ -13,9 +13,17 @@ body {
     color: #fff;
     font-family: Impact, 'Arial Black', sans-serif;
     min-height: 100vh;
-    overflow: hidden;
+    overflow: auto;
     cursor: none;
     position: relative;
+    /* Hide scrollbar for IE, Edge and Firefox */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+body::-webkit-scrollbar {
+    display: none;
 }
 
 .flash-overlay {
