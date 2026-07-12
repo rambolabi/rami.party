@@ -1,47 +1,60 @@
-# Rami.party - Digital Playground
+# ✨ rami.party — An Enchanted Playground
 
-This is a demo/test domain for experimental projects. 
+A whimsical hub of tiny web experiments. Each "realm" is its own little website or toy.
+Magical on the outside, tidy and maintainable on the inside.
 
-## What is this?
+## 🗺️ Structure
 
-A place where websites are born, tested, and sometimes mysteriously disappear into the digital void.
+```
+/                     Enchanted hub (index.html, style.css, script.js)
+projects.js           Realm registry — the single source of truth for the grid
+favicon.svg           Sparkle icon (also used by the manifest)
+404.html              "Lost in the aether" error page
+archive/              🗝️ The Vault — retired experiments + its own index
+  old-rami.party/     Previous jQuery-era incarnation (preserved)
+  adhd/               An empty husk (kept as a relic)
+fun/
+  lore/               📜 Lore Gallery — image grimoire
+  prankscreens/       🖥️ Prank Screens — fake OS/boot screens
+neko/                 🐱 Neko Paradise — draggable chibi sprites
+```
 
-## Warning
+## ➕ Adding a new project
 
-⚠️ This is a test environment. Things may:
-- Break without notice
-- Move unexpectedly
-- Achieve sentience
-- Return interesting HTTP status codes
+You (almost) never touch HTML. Open [`projects.js`](projects.js) and append one object:
 
-## Movie Quote Philosophy
+```js
+{
+    title: 'My New Realm',
+    href: './path/to/project/',
+    glyph: '🌟',
+    tagline: 'A short hook',
+    description: 'One or two sentences of enchantment.',
+    tags: ['demo', 'wip'],
+    aura: 'violet',        // violet | cyan | pink | gold
+    status: 'live',        // 'soon' renders a locked teaser card
+}
+```
 
-We believe in coding by famous movie quotes:
-- "Houston, we have a problem" - Every deployment
-- "Life finds a way" - Just like bugs in production
-- "I'll be back" - Every 500 error
-- "These aren't the domains you're looking for" - Obi-Wan's wisdom
+The hub renders the card automatically. That's it.
 
-## Links
+## 🎨 Design language
 
-- Professional services: [Compyra.com](https://compyra.com)
-- Project index: [Lebon.info](https://lebon.info)
-- Home inspection: [Huiskeuring.be](https://huiskeuring.be)
+Midnight-arcane: deep indigo/violet gradients, a twinkling starfield, drifting aurorae, a glowing
+gradient wordmark (Cinzel Decorative), and glassmorphism portal cards. Fully responsive, keyboard
+accessible, and respects `prefers-reduced-motion`.
 
-## Files
+## 🔗 Allied realms
 
-- `index.html` - Main landing page
-- `404.html` - Error page (most visited page)
-- `style.css` - Sunset themed styling
-- `robots.txt` - The Three Laws of Robotics
-- `sitemap.xml` - Map of potentially existing pages
-- `humans.txt` - Credits and ASCII art
-- `site.webmanifest` - PWA configuration
+- Professional services — [Compyra.com](https://compyra.com)
+- Project index — [Lebon.info](https://lebon.info)
+- Home inspection — [Huiskeuring.be](https://huiskeuring.be)
 
-## License
+## 📝 Notes
 
-Do whatever you want. Just don't blame me if it breaks.
+See [`followUp.md`](followUp.md) for pending decisions and next steps.
 
 ---
 
-*"That's not a bug, it's a feature!"* - Ancient Developer Proverb
+*"That's not a bug, it's a feature."* — Ancient Developer Proverb
+

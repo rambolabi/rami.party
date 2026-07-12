@@ -4,73 +4,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Not Found | Rami.party</title>
-    <link rel="stylesheet" href="https://rami.party/style.css">
+    <title>404 · Lost in the aether — rami.party</title>
 
-    <!-- Primary Meta Tags -->
-    <meta name="title" content="404 - Page Not Found">
-    <meta name="description" content="This page has mysteriously disappeared into the digital void">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <meta name="title" content="404 — Lost in the aether">
+    <meta name="description" content="This page has mysteriously disappeared into the digital void.">
     <meta name="author" content="Rami">
+    <meta name="theme-color" content="#0b0524">
     <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A8%3C/text%3E%3C/svg%3E">
 </head>
 
 <body>
-    <header>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
+    </div>
+
+    <header class="site-header">
         <div class="container">
-            <div class="logo">
-                <a href="/">
-                    <h1>RAMI.PARTY</h1>
-                </a>
-            </div>
+            <a href="/" class="wordmark" aria-label="rami.party — home">
+                <span class="wordmark-spark" aria-hidden="true">✦</span>
+                <span class="wordmark-text">RAMI<span class="dot">.</span>PARTY</span>
+            </a>
+            <nav class="main-nav" aria-label="Primary">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/#realms">Realms</a></li>
+                    <li><a href="/archive/">The Vault</a></li>
+                </ul>
+            </nav>
         </div>
     </header>
 
-    <section id="home" class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>404: Page Not Found</h1>
-                <p class="quote-attribution">- Luckily it's still not a 418: I'm a teapot</p>
-                <p class="subtitle">Oops! This is one of those mysterious disappearances we warned you about.</p>
-                <div class="message-box">
-                    <p>🧪 Looks like this experiment didn't survive deployment to production.</p>
-                    <p>The page you're looking for either never existed, is taking a break, or has achieved sentience and decided to leave.</p>
-                    
-                    <p class="movie-quote">"I have a bad feeling about this" - Every developer checking their 404 logs</p>
-                    <p class="movie-quote">"There is no spoon... or page" - The Matrix: 404 Edition</p>
-                    <p class="movie-quote">"Nobody puts Baby in a corner... but we did put this page in the void" - Dirty Dancing DevOps Manual</p>
-                    <p class="movie-quote">"May the Force be with you" - Finding Your Way Back to the Homepage</p>
-                    
-                    <div style="margin-top: 2rem; text-align: center;">
-                        <a href="/" class="back-button">← Return to Safety (Homepage)</a>
-                    </div>
+    <main id="top">
+        <section class="hero" aria-labelledby="err-title">
+            <div class="container">
+                <p class="eyebrow"><span aria-hidden="true">💫</span> Error 404 <span aria-hidden="true">💫</span></p>
+                <h1 id="err-title" class="hero-title">Lost in the aether</h1>
+                <p class="hero-quote">“There is no spoon… or page.”</p>
+                <p class="hero-attr">— The Matrix: 404 Edition</p>
+                <p class="hero-sub">The portal you sought has flickered out of existence. It may never
+                    have been, it may be resting, or it may have achieved sentience and wandered off.
+                    Either way — let's guide you back.</p>
+                <div class="hero-cta">
+                    <a href="/" class="btn btn-primary"><span aria-hidden="true">←</span> Return to safety</a>
+                    <a href="/#realms" class="btn btn-ghost">Browse the realms</a>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </main>
 
-    <footer>
+    <footer class="site-footer">
         <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>Useful Links</h3>
-                    <div class="footer-links">
-                        <a href="https://compyra.com" target="_blank" rel="noopener noreferrer">
-                            Professional Help - Compyra.com
-                        </a>
-                        <a href="https://lebon.info" target="_blank" rel="noopener noreferrer">
-                            Index & Links - Lebon.info
-                        </a>
-                        <a href="https://huiskeuring.be" target="_blank" rel="noopener noreferrer">
-                            Home Inspection - Huiskeuring.be
-                        </a>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Rami.party - Where experiments happen (and sometimes disappear)</p>
+            <div class="footer-bottom" style="border:0;">
+                <p>&copy; <span id="year">2026</span> rami.party · <span class="muted">“That's not a bug, it's a feature.”</span></p>
             </div>
         </div>
     </footer>
+
+    <script src="/script.js"></script>
 </body>
 
 </html>
