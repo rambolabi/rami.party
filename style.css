@@ -1,300 +1,6 @@
 /* ==========================================================================
-   rami.party — an enchanted playground
-   A midnight-arcane theme: starfields, aurorae, glass portals & glowing runes.
+   rami.party — hub page styles (hero + realm groups). Requires theme.css.
    ========================================================================== */
-
-*,
-*::before,
-*::after {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-:root {
-    /* Enchanted palette */
-    --night-0: #06030f;
-    --night-1: #0b0524;
-    --night-2: #150a3a;
-    --violet: #a855f7;
-    --pink: #ec4899;
-    --cyan: #22d3ee;
-    --gold: #fbbf24;
-
-    --text: #ece9ff;
-    --text-muted: #a99fce;
-    --card: rgba(30, 18, 66, 0.55);
-    --card-border: rgba(168, 85, 247, 0.28);
-    --glass-blur: 16px;
-
-    --radius: 18px;
-    --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
-    --ease: cubic-bezier(0.22, 1, 0.36, 1);
-    --spell: linear-gradient(120deg, var(--violet), var(--pink) 40%, var(--cyan) 75%, var(--gold));
-}
-
-html {
-    scroll-behavior: smooth;
-    scroll-padding-top: 90px;
-    background-color: #06030f;
-}
-
-body {
-    font-family: 'Quicksand', system-ui, -apple-system, sans-serif;
-    font-weight: 500;
-    line-height: 1.7;
-    color: var(--text);
-    background:
-        radial-gradient(1200px 700px at 12% -10%, rgba(168, 85, 247, 0.22), transparent 60%),
-        radial-gradient(1000px 800px at 90% 10%, rgba(34, 211, 238, 0.14), transparent 55%),
-        radial-gradient(900px 900px at 50% 120%, rgba(236, 72, 153, 0.16), transparent 60%),
-        linear-gradient(180deg, var(--night-1) 0%, var(--night-0) 100%);
-    background-attachment: fixed;
-    min-height: 100vh;
-    overflow-x: hidden;
-}
-
-.container {
-    width: min(92%, 1180px);
-    margin: 0 auto;
-}
-
-a {
-    color: inherit;
-    text-decoration: none;
-}
-
-ul {
-    list-style: none;
-}
-
-/* Decorative backdrop ------------------------------------------------------ */
-#starfield {
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -2;
-    pointer-events: none;
-}
-
-.aurora {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    overflow: hidden;
-    pointer-events: none;
-}
-
-.aurora-blob {
-    position: absolute;
-    width: 48vw;
-    height: 48vw;
-    border-radius: 50%;
-    filter: blur(90px);
-    opacity: 0.35;
-    mix-blend-mode: screen;
-    animation: drift 26s var(--ease) infinite alternate;
-}
-
-.aurora-blob.a1 {
-    background: radial-gradient(circle, var(--violet), transparent 65%);
-    top: -12vw;
-    left: -8vw;
-}
-
-.aurora-blob.a2 {
-    background: radial-gradient(circle, var(--cyan), transparent 65%);
-    bottom: -14vw;
-    right: -6vw;
-    animation-delay: -8s;
-}
-
-.aurora-blob.a3 {
-    background: radial-gradient(circle, var(--pink), transparent 65%);
-    top: 30%;
-    left: 55%;
-    animation-delay: -16s;
-}
-
-@keyframes drift {
-    from { transform: translate(0, 0) scale(1); }
-    to { transform: translate(6vw, 5vw) scale(1.18); }
-}
-
-/* Accessibility helpers ---------------------------------------------------- */
-.skip-link {
-    position: absolute;
-    left: 50%;
-    top: -60px;
-    transform: translateX(-50%);
-    z-index: 2000;
-    background: var(--violet);
-    color: #fff;
-    padding: 10px 18px;
-    border-radius: 0 0 12px 12px;
-    font-weight: 700;
-    transition: top 0.2s ease;
-}
-
-.skip-link:focus {
-    top: 0;
-}
-
-:focus-visible {
-    outline: 2px solid var(--cyan);
-    outline-offset: 3px;
-    border-radius: 6px;
-}
-
-/* Header ------------------------------------------------------------------- */
-.site-header {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    background: rgba(11, 5, 36, 0.55);
-    border-bottom: 1px solid rgba(168, 85, 247, 0.18);
-}
-
-.site-header .container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 14px 0;
-}
-
-.wordmark {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.wordmark-spark {
-    color: var(--gold);
-    font-size: 1.1rem;
-    animation: twinkle 3s ease-in-out infinite;
-}
-
-.wordmark-text {
-    font-family: 'Cinzel Decorative', serif;
-    font-weight: 700;
-    letter-spacing: 1px;
-    font-size: 1.15rem;
-    background: var(--spell);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    animation: shimmer 8s linear infinite;
-}
-
-.dot {
-    color: var(--pink);
-    -webkit-text-fill-color: var(--pink);
-}
-
-.main-nav ul {
-    display: flex;
-    gap: 26px;
-}
-
-.main-nav a {
-    position: relative;
-    font-weight: 600;
-    color: var(--text-muted);
-    padding: 6px 2px;
-    transition: color 0.25s ease;
-}
-
-.main-nav a::after {
-    content: '';
-    position: absolute;
-    left: 0;
-    bottom: -2px;
-    width: 0;
-    height: 2px;
-    border-radius: 2px;
-    background: var(--spell);
-    transition: width 0.3s var(--ease);
-}
-
-.main-nav a:hover,
-.main-nav a:focus-visible {
-    color: var(--text);
-}
-
-.main-nav a:hover::after,
-.main-nav a:focus-visible::after {
-    width: 100%;
-}
-
-.burger {
-    display: none;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 30px;
-    height: 22px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-}
-
-.burger span {
-    height: 3px;
-    width: 100%;
-    border-radius: 3px;
-    background: var(--text);
-    transition: var(--ease) 0.3s;
-}
-
-.burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(9.5px) rotate(45deg); }
-.burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
-.burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-9.5px) rotate(-45deg); }
-
-/* Buttons ------------------------------------------------------------------ */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 30px;
-    border-radius: 999px;
-    font-family: inherit;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    border: none;
-    transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), background 0.3s ease;
-}
-
-.btn-primary {
-    color: #fff;
-    background: var(--spell);
-    background-size: 200% auto;
-    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.45);
-}
-
-.btn-primary:hover {
-    transform: translateY(-3px);
-    background-position: right center;
-    box-shadow: 0 16px 40px rgba(236, 72, 153, 0.5);
-}
-
-.btn-ghost {
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--card-border);
-    backdrop-filter: blur(6px);
-}
-
-.btn-ghost:hover {
-    transform: translateY(-3px);
-    border-color: var(--cyan);
-    color: #fff;
-    box-shadow: 0 12px 30px rgba(34, 211, 238, 0.25);
-}
 
 /* Hero --------------------------------------------------------------------- */
 .hero {
@@ -304,7 +10,7 @@ ul {
 }
 
 .eyebrow {
-    font-family: 'Cinzel Decorative', serif;
+    font-family: var(--font-display);
     letter-spacing: 4px;
     text-transform: uppercase;
     font-size: 0.82rem;
@@ -313,7 +19,7 @@ ul {
 }
 
 .hero-title {
-    font-family: 'Cinzel Decorative', serif;
+    font-family: var(--font-display);
     font-weight: 900;
     font-size: clamp(2.8rem, 9vw, 6rem);
     line-height: 1.02;
@@ -383,18 +89,18 @@ ul {
     animation: scrollCue 1.8s ease-in-out infinite;
 }
 
-/* Realms (project grid) ---------------------------------------------------- */
+/* Realms ------------------------------------------------------------------- */
 .realms {
-    padding: 40px 0 90px;
+    padding: 30px 0 70px;
 }
 
 .section-head {
     text-align: center;
-    margin-bottom: 46px;
+    margin-bottom: 40px;
 }
 
 .section-title {
-    font-family: 'Cinzel Decorative', serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: clamp(1.9rem, 4vw, 2.8rem);
     margin-bottom: 12px;
@@ -402,6 +108,46 @@ ul {
 
 .section-sub {
     color: var(--text-muted);
+}
+
+/* Realm groups (Workshop / Gallery / Wastelands) */
+.realm-group {
+    margin-bottom: 64px;
+}
+
+.realm-group:last-child {
+    margin-bottom: 0;
+}
+
+.group-head {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    margin-bottom: 24px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(168, 85, 247, 0.18);
+}
+
+.group-head .group-emoji {
+    font-size: 1.6rem;
+}
+
+.group-head h3 {
+    font-family: var(--font-display);
+    font-size: clamp(1.3rem, 3vw, 1.9rem);
+    background: var(--spell);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.group-head p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    margin-left: auto;
+    text-align: right;
+    max-width: 46%;
 }
 
 .realm-grid {
@@ -421,7 +167,7 @@ ul {
     text-decoration: underline;
 }
 
-/* Portal card */
+/* Portal card -------------------------------------------------------------- */
 .realm-card {
     position: relative;
     display: flex;
@@ -453,7 +199,6 @@ ul {
     transition: opacity 0.35s ease;
 }
 
-/* Glow that follows the cursor (set via JS custom props) */
 .realm-card::after {
     content: '';
     position: absolute;
@@ -501,14 +246,10 @@ ul {
 }
 
 .realm-card h3 {
-    font-family: 'Cinzel Decorative', serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: 1.4rem;
     margin-bottom: 10px;
-}
-
-.realm-card h3 a {
-    /* Stretch the link across the whole card */
 }
 
 .realm-card h3 a::after {
@@ -560,13 +301,12 @@ ul {
     transform: translateX(5px);
 }
 
-/* Locked / coming-soon card */
-.realm-card.is-soon {
-    opacity: 0.72;
-}
+.realm-card.is-soon { opacity: 0.72; }
+.realm-card.is-soon .realm-enter { color: var(--text-muted); }
 
-.realm-card.is-soon .realm-enter {
-    color: var(--text-muted);
+.realm-card.is-external .realm-enter::after {
+    content: '↗';
+    font-size: 0.85em;
 }
 
 /* Aura color variants */
@@ -574,161 +314,9 @@ ul {
 .aura-cyan   { --card-aura: linear-gradient(135deg, var(--cyan), transparent 70%);   --card-glow: rgba(34, 211, 238, 0.28); --card-ink: #7fe6f7; }
 .aura-pink   { --card-aura: linear-gradient(135deg, var(--pink), transparent 70%);   --card-glow: rgba(236, 72, 153, 0.3); --card-ink: #ff9ecb; }
 .aura-gold   { --card-aura: linear-gradient(135deg, var(--gold), transparent 70%);   --card-glow: rgba(251, 191, 36, 0.3); --card-ink: #ffd77a; }
+.aura-ash    { --card-aura: linear-gradient(135deg, #8a8f98, transparent 70%);       --card-glow: rgba(160, 170, 185, 0.22); --card-ink: #c3c9d6; }
 
-/* Footer ------------------------------------------------------------------- */
-.site-footer {
-    margin-top: 40px;
-    padding: 54px 0 30px;
-    border-top: 1px solid rgba(168, 85, 247, 0.18);
-    background: rgba(6, 3, 15, 0.6);
-    backdrop-filter: blur(10px);
-}
-
-.footer-grid {
-    display: flex;
-    justify-content: space-between;
-    gap: 40px;
-    flex-wrap: wrap;
-    margin-bottom: 34px;
-}
-
-.footer-brand .wordmark-text {
-    font-size: 1.4rem;
-}
-
-.footer-brand p {
-    color: var(--text-muted);
-    margin-top: 8px;
-    max-width: 320px;
-}
-
-.footer-links h3 {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 1rem;
-    color: var(--gold);
-    margin-bottom: 14px;
-}
-
-.footer-links a {
-    display: block;
-    color: var(--text-muted);
-    padding: 6px 0;
-    transition: color 0.25s ease, transform 0.25s ease;
-}
-
-.footer-links a:hover {
-    color: var(--text);
-    transform: translateX(5px);
-}
-
-.footer-bottom {
-    text-align: center;
-    padding-top: 24px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-.footer-bottom .muted {
-    font-style: italic;
-    opacity: 0.8;
-}
-
-/* Mobile navigation overlay ------------------------------------------------ */
-.mobile-nav {
-    position: fixed;
-    inset: 0;
-    z-index: 1500;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    background: rgba(6, 3, 15, 0.92);
-    backdrop-filter: blur(14px);
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0.3s ease;
-}
-
-.mobile-nav.open {
-    opacity: 1;
-    visibility: visible;
-}
-
-.mobile-nav a {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: 1.6rem;
-    color: var(--text);
-    padding: 12px 20px;
-}
-
-.mobile-nav a:hover {
-    color: var(--gold);
-}
-
-.mobile-nav .close-btn {
-    position: absolute;
-    top: 22px;
-    right: 22px;
-    font-size: 2rem;
-    background: none;
-    border: none;
-    color: var(--text);
-    cursor: pointer;
-    line-height: 1;
-}
-
-/* Keyframes ---------------------------------------------------------------- */
-@keyframes shimmer {
-    to { background-position: 200% center; }
-}
-
-@keyframes twinkle {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(0.8); }
-}
-
-@keyframes scrollCue {
-    0% { top: 8px; opacity: 1; }
-    100% { top: 24px; opacity: 0; }
-}
-
-/* Reveal on scroll */
-.reveal {
-    opacity: 0;
-    transform: translateY(26px);
-    transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
-}
-
-.reveal.visible {
-    opacity: 1;
-    transform: none;
-}
-
-/* Responsive --------------------------------------------------------------- */
-@media (max-width: 760px) {
-    .main-nav {
-        display: none;
-    }
-
-    .burger {
-        display: flex;
-    }
-}
-
-/* Reduced motion ----------------------------------------------------------- */
-@media (prefers-reduced-motion: reduce) {
-    html { scroll-behavior: auto; }
-
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.001ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.001ms !important;
-    }
-
-    .reveal { opacity: 1; transform: none; }
-    .aurora-blob { animation: none; }
+@media (max-width: 620px) {
+    .group-head { flex-direction: column; gap: 4px; }
+    .group-head p { margin-left: 0; text-align: left; max-width: 100%; }
 }

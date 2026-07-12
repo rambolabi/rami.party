@@ -8,34 +8,48 @@
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* ---- Realm cards --------------------------------------------------------- */
-function renderRealms() {
-    const grid = document.getElementById('realmGrid');
-    const realms = window.RAMI_REALMS;
-    if (!grid || !Array.isArray(realms) || !realms.length) return;
+function cardMarkup(r) {
+    const soon = r.status === 'soon';
+    const tags = (r.tags || []).map(t => `<span>${t}</span>`).join('');
+    const ext = r.external ? ' target="_blank" rel="noopener noreferrer"' : '';
+    const titleInner = soon ? r.title : `<a href="${r.href}"${ext}>${r.title}</a>`;
+    const enter = soon
+        ? `<span class="realm-enter">🔒 ${r.tagline === 'Never drew breath' ? 'Nothing to see' : 'Coming soon'}</span>`
+        : `<span class="realm-enter">${r.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
 
-    grid.innerHTML = '';
-    realms.forEach(r => {
-        const soon = r.status === 'soon';
-        const li = document.createElement('li');
-        li.className = `realm-card aura-${r.aura || 'violet'}${soon ? ' is-soon' : ''} reveal`;
-
-        const tags = (r.tags || []).map(t => `<span>${t}</span>`).join('');
-        const titleInner = soon
-            ? `${r.title}`
-            : `<a href="${r.href}">${r.title}</a>`;
-        const enter = soon
-            ? `<span class="realm-enter">🔒 Coming soon</span>`
-            : `<span class="realm-enter">Enter <span class="arrow" aria-hidden="true">→</span></span>`;
-
-        li.innerHTML = `
+    return `
+        <li class="realm-card aura-${r.aura || 'violet'}${soon ? ' is-soon' : ''}${r.external ? ' is-external' : ''} reveal">
             <div class="realm-glyph" aria-hidden="true">${r.glyph || '✨'}</div>
             <p class="realm-tagline">${r.tagline || ''}</p>
             <h3>${titleInner}</h3>
             <p class="realm-desc">${r.description || ''}</p>
             <div class="realm-tags">${tags}</div>
             ${enter}
-        `;
-        grid.appendChild(li);
+        </li>`;
+}
+
+function renderRealms() {
+    const root = document.getElementById('realmGroups');
+    const realms = window.RAMI_REALMS;
+    const groups = window.RAMI_GROUPS;
+    if (!root || !Array.isArray(realms) || !Array.isArray(groups)) return;
+
+    root.innerHTML = '';
+    groups.forEach(g => {
+        const items = realms.filter(r => r.category === g.id);
+        if (!items.length) return;
+        const section = document.createElement('section');
+        section.className = 'realm-group';
+        section.innerHTML = `
+            <header class="group-head">
+                <span class="group-emoji" aria-hidden="true">${g.emoji}</span>
+                <h3>${g.title}</h3>
+                <p>${g.blurb}</p>
+            </header>
+            <ul class="realm-grid" role="list">
+                ${items.map(cardMarkup).join('')}
+            </ul>`;
+        root.appendChild(section);
     });
 
     setupCardGlow();
@@ -127,10 +141,9 @@ function setupMobileNav() {
     overlay.innerHTML = `
         <button class="close-btn" aria-label="Close menu">&times;</button>
         <a href="#realms">Realms</a>
-        <a href="./fun/lore/">Lore</a>
-        <a href="./fun/prankscreens/">Prank Screens</a>
-        <a href="./neko/">Neko</a>
-        <a href="./archive/">The Vault</a>
+        <a href="./gallery/lore/">Lore</a>
+        <a href="./gallery/prankscreens/">Prank Screens</a>
+        <a href="./wasteland/">The Wastelands</a>
     `;
     document.body.appendChild(overlay);
     const closeBtn = overlay.querySelector('.close-btn');

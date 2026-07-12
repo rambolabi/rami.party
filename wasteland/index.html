@@ -4,18 +4,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Vault · rami.party</title>
+    <title>The Wastelands · rami.party</title>
 
+    <link rel="stylesheet" href="/theme.css">
     <link rel="stylesheet" href="/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <meta name="description" content="The Vault of rami.party — where retired experiments and ancient prototypes slumber.">
+    <meta name="description" content="The Wastelands of rami.party — where fallen experiments and ancient prototypes lie in ruin.">
     <meta name="author" content="Rami">
     <meta name="theme-color" content="#0b0524">
     <meta name="robots" content="noindex, nofollow">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%9D%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%84%EF%B8%8F%3C/text%3E%3C/svg%3E">
 </head>
 
 <body>
@@ -34,25 +35,20 @@
                 <span class="wordmark-spark" aria-hidden="true">✦</span>
                 <span class="wordmark-text">RAMI<span class="dot">.</span>PARTY</span>
             </a>
-            <nav class="main-nav" aria-label="Primary">
-                <ul>
-                    <li><a href="/">Home</a></li>
-                    <li><a href="/#realms">Realms</a></li>
-                    <li><a href="/fun/prankscreens/">Prank Screens</a></li>
-                </ul>
-            </nav>
+            <a href="/" class="back-home"><span aria-hidden="true">←</span> Back to the playground</a>
         </div>
     </header>
 
     <main id="top">
         <section class="hero" aria-labelledby="vault-title">
             <div class="container">
-                <p class="eyebrow"><span aria-hidden="true">🗝️</span> Restricted section <span aria-hidden="true">🗝️</span></p>
-                <h1 id="vault-title" class="hero-title">The Vault</h1>
-                <p class="hero-sub">Beneath the playground lies a dusty vault. Here rest the relics of
-                    experiments retired, abandoned, or gently laid to sleep. Disturb them at your peril.</p>
+                <p class="eyebrow"><span aria-hidden="true">☄️</span> Fallen realms <span aria-hidden="true">☄️</span></p>
+                <h1 id="vault-title" class="hero-title">The Wastelands</h1>
+                <p class="hero-sub">Beyond the playground stretch the wastelands — a scorched expanse
+                    where retired experiments, failed spells and ancient prototypes lie half-buried in
+                    ash. Wander the ruins, but expect no polish here.</p>
                 <div class="hero-cta">
-                    <a href="/" class="btn btn-ghost"><span aria-hidden="true">←</span> Back to the playground</a>
+                    <a href="/#realms" class="btn btn-ghost">Return to the living realms</a>
                 </div>
             </div>
         </section>
@@ -60,11 +56,21 @@
         <section id="relics" class="realms" aria-labelledby="relics-title">
             <div class="container">
                 <div class="section-head">
-                    <h2 id="relics-title" class="section-title">Archived relics</h2>
+                    <h2 id="relics-title" class="section-title">Ruins &amp; relics</h2>
                     <p class="section-sub">Kept for posterity — not for polish.</p>
                 </div>
                 <ul class="realm-grid" role="list">
-                    <li class="realm-card aura-gold reveal">
+                    <li class="realm-card aura-ash reveal">
+                        <div class="realm-glyph" aria-hidden="true">🐱</div>
+                        <p class="realm-tagline">Still purring in the ruins</p>
+                        <h3><a href="./neko/">Neko Paradise</a></h3>
+                        <p class="realm-desc">A clowder of draggable chibi neko familiars. Retired from the
+                            main stage, but they'll still bounce and play if you visit.</p>
+                        <div class="realm-tags"><span>toy</span><span>cats</span></div>
+                        <span class="realm-enter">Enter the ruins <span class="arrow" aria-hidden="true">→</span></span>
+                    </li>
+
+                    <li class="realm-card aura-ash reveal">
                         <div class="realm-glyph" aria-hidden="true">🏚️</div>
                         <p class="realm-tagline">Circa the jQuery era</p>
                         <h3><a href="./old-rami.party/">Old rami.party</a></h3>
@@ -74,7 +80,7 @@
                         <span class="realm-enter">Explore the ruins <span class="arrow" aria-hidden="true">→</span></span>
                     </li>
 
-                    <li class="realm-card aura-violet reveal is-soon">
+                    <li class="realm-card aura-ash reveal is-soon">
                         <div class="realm-glyph" aria-hidden="true">🌀</div>
                         <p class="realm-tagline">Never drew breath</p>
                         <h3>ADHD experiment</h3>
@@ -91,7 +97,7 @@
     <footer class="site-footer">
         <div class="container">
             <div class="footer-bottom" style="border:0;">
-                <p>&copy; <span id="year">2026</span> rami.party · <span class="muted">“Some experiments are best left sleeping.”</span></p>
+                <p>&copy; <span id="year">2026</span> rami.party · <span class="muted">“Some experiments are best left in the ash.”</span></p>
             </div>
         </div>
     </footer>

@@ -3,7 +3,6 @@
 
 Contact: mailto:contact@compyra.com
 Contact: https://compyra.com
-Expires: 2027-01-11T23:59:59.000Z
 Preferred-Languages: en, nl, fr
 Canonical: https://rami.party/.well-known/security.txt
 

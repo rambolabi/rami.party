@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rami.party · An Enchanted Playground of Experiments</title>
 
+    <link rel="stylesheet" href="theme.css">
     <link rel="stylesheet" href="style.css">
 
     <!-- Fonts -->
@@ -30,9 +31,14 @@
     <meta property="og:title" content="Rami.party · An Enchanted Playground of Experiments">
     <meta property="og:description" content="A whimsical hub of tiny web experiments — magical galleries, prank screens, neko familiars and other curiosities.">
     <meta property="og:site_name" content="rami.party">
+    <meta property="og:image" content="https://rami.party/og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="rami.party — an enchanted playground of experiments">
     <meta property="twitter:card" content="summary_large_image">
     <meta property="twitter:title" content="Rami.party · An Enchanted Playground of Experiments">
     <meta property="twitter:description" content="A whimsical hub of tiny web experiments — magical galleries, prank screens, neko familiars and other curiosities.">
+    <meta property="twitter:image" content="https://rami.party/og-image.png">
 </head>
 
 <body>
@@ -56,9 +62,9 @@
             <nav class="main-nav" aria-label="Primary">
                 <ul>
                     <li><a href="#realms">Realms</a></li>
-                    <li><a href="./fun/lore/">Lore</a></li>
-                    <li><a href="./fun/prankscreens/">Prank Screens</a></li>
-                    <li><a href="./archive/">The Vault</a></li>
+                    <li><a href="./gallery/lore/">Lore</a></li>
+                    <li><a href="./gallery/prankscreens/">Prank Screens</a></li>
+                    <li><a href="./wasteland/">The Wastelands</a></li>
                 </ul>
             </nav>
 
@@ -80,7 +86,7 @@
                     know what you'll conjure.</p>
                 <div class="hero-cta">
                     <a href="#realms" class="btn btn-primary">Enter the realms <span aria-hidden="true">→</span></a>
-                    <a href="./archive/" class="btn btn-ghost">Visit the Vault</a>
+                    <a href="./wasteland/" class="btn btn-ghost">Visit the Wastelands</a>
                 </div>
             </div>
             <a href="#realms" class="scroll-cue" aria-label="Scroll to the realms"><span></span></a>
@@ -90,17 +96,17 @@
             <div class="container">
                 <div class="section-head">
                     <h2 id="realms-title" class="section-title">Choose your realm</h2>
-                    <p class="section-sub">Each portal leads to its own little experiment. Wander freely.</p>
+                    <p class="section-sub">Three great realms await. Wander freely between them.</p>
                 </div>
-                <ul class="realm-grid" id="realmGrid" role="list">
-                    <!-- Cards injected from projects.js by script.js -->
-                    <li class="realm-fallback">
-                        <a href="./fun/lore/">Lore Gallery</a> ·
-                        <a href="./fun/prankscreens/">Prank Screens</a> ·
-                        <a href="./neko/">Neko Paradise</a> ·
-                        <a href="./archive/">The Vault</a>
-                    </li>
-                </ul>
+                <div id="realmGroups">
+                    <!-- Realm groups injected from projects.js by script.js -->
+                    <p class="realm-fallback">
+                        <a href="./gallery/lore/">Lore Gallery</a> ·
+                        <a href="./gallery/prankscreens/">Prank Screens</a> ·
+                        <a href="./wasteland/neko/">Neko Paradise</a> ·
+                        <a href="./wasteland/">The Wastelands</a>
+                    </p>
+                </div>
             </div>
         </section>
     </main>
@@ -114,6 +120,7 @@
                 </div>
                 <nav class="footer-links" aria-label="Allied realms">
                     <h3>Allied realms</h3>
+                    <a href="https://labidi.eu" target="_blank" rel="noopener noreferrer">✨ Labidi.eu — professional projects</a>
                     <a href="https://compyra.com" target="_blank" rel="noopener noreferrer">🛡️ Compyra — professional help</a>
                     <a href="https://lebon.info" target="_blank" rel="noopener noreferrer">🧭 Lebon.info — index &amp; links</a>
                     <a href="https://huiskeuring.be" target="_blank" rel="noopener noreferrer">🏠 Huiskeuring.be — home inspection</a>

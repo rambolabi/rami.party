@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    /* Design at 1200x630, scaled 0.8 inside a 960x504 stage so a 1.25 DPR
+       screenshot yields an exact 1200x630 with no overflow. */
+    html, body { width: 960px; height: 504px; overflow: hidden; }
+    .stage { position: relative; width: 960px; height: 504px; overflow: hidden; }
+    .banner {
+        position: relative;
+        width: 1200px; height: 630px;
+        transform: scale(0.8);
+        transform-origin: top left;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-family: 'Quicksand', sans-serif;
+        color: #ece9ff;
+        overflow: hidden;
+        background:
+            radial-gradient(900px 500px at 15% 0%, rgba(168,85,247,0.35), transparent 60%),
+            radial-gradient(800px 600px at 88% 100%, rgba(34,211,238,0.28), transparent 55%),
+            radial-gradient(700px 700px at 50% 120%, rgba(236,72,153,0.25), transparent 60%),
+            linear-gradient(180deg, #0b0524 0%, #06030f 100%);
+    }
+    .stars { position: absolute; inset: 0; }
+    .stars i {
+        position: absolute; border-radius: 50%; background: #fff;
+        box-shadow: 0 0 6px rgba(255,255,255,0.8);
+    }
+    .spark { font-size: 40px; color: #fbbf24; margin-bottom: 18px; }
+    .brand {
+        font-family: 'Cinzel Decorative', serif;
+        font-weight: 900; font-size: 130px; line-height: 1; letter-spacing: 3px;
+        background: linear-gradient(120deg, #a855f7, #ec4899 40%, #22d3ee 75%, #fbbf24);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        filter: drop-shadow(0 8px 34px rgba(168,85,247,0.5));
+    }
+    .brand .dot { color: #ec4899; -webkit-text-fill-color: #ec4899; }
+    .tagline {
+        font-family: 'Cinzel Decorative', serif; font-weight: 700;
+        font-size: 34px; color: #fff; margin: 26px 0 22px; letter-spacing: 1px;
+    }
+    .glyphs { font-size: 46px; letter-spacing: 20px; margin-left: 20px; }
+    .url {
+        position: absolute; bottom: 46px; left: 50%; transform: translateX(-50%);
+        font-family: 'Cinzel Decorative', serif; font-weight: 700;
+        font-size: 26px; color: #22d3ee; letter-spacing: 2px;
+    }
+</style>
+</head>
+<body>
+<div class="stage">
+    <div class="banner">
+        <div class="stars" id="stars"></div>
+        <div class="spark">✦</div>
+        <div class="brand">RAMI<span class="dot">.</span>PARTY</div>
+        <div class="tagline">An enchanted playground of experiments</div>
+        <div class="glyphs" aria-hidden="true">📜 🖥️ 🐱 🗝️</div>
+        <div class="url">rami.party</div>
+    </div>
+</div>
+<script>
+    const s = document.getElementById('stars');
+    const colors = ['#ffffff', '#c99bff', '#7fe6f7', '#ffd77a'];
+    for (let i = 0; i < 90; i++) {
+        const star = document.createElement('i');
+        const size = Math.random() * 3 + 1;
+        star.style.width = size + 'px';
+        star.style.height = size + 'px';
+        star.style.left = Math.random() * 1200 + 'px';
+        star.style.top = Math.random() * 630 + 'px';
+        star.style.opacity = (Math.random() * 0.7 + 0.3).toFixed(2);
+        star.style.background = colors[(Math.random() * colors.length) | 0];
+        s.appendChild(star);
+    }
+</script>
+</body>
+</html>

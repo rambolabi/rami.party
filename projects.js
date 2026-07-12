@@ -1,16 +1,44 @@
 /* ==========================================================================
    rami.party — Realm registry
    --------------------------------------------------------------------------
-   The single source of truth for every "realm" (project) shown on the hub.
-   ➕ To add a new project, drop a new object in this array — nothing else to
-      touch. Keep `status: 'live'` for active portals, or 'soon' to tease a
-      work-in-progress (rendered as a locked, non-clickable card).
+   The single source of truth for every realm shown on the hub.
+
+   • RAMI_GROUPS  → the three great realms (categories), rendered in order.
+   • RAMI_REALMS  → individual portals. Set `category` to a group id.
+
+   ➕ To add a project: append one object to RAMI_REALMS. Order within a group
+      = ranking (top of the array shows first). Nothing else to touch.
+      status: 'live' (clickable) · 'soon' (locked teaser)
+      external: true opens in a new tab and shows an ↗ marker.
    ========================================================================== */
 
-window.RAMI_REALMS = [
+window.RAMI_GROUPS = [
     {
+        id: 'gallery',
+        emoji: '🏛️',
+        title: 'The Gallery of Wonders',
+        blurb: 'Finished realms, polished and ready to explore.',
+    },
+    {
+        id: 'workshop',
+        emoji: '⚗️',
+        title: 'The Workshop',
+        blurb: 'Spells still being brewed — works in progress & playthings.',
+    },
+    {
+        id: 'wastes',
+        emoji: '☄️',
+        title: 'The Wastelands',
+        blurb: 'Fallen, forgotten and abandoned experiments. Enter the ruins.',
+    },
+];
+
+window.RAMI_REALMS = [
+    /* ---- The Gallery of Wonders (finished) ---- */
+    {
+        category: 'gallery',
         title: 'Lore Gallery',
-        href: './fun/lore/',
+        href: './gallery/lore/',
         glyph: '📜',
         tagline: 'A grimoire of images',
         description: 'Leaf through a living grimoire of magical lore, muggle mischief and impossibly cute creatures.',
@@ -19,8 +47,9 @@ window.RAMI_REALMS = [
         status: 'live',
     },
     {
+        category: 'gallery',
         title: 'Prank Screens',
-        href: './fun/prankscreens/',
+        href: './gallery/prankscreens/',
         glyph: '🖥️',
         tagline: 'Full-screen illusions',
         description: 'Conjure convincing fake boot screens, BIOS spells and “hacked” terminals to bewitch your friends.',
@@ -29,23 +58,63 @@ window.RAMI_REALMS = [
         status: 'live',
     },
     {
-        title: 'Neko Paradise',
-        href: './neko/',
-        glyph: '🐱',
-        tagline: 'A clowder of sprites',
-        description: 'Summon a mischievous clowder of chibi neko familiars, then drag them into a purring party.',
-        tags: ['toy', 'cats'],
+        category: 'gallery',
+        title: 'The BBQ',
+        href: 'https://lebon.info/bbq',
+        glyph: '🔥',
+        tagline: 'A feast of flames',
+        description: 'Gather round the coals — a crackling little BBQ companion living over on lebon.info.',
+        tags: ['tool', 'food'],
+        aura: 'gold',
+        status: 'live',
+        external: true,
+    },
+
+    /* ---- The Workshop (WIP / playthings) ---- */
+    {
+        category: 'workshop',
+        title: 'A new spell is brewing',
+        href: './workshop/',
+        glyph: '✨',
+        tagline: 'Coming soon',
+        description: 'Something curious is bubbling in the cauldron. Peek into the workshop to see what hatches.',
+        tags: ['wip'],
         aura: 'pink',
         status: 'live',
     },
+
+    /* ---- The Wastelands (archived / fallen) ---- */
     {
-        title: 'The Vault',
-        href: './archive/',
-        glyph: '🗝️',
-        tagline: 'Relics of the past',
-        description: 'Descend into the vault where retired experiments and ancient prototypes slumber in dust.',
-        tags: ['archive'],
-        aura: 'gold',
+        category: 'wastes',
+        title: 'Neko Paradise',
+        href: './wasteland/neko/',
+        glyph: '🐱',
+        tagline: 'A clowder of sprites',
+        description: 'A mischievous clowder of chibi neko familiars — retired to the ruins, but still purring.',
+        tags: ['toy', 'cats'],
+        aura: 'ash',
         status: 'live',
+    },
+    {
+        category: 'wastes',
+        title: 'Old rami.party',
+        href: './wasteland/old-rami.party/',
+        glyph: '🏚️',
+        tagline: 'The jQuery era',
+        description: 'The previous incarnation of this domain — a paws-and-cats relic, preserved as it was found.',
+        tags: ['legacy', 'jquery'],
+        aura: 'ash',
+        status: 'live',
+    },
+    {
+        category: 'wastes',
+        title: 'ADHD experiment',
+        href: '#',
+        glyph: '🌀',
+        tagline: 'Never drew breath',
+        description: 'An empty husk — a project that was conjured but never filled. A reminder that not every spell takes.',
+        tags: ['empty'],
+        aura: 'ash',
+        status: 'soon',
     },
 ];

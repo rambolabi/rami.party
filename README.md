@@ -6,18 +6,27 @@ Magical on the outside, tidy and maintainable on the inside.
 ## 🗺️ Structure
 
 ```
-/                     Enchanted hub (index.html, style.css, script.js)
-projects.js           Realm registry — the single source of truth for the grid
+/                     Enchanted hub (index.html, script.js)
+theme.css             Shared palette, tokens, backdrop & chrome (imported everywhere)
+style.css             Hub-only styles (hero + realm groups)
+projects.js           Realm registry — groups + portals, the single source of truth
 favicon.svg           Sparkle icon (also used by the manifest)
+og-image.png          1200×630 social share banner
+admin/                Generic CMS-style login (keeps the classic history-bomb prank JS)
 404.html              "Lost in the aether" error page
-archive/              🗝️ The Vault — retired experiments + its own index
+gallery/              🏛️ The Gallery of Wonders — finished realms
+  lore/               📜 Lore Gallery — image grimoire
+  prankscreens/       🖥️ Prank Screens — fake OS/boot screens (hub is enchanted;
+                          individual screens stay pixel-accurate on purpose)
+workshop/             ⚗️ The Workshop — works-in-progress (landing page for now)
+wasteland/            ☄️ The Wastelands — retired experiments + its own index
+  neko/               🐱 Neko Paradise (draggable chibi sprites)
   old-rami.party/     Previous jQuery-era incarnation (preserved)
   adhd/               An empty husk (kept as a relic)
-fun/
-  lore/               📜 Lore Gallery — image grimoire
-  prankscreens/       🖥️ Prank Screens — fake OS/boot screens
-neko/                 🐱 Neko Paradise — draggable chibi sprites
 ```
+
+The folder names mirror the three realms: **gallery** (finished), **workshop** (WIP) and
+**wasteland** (archive).
 
 ## ➕ Adding a new project
 
@@ -25,18 +34,20 @@ You (almost) never touch HTML. Open [`projects.js`](projects.js) and append one 
 
 ```js
 {
+    category: 'gallery',   // gallery | workshop | wastes
     title: 'My New Realm',
     href: './path/to/project/',
     glyph: '🌟',
     tagline: 'A short hook',
     description: 'One or two sentences of enchantment.',
     tags: ['demo', 'wip'],
-    aura: 'violet',        // violet | cyan | pink | gold
+    aura: 'violet',        // violet | cyan | pink | gold | ash
     status: 'live',        // 'soon' renders a locked teaser card
+    // external: true,     // opens in a new tab with an ↗ marker
 }
 ```
 
-The hub renders the card automatically. That's it.
+The hub renders the card in the right realm automatically. Array order = ranking.
 
 ## 🎨 Design language
 
@@ -46,6 +57,7 @@ accessible, and respects `prefers-reduced-motion`.
 
 ## 🔗 Allied realms
 
+- Professional projects — [Labidi.eu](https://labidi.eu)
 - Professional services — [Compyra.com](https://compyra.com)
 - Project index — [Lebon.info](https://lebon.info)
 - Home inspection — [Huiskeuring.be](https://huiskeuring.be)

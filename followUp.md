@@ -1,73 +1,53 @@
 # ✨ rami.party — Follow-ups & Decisions
 
-Living notes for the enchanted-playground revamp. Tick things off or hand them back to a human
-when a decision is needed.
+Living notes for the enchanted-playground revamp. All of Rami's decisions from the previous round
+have now been actioned. ✅
 
 ---
 
-## ✅ Done in this pass
-- **New enchanted hub**: rebuilt `index.html`, `style.css`, `script.js` into a midnight-arcane theme
-  (starfield canvas, aurora blobs, glowing gradient wordmark, glassmorphism portal cards).
-- **Data-driven realms**: `projects.js` (`window.RAMI_REALMS`) is the single source of truth. Add a
-  project by appending one object — the grid renders itself. Use `status:'soon'` for locked teasers.
-- **Reorganised structure**: `Archive/` → lowercase **`archive/`**; empty/broken `projects/adhd`
-  moved to `archive/adhd`; empty `projects/` folder removed.
-- **The Vault**: new `archive/index.html` lists archived relics (old rami.party, the empty ADHD husk).
-- **404** restyled to match the theme.
-- **Consistent meta**: Open Graph/Twitter tags, `theme-color`, SVG favicon (`favicon.svg`), refreshed
-  `site.webmanifest` (was pointing at non-existent PNG icons).
-- **A11y/perf**: semantic landmarks, skip links, focus states, `prefers-reduced-motion` support,
-  keyboard-friendly mobile nav, no heavy libraries.
+## ✅ Done in this pass (round 2)
+- **Shared `theme.css`** extracted — palette, tokens, backdrop, header/wordmark, buttons, footer,
+  mobile nav, back-home pill, reveal & reduced-motion all live in one file. Every page imports it.
+- **Three great realms** (categories) on the hub, driven by `RAMI_GROUPS` in `projects.js`:
+  - 🏛️ **The Gallery of Wonders** — finished realms (Lore, Prank Screens, the BBQ).
+  - ⚗️ **The Workshop** — works-in-progress / playthings (teaser card for now).
+  - ☄️ **The Wastelands** — the old archive, renamed & re-themed apocalyptic.
+  - Ranking is just array order — trivial to reorder.
+- **Neko moved** to `wasteland/neko/` and now lives in The Wastelands (with a themed back link).
+- **Sub-projects re-skinned** to the enchanted theme: Lore Gallery, Prank Screens hub, the Wastelands
+  page, 404. Each keeps its original scripts/IDs, so **lore, prank screens and the BBQ all still work**.
+  - Individual prank *screens* stay pixel-accurate OS clones on purpose (only the hub is enchanted).
+- **`/admin/`** rebuilt to look like a small, generic CMS login — while quietly keeping the original
+  browser history-bomb prank script (“leave the Javascript”).
+- **`labidi.eu`** added to the allied realms (professional projects), above Compyra.
+- **Social share image** `og-image.png` (1200×630) created and wired via `og:image`/`twitter:image`.
+- **Old files kept** (per decision): PSDs, jQuery and all legacy assets remain in `wasteland/old-rami.party`.
 
-## 🔮 Recommended next (nice-to-have)
-- [ ] **Re-skin the sub-projects to match the hub.** `fun/lore/`, `fun/prankscreens/` (hub page) and
-      `neko/` still use their own older styling. A shared `theme.css` (extracted from `style.css`)
-      could give them the same enchanted chrome + a "← back to rami.party" link. *Decision: how far
-      to restyle prank screens — they intentionally imitate real OSes, so probably leave the
-      individual screens alone and only re-skin the hub/landing page.*
-Yes, re-skin all of them, move the neko to the archive.
-Make sure the prankscreens, the BBQ and the lore still work fine.
+## 🗺️ Current structure
+```
+/                 hub (index.html, theme.css, style.css, script.js, projects.js)
+favicon.svg · og-image.png · admin/ · 404.html
+gallery/lore/         📜 Lore Gallery  (Gallery of Wonders)
+gallery/prankscreens/ 🖥️ Prank Screens (Gallery of Wonders)
+workshop/             ⚗️ The Workshop (WIP landing)
+wasteland/            ☄️ The Wastelands (index)
+  neko/           🐱 Neko Paradise (relic)
+  old-rami.party/ 🏚️ jQuery-era relic
+  adhd/           🌀 empty husk
+```
+External realms surfaced on the hub: 🔥 The BBQ (lebon.info/bbq).
 
-- [ ] **Extract a shared `theme.css`** with the palette/tokens so every page imports one file.
-Yes, do this.
+## 🔮 Still open / next
+- [ ] **SEO / sitemap** — deferred until the realm folders were finalised (now they are). When you're
+      ready to allow indexing: flip `robots` off `noindex`, refresh `sitemap.xml` to list `/`,
+      `/gallery/lore/`, `/gallery/prankscreens/`, `/wasteland/`, `/wasteland/neko/`, and add canonical URLs.
+      Left as-is for now since the domain is still your demo/playground.
+- [ ] **Fill The Workshop** — the group currently shows one “coming soon” teaser. Drop a real WIP
+      project object into `projects.js` (category `workshop`) whenever one is ready.
+- [ ] **Optional:** give the neko toy a deeper enchanted restyle (it's an archived relic, so it only
+      got a themed back-link + tag this round; its internals are untouched and fully working).
 
-- [ ] **Consistent project home.** Active projects live under `fun/` and `neko/`. Consider migrating
-      future projects under a single `realms/` (or `projects/`) folder for tidiness. Kept current URLs
-      as-is this pass to avoid breaking existing links/bookmarks.
-yes, create realms.
-Create three different realms. The old failed realms, give it a matching name. Perhaps apocalypse related. That's the archive.
-One for projects we are still working on or playing with.
-And one for finished projects.
-
-- [ ] **Add a real social share image** (`og-image.png`, 1200×630) and wire `og:image`/`twitter:image`.
-      Only the text OG tags exist right now.
-Create a matching rami.party image.
-
-## 🧹 Cleanup / space
-- [ ] `archive/old-rami.party/protected/assets/media/*.psd` (~745 KB of Photoshop sources) add no value
-      to a web archive. **Decision needed:** delete to slim the repo, or keep for sentimental/source
-      reasons? (They also include duplicate `.gif`/`.png` exports.)
-Leave all old file, we have enough space.
-
-- [ ] `archive/old-rami.party` still ships `jquery-2.1.1.min.js` — fine for an archived relic, but worth
-      noting it's an old, unmaintained dependency.
-That's archived. You can leave it.
-
-## 🔍 SEO / crawlability
-- The site is intentionally `noindex, nofollow` (owner's demo domain). Kept that, but added rich
-  link-preview metadata so shared links still look good.
-- [ ] If indexing is ever desired: flip robots, refresh `sitemap.xml` to list the realms
-      (`/`, `/fun/lore/`, `/fun/prankscreens/`, `/neko/`, `/archive/`), and add canonical URLs.
-Wait before implementing this we need to finish the clean realm folders.
-
-## ❓ Open questions for Rami
-1. Delete the `.psd` files in the archive? (space vs. keepsake)
-No
-2. Should prank screens get the enchanted chrome, or stay pixel-accurate OS clones?
-Yes create a similar enchanting view.
-3. Keep `admin.html` (looks like a prank/placeholder) or archive it too?
-Add some very small content in the admin page, make it look like a login screen for a average CMS. Leave the Javascript
-4. Any projects you want promoted to the top of the realm grid, or new ones to add to `projects.js`?
-Not yet, leave the option to choose the ranking easily.
-
-Add labidi.eu to the allied realms for the professional projects. Rami.party will be for demo, testing or the fun projects.
+## 🧩 How to add / rank a project
+Edit `projects.js` → append one object to `RAMI_REALMS` with a `category` of `gallery`, `workshop`
+or `wastes`. Order within the array = ranking. `status:'soon'` makes a locked teaser; `external:true`
+opens in a new tab. Nothing else to touch.
