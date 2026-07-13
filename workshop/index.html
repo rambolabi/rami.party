@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Workshop · rami.party</title>
 
-    <link rel="stylesheet" href="/theme.css">
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="../theme.css">
+    <link rel="stylesheet" href="../style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -45,9 +45,10 @@
                 <p class="eyebrow"><span aria-hidden="true">⚗️</span> Spells in progress <span aria-hidden="true">⚗️</span></p>
                 <h1 id="workshop-title" class="hero-title">The Workshop</h1>
                 <p class="hero-sub">This is where new realms are conjured — half-finished spells,
-                    bubbling cauldrons and experiments not yet ready to meet the world. Peek in, but
-                    mind the sparks.</p>
+                    bubbling cauldrons and experiments not yet ready to meet the world. Poke around;
+                    some are further along than others, and a few are only names on a wishlist.</p>
                 <div class="hero-cta">
+                    <a href="#brewing" class="btn btn-primary">See what's brewing <span aria-hidden="true">→</span></a>
                     <a href="/#realms" class="btn btn-ghost">Back to the realms</a>
                 </div>
             </div>
@@ -57,19 +58,21 @@
             <div class="container">
                 <div class="section-head">
                     <h2 id="brewing-title" class="section-title">Currently brewing</h2>
-                    <p class="section-sub">Nothing's quite ready yet — but the cauldron is warm.</p>
+                    <p class="section-sub">Works in progress — each lives in its own little chamber.</p>
                 </div>
-                <ul class="realm-grid" role="list">
-                    <li class="realm-card aura-pink reveal is-soon">
-                        <div class="realm-glyph" aria-hidden="true">✨</div>
-                        <p class="realm-tagline">Coming soon</p>
-                        <h3>A new spell is brewing</h3>
-                        <p class="realm-desc">Something curious is bubbling away. Check back soon to see
-                            what hatches from the cauldron.</p>
-                        <div class="realm-tags"><span>wip</span></div>
-                        <span class="realm-enter">🔒 Not ready yet</span>
-                    </li>
+                <ul id="workshopGrid" class="realm-grid" role="list">
+                    <li class="realm-fallback">The workbench is loading…</li>
                 </ul>
+            </div>
+        </section>
+
+        <section id="planned" class="realms" aria-labelledby="planned-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="planned-title" class="section-title">Planned spells</h2>
+                    <p class="section-sub">Named but not yet begun — ideas waiting for their day in the cauldron.</p>
+                </div>
+                <ul id="plannedList" class="planned-list" role="list"></ul>
             </div>
         </section>
     </main>
@@ -82,7 +85,25 @@
         </div>
     </footer>
 
-    <script src="/script.js"></script>
+    <script src="../projects.js"></script>
+    <script src="../script.js"></script>
+    <script>
+        (function () {
+            var grid = document.getElementById('workshopGrid');
+            if (grid && Array.isArray(window.RAMI_WORKSHOP) && typeof window.cardMarkup === 'function') {
+                grid.innerHTML = window.RAMI_WORKSHOP.map(window.cardMarkup).join('');
+            }
+            var plan = document.getElementById('plannedList');
+            if (plan && Array.isArray(window.RAMI_PLANNED)) {
+                plan.innerHTML = window.RAMI_PLANNED.map(function (p) {
+                    return '<li class="planned-chip"><span class="planned-name">✦ ' + p.name + '</span>' +
+                        (p.note ? '<span class="planned-note">' + p.note + '</span>' : '') + '</li>';
+                }).join('');
+            }
+            if (typeof window.__ramiReveal === 'function') window.__ramiReveal();
+            if (typeof window.__ramiGlow === 'function') window.__ramiGlow();
+        })();
+    </script>
 </body>
 
 </html>

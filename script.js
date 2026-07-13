@@ -27,6 +27,7 @@ function cardMarkup(r) {
             ${enter}
         </li>`;
 }
+window.cardMarkup = cardMarkup;
 
 function renderRealms() {
     const root = document.getElementById('realmGroups');
@@ -192,6 +193,8 @@ function observeReveal() {
         revealObserver.observe(el);
     });
 }
+window.__ramiReveal = observeReveal;
+window.__ramiGlow = setupCardGlow;
 
 /* ---- Init ---------------------------------------------------------------- */
 document.addEventListener('DOMContentLoaded', () => {
