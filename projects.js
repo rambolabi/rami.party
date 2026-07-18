@@ -151,6 +151,18 @@ window.RAMI_REALMS = [
         status: 'live',
         external: true,
     },
+    {
+        category: 'wastes',
+        title: 'The Little House',
+        href: 'https://huiskeuring.be/',
+        glyph: '🏠',
+        tagline: 'Rebuilt as Huiskeuring',
+        description: 'The little experimental house has moved out of the workshop — a brand-new version now lives at huiskeuring.be, offering home-inspection services. This husk stays behind as a memento.',
+        tags: ['experiment', 'home'],
+        aura: 'ash',
+        status: 'live',
+        external: true,
+    },
 ];
 
 /* ==========================================================================
@@ -342,16 +354,6 @@ window.RAMI_WORKSHOP = [
         description: 'A personal scratch page with handy little utilities and links.',
         tags: ['personal', 'wip'],
         aura: 'violet',
-        status: 'live',
-    },
-    {
-        title: 'The Little House',
-        href: './house/',
-        glyph: '🏠',
-        tagline: 'A tiny build',
-        description: 'A small experimental house build — freshly unpacked from the archives.',
-        tags: ['experiment', 'wip'],
-        aura: 'gold',
         status: 'live',
     },
 ];
