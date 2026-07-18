@@ -93,6 +93,17 @@ window.RAMI_REALMS = [
         aura: 'pink',
         status: 'live',
     },
+    {
+        category: 'workshop',
+        title: 'Demoscene Generator',
+        href: './workshop/video-generator/',
+        glyph: '🌈',
+        tagline: 'Conjure video & music',
+        description: 'A retro-futuristic forge for short demoscene visuals and chiptune music — shapes, plasma, kaleidoscopes and a WebAudio synth, exportable to video & audio.',
+        tags: ['demoscene', 'canvas', 'audio'],
+        aura: 'violet',
+        status: 'live',
+    },
 
     /* ---- The Wastelands (archived / fallen) ---- */
     {
