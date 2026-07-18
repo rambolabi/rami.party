@@ -139,6 +139,18 @@ window.RAMI_REALMS = [
         aura: 'ash',
         status: 'soon',
     },
+    {
+        category: 'wastes',
+        title: 'Bluetooth Radar',
+        href: 'https://ghosttooth.labidi.eu/',
+        glyph: '📡',
+        tagline: 'Reborn as GhostTooth',
+        description: 'The old ghost radar has left the ruins — a brand-new version now runs at ghosttooth.labidi.eu. This husk stays behind as a memento.',
+        tags: ['tool', 'bluetooth'],
+        aura: 'ash',
+        status: 'live',
+        external: true,
+    },
 ];
 
 /* ==========================================================================
@@ -210,16 +222,6 @@ window.RAMI_WORKSHOP = [
         description: 'Let the dice-spirits decide who goes first, with team modes and colour-blind-friendly picks.',
         tags: ['toy', 'games'],
         aura: 'violet',
-        status: 'live',
-    },
-    {
-        title: 'Bluetooth Radar',
-        href: './bluetooth/',
-        glyph: '📡',
-        tagline: 'Ghost radar',
-        description: 'Sniff the airwaves for nearby Bluetooth familiars and trackers using the Web Bluetooth API.',
-        tags: ['tool', 'bluetooth'],
-        aura: 'cyan',
         status: 'live',
     },
     {
