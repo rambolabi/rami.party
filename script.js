@@ -58,9 +58,11 @@ function renderRealms() {
 }
 
 /* Cursor-following glow on cards */
-function setupCardGlow() {
+function setupCardGlow(root) {
     if (reduceMotion) return;
-    document.querySelectorAll('.realm-card').forEach(card => {
+    (root || document).querySelectorAll('.realm-card').forEach(card => {
+        if (card.dataset.glow) return;
+        card.dataset.glow = '1';
         card.addEventListener('pointermove', e => {
             const rect = card.getBoundingClientRect();
             card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
@@ -68,6 +70,119 @@ function setupCardGlow() {
         });
     });
 }
+
+/* ---- Project search ------------------------------------------------------ */
+const STATUS_META = {
+    finished: { label: 'Finished', cls: 'st-finished', icon: '✅' },
+    wip: { label: 'WIP', cls: 'st-wip', icon: '🚧' },
+    archived: { label: 'Archived', cls: 'st-archived', icon: '☄️' },
+    planned: { label: 'Planned', cls: 'st-planned', icon: '🕓' },
+};
+
+function resolveWorkshopHref(href, external) {
+    if (!href) return null;
+    if (external || /^https?:/.test(href) || href.startsWith('//') || href === '#') return href;
+    return './workshop/' + href.replace(/^\.\//, '');
+}
+
+function buildSearchIndex() {
+    const entries = [];
+    const seen = new Set();
+    const push = (item, statusKey, url, external) => {
+        if (!item || !item.title) return;
+        if (item.title === 'Enter the Workshop') return;      // a portal, not a project
+        const key = item.title.toLowerCase();
+        if (seen.has(key)) return;
+        seen.add(key);
+        const meta = STATUS_META[statusKey] || STATUS_META.wip;
+        const tags = (item.tags || []).join(' ');
+        const haystack = [item.title, item.tagline, item.description, item.search, tags, meta.label, statusKey]
+            .filter(Boolean).join(' ').toLowerCase();
+        entries.push({ item, meta, url, external: !!external, haystack });
+    };
+
+    (window.RAMI_REALMS || []).forEach(r => {
+        let statusKey = r.category === 'gallery' ? 'finished'
+            : r.category === 'wastes' ? 'archived' : 'wip';
+        if (r.status === 'soon' && r.category !== 'wastes') statusKey = 'planned';
+        push(r, statusKey, r.href, r.external);
+    });
+    (window.RAMI_WORKSHOP || []).forEach(w => {
+        const statusKey = w.status === 'soon' ? 'planned' : 'wip';
+        push(w, statusKey, resolveWorkshopHref(w.href, w.external), w.external);
+    });
+    (window.RAMI_PLANNED || []).forEach(p => {
+        push({ title: p.name, tagline: 'Not yet begun', description: p.note, search: p.note, tags: ['planned'] },
+            'planned', null, false);
+    });
+    return entries;
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function resultCardMarkup(e) {
+    const it = e.item;
+    const soon = !e.url || e.url === '#';
+    const ext = e.external ? ' target="_blank" rel="noopener noreferrer"' : '';
+    const title = soon ? escapeHtml(it.title) : `<a href="${e.url}"${ext}>${escapeHtml(it.title)}</a>`;
+    const tags = (it.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('');
+    const enter = soon
+        ? `<span class="realm-enter">🔒 Nothing to visit</span>`
+        : `<span class="realm-enter">${e.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
+    return `
+        <li class="realm-card aura-${it.aura || 'violet'}${soon ? ' is-soon' : ''}${e.external ? ' is-external' : ''} visible">
+            <span class="status-badge ${e.meta.cls}">${e.meta.icon} ${e.meta.label}</span>
+            <div class="realm-glyph" aria-hidden="true">${it.glyph || '✨'}</div>
+            <p class="realm-tagline">${escapeHtml(it.tagline || '')}</p>
+            <h3>${title}</h3>
+            <p class="realm-desc">${escapeHtml(it.description || '')}</p>
+            <div class="realm-tags">${tags}</div>
+            ${enter}
+        </li>`;
+}
+
+let SEARCH_INDEX = null;
+function setupSearch() {
+    const input = document.getElementById('realmSearch');
+    const results = document.getElementById('realmResults');
+    const groups = document.getElementById('realmGroups');
+    const clearBtn = document.getElementById('realmSearchClear');
+    if (!input || !results || !groups) return;
+    SEARCH_INDEX = buildSearchIndex();
+
+    const run = () => {
+        const raw = input.value.trim();
+        const q = raw.toLowerCase();
+        if (clearBtn) clearBtn.hidden = !raw;
+        if (!q) {
+            results.hidden = true;
+            results.innerHTML = '';
+            groups.hidden = false;
+            return;
+        }
+        const tokens = q.split(/\s+/);
+        const matches = SEARCH_INDEX.filter(e => tokens.every(t => e.haystack.includes(t)));
+        groups.hidden = true;
+        results.hidden = false;
+        if (!matches.length) {
+            results.innerHTML =
+                `<p class="search-empty">No realms match “${escapeHtml(raw)}”. Try another incantation.</p>`;
+            return;
+        }
+        results.innerHTML =
+            `<p class="search-count">${matches.length} realm${matches.length === 1 ? '' : 's'} found</p>
+             <ul class="realm-grid" role="list">${matches.map(resultCardMarkup).join('')}</ul>`;
+        setupCardGlow(results);
+    };
+
+    input.addEventListener('input', run);
+    input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; run(); } });
+    if (clearBtn) clearBtn.addEventListener('click', () => { input.value = ''; run(); input.focus(); });
+}
+
 
 /* ---- Starfield ----------------------------------------------------------- */
 function startStarfield() {
@@ -204,5 +319,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderRealms();
     startStarfield();
     setupMobileNav();
+    setupSearch();
     observeReveal();
 });

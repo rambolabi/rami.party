@@ -98,6 +98,14 @@
                     <h2 id="realms-title" class="section-title">Choose your realm</h2>
                     <p class="section-sub">Three great realms await. Wander freely between them.</p>
                 </div>
+                <div class="realm-search" role="search">
+                    <span class="realm-search-icon" aria-hidden="true">🔍</span>
+                    <input type="search" id="realmSearch" class="realm-search-input"
+                        placeholder="Search every realm — name, tag, purpose…"
+                        aria-label="Search projects" autocomplete="off" spellcheck="false" />
+                    <button type="button" id="realmSearchClear" class="realm-search-clear" aria-label="Clear search" hidden>✕</button>
+                </div>
+                <div id="realmResults" class="realm-results" hidden aria-live="polite"></div>
                 <div id="realmGroups">
                     <!-- Realm groups injected from projects.js by script.js -->
                     <p class="realm-fallback">
