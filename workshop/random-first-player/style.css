@@ -8,6 +8,7 @@
 body {
     width: 100%;
     height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     background: #000;
@@ -15,13 +16,15 @@ body {
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    overscroll-behavior: none;
 }
 
 /* Burger Menu Button */
 .burger-menu {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: calc(20px + env(safe-area-inset-top, 0px));
+    right: calc(20px + env(safe-area-inset-right, 0px));
     width: 50px;
     height: 50px;
     background: rgba(255, 255, 255, 0.1);
@@ -69,12 +72,16 @@ body {
     width: 100%;
     max-width: 400px;
     height: 100vh;
+    height: 100dvh;
     background: rgba(20, 20, 20, 0.98);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
     z-index: 999;
     transition: right 0.4s ease;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-top: env(safe-area-inset-top, 0px);
     /* Allow touch interactions in settings */
     touch-action: auto;
     user-select: auto;
@@ -191,6 +198,7 @@ body {
 .game-area {
     width: 100%;
     height: 100vh;
+    height: 100dvh;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -217,6 +225,7 @@ body {
     left: 0;
     width: 100%;
     height: 100vh;
+    height: 100dvh;
     pointer-events: none;
     z-index: 100;
 }
@@ -375,10 +384,13 @@ body {
     left: 0;
     width: 100%;
     height: 100vh;
+    height: 100dvh;
     background: #000;
     z-index: 50;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     padding: 20px;
+    padding-top: calc(20px + env(safe-area-inset-top, 0px));
 }
 
 .manual-mode-interface.active {
@@ -669,6 +681,7 @@ body {
     transform: translateX(-50%);
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     padding: 15px 30px;
     border-radius: 50px;
     border: 2px solid rgba(255, 255, 255, 0.3);

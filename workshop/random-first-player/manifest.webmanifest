@@ -1,0 +1,21 @@
+{
+  "name": "TapFate — Random First Player & Team Picker",
+  "short_name": "TapFate",
+  "description": "Place your fingers on the screen and let fate pick who goes first — a fair, random first-player and team picker for board games, party games and sports.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "lang": "en",
+  "categories": ["games", "utilities", "entertainment"],
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

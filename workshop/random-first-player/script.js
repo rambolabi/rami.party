@@ -17,6 +17,7 @@ let gamePhase = 'waiting'; // 'waiting', 'countdown', 'selecting', 'winner', 'co
 let countdownTimer = null;
 let countdownInterval = null;
 let countdownStartTime = null;
+let effectTimer = null;
 let selectedWinner = null;
 let colorPool = [];
 let testFingerIds = [];
@@ -76,6 +77,11 @@ function loadSettings() {
 
 function saveSettings() {
     localStorage.setItem('randomFirstPlayerSettings', JSON.stringify(settings));
+}
+
+function closeSettings() {
+    settingsPanel.classList.remove('active');
+    burgerMenu.classList.remove('active');
 }
 
 function updateSettingsUI() {
@@ -258,6 +264,14 @@ function setupEventListeners() {
     });
     randomizeBtn.addEventListener('click', randomizeParticipants);
     clearAllBtn.addEventListener('click', clearAllParticipants);
+
+    // Remove participants via event delegation (no inline handlers)
+    participantsList.addEventListener('click', (e) => {
+        const btn = e.target.closest('.remove-participant-btn');
+        if (btn) {
+            removeParticipant(btn.dataset.id);
+        }
+    });
     
     // Double tap prompt click
     doubleTapPrompt.addEventListener('click', (e) => {
@@ -273,17 +287,26 @@ function handleTouchStart(e) {
     if (e.target.closest('.settings-panel') || e.target.closest('.burger-menu')) {
         return; // Don't prevent default - let normal interaction happen
     }
-    
+
+    // Manual mode uses its own UI — ignore game touches entirely
+    if (settings.manualMode) return;
+
+    // If the settings panel is open, a tap outside it just closes it
+    if (settingsPanel.classList.contains('active')) {
+        closeSettings();
+        return;
+    }
+
     e.preventDefault();
-    
+
     // Handle double tap during winner/cooldown phase
     if (gamePhase === 'winner' || gamePhase === 'cooldown') {
         handleDoubleTap();
         return;
     }
-    
-    // Block new touches during selection and winner phases
-    if (gamePhase === 'selecting' || gamePhase === 'winner' || gamePhase === 'cooldown') {
+
+    // Block new touches during the selection animation
+    if (gamePhase === 'selecting') {
         return;
     }
 
@@ -310,6 +333,7 @@ function handleTouchStart(e) {
         }
     }
 
+    renumberTouches();
     updateInstructionText();
     startCountdownIfNeeded();
 }
@@ -319,7 +343,9 @@ function handleTouchMove(e) {
     if (e.target.closest('.settings-panel') || e.target.closest('.burger-menu')) {
         return; // Don't prevent default - let normal interaction happen
     }
-    
+
+    if (settings.manualMode) return;
+
     e.preventDefault();
     
     const touches = e.changedTouches;
@@ -342,7 +368,9 @@ function handleTouchEnd(e) {
     if (e.target.closest('.settings-panel') || e.target.closest('.burger-menu')) {
         return; // Don't prevent default - let normal interaction happen
     }
-    
+
+    if (settings.manualMode) return;
+
     e.preventDefault();
     
     // Don't remove fingers during winner/cooldown - they stay imprinted
@@ -350,7 +378,8 @@ function handleTouchEnd(e) {
         return;
     }
     
-    // Don't remove fingers after countdown starts in two teams mode or any mode
+    // Once the countdown has started, fingers are locked in and can't be
+    // removed (this is intentional so a lifted finger can still be picked).
     if (gamePhase === 'countdown' || gamePhase === 'selecting') {
         return;
     }
@@ -370,23 +399,12 @@ function handleTouchEnd(e) {
             }
         }
     }
-    
-    // Check if we need to cancel countdown due to insufficient players
-    if (gamePhase === 'countdown' && activeTouches.size < 2) {
-        clearTimeout(countdownTimer);
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-            countdownInterval = null;
-        }
-        countdownDisplay.classList.remove('visible');
-        gamePhase = 'waiting';
-        updateInstructionText();
-    }
 
     // Only allow reset if all fingers removed during waiting phase
     if (activeTouches.size === 0 && gamePhase === 'waiting') {
         resetGame();
     } else {
+        renumberTouches();
         updateInstructionText();
     }
 }
@@ -408,7 +426,13 @@ function createTouchIndicator(x, y, color, number) {
 }
 
 function updateTouchIndicatorText(touchData) {
-    if (!settings.colorblindMode) return;
+    if (!touchData || !touchData.element) return;
+
+    // When colorblind numbering is off, make sure no leftover text remains.
+    if (!settings.colorblindMode) {
+        touchData.element.textContent = '';
+        return;
+    }
     
     const isTeamMode = settings.twoTeams || settings.threeTeams;
     
@@ -421,20 +445,29 @@ function updateTouchIndicatorText(touchData) {
     }
 }
 
+// Keep the on-screen numbers sequential (1..n) as fingers are added/removed.
+function renumberTouches() {
+    let n = 1;
+    activeTouches.forEach((touchData) => {
+        touchData.number = n++;
+        if (settings.colorblindMode) {
+            updateTouchIndicatorText(touchData);
+        }
+    });
+}
+
 function getColorForTouch(index, touchId = null) {
-    if (settings.twoTeams) {
-        // During waiting/countdown phase, show gray colors
+    if (settings.twoTeams || settings.threeTeams) {
+        // During waiting/countdown phase, show neutral gray for everyone
         if (gamePhase === 'waiting' || gamePhase === 'countdown') {
             return 'hsl(0, 0%, 70%)'; // Gray color
         }
         // After selection starts, return team color if assigned
         if (touchId !== null && teamAssignments.has(touchId)) {
             const team = teamAssignments.get(touchId);
-            if (team === 1) {
-                return teamColors.team1;
-            } else if (team === 2) {
-                return teamColors.team2;
-            }
+            if (team === 1) return teamColors.team1;
+            if (team === 2) return teamColors.team2;
+            if (team === 3) return teamColors.team3;
         }
     }
     
@@ -452,24 +485,24 @@ function getColorForTouch(index, touchId = null) {
 }
 
 function generateRandomColor() {
-    // Generate vibrant, saturated colors
+    // Generate vibrant, saturated colors (integer HSL so contrast parsing works)
     const hue = Math.floor(Math.random() * 360);
-    const saturation = 70 + Math.random() * 30; // 70-100%
-    const lightness = 50 + Math.random() * 20; // 50-70%
+    const saturation = Math.round(70 + Math.random() * 30); // 70-100%
+    const lightness = Math.round(50 + Math.random() * 20); // 50-70%
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
 function generateGrayscaleColor() {
     // Generate various shades of gray (white to light gray)
-    const lightness = 70 + Math.random() * 30; // 70-100% for light grays to white
+    const lightness = Math.round(70 + Math.random() * 30); // 70-100% for light grays to white
     return `hsl(0, 0%, ${lightness}%)`;
 }
 
 function getContrastColor(hslColor) {
-    // Extract lightness from HSL
-    const match = hslColor.match(/hsl\(\d+,\s*\d+%,\s*(\d+)%\)/);
+    // Extract lightness from HSL (tolerant of decimals and spacing)
+    const match = hslColor.match(/hsl\(\s*[\d.]+\s*,\s*[\d.]+%\s*,\s*([\d.]+)%/i);
     if (match) {
-        const lightness = parseInt(match[1]);
+        const lightness = parseFloat(match[1]);
         return lightness > 60 ? '#000' : '#fff';
     }
     return '#fff';
@@ -666,6 +699,7 @@ function selectWinner() {
     doubleTapPrompt.classList.add('visible');
     
     gamePhase = 'cooldown';
+    scheduleAutoReset();
 }
 
 function showTeamAssignments() {
@@ -702,11 +736,26 @@ function showTeamAssignments() {
     
     // Show double tap prompt
     doubleTapPrompt.classList.add('visible');
+    scheduleAutoReset();
+}
+
+// After a winner/teams are shown, automatically clear the round once the
+// configured "Winner Effect Duration" elapses (double-tap still resets sooner).
+function scheduleAutoReset() {
+    clearTimeout(effectTimer);
+    const seconds = parseFloat(settings.effectDuration);
+    if (!seconds || seconds <= 0) return;
+    effectTimer = setTimeout(() => {
+        if (gamePhase === 'cooldown' || gamePhase === 'winner') {
+            resetGame();
+        }
+    }, seconds * 1000);
 }
 
 function resetGame() {
     clearTimeout(countdownTimer);
     clearTimeout(tapTimeout);
+    clearTimeout(effectTimer);
     if (countdownInterval) {
         clearInterval(countdownInterval);
         countdownInterval = null;
@@ -885,6 +934,7 @@ function addTestFinger() {
     activeTouches.set(testId, touchData);
     testFingerIds.push(testId);
     
+    renumberTouches();
     updateInstructionText();
     startCountdownIfNeeded();
     updateTestModeButton();
@@ -947,6 +997,12 @@ function removeAllTestFingers() {
 function handleMouseDown(e) {
     if (settings.manualMode) return;
     if (e.target.closest('.settings-panel') || e.target.closest('.burger-menu')) return;
+
+    // If the settings panel is open, a click outside it just closes it
+    if (settingsPanel.classList.contains('active')) {
+        closeSettings();
+        return;
+    }
     
     // Handle double click during winner/cooldown phase
     if (gamePhase === 'winner' || gamePhase === 'cooldown') {
@@ -954,8 +1010,8 @@ function handleMouseDown(e) {
         return;
     }
     
-    // Block new touches during selection and winner phases
-    if (gamePhase === 'selecting' || gamePhase === 'winner' || gamePhase === 'cooldown') {
+    // Block new touches during the selection animation
+    if (gamePhase === 'selecting') {
         return;
     }
     
@@ -976,6 +1032,7 @@ function handleMouseDown(e) {
         };
         
         activeTouches.set(mouseTouchId, touchData);
+        renumberTouches();
         updateInstructionText();
         startCountdownIfNeeded();
     }
@@ -1003,7 +1060,7 @@ function handleMouseUp(e) {
         return;
     }
     
-    // Don't remove fingers after countdown starts
+    // Once the countdown has started, the finger is locked in
     if (gamePhase === 'countdown' || gamePhase === 'selecting') {
         return;
     }
@@ -1019,24 +1076,13 @@ function handleMouseUp(e) {
         }
     }
     
-    // Check if we need to cancel countdown due to insufficient players
-    if (gamePhase === 'countdown' && activeTouches.size < 2) {
-        clearTimeout(countdownTimer);
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-            countdownInterval = null;
-        }
-        countdownDisplay.classList.remove('visible');
-        gamePhase = 'waiting';
-        updateInstructionText();
-    }
-    
     // Only allow reset if all fingers removed during waiting phase
     if (activeTouches.size === 0 && gamePhase === 'waiting') {
         resetGame();
     } else if ((activeTouches.size === 1 && testFingerIds.length === 1) && gamePhase === 'waiting') {
         resetGame();
     } else {
+        renumberTouches();
         updateInstructionText();
     }
 }
@@ -1085,16 +1131,27 @@ function addParticipant() {
     const name = participantInput.value.trim();
     if (!name) return;
     
-    const color = generateRandomColor();
-    participants.push({ name, color, id: Date.now() + Math.random() });
+    // If the user typed a real CSS colour (e.g. "red", "#0af"), honour it;
+    // otherwise assign a random vibrant colour.
+    const color = parseCssColor(name) || generateRandomColor();
+    const id = 'p-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+    participants.push({ name, color, id });
     
     participantInput.value = '';
     updateParticipantsList();
     participantInput.focus();
 }
 
+// Returns a normalised colour string if `str` is a valid CSS colour, else null.
+function parseCssColor(str) {
+    const probe = new Option().style;
+    probe.color = '';
+    probe.color = str;
+    return probe.color !== '' ? probe.color : null;
+}
+
 function removeParticipant(id) {
-    participants = participants.filter(p => p.id !== id);
+    participants = participants.filter(p => String(p.id) !== String(id));
     updateParticipantsList();
 }
 
@@ -1110,7 +1167,7 @@ function updateParticipantsList() {
                     <div class="participant-color" style="background-color: ${p.color};"></div>
                     <span class="participant-name">${escapeHtml(p.name)}</span>
                 </div>
-                <button class="remove-participant-btn" onclick="removeParticipant(${p.id})">Remove</button>
+                <button class="remove-participant-btn" data-id="${escapeHtml(String(p.id))}" aria-label="Remove ${escapeHtml(p.name)}">Remove</button>
             </div>
         `).join('');
         randomizeBtn.disabled = participants.length < 2;
@@ -1218,8 +1275,13 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// Make removeParticipant available globally
-window.removeParticipant = removeParticipant;
+// Prevent the long-press context menu / callout on the game surface
+document.addEventListener('contextmenu', (e) => {
+    if (e.target.closest('.settings-panel') || e.target.closest('.manual-mode-interface')) {
+        return; // allow normal menu on inputs/settings
+    }
+    e.preventDefault();
+});
 
 // Prevent default touch behaviors
 document.body.addEventListener('touchstart', (e) => {
