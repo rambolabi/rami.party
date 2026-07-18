@@ -177,6 +177,19 @@ window.RAMI_REALMS = [
         status: 'live',
         external: true,
     },
+    {
+        category: 'wastes',
+        title: 'Random First Player',
+        href: 'https://tapfate.labidi.eu/',
+        glyph: '🎲',
+        tagline: 'Reborn as TapFate',
+        description: 'The fate roller graduated from the workshop — the finished version now runs in production as TapFate at tapfate.labidi.eu. This husk stays behind as a memento.',
+        search: 'A random first player picker and turn order randomizer for board games and tabletop games, with team modes and colour-blind friendly options. Graduated and reimplemented in production as TapFate at tapfate.labidi.eu. Decide who goes first.',
+        tags: ['toy', 'games'],
+        aura: 'ash',
+        status: 'live',
+        external: true,
+    },
 ];
 
 /* ==========================================================================
@@ -243,17 +256,6 @@ window.RAMI_WORKSHOP = [
         search: 'A live event registration and leaderboard scoreboard application with an admin gamemaster control panel for tournaments, competitions and games.',
         tags: ['app', 'games'],
         aura: 'gold',
-        status: 'live',
-    },
-    {
-        title: 'Random First Player',
-        href: './random-first-player/',
-        glyph: '🎲',
-        tagline: 'The fate roller',
-        description: 'Let the dice-spirits decide who goes first, with team modes and colour-blind-friendly picks.',
-        search: 'A random player picker and turn order randomizer for board games and tabletop games, with team modes and colour-blind friendly options. Decide who goes first.',
-        tags: ['toy', 'games'],
-        aura: 'violet',
         status: 'live',
     },
     {
