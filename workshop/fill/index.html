@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fill up your hard disk with just a single click — using HTML5 localStorage!</title>
+  <meta name="description" content="A faithful recreation of filldisk.com — masterful trolling with HTML5 localStorage. Fill your browser's storage with cats, then reclaim it.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%BE%3C/text%3E%3C/svg%3E">
+  <link href="https://fonts.googleapis.com/css2?family=Arvo:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <a class="fork-ribbon" href="https://github.com/feross/filldisk.com" target="_blank" rel="noopener">Fork me on GitHub</a>
+
+  <main class="page">
+    <h1>The Joys of HTML5</h1>
+    <h2>Introducing the new HTML5 Hard&nbsp;Disk&nbsp;Filler&trade; API</h2>
+
+    <p class="lede">Oh hai there&hellip; Filling your hard disk with lots of cats&hellip;</p>
+
+    <h3>Used <strong><span class="mb">0.0</span>&nbsp;MB</strong> of disk space!</h3>
+
+    <div class="meter" role="progressbar" aria-label="Disk space used" aria-valuemin="0" aria-valuemax="100">
+      <div class="meter-fill"></div>
+    </div>
+
+    <div class="cat-stage">
+      <span class="cat" aria-hidden="true">🐱</span>
+    </div>
+
+    <div class="cat-wall" aria-hidden="true"></div>
+
+    <div class="controls">
+      <button class="fill" type="button">Fill&nbsp;&rsquo;er&nbsp;up!</button>
+      <button class="reclaim" type="button" disabled>Stop the madness!</button>
+      <span class="hint">(gives your disk space back)</span>
+    </div>
+
+    <p class="status" role="status" aria-live="polite">Click <strong>Fill&nbsp;&rsquo;er&nbsp;up!</strong> to begin. (It only touches this page&rsquo;s storage, and it&rsquo;s fully reversible.)</p>
+
+    <p class="note">
+      Works in Chrome, Safari, Edge, Opera &amp; Firefox &mdash; but modern browsers now
+      cap each site to a few&nbsp;MB, so the original trick (one <code>localStorage</code>
+      per subdomain: <code>1.filldisk.com</code>, <code>2.filldisk.com</code>&hellip;) is
+      patched. This is a faithful, self-contained recreation on a single origin.
+    </p>
+
+    <p class="links">
+      Read about <a href="https://feross.org/fill-disk/" target="_blank" rel="noopener">how this works</a>.
+      Original hack by <a href="https://feross.org" target="_blank" rel="noopener">Feross&nbsp;Aboukhadijeh</a>.
+    </p>
+
+    <p class="src">
+      <a href="https://github.com/feross/filldisk.com" target="_blank" rel="noopener">Source code</a>
+      is available. Happy hacking!
+    </p>
+  </main>
+
+  <button class="music" type="button" aria-pressed="false" title="Toggle the trololo tune">♪ trololo: off</button>
+
+  <script src="script.js"></script>
+</body>
+</html>

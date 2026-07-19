@@ -1,0 +1,228 @@
+/* filldisk.com — recreation
+   Faithful to the original's cheerful, retro look (Arvo serif, white → red
+   background as it "fills"), with a bit of modern polish. */
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: 'Arvo', Georgia, 'Times New Roman', serif;
+  background: #ffffff;               /* JS reddens this as the disk "fills" */
+  color: #1a1a1a;
+  text-align: center;
+  line-height: 1.5;
+  padding: 24px 16px 96px;
+  transition: background-color 0.2s linear;
+  -webkit-font-smoothing: antialiased;
+}
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: clamp(2rem, 6vw, 3.4rem);
+  font-weight: 700;
+  margin: 8px 0 4px;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-size: clamp(1.1rem, 3.2vw, 1.6rem);
+  font-weight: 700;
+  color: #b1002e;
+  margin: 0 0 18px;
+}
+
+.lede {
+  font-size: 1.1rem;
+  font-style: italic;
+  color: #444;
+  margin: 0 0 20px;
+}
+
+h3 {
+  font-size: clamp(1.3rem, 4vw, 1.9rem);
+  font-weight: 400;
+  margin: 8px 0 14px;
+}
+
+h3 strong { font-weight: 700; }
+
+.mb {
+  font-variant-numeric: tabular-nums;
+  color: #b1002e;
+}
+
+/* Progress meter -------------------------------------------------------- */
+.meter {
+  height: 22px;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto 22px;
+  background: rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.meter-fill {
+  height: 100%;
+  width: 0%;
+  background: repeating-linear-gradient(
+    45deg,
+    #ff3b6b, #ff3b6b 12px,
+    #ff6a8f 12px, #ff6a8f 24px
+  );
+  transition: width 0.15s linear;
+}
+
+/* Cats ------------------------------------------------------------------ */
+.cat-stage {
+  margin: 6px 0 14px;
+  min-height: 96px;
+}
+
+.cat {
+  font-size: 84px;
+  line-height: 1;
+  display: inline-block;
+  animation: catPop 0.35s ease;
+}
+
+.cat.bounce { animation: catPop 0.25s ease; }
+
+@keyframes catPop {
+  0%   { transform: scale(0.4) rotate(-12deg); opacity: 0; }
+  60%  { transform: scale(1.15) rotate(4deg); }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+.cat-wall {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  max-width: 640px;
+  margin: 0 auto 22px;
+  min-height: 0;
+}
+
+.cat-wall span {
+  font-size: 20px;
+  line-height: 1;
+  animation: dropIn 0.3s ease backwards;
+}
+
+@keyframes dropIn {
+  from { transform: translateY(-8px) scale(0.6); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* Controls -------------------------------------------------------------- */
+.controls {
+  margin: 8px 0 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  align-items: center;
+  justify-content: center;
+}
+
+button {
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  padding: 12px 22px;
+  border-radius: 10px;
+  border: 2px solid #1a1a1a;
+  background: #ffd500;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.2s ease, background 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 3px 0 #1a1a1a;
+}
+
+button:hover:not(:disabled) { transform: translateY(-1px); }
+button:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #1a1a1a; }
+
+button:disabled { opacity: 0.45; cursor: not-allowed; box-shadow: 0 3px 0 rgba(0,0,0,0.4); }
+
+.fill { background: #ffd500; }
+.reclaim { background: #ff3b6b; color: #fff; border-color: #7a0020; box-shadow: 0 3px 0 #7a0020; }
+
+.hint { font-size: 0.9rem; color: #555; font-style: italic; }
+
+/* Text blocks ----------------------------------------------------------- */
+.status {
+  font-size: 1rem;
+  min-height: 1.5em;
+  margin: 4px auto 24px;
+  max-width: 600px;
+  font-weight: 700;
+}
+
+.note, .links, .src {
+  font-size: 0.92rem;
+  color: #333;
+  max-width: 620px;
+  margin: 10px auto;
+}
+
+.note code {
+  background: rgba(0, 0, 0, 0.07);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+a { color: #b1002e; text-decoration: underline; text-underline-offset: 2px; }
+a:hover { color: #7a0020; }
+
+/* "Fork me on GitHub" ribbon ------------------------------------------- */
+.fork-ribbon {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 20;
+  background: #aa0000;
+  color: #fff;
+  font-family: 'Arvo', serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  padding: 6px 42px;
+  transform: rotate(45deg) translate(28px, -8px);
+  transform-origin: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  border-top: 1px dashed rgba(255, 255, 255, 0.6);
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.6);
+}
+.fork-ribbon:hover { background: #c40000; color: #fff; }
+
+/* Music toggle ---------------------------------------------------------- */
+.music {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 20;
+  font-size: 14px;
+  padding: 8px 14px;
+  background: #1a1a1a;
+  color: #ffd500;
+  border-color: #ffd500;
+  box-shadow: 0 3px 0 #7a5c00;
+}
+.music[aria-pressed="true"] { background: #b1002e; color: #fff; border-color: #fff; }
+
+@media (max-width: 480px) {
+  .fork-ribbon { font-size: 11px; padding: 5px 34px; }
+  .cat { font-size: 64px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cat, .cat-wall span { animation: none; }
+  body, .meter-fill { transition: none; }
+}
