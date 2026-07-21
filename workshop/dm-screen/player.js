@@ -22,25 +22,45 @@
     const fogLayer = $('#fogLayer');
     const nightVeil = $('#nightVeil');
     const fxLayer = $('#fxLayer');
+    const drawCanvas = $('#drawCanvas');
+    const dctx = drawCanvas.getContext('2d');
+    const mapFrame = $('#mapFrame');
     let lastPingT = 0, lastRollT = 0;
 
-    function weatherBlocked() {
+    function weatherModel() {
         const L = S.loc();
-        const set = new Set(L.weatherExclude || []);
-        if (L.weatherIndoorSafe) {
-            for (let r = 0; r < L.map.rows; r++) for (let c = 0; c < L.map.cols; c++) {
-                const t = L.terrain[c + ',' + r] || L.map.bg;
-                if (INDOOR.has(t)) set.add(c + ',' + r);
-            }
-        }
-        return { cols: L.map.cols, rows: L.map.rows, blocked: set };
+        const cells = L.weatherCells || {};
+        const base = L.weather || 'none';
+        const indoorSafe = L.weatherIndoorSafe;
+        const at = (c, r) => {
+            const key = c + ',' + r;
+            if (cells[key] !== undefined) return cells[key];
+            if (indoorSafe) { const t = L.terrain[key] || L.map.bg; if (INDOOR.has(t)) return 'none'; }
+            return base;
+        };
+        const types = new Set();
+        if (base && base !== 'none') types.add(base);
+        Object.values(cells).forEach((t) => { if (t && t !== 'none') types.add(t); });
+        return { cols: L.map.cols, rows: L.map.rows, at, types: [...types] };
     }
     const ambient = window.LoregateAmbient.init(
         $('#ambientCanvas'),
-        () => S.loc().weather,
-        () => S.get().settings.animations,
-        weatherBlocked
+        weatherModel,
+        () => S.get().settings.animations
     );
+
+    function renderDrawings() {
+        const L = S.loc(); const rect = mapFrame.getBoundingClientRect();
+        const cw = Math.max(1, Math.round(rect.width)), ch = Math.max(1, Math.round(rect.height));
+        if (drawCanvas.width !== cw || drawCanvas.height !== ch) { drawCanvas.width = cw; drawCanvas.height = ch; }
+        dctx.clearRect(0, 0, cw, ch);
+        S.drawStrokes(dctx, L.drawings, cw, ch);
+    }
+    function renderLaser() {
+        const L = S.loc(); let dot = fxLayer.querySelector('.laser-dot');
+        if (L.laser) { if (!dot) { dot = document.createElement('div'); dot.className = 'laser-dot'; fxLayer.appendChild(dot); } dot.style.left = (L.laser.x * 100) + '%'; dot.style.top = (L.laser.y * 100) + '%'; }
+        else if (dot) dot.remove();
+    }
 
     function showDice(roll) {
         const pop = $('#dicePopup');
@@ -155,9 +175,11 @@
             ping.className = 'ping';
             ping.style.left = ((L.ping.c + 0.5) / cols * 100) + '%';
             ping.style.top = ((L.ping.r + 0.5) / rows * 100) + '%';
-            fxLayer.innerHTML = ''; fxLayer.appendChild(ping);
-            setTimeout(() => { if (fxLayer.firstChild === ping) fxLayer.innerHTML = ''; }, 3200);
+            fxLayer.appendChild(ping);
+            setTimeout(() => ping.remove(), 3200);
         }
+        renderLaser();
+        renderDrawings();
 
         // dice popup
         if (st.lastRoll && st.lastRoll.t !== lastRollT && Date.now() - st.lastRoll.t < 6000) {

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loregate — Guide</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#07060d">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%89%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --ink-0: #07060d;
+            --ink-1: #0d0b18;
+            --panel: #17132b;
+            --panel-2: #1e1836;
+            --line: #2c2450;
+            --text: #f2eefc;
+            --text-soft: #b6acd6;
+            --text-faint: #7c729e;
+            --gold: #e8b24c;
+            --gold-soft: #f4d08a;
+            --arcane: #a78bfa;
+            --display: 'Cinzel', Georgia, serif;
+            --body: 'Spectral', system-ui, sans-serif;
+            --mono: 'JetBrains Mono', ui-monospace, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--body);
+            color: var(--text);
+            line-height: 1.7;
+            background:
+                radial-gradient(1100px 600px at 10% -10%, rgba(167, 139, 250, .16), transparent 60%),
+                radial-gradient(900px 700px at 95% 0%, rgba(232, 178, 76, .12), transparent 55%),
+                var(--ink-0);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: clamp(1.5rem, 4vw, 3rem) 1rem 4rem;
+        }
+
+        .wrap {
+            width: min(100%, 860px);
+            margin: 0 auto;
+        }
+
+        header.hero {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .sigil {
+            font-size: 3rem;
+            filter: drop-shadow(0 6px 16px rgba(232, 178, 76, .4));
+        }
+
+        h1 {
+            font-family: var(--display);
+            font-size: clamp(2rem, 6vw, 3rem);
+            background: linear-gradient(110deg, var(--gold-soft), var(--gold) 50%, var(--arcane));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: .3rem 0;
+        }
+
+        .lede {
+            color: var(--text-soft);
+            max-width: 60ch;
+            margin: 0 auto;
+        }
+
+        section {
+            background: linear-gradient(180deg, var(--panel-2), var(--panel));
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            padding: 1.4rem 1.6rem;
+            margin-bottom: 1.1rem;
+            box-shadow: 0 18px 46px rgba(0, 0, 0, .4);
+        }
+
+        h2 {
+            font-family: var(--display);
+            color: var(--gold-soft);
+            font-size: 1.3rem;
+            margin-bottom: .6rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        h3 {
+            font-family: var(--display);
+            color: var(--text);
+            font-size: 1.02rem;
+            margin: 1rem 0 .3rem;
+        }
+
+        p {
+            color: var(--text-soft);
+            margin-bottom: .6rem;
+        }
+
+        ul,
+        ol {
+            color: var(--text-soft);
+            padding-left: 1.3rem;
+            margin-bottom: .5rem;
+        }
+
+        li {
+            margin-bottom: .35rem;
+        }
+
+        strong {
+            color: var(--text);
+        }
+
+        code,
+        kbd {
+            font-family: var(--mono);
+            font-size: .85em;
+            background: rgba(0, 0, 0, .35);
+            border: 1px solid var(--line);
+            border-radius: 5px;
+            padding: .05rem .35rem;
+            color: var(--gold-soft);
+        }
+
+        .note {
+            border-left: 3px solid var(--gold);
+            background: rgba(232, 178, 76, .07);
+            padding: .6rem .9rem;
+            border-radius: 0 10px 10px 0;
+            margin: .6rem 0;
+        }
+
+        .steps {
+            counter-reset: step;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .steps li {
+            position: relative;
+            padding-left: 2.4rem;
+            margin-bottom: .7rem;
+        }
+
+        .steps li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1.7rem;
+            height: 1.7rem;
+            background: var(--gold);
+            color: #1a1206;
+            font-family: var(--display);
+            font-weight: 700;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: .5rem;
+            font-size: .92rem;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: .5rem .6rem;
+            border-bottom: 1px solid var(--line);
+            color: var(--text-soft);
+        }
+
+        th {
+            color: var(--gold-soft);
+            font-family: var(--display);
+        }
+
+        .cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: .4rem 1.4rem;
+        }
+
+        @media (max-width:640px) {
+            .cols {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .back {
+            display: inline-block;
+            margin-top: 1.5rem;
+            color: var(--gold);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        a {
+            color: var(--gold);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <header class="hero">
+            <div class="sigil" aria-hidden="true">🐉</div>
+            <h1>Loregate</h1>
+            <p class="lede">A dual-screen Dungeon Master's table for tabletop RPGs. You run everything from
+                your screen; your players watch a live, mirrored map on a second monitor or TV.</p>
+        </header>
+
+        <section>
+            <h2>🚀 Getting started</h2>
+            <ol class="steps">
+                <li>Open <strong>Loregate</strong> on your laptop.</li>
+                <li>Click <strong>🖥️ Open player screen</strong>. Drag the new window onto your second
+                    monitor / TV and press <kbd>F11</kbd> for full-screen.</li>
+                <li>Pick a map from the <strong>✨ New / preset…</strong> menu (or start blank), then start
+                    dragging tokens. The player screen updates instantly.</li>
+            </ol>
+            <div class="note">Both screens must be opened from the <strong>same browser on the same
+                    computer</strong> — they sync through it. Everything is stored locally; nothing leaves
+                your device.</div>
+        </section>
+
+        <section>
+            <h2>🗺️ Locations</h2>
+            <p>Every location keeps its own map, terrain, tokens, items, fog, weather and drawings.</p>
+            <ul>
+                <li><strong>‹ ›</strong> flip between saved locations; the name field renames the current one.</li>
+                <li><strong>✨ New / preset…</strong> builds a blank or ready-made map (tavern, market, school,
+                    road, forest, elven glade, treehouse, villa, cavern, vault, villain's lair, mimic hall).
+                    Presets start <strong>fogged</strong> so you reveal them as the party explores.</li>
+                <li><strong>⭳ / ⭱</strong> export or import a single location; <strong>🗑️</strong> deletes it.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🎨 Terrain</h2>
+            <p>Choose a terrain, then <strong>🖌️ Paint</strong> it cell by cell (walls, water, roads, rugs…).
+                <strong>🧽 Erase</strong> removes painted terrain; <strong>Fill map</strong> repaints the whole
+                base. Water and lava shimmer only within their own cells.</p>
+        </section>
+
+        <section>
+            <h2>🌫️ Fog &amp; visibility</h2>
+            <ul>
+                <li><strong>🔦 Reveal</strong> / <strong>🌫️ Hide</strong> brushes with <strong>1×1 / 3×3 / 5×5</strong>
+                    sizes (hold <kbd>Alt</kbd> to invert a brush).</li>
+                <li><strong>Reveal all / Hide all</strong> for the whole location.</li>
+                <li><strong>See-through</strong> slider — how transparent unrevealed fog looks on <em>your</em>
+                    screen (players always see solid black).</li>
+                <li><strong>⬛ Blackout</strong> instantly blacks out the players' screen.</li>
+                <li>Turn on <strong>Dynamic light</strong> in Settings and give a player a torch or lantern —
+                    fog opens around them automatically.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>🌦️ Weather — per block</h2>
+            <ol class="steps">
+                <li><strong>Select</strong> a weather type (it highlights) — Rain, Storm, Snow, Hail, Mist,
+                    Fog, Sun, Heat, Cold or Embers.</li>
+                <li>Click <strong>🗺️ Whole map</strong> to apply it everywhere, or <strong>🖌️ Paint</strong> to
+                    brush it onto only the blocks you click.</li>
+                <li><strong>✂️ Erase cells</strong> removes weather from specific blocks; <strong>🚫 Clear all</strong>
+                    resets it.</li>
+            </ol>
+            <p>Different blocks can carry different weather at once. <strong>Skip indoors</strong> keeps weather
+                off walls and floors automatically.</p>
+        </section>
+
+        <section>
+            <h2>✏️ Drawing &amp; laser pointer</h2>
+            <ul>
+                <li><strong>✏️ Pen</strong> draws on the map. Pick a <strong>colour</strong>, <strong>thickness</strong>
+                    and a style: <strong>Pen</strong>, <strong>Marker</strong>, <strong>Glow</strong> or
+                    <strong>Dashed</strong>.</li>
+                <li><strong>🩹 Erase</strong> rubs out strokes; <strong>↶ Undo</strong> removes the last one;
+                    <strong>🧹 Clear</strong> wipes them all.</li>
+                <li><strong>🔦 Laser</strong> — hold and move to point things out; a glowing dot follows your
+                    cursor on both screens and vanishes when you let go.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>⚔️ Tokens, items &amp; combat</h2>
+            <div class="cols">
+                <div>
+                    <h3>Roster</h3>
+                    <p>Add players / enemies / NPCs, adjust HP, AC, initiative, conditions and size. Hide a
+                        token from players or reveal its HP. Drag tokens on the map to move them — names and HP
+                        stay <em>inside</em> the square.</p>
+                </div>
+                <div>
+                    <h3>Items &amp; props</h3>
+                    <p>Click a prop in the palette, then click the map to place it (or place and drag). Rename,
+                        resize, hide or delete each one.</p>
+                </div>
+                <div>
+                    <h3>Initiative</h3>
+                    <p>Auto-roll, step through turns and track the round. The active creature glows on both
+                        screens.</p>
+                </div>
+                <div>
+                    <h3>Dice</h3>
+                    <p>d4–d100 with count, modifier and advantage. Tick <strong>Show rolls to the players</strong>
+                        to reveal each result on their screen with a flourish.</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>👥 What the players see</h2>
+            <p>The player screen shows the current map, revealed areas, weather, drawings and any tokens/items
+                you've left visible. It never shows hidden tokens, DM fog or your notes. You can also enable a
+                <strong>party HP sidebar</strong>, the <strong>party inventory</strong>, <strong>dice rolls</strong>
+                and the <strong>read-aloud scene</strong>.</p>
+        </section>
+
+        <section>
+            <h2>🧭 Panels &amp; settings</h2>
+            <p>Reorder any panel with <strong>▲ ▼</strong> or send it straight to the bottom with
+                <strong>⤓</strong>. The Settings panel holds animations, night overlay, grid on the player
+                screen, coordinates, snap-to-grid, dynamic light, the party sidebar, inventory &amp; dice
+                sharing, HP-as-numbers, names-on-hover and confirm-deletions.</p>
+            <p><strong>Save</strong> before a big fight and <strong>Load</strong> to roll back. Everything lives
+                in this browser.</p>
+        </section>
+
+        <a class="back" href="index.html">← Back to Loregate</a>
+    </div>
+</body>
+
+</html>

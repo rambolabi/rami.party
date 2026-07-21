@@ -212,6 +212,7 @@
             map: { bg: 'stone', imageUrl: '', cols: 24, rows: 16, grid: true, fogEnabled: true },
             terrain: {}, fog: [], tokens: [], items: [], ping: null,
             weather: 'none', weatherExclude: [], weatherIndoorSafe: true,
+            weatherCells: {}, drawings: [], laser: null,
         }, o || {});
     }
 
@@ -370,6 +371,182 @@
             loc.scene = 'Chest after chest lines the hall. Statistically, at least one of them has teeth.';
             return loc; // fogged
         },
+
+        // ------------------------------------------------------------------
+        // A schoolhouse: classrooms, a library and a central courtyard.
+        // ------------------------------------------------------------------
+        school() {
+            const loc = makeLocation({ name: 'Ravenbrook Academy' });
+            loc.map.bg = 'grass';
+            fillRect(loc, 2, 1, 21, 13, 'wood'); wallRect(loc, 2, 1, 21, 13);
+            fillRect(loc, 9, 5, 14, 9, 'grass');                  // courtyard
+            wallRect(loc, 9, 5, 14, 9); loc.terrain['11,9'] = 'grass'; loc.terrain['12,9'] = 'grass';
+            fillRect(loc, 3, 2, 8, 2, 'wall'); loc.terrain['5,2'] = 'wood';   // classroom wall
+            fillRect(loc, 15, 2, 20, 2, 'wall'); loc.terrain['18,2'] = 'wood';
+            loc.terrain['11,13'] = 'wood'; loc.terrain['12,13'] = 'wood';
+            placeItems(loc, 'door', [[11, 13]], { name: 'Main entrance' });
+            placeItems(loc, 'table', [[4, 4], [6, 4], [4, 6], [6, 6], [16, 4], [18, 4], [16, 6], [18, 6]], {});
+            placeItems(loc, 'book', [[3, 10], [4, 10], [5, 10], [3, 11], [5, 11]]);
+            placeItems(loc, 'sign', [[11, 4]], { name: 'Courtyard' });
+            placeItems(loc, 'lantern', [[3, 2], [20, 2], [3, 12], [20, 12]]);
+            placeItems(loc, 'statue', [[11, 7]]);
+            loc.tokens.push(makeToken({ name: 'Headmaster', kind: 'npc', color: '#e8b24c', c: 18, r: 11, hp: 20, maxHp: 20, ac: 13, initiative: 10 }));
+            [['Student', 5, 5], ['Student', 17, 5], ['Librarian', 4, 11]].forEach(([n, c, r]) =>
+                loc.tokens.push(makeToken({ name: n, kind: 'npc', color: '#e8b24c', c, r, hp: 8, maxHp: 8, ac: 11, initiative: Math.ceil(Math.random() * 12) })));
+            loc.scene = 'Chalk-dust and old parchment. Somewhere a bell tolls the end of a lesson.';
+            return loc;
+        },
+
+        // ------------------------------------------------------------------
+        // A market square: stalls, a fountain, crates and busy merchants.
+        // ------------------------------------------------------------------
+        market() {
+            const loc = makeLocation({ name: 'Market Square' });
+            loc.map.bg = 'cobble';
+            fillRect(loc, 0, 0, 23, 0, 'road'); fillRect(loc, 0, 15, 23, 15, 'road');
+            fillRect(loc, 0, 0, 0, 15, 'road'); fillRect(loc, 23, 0, 23, 15, 'road');
+            fillRect(loc, 10, 6, 13, 9, 'water'); fillRect(loc, 11, 7, 12, 8, 'deepwater'); // fountain
+            placeItems(loc, 'well', [[11, 5]], { name: 'Fountain' });
+            const stalls = [[3, 3], [6, 3], [9, 3], [15, 3], [18, 3], [3, 12], [6, 12], [15, 12], [18, 12]];
+            stalls.forEach(([c, r]) => { placeItems(loc, 'table', [[c, r]]); placeItems(loc, 'banner', [[c, r - 1]]); });
+            placeItems(loc, 'crate', [[4, 4], [7, 4], [16, 4], [19, 12]]);
+            placeItems(loc, 'barrel', [[5, 12], [17, 3]]);
+            placeItems(loc, 'food', [[6, 3], [15, 3]]);
+            placeItems(loc, 'sign', [[11, 13]], { name: 'Market Square' });
+            ['Merchant', 'Merchant', 'Farmer', 'Guard', 'Pickpocket'].forEach((n, i) =>
+                loc.tokens.push(makeToken({ name: n, kind: n === 'Pickpocket' ? 'enemy' : 'npc', color: n === 'Pickpocket' ? '#e5484d' : '#e8b24c', c: 4 + i * 4, r: 5 + (i % 2) * 6, hp: 10, maxHp: 10, ac: 11, initiative: Math.ceil(Math.random() * 14) })));
+            loc.weather = 'sun';
+            loc.scene = 'Hawkers cry their wares over the clatter of carts and coins.';
+            return loc;
+        },
+
+        // ------------------------------------------------------------------
+        // A long highway cutting across country — good for a road ambush.
+        // ------------------------------------------------------------------
+        road() {
+            const loc = makeLocation({ name: 'The King\u2019s Road' });
+            loc.map.bg = 'grass';
+            fillRect(loc, 0, 6, 23, 9, 'road');
+            fillRect(loc, 0, 7, 23, 8, 'dirt');
+            placeItems(loc, 'sign', [[3, 5]], { name: 'To the Capital →' });
+            placeItems(loc, 'tree', [[1, 1], [4, 2], [7, 1], [10, 2], [14, 1], [18, 2], [21, 1], [2, 13], [6, 14], [12, 13], [17, 14], [21, 12]]);
+            placeItems(loc, 'bush', [[3, 3], [9, 4], [16, 3], [20, 4], [5, 11], [13, 12], [19, 11]]);
+            placeItems(loc, 'boulder', [[8, 5], [15, 10]]);
+            placeItems(loc, 'crate', [[11, 7]], { name: 'Toppled cart' });
+            [['Bandit', 9, 5, 11], ['Bandit', 10, 4, 11], ['Bandit Leader', 8, 4, 22], ['Bandit', 14, 10, 11], ['Bandit', 15, 11, 11]]
+                .forEach(([n, c, r, hp]) => loc.tokens.push(makeToken({ name: n, kind: 'enemy', color: '#e5484d', c, r, hp, maxHp: hp, ac: 12, initiative: Math.ceil(Math.random() * 20) })));
+            loc.weather = 'mist';
+            loc.scene = 'The road stretches empty ahead — a little too empty.';
+            return loc;
+        },
+
+        // ------------------------------------------------------------------
+        // An abandoned villa: dust, cobwebs, broken rooms and something lurking.
+        // ------------------------------------------------------------------
+        villa() {
+            const loc = makeLocation({ name: 'The Abandoned Villa' });
+            loc.map.bg = 'grass';
+            fillRect(loc, 2, 2, 21, 13, 'wood'); wallRect(loc, 2, 2, 21, 13);
+            fillRect(loc, 2, 7, 21, 7, 'wall'); loc.terrain['8,7'] = 'wood'; loc.terrain['15,7'] = 'wood';
+            fillRect(loc, 11, 2, 11, 13, 'wall'); loc.terrain['11,4'] = 'wood'; loc.terrain['11,10'] = 'wood';
+            loc.terrain['11,13'] = 'wood';
+            fillRect(loc, 6, 5, 9, 6, 'moss'); fillRect(loc, 16, 9, 19, 11, 'moss'); // overgrowth
+            placeItems(loc, 'door', [[11, 13]], { name: 'Grand entrance' });
+            placeItems(loc, 'web', [[3, 3], [20, 3], [4, 12], [19, 12], [12, 6]]);
+            placeItems(loc, 'statue', [[5, 4], [18, 4]]);
+            placeItems(loc, 'bed', [[6, 10]]); placeItems(loc, 'table', [[16, 4]]);
+            placeItems(loc, 'bones', [[8, 11]]); placeItems(loc, 'corpse', [[17, 5]]);
+            placeItems(loc, 'chest', [[19, 10]]); placeItems(loc, 'bush', [[7, 5], [17, 10]]);
+            loc.tokens.push(makeToken({ name: 'Wraith', kind: 'enemy', color: '#7c3aed', c: 15, r: 10, hp: 45, maxHp: 45, ac: 13, initiative: 12, hidden: true }));
+            loc.tokens.push(makeToken({ name: 'Giant Rat', kind: 'enemy', color: '#e5484d', c: 5, r: 4, hp: 5, maxHp: 5, ac: 11, initiative: 8 }));
+            loc.weather = 'mist';
+            loc.scene = 'Sheets shroud the furniture like ghosts. Dust hangs in the shafts of grey light.';
+            return loc;
+        },
+
+        // ------------------------------------------------------------------
+        // A villain's lair: a torch-lit throne room deep underground.
+        // ------------------------------------------------------------------
+        hideout() {
+            const loc = makeLocation({ name: 'The Villain\u2019s Lair' });
+            loc.map.bg = 'wall';
+            fillRect(loc, 2, 2, 21, 13, 'stone');
+            fillRect(loc, 9, 3, 14, 3, 'rug'); fillRect(loc, 11, 3, 12, 6, 'rug'); // throne carpet
+            loc.terrain['11,13'] = 'stone'; loc.terrain['12,13'] = 'stone';
+            placeItems(loc, 'door', [[11, 13]], { name: 'Iron doors' });
+            placeItems(loc, 'altar', [[11, 3]], { name: 'Throne' });
+            placeItems(loc, 'torch', [[3, 3], [20, 3], [3, 12], [20, 12], [7, 7], [16, 7]]);
+            placeItems(loc, 'statue', [[6, 5], [17, 5], [6, 10], [17, 10]]);
+            placeItems(loc, 'chest', [[4, 12], [19, 12]]); placeItems(loc, 'gold', [[19, 11]]);
+            placeItems(loc, 'banner', [[9, 2], [14, 2]]);
+            loc.tokens.push(makeToken({ name: 'The Villain', kind: 'enemy', color: '#b91c1c', size: 2, c: 11, r: 4, hp: 120, maxHp: 120, ac: 17, initiative: 18 }));
+            [['Cultist', 8, 9, 11], ['Cultist', 15, 9, 11], ['Bodyguard', 9, 6, 30], ['Bodyguard', 14, 6, 30]]
+                .forEach(([n, c, r, hp]) => loc.tokens.push(makeToken({ name: n, kind: 'enemy', color: '#e5484d', c, r, hp, maxHp: hp, ac: 13, initiative: Math.ceil(Math.random() * 16) })));
+            loc.weather = 'embers';
+            loc.scene = 'Torchlight gutters across a throne of black iron. So — you found me at last.';
+            return loc;
+        },
+
+        // ------------------------------------------------------------------
+        // Deep woods: dense trees, a stream and hungry wildlife.
+        // ------------------------------------------------------------------
+        forest() {
+            const loc = makeLocation({ name: 'Deep Forest' });
+            loc.map.bg = 'forest';
+            for (let i = 0; i < 34; i++) placeItems(loc, 'tree', [[Math.floor(Math.random() * 24), Math.floor(Math.random() * 16)]]);
+            for (let r = 0; r < 16; r++) { const c = 8 + Math.round(Math.sin(r / 2) * 3); loc.terrain[c + ',' + r] = 'water'; loc.terrain[(c + 1) + ',' + r] = 'water'; }
+            placeItems(loc, 'bush', [[3, 3], [12, 5], [18, 9], [6, 12], [20, 4], [15, 13]]);
+            placeItems(loc, 'mushroom', [[5, 8], [17, 6], [10, 12]]);
+            placeItems(loc, 'boulder', [[14, 3], [19, 11]]);
+            [['Wolf', 16, 6, 11], ['Wolf', 17, 7, 11], ['Wolf', 15, 8, 11], ['Brown Bear', 4, 10, 34]]
+                .forEach(([n, c, r, hp]) => loc.tokens.push(makeToken({ name: n, kind: 'enemy', color: '#e5484d', c, r, hp, maxHp: hp, ac: 13, initiative: Math.ceil(Math.random() * 18) })));
+            loc.weather = 'fog';
+            loc.scene = 'The canopy swallows the sky. Every snapping twig sounds like a footstep.';
+            return loc;
+        },
+
+        // ------------------------------------------------------------------
+        // An elven glade: lantern-lit clearings, shrines and watchful elves.
+        // ------------------------------------------------------------------
+        elfForest() {
+            const loc = makeLocation({ name: 'Glade of the Silver Elves' });
+            loc.map.bg = 'forest';
+            for (let i = 0; i < 22; i++) placeItems(loc, 'tree', [[Math.floor(Math.random() * 24), Math.floor(Math.random() * 16)]]);
+            fillRect(loc, 9, 6, 14, 10, 'grass');                 // sacred clearing
+            placeItems(loc, 'altar', [[11, 8]], { name: 'Moon Shrine' });
+            placeItems(loc, 'lantern', [[9, 6], [14, 6], [9, 10], [14, 10], [5, 3], [18, 12]]);
+            placeItems(loc, 'statue', [[11, 6]]); placeItems(loc, 'mushroom', [[4, 9], [19, 5]]);
+            placeItems(loc, 'gem', [[11, 9]]);
+            [['Elf Sentinel', 7, 7, 16], ['Elf Sentinel', 16, 9, 16], ['Elf Archer', 6, 11, 13], ['Elf Elder', 11, 12, 22]]
+                .forEach(([n, c, r, hp]) => loc.tokens.push(makeToken({ name: n, kind: 'npc', color: '#e8b24c', c, r, hp, maxHp: hp, ac: 14, initiative: Math.ceil(Math.random() * 16) })));
+            loc.weather = 'mist';
+            loc.scene = 'Silver light pools in the clearing. You are being watched by a dozen unseen eyes.';
+            return loc;
+        },
+
+        // ------------------------------------------------------------------
+        // A treehouse village: raised wooden platforms and rope bridges.
+        // ------------------------------------------------------------------
+        treehouse() {
+            const loc = makeLocation({ name: 'Canopy Village' });
+            loc.map.bg = 'forest';
+            const plats = [[3, 2, 8, 6], [15, 2, 20, 6], [9, 9, 14, 13], [3, 10, 6, 13], [18, 9, 21, 13]];
+            plats.forEach(([c0, r0, c1, r1]) => { fillRect(loc, c0, r0, c1, r1, 'plank'); });
+            // rope bridges (planks connecting platforms)
+            fillRect(loc, 8, 4, 15, 4, 'plank'); fillRect(loc, 11, 6, 11, 9, 'plank');
+            fillRect(loc, 6, 11, 9, 11, 'plank'); fillRect(loc, 14, 11, 18, 11, 'plank');
+            placeItems(loc, 'stairs', [[5, 13]], { name: 'Ladder down' });
+            placeItems(loc, 'lantern', [[3, 2], [20, 2], [9, 9], [14, 13]]);
+            placeItems(loc, 'table', [[5, 4], [17, 4], [11, 11]]);
+            placeItems(loc, 'bed', [[4, 3], [19, 3]]);
+            placeItems(loc, 'chest', [[7, 5], [16, 5]]);
+            placeItems(loc, 'tree', [[10, 2], [1, 7], [22, 7], [12, 15]]);
+            loc.tokens.push(makeToken({ name: 'Villager', kind: 'npc', color: '#e8b24c', c: 5, r: 3, hp: 8, maxHp: 8, ac: 11, initiative: 8 }));
+            loc.tokens.push(makeToken({ name: 'Village Chief', kind: 'npc', color: '#e8b24c', c: 11, r: 11, hp: 16, maxHp: 16, ac: 12, initiative: 10 }));
+            loc.weather = 'sun';
+            loc.scene = 'Rope bridges sway between the great trunks. The forest floor is a dizzy drop below.';
+            return loc;
+        },
     };
 
     function defaultState() {
@@ -427,6 +604,9 @@
                 if (l.weather === undefined) l.weather = 'none';
                 if (!l.weatherExclude) l.weatherExclude = [];
                 if (l.weatherIndoorSafe === undefined) l.weatherIndoorSafe = true;
+                if (!l.weatherCells) l.weatherCells = {};
+                if (!l.drawings) l.drawings = [];
+                if (l.laser === undefined) l.laser = null;
             });
             if (saved.lastRoll === undefined) saved.lastRoll = null;
             return saved;
@@ -486,6 +666,25 @@
         clone,
         makeToken, makeItem, makeLocation,
         presets: PRESETS,
+        drawStrokes(ctx, strokes, w, h) {
+            (strokes || []).forEach((s) => {
+                if (!s.points || !s.points.length) return;
+                ctx.save();
+                ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+                ctx.strokeStyle = s.color; ctx.fillStyle = s.color;
+                const width = s.width || 3;
+                ctx.lineWidth = width; ctx.setLineDash([]); ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0; ctx.shadowColor = s.color;
+                if (s.type === 'marker') { ctx.globalAlpha = 0.4; ctx.lineWidth = width * 2.2; }
+                else if (s.type === 'blur') { ctx.shadowBlur = width * 2.5; ctx.globalAlpha = 0.85; }
+                else if (s.type === 'dashed') { ctx.setLineDash([width * 2, width * 2]); }
+                ctx.beginPath();
+                s.points.forEach((p, i) => { const x = p.x * w, y = p.y * h; if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+                if (s.points.length === 1) { const p = s.points[0]; ctx.arc(p.x * w, p.y * h, Math.max(1, ctx.lineWidth / 2), 0, 6.283); ctx.fill(); }
+                else ctx.stroke();
+                ctx.restore();
+            });
+        },
         TERRAIN, ITEMS,
     };
 

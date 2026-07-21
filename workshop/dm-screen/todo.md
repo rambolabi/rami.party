@@ -16,9 +16,9 @@ between the two screens via `BroadcastChannel` + `localStorage`.
 - Migration layer so older saves keep working.
 
 ### Locations
-- Multiple saved locations with ‹ › arrow navigation; each keeps its own map, terrain, tokens, items, fog and weather.
+- Multiple saved locations with ‹ › arrow navigation; each keeps its own map, terrain, tokens, items, fog, weather and drawings.
 - Rename, delete, **export / import a single location** (with all its stats, items and creatures).
-- **Generate new location** and **pre-made maps**: Tavern (with / without NPCs), Fields (ambush), Cavern (spider lair), Vault (traps &amp; treasure), Mimic hall.
+- **Generate new location** and a big library of **pre-made, realistic maps**: Tavern (with / without NPCs), Market square, School / academy, King's road (ambush), Fields, Deep forest, Elven glade, Treehouse village, Abandoned villa, Cavern (spider lair), Villain's lair, Vault (traps &amp; treasure), Mimic hall.
 - Pre-made maps are **realistic, D&D-style layouts** — walls, floors, roads, doors, bar counters, kitchens, stairs, furniture, props and placed NPCs/monsters.
 - Presets start **fully fogged**.
 
@@ -42,11 +42,17 @@ between the two screens via `BroadcastChannel` + `localStorage`.
 - Dynamic light: auto-reveal fog around players, torches, lanterns (with a radius setting).
 - **Blackout** button to black out the player screen entirely.
 
-### Weather (per location)
-- Dedicated buttons: Clear, Rain, Storm (thunder flashes), Snow, Hail, Mist, Fog, Sun, Heat, Cold, Embers.
-- **Skip indoors** — weather automatically stops over walls / floors / indoor terrain.
-- **Clear cells** brush — remove weather from specific blocks.
+### Weather (per location &amp; per block)
+- Dedicated buttons: Rain, Storm (thunder flashes), Snow, Hail, Mist, Fog, Sun, Heat, Cold, Embers.
+- **Select a weather brush**, then apply it to the **whole map** or **paint it onto individual blocks** — several different weathers can play at once on the same map.
+- **Erase cells** removes weather from specific blocks; **Clear all** resets it; **Skip indoors** keeps weather off walls / floors automatically.
+- Water &amp; lava shimmer stay contained to their own cells.
 - One global animations toggle pauses all of it.
+
+### Drawing &amp; laser
+- **Pen** with colour, thickness and four styles (Pen, Marker, Glow, Dashed).
+- **Erase**, **Undo** and **Clear** for drawings; strokes sync to the player screen.
+- **Laser pointer** — a glowing red dot that follows the cursor on both screens and vanishes on release.
 
 ### Play aids
 - Initiative tracker (auto-roll, next / prev, round counter).
@@ -58,20 +64,23 @@ between the two screens via `BroadcastChannel` + `localStorage`.
 - Party HP sidebar on the player screen.
 
 ### UX
-- **Reorderable panels** (▲ ▼) so the DM can push, say, the Big Bad to the bottom.
+- **Reorderable panels** — move up ▲, down ▼ or straight to the bottom ⤓ (persisted).
+- Dragging pieces no longer jumps the DM screen.
+- An in-app **HTML guide** (`guide.html`) plus this build log.
 - Big settings panel (animations, grid, coordinates, snap, dynamic light, sidebar, dice-to-players, HP as numbers, names on hover, confirm deletions, …).
 
 ---
 
 ## 🔜 Steps still to do (polish / follow-ups)
 - Persist per-panel open/closed state between sessions.
-- Undo / redo for map edits (token moves, terrain, fog).
+- Undo / redo for map edits beyond drawings (token moves, terrain, fog).
 - Touch-friendly drag on tablets (pointer events are in place; needs testing on-device).
 - Larger prop art / directional walls instead of emoji + terrain walls.
 - Multi-cell "wall drawing" tool (click-drag a wall line).
 - Snap the measurement tool to grid centres and support diagonal (5-5-5 vs 5-10-5) rules.
 - Optional per-token vision so dynamic light only reveals line-of-sight.
 - Confirm-before-overwrite when importing a campaign.
+- **Multiplayer** — give each player their own device/screen (see `multiplayer.md`, a separate approved-pending project).
 
 ---
 
@@ -84,7 +93,6 @@ between the two screens via `BroadcastChannel` + `localStorage`.
 - **Soundboard / ambient audio** (tavern noise, combat, rain) tied to weather/scene.
 - **Combat automation** — attack rolls, damage application, death saves, concentration checks.
 - **Area templates** — cones, circles, lines for spells, draggable onto the map.
-- **Drawing / annotation layer** the DM can sketch on and optionally share.
 - **Measurement presets** for movement speed &amp; reach; auto path distance.
 - **Line-of-sight / dynamic vision** walls that block both light and sight.
 - **Dice tray with 3D dice** and shared roll history for the whole party.
