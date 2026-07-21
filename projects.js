@@ -190,6 +190,18 @@ window.RAMI_REALMS = [
         status: 'live',
         external: true,
     },
+    {
+        category: 'wastes',
+        title: 'Notes & Todo',
+        href: './wasteland/notes/',
+        glyph: '🗒️',
+        tagline: 'Reborn as Daybook',
+        description: 'The original plain notes-and-todo scratchpad. Its cleaner, faster descendant now lives in the workshop as Daybook — this first draft rests here in the ruins.',
+        search: 'The original simple notes and todo list page with autosaving notes, a checklist, dark mode and a new day reset. Archived and replaced by the cleaner Daybook version in the workshop.',
+        tags: ['tool', 'legacy'],
+        aura: 'ash',
+        status: 'live',
+    },
 ];
 
 /* ==========================================================================
@@ -203,6 +215,50 @@ window.RAMI_REALMS = [
       status: 'live' (clickable) · 'soon' (locked teaser).
    ========================================================================== */
 window.RAMI_WORKSHOP = [
+    {
+        title: 'Loregate',
+        href: './dm-screen/',
+        glyph: '🐉',
+        tagline: 'Dual-screen DM table',
+        description: 'A Dungeon Master\u2019s command table for tabletop RPGs — build battlemaps with painted terrain, props and pre-made locations, move tokens, sculpt fog of war, run initiative and the big bad, all mirrored live onto a second screen for your players.',
+        search: 'A Dungeon Master screen and virtual tabletop for Dungeons and Dragons and other tabletop RPGs. Two screens: a DM control page and a separate player map page for an external monitor or TV. Build multiple saved locations, paint realistic terrain (grass, stone, water, lava, snow) cell by cell, place and drag props and items like chests doors traps torches and mimics, choose which items and creatures are visible to players, move player and monster tokens on a battlemap grid, paint fog of war and dynamic light to reveal the map, track hit points armour class conditions and initiative turn order, resize the big bad boss, keep a bestiary and a party inventory, roll dice, use pre-generated maps (tavern, fields, cavern, traps and treasure, mimic hall), a party HP sidebar for players, weather and animation effects, and export or import the whole campaign. Live synced between both screens, runs locally in the browser.',
+        tags: ['app', 'ttrpg'],
+        aura: 'gold',
+        status: 'live',
+    },
+    {
+        title: 'Daybook',
+        href: './todo/',
+        glyph: '🗒️',
+        tagline: 'Notes &amp; tasks, saved',
+        description: 'A calm, offline notes-and-to-do companion — jot the day down, tick tasks off, then start a fresh page each morning. Everything autosaves to your browser.',
+        search: 'A clean minimal notes and todo list app. Write notes and manage a checklist of tasks that autosave to localStorage in the browser, with dark mode, timestamps, a new day reset that archives yesterday and keeps unfinished tasks. A leaner rewrite of the old notes and todo page.',
+        tags: ['tool', 'productivity'],
+        aura: 'violet',
+        status: 'live',
+    },
+    {
+        title: 'Echo',
+        href: './batlistener/',
+        glyph: '🦇',
+        tagline: 'Bat-sound listener',
+        description: 'Point your microphone at the night and Echo watches the top of the audible band for bat-like clicks and chirps — capturing calls, replaying them aloud, or letting you study the waveforms in silence.',
+        search: 'A bat sound detector and listener that uses the device microphone and the Web Audio API to watch for high-frequency ultrasonic bat calls, clicks and chirps. Shows a live spectrogram, captures and records detected calls, plays them out loud, and lets you view the soundwaves and waveforms without playing the sound. Runs locally in the browser.',
+        tags: ['audio', 'tool'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
+        title: 'Isekai Forge',
+        href: './character-forge/',
+        glyph: '🎲',
+        tagline: 'Roll a whole hero',
+        description: 'A one-tap character and background roller for other-world stories — how they got dragged in, who they used to be, the power they woke up with and the world that caught them. Reroll one line or shuffle an entire destiny.',
+        search: 'A random character generator and creator for isekai and reincarnation stories. Shuffles and randomizes a background and character: how they were transported or isekaid, their past life, the being they were reborn as, the ability or power they gained, and the world they landed in. Reroll each part individually or shuffle everything at once.',
+        tags: ['toy', 'generator'],
+        aura: 'pink',
+        status: 'live',
+    },
     {
         title: 'Webcheck',
         href: './webcheck/',

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echo — Bat Sound Listener</title>
+    <meta name="description"
+        content="Listen for bat-like ultrasonic clicks and chirps through your microphone, watch them on a live spectrogram, and replay captured calls.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#07090f">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A6%87%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <header class="hero">
+            <div class="hero-mark" aria-hidden="true">🦇</div>
+            <h1>Echo</h1>
+            <p class="lede">A microphone listener tuned to the <strong>high-frequency clicks &amp; chirps</strong>
+                that bats make. Watch the sound in real time, capture the calls, and replay them — or just
+                study the waveforms in silence.</p>
+        </header>
+
+        <section class="stage" aria-label="Live spectrogram">
+            <canvas id="spectro" class="spectro"></canvas>
+            <div class="stage-overlay">
+                <div id="statusPill" class="pill pill-idle">
+                    <span class="dot"></span><span id="statusText">Idle</span>
+                </div>
+                <div id="freqReadout" class="readout" hidden>
+                    <span id="peakFreq">—</span><span class="unit">peak kHz</span>
+                </div>
+            </div>
+            <div id="detectFlash" class="detect-flash" aria-hidden="true"></div>
+        </section>
+
+        <section class="controls">
+            <div class="control-row primary-row">
+                <button id="listenBtn" class="btn btn-primary" type="button">
+                    <span class="btn-icon" aria-hidden="true">🎙️</span>
+                    <span class="btn-label">Start listening</span>
+                </button>
+
+                <label class="switch" title="Play captured bat calls aloud automatically">
+                    <input type="checkbox" id="autoPlay">
+                    <span class="switch-track" aria-hidden="true"></span>
+                    <span class="switch-label">Auto-play captures</span>
+                </label>
+
+                <label class="switch" title="Watch the spectrogram without capturing or playing anything">
+                    <input type="checkbox" id="silentMode">
+                    <span class="switch-track" aria-hidden="true"></span>
+                    <span class="switch-label">Silent watch (view only)</span>
+                </label>
+            </div>
+
+            <div class="control-row sliders">
+                <div class="slider">
+                    <label for="minFreq">Listen above
+                        <output id="minFreqVal">14 kHz</output>
+                    </label>
+                    <input type="range" id="minFreq" min="6" max="20" step="0.5" value="14">
+                    <span class="hint">Bat calls are high-pitched — raise this to ignore voices &amp; noise.</span>
+                </div>
+                <div class="slider">
+                    <label for="sensitivity">Sensitivity
+                        <output id="sensitivityVal">Medium</output>
+                    </label>
+                    <input type="range" id="sensitivity" min="1" max="10" step="1" value="5">
+                    <span class="hint">How loud a high-frequency burst must be to count as a call.</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="captures" aria-labelledby="captures-head">
+            <div class="captures-head">
+                <h2 id="captures-head">Captured calls <span id="captureCount" class="count">0</span></h2>
+                <button id="clearBtn" class="btn btn-ghost btn-sm" type="button" hidden>Clear all</button>
+            </div>
+            <ul id="captureList" class="capture-list" role="list"></ul>
+            <p id="capturesEmpty" class="captures-empty">
+                No calls captured yet. Start listening near a source of high-frequency sound —
+                a jingling set of keys or a hiss makes a good test.
+            </p>
+        </section>
+
+        <details class="note">
+            <summary>Can a phone really hear a bat?</summary>
+            <p>Most bats echolocate between <strong>20&nbsp;kHz and 120&nbsp;kHz</strong> — well above the
+                <strong>~20&nbsp;kHz</strong> ceiling that ordinary microphones and audio hardware can capture.
+                Echo listens to the very top of the audible band, so it reliably catches the lower-frequency
+                <em>social calls</em> of some species and the audible portion of a call, plus any high clicks,
+                hisses and jingles. For true ultrasonic detection you'd need a dedicated bat detector that
+                pitches the sound down into hearing range. Everything here runs locally — no audio ever leaves
+                your device.</p>
+        </details>
+
+        <footer class="footer">
+            <a href="/workshop/" class="back">← Back to the Workshop</a>
+            <span class="footer-note">Runs entirely in your browser · nothing is uploaded</span>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daybook — Notes &amp; Tasks</title>
+    <meta name="description"
+        content="A clean, fast, offline notes and to-do companion. Everything saves to your browser automatically.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#111318">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%97%92%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <header class="topbar">
+            <div class="brand">
+                <span class="brand-mark" aria-hidden="true">🗒️</span>
+                <div>
+                    <h1>Daybook</h1>
+                    <p class="tagline">Notes &amp; tasks, saved as you type.</p>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button id="themeToggle" class="icon-btn" type="button" title="Toggle theme"
+                    aria-label="Toggle light or dark theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+                <button id="newDayBtn" class="btn btn-ghost" type="button" title="Archive today &amp; start fresh">
+                    <span aria-hidden="true">✦</span> New day
+                </button>
+            </div>
+        </header>
+
+        <main class="grid">
+            <section class="panel notes-panel" aria-labelledby="notes-heading">
+                <div class="panel-head">
+                    <h2 id="notes-heading">Notes</h2>
+                    <div class="panel-tools">
+                        <span id="notesMeta" class="meta">0 words</span>
+                        <button id="stampBtn" class="chip" type="button" title="Insert date &amp; time (Esc)">
+                            + timestamp
+                        </button>
+                    </div>
+                </div>
+                <textarea id="notes" class="notes-area" placeholder="Start writing… everything saves automatically."
+                    autofocus spellcheck="true"></textarea>
+
+                <details id="lastDay" class="last-day" hidden>
+                    <summary>Yesterday's notes</summary>
+                    <pre id="lastDayText" class="last-day-text"></pre>
+                </details>
+            </section>
+
+            <section class="panel tasks-panel" aria-labelledby="tasks-heading">
+                <div class="panel-head">
+                    <h2 id="tasks-heading">Tasks</h2>
+                    <span id="tasksMeta" class="meta">0 of 0 done</span>
+                </div>
+
+                <form id="taskForm" class="task-input" autocomplete="off">
+                    <input id="taskInput" type="text" placeholder="Add a task and press Enter…"
+                        aria-label="New task" maxlength="240">
+                    <button class="btn btn-solid" type="submit">Add</button>
+                </form>
+
+                <ul id="taskList" class="task-list" role="list"></ul>
+                <p id="emptyTasks" class="empty">Nothing here yet — your list is clear. 🌤️</p>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <a href="/workshop/" class="back">← Back to the Workshop</a>
+            <span class="footer-note">Private &amp; offline · stored only in this browser</span>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

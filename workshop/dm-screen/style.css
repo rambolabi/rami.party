@@ -1,0 +1,498 @@
+/* ==========================================================================
+   Loregate — Dungeon Master's table  ·  shared styling (v2)
+   ========================================================================== */
+
+:root {
+    --ink-0: #07060d;
+    --ink-1: #0d0b18;
+    --ink-2: #141122;
+    --panel: #17132b;
+    --panel-2: #1e1836;
+    --line: #2c2450;
+    --line-soft: #241d40;
+    --text: #f2eefc;
+    --text-soft: #b6acd6;
+    --text-faint: #7c729e;
+    --gold: #e8b24c;
+    --gold-soft: #f4d08a;
+    --blood: #e5484d;
+    --emerald: #34d399;
+    --arcane: #a78bfa;
+    --azure: #38bdf8;
+    --radius: 14px;
+    --radius-sm: 9px;
+    --shadow: 0 18px 46px rgba(0, 0, 0, .5);
+    --display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+    --body: 'Spectral', 'Inter', system-ui, -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    font-family: var(--body);
+    color: var(--text);
+    background:
+        radial-gradient(1100px 600px at 10% -10%, rgba(167, 139, 250, .16), transparent 60%),
+        radial-gradient(900px 700px at 95% 0%, rgba(232, 178, 76, .12), transparent 55%),
+        var(--ink-0);
+    background-attachment: fixed;
+    min-height: 100vh;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+    color: inherit;
+}
+
+h1,
+h2,
+h3,
+.display {
+    font-family: var(--display);
+    letter-spacing: .01em;
+}
+
+/* ==========================================================================
+   Map — shared by both screens
+   ========================================================================== */
+.map-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #05040a;
+    box-shadow: inset 0 0 44px rgba(0, 0, 0, .4), var(--shadow);
+    border: 1px solid var(--line);
+    user-select: none;
+    touch-action: none;
+}
+
+.map-layer {
+    position: absolute;
+    inset: 0;
+}
+
+/* base terrain fill (background set inline from JS) */
+#mapSurface {
+    background-size: cover;
+    background-position: center;
+}
+
+/* animated terrain shimmer */
+.anim-water::after,
+.anim-lava::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+}
+
+.anim-water::after {
+    background: repeating-linear-gradient(100deg, rgba(255, 255, 255, .07) 0 4px, transparent 4px 16px);
+    animation: waterDrift 7s linear infinite;
+    opacity: .5;
+}
+
+.anim-lava::after {
+    background: radial-gradient(circle at 30% 40%, rgba(255, 170, 60, .4), transparent 30%),
+        radial-gradient(circle at 70% 60%, rgba(255, 90, 20, .35), transparent 32%);
+    animation: lavaGlow 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes waterDrift {
+    to {
+        background-position: 120px 0;
+    }
+}
+
+@keyframes lavaGlow {
+    from {
+        opacity: .35;
+    }
+
+    to {
+        opacity: .75;
+    }
+}
+
+/* painted terrain patches */
+.terrain-layer {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.terrain-cell {
+    background-size: cover;
+    background-position: center;
+    box-shadow: inset 0 0 6px rgba(0, 0, 0, .25);
+}
+
+.dm .terrain-layer.paint-on {
+    pointer-events: auto;
+    cursor: crosshair;
+}
+
+/* Grid overlay */
+.map-grid {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, .10) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .10) 1px, transparent 1px);
+    opacity: 0;
+}
+
+.map-grid.on {
+    opacity: 1;
+}
+
+/* Items */
+#itemLayer {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+}
+
+.map-item {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: grid;
+    place-items: center;
+    line-height: 1;
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .6));
+    pointer-events: auto;
+    z-index: 3;
+}
+
+.map-item .item-emoji {
+    font-size: clamp(.7rem, 2vw, 1.3rem);
+}
+
+.dm .map-item {
+    cursor: grab;
+}
+
+.dm .map-item.dragging {
+    cursor: grabbing;
+    z-index: 12;
+}
+
+.dm .map-item.is-hidden {
+    opacity: .5;
+    outline: 1px dashed rgba(255, 255, 255, .5);
+    outline-offset: 1px;
+    border-radius: 6px;
+}
+
+.map-item.flicker .item-emoji {
+    animation: flicker 1.8s ease-in-out infinite;
+    transform-origin: bottom center;
+}
+
+@keyframes flicker {
+
+    0%,
+    100% {
+        filter: brightness(1);
+        transform: scale(1) rotate(-1deg);
+    }
+
+    50% {
+        filter: brightness(1.3);
+        transform: scale(1.08) rotate(1.5deg);
+    }
+}
+
+/* Fog of war */
+.fog-layer {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.fog-cell {
+    background: #05040a;
+    transition: opacity .35s ease, background .3s ease;
+}
+
+.fog-cell.revealed {
+    opacity: 0;
+}
+
+.dm .fog-cell {
+    background: rgba(4, 3, 10, var(--dm-fog, .78));
+}
+
+.dm .fog-layer.brush-on {
+    pointer-events: auto;
+    cursor: crosshair;
+}
+
+/* Tokens ------------------------------------------------------------------- */
+#tokenLayer {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.token {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, .55);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .6), 0 0 0 2px rgba(255, 255, 255, .12) inset;
+    color: #0b0810;
+    font-weight: 700;
+    font-family: var(--display);
+    font-size: clamp(.55rem, 1.5vw, .95rem);
+    text-shadow: 0 1px 1px rgba(255, 255, 255, .35);
+    pointer-events: auto;
+    overflow: hidden;
+    z-index: 4;
+}
+
+.token .token-init {
+    pointer-events: none;
+}
+
+/* HP kept INSIDE the square — a thin bar hugging the bottom of the disc */
+.token .token-hp {
+    position: absolute;
+    left: 14%;
+    right: 14%;
+    bottom: 9%;
+    height: 10%;
+    min-height: 3px;
+    border-radius: 3px;
+    background: rgba(5, 4, 10, .85);
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.token .token-hp span {
+    display: block;
+    height: 100%;
+    background: var(--emerald);
+    transition: width .3s ease, background .3s ease;
+}
+
+.token .token-hpnum {
+    position: absolute;
+    bottom: 4%;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: .5rem;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 1px 2px #000;
+    pointer-events: none;
+}
+
+.token.kind-player {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .6), 0 0 0 3px rgba(56, 189, 248, .5);
+}
+
+.token.kind-npc {
+    box-shadow: 0 3px 10px rgba(0, 0, 0, .6), 0 0 0 3px rgba(232, 178, 76, .5);
+}
+
+.token.is-dead {
+    filter: grayscale(1) brightness(.6);
+}
+
+.token.is-dead .token-init::after {
+    content: "✕";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--blood);
+    font-size: 1.4em;
+}
+
+.dm .token {
+    cursor: grab;
+}
+
+.dm .token.dragging {
+    cursor: grabbing;
+    z-index: 20;
+    filter: brightness(1.15);
+}
+
+.token.is-active {
+    animation: tokenPulse 1.6s ease-in-out infinite;
+}
+
+@keyframes tokenPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 3px 10px rgba(0, 0, 0, .6), 0 0 0 3px var(--gold);
+    }
+
+    50% {
+        box-shadow: 0 3px 18px rgba(232, 178, 76, .7), 0 0 0 6px rgba(232, 178, 76, .35);
+    }
+}
+
+.token.spawn-in {
+    animation: spawnIn .35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes spawnIn {
+    from {
+        transform: translate(-50%, -50%) scale(.2);
+        opacity: 0;
+    }
+}
+
+.dm .token.is-hidden {
+    opacity: .45;
+    outline: 2px dashed rgba(255, 255, 255, .4);
+    outline-offset: 2px;
+}
+
+/* Ping */
+#fxLayer {
+    position: absolute;
+    inset: 0;
+    z-index: 8;
+    pointer-events: none;
+}
+
+.ping {
+    position: absolute;
+    width: 46px;
+    height: 46px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 3px solid var(--gold);
+    pointer-events: none;
+    animation: pingPulse 1s ease-out 3;
+}
+
+@keyframes pingPulse {
+    0% {
+        opacity: .9;
+        transform: translate(-50%, -50%) scale(.3);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.6);
+    }
+}
+
+/* Measurement */
+.measure-line {
+    position: absolute;
+    height: 2px;
+    background: var(--gold);
+    transform-origin: left center;
+    pointer-events: none;
+    z-index: 9;
+    box-shadow: 0 0 6px var(--gold);
+}
+
+.measure-label {
+    position: absolute;
+    transform: translate(-50%, -140%);
+    background: rgba(5, 4, 10, .85);
+    border: 1px solid var(--gold);
+    color: var(--gold);
+    font-family: var(--mono);
+    font-size: .7rem;
+    padding: .1rem .4rem;
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 9;
+}
+
+/* ambient weather canvas */
+.ambient-canvas {
+    position: absolute;
+    inset: 0;
+    z-index: 7;
+    pointer-events: none;
+    display: none;
+}
+
+/* night / dim filter */
+.night-veil {
+    position: absolute;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    background: radial-gradient(circle at 50% 45%, rgba(6, 10, 30, .25), rgba(2, 4, 14, .72) 100%);
+    opacity: 0;
+    transition: opacity .5s ease;
+}
+
+.night-veil.on {
+    opacity: 1;
+}
+
+/* coordinate labels */
+.coord-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    font-family: var(--mono);
+    font-size: 8px;
+    color: rgba(255, 255, 255, .4);
+    display: none;
+}
+
+.coord-layer.on {
+    display: block;
+}
+
+/* Turn off every animation on demand */
+.no-anim *,
+.no-anim *::before,
+.no-anim *::after {
+    animation: none !important;
+    transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation: none !important;
+    }
+}

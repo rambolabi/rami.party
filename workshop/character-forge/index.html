@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Isekai Forge — Character Roller</title>
+    <meta name="description"
+        content="Roll up a whole isekai protagonist in one tap: how they got here, who they used to be, the power they woke up with, and the world they landed in.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#120a1e">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%B2%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <header class="hero">
+            <p class="eyebrow">✦ Character &amp; background roller</p>
+            <h1 class="title">Isekai Forge</h1>
+            <p class="lede">One tap conjures a whole other-world protagonist — how they were dragged in,
+                who they used to be, the power they woke up with, and where fate dropped them. Reroll a
+                single line, or shuffle the entire destiny at once.</p>
+        </header>
+
+        <section class="character" aria-label="Generated character">
+            <div class="char-name-row">
+                <span class="char-kicker">Your new self</span>
+                <h2 id="charName" class="char-name">—</h2>
+            </div>
+            <div id="parts" class="parts"><!-- rows injected by JS --></div>
+        </section>
+
+        <div class="action-bar">
+            <button id="shuffleAll" class="btn btn-primary" type="button">
+                <span class="dice" aria-hidden="true">🎲</span> Shuffle everything
+            </button>
+            <button id="copyBtn" class="btn btn-ghost" type="button">
+                <span aria-hidden="true">📋</span> Copy character
+            </button>
+        </div>
+
+        <footer class="footer">
+            <a href="/workshop/" class="back">← Back to the Workshop</a>
+            <span class="footer-note" id="comboNote"></span>
+        </footer>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

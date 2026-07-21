@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loregate — Dungeon Master's Screen</title>
+    <meta name="description"
+        content="A dual-screen Dungeon Master's control table: build battlemaps with painted terrain, props, weather, fog and locations while players watch a live map on the second screen.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#07060d">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%89%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dm.css">
+</head>
+
+<body class="dm">
+    <div class="dm-shell">
+
+        <!-- ============================ STAGE ============================ -->
+        <div class="stage-col">
+            <header class="topbar">
+                <div class="brand">
+                    <span class="sigil" aria-hidden="true">🐉</span>
+                    <div>
+                        <h1>Loregate</h1>
+                        <span class="sub">Dungeon Master's screen</span>
+                    </div>
+                </div>
+                <div class="topbar-actions">
+                    <button id="openPlayer" class="btn btn-gold" type="button">🖥️ Open player screen</button>
+                    <button id="exportBtn" class="btn btn-sm" type="button" title="Save the whole campaign to a file">⭳ Save</button>
+                    <button id="importBtn" class="btn btn-sm" type="button" title="Load a saved campaign">⭱ Load</button>
+                    <button id="resetBtn" class="btn btn-sm btn-ghost" type="button" title="Reset everything">↺ Reset</button>
+                    <input id="importFile" type="file" accept="application/json" hidden>
+                </div>
+            </header>
+
+            <!-- location switcher -->
+            <div class="loc-switcher">
+                <button id="locPrev" class="loc-arrow" type="button" title="Previous location" aria-label="Previous location">‹</button>
+                <div class="loc-name-wrap">
+                    <input id="locName" class="loc-name-input" type="text" aria-label="Location name">
+                    <span class="loc-count" id="locCount">Location 1 of 1</span>
+                </div>
+                <button id="locNext" class="loc-arrow" type="button" title="Next location" aria-label="Next location">›</button>
+                <select id="presetSelect" class="btn btn-sm" title="Generate a pre-made map" style="max-width:150px">
+                    <option value="">✨ New / preset…</option>
+                    <option value="blank">Blank location</option>
+                    <option value="tavernNpc">Tavern — with NPCs</option>
+                    <option value="tavern">Tavern — empty</option>
+                    <option value="fields">Fields — ambush</option>
+                    <option value="cavern">Cavern — spider lair</option>
+                    <option value="trapsTreasure">Vault — traps &amp; treasure</option>
+                    <option value="mimics">Mimic hall</option>
+                </select>
+                <button id="locExport" class="loc-arrow" type="button" title="Export this location">⭳</button>
+                <button id="locImport" class="loc-arrow" type="button" title="Import a location">⭱</button>
+                <button id="locDelete" class="loc-arrow" type="button" title="Delete this location">🗑️</button>
+                <input id="locImportFile" type="file" accept="application/json" hidden>
+            </div>
+
+            <!-- terrain & tools -->
+            <div class="map-toolbar" role="toolbar" aria-label="Terrain tools">
+                <span class="tool-label">Terrain</span>
+                <select id="terrainSelect" title="Terrain to paint / fill" style="max-width:120px"></select>
+                <button id="paintBtn" class="btn btn-sm" type="button" title="Paint terrain on the cells you click">🖌️ Paint</button>
+                <button id="eraseBtn" class="btn btn-sm" type="button" title="Erase painted terrain">🧽 Erase</button>
+                <button id="fillBtn" class="btn btn-sm btn-ghost" type="button" title="Fill the whole base map">Fill map</button>
+                <input id="bgImage" type="url" placeholder="image url…" style="flex:1;min-width:90px;display:none">
+                <span class="spacer"></span>
+                <label class="chip-toggle"><input type="checkbox" id="gridToggle" checked> Grid</label>
+                <button id="pingBtn" class="btn btn-sm" type="button" title="Click the map to mark a spot">📍 Ping</button>
+                <button id="measureBtn" class="btn btn-sm" type="button" title="Drag to measure distance">📏 Measure</button>
+            </div>
+
+            <!-- fog & visibility -->
+            <div class="map-toolbar" role="toolbar" aria-label="Fog tools">
+                <span class="tool-label">Fog</span>
+                <label class="chip-toggle"><input type="checkbox" id="fogToggle" checked> On</label>
+                <button id="brushBtn" class="btn btn-sm" type="button" title="Paint to reveal the map">🔦 Reveal</button>
+                <button id="hideBrushBtn" class="btn btn-sm" type="button" title="Paint to hide the map again">🌫️ Hide</button>
+                <select id="brushSize" title="Brush size" style="max-width:70px">
+                    <option value="1">1×1</option>
+                    <option value="3">3×3</option>
+                    <option value="5">5×5</option>
+                </select>
+                <button id="revealAll" class="btn btn-sm btn-ghost" type="button">Reveal all</button>
+                <button id="hideAll" class="btn btn-sm btn-ghost" type="button">Hide all</button>
+                <span class="spacer"></span>
+                <span class="tool-label">See-through</span>
+                <input type="range" id="dmFog" min="0" max="90" step="5" title="How see-through the fog is on your screen" style="max-width:100px">
+                <button id="blackoutBtn" class="btn btn-sm" type="button" title="Black out the player screen">⬛ Blackout</button>
+            </div>
+
+            <!-- weather -->
+            <div class="map-toolbar weather-bar" role="toolbar" aria-label="Weather">
+                <span class="tool-label">Weather</span>
+                <button class="wx btn btn-sm" data-wx="none" type="button">🚫 Clear</button>
+                <button class="wx btn btn-sm" data-wx="rain" type="button">🌧️ Rain</button>
+                <button class="wx btn btn-sm" data-wx="thunder" type="button">⛈️ Storm</button>
+                <button class="wx btn btn-sm" data-wx="snow" type="button">❄️ Snow</button>
+                <button class="wx btn btn-sm" data-wx="hail" type="button">🧊 Hail</button>
+                <button class="wx btn btn-sm" data-wx="mist" type="button">🌫️ Mist</button>
+                <button class="wx btn btn-sm" data-wx="fog" type="button">🌁 Fog</button>
+                <button class="wx btn btn-sm" data-wx="sun" type="button">🔆 Sun</button>
+                <button class="wx btn btn-sm" data-wx="heat" type="button">🥵 Heat</button>
+                <button class="wx btn btn-sm" data-wx="cold" type="button">🥶 Cold</button>
+                <button class="wx btn btn-sm" data-wx="embers" type="button">🔥 Embers</button>
+                <span class="spacer"></span>
+                <button id="wxEraseBtn" class="btn btn-sm" type="button" title="Click cells to remove weather there">✂️ Clear cells</button>
+                <label class="chip-toggle" title="Skip weather over walls, floors and other indoor terrain"><input type="checkbox" id="wxIndoor"> Skip indoors</label>
+            </div>
+
+            <div id="mapFrame" class="map-frame">
+                <div id="mapSurface" class="map-layer"></div>
+                <div id="terrainLayer" class="terrain-layer"></div>
+                <div id="coordLayer" class="coord-layer"></div>
+                <div id="mapGrid" class="map-grid on"></div>
+                <div id="itemLayer"></div>
+                <div id="tokenLayer"></div>
+                <div id="fogLayer" class="fog-layer"></div>
+                <div id="nightVeil" class="night-veil"></div>
+                <canvas id="ambientCanvas" class="ambient-canvas"></canvas>
+                <div id="fxLayer"></div>
+            </div>
+            <p class="hint">Drag tokens &amp; items to move them · pick a tool above, then click the map ·
+                everything mirrors to the player screen live.</p>
+        </div>
+
+        <!-- ============================ PANELS ============================ -->
+        <div class="panel-col" id="panelCol">
+
+            <details class="panel" data-panel="scene" open>
+                <summary>
+                    <h2><span aria-hidden="true">📖</span> Scene &amp; Story</h2>
+                    <span class="panel-tools"><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button><span class="chevron">▶</span></span>
+                </summary>
+                <div class="panel-body">
+                    <div class="field"><label for="campaignTitle">Campaign title</label>
+                        <input type="text" id="campaignTitle"></div>
+                    <div class="field"><label for="sceneText">Scene for this location (read-aloud)</label>
+                        <textarea id="sceneText" rows="4"></textarea></div>
+                    <label class="chip-toggle"><input type="checkbox" id="revealScene" checked>
+                        Show this scene on the player screen</label>
+                </div>
+            </details>
+
+            <details class="panel" data-panel="bigbad" open>
+                <summary>
+                    <h2><span aria-hidden="true">☠️</span> The Big Bad</h2>
+                    <span class="panel-tools"><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button><span class="chevron">▶</span></span>
+                </summary>
+                <div class="panel-body">
+                    <div class="statblock">
+                        <input type="text" id="bbName" placeholder="Name of the villain"
+                            style="font-family:var(--display);color:var(--gold-soft)">
+                        <div class="grid-3">
+                            <div class="field"><label for="bbCr">CR</label><input type="text" id="bbCr"></div>
+                            <div class="field"><label for="bbAc">AC</label><input type="text" id="bbAc"></div>
+                            <div class="field"><label for="bbSize">Size</label>
+                                <select id="bbSize">
+                                    <option value="1">Medium (1×1)</option>
+                                    <option value="2">Large (2×2)</option>
+                                    <option value="3">Huge (3×3)</option>
+                                    <option value="4">Gargantuan (4×4)</option>
+                                </select></div>
+                        </div>
+                        <div class="field"><label for="bbHp">Hit points</label>
+                            <div class="row">
+                                <input type="number" id="bbHp" style="flex:1">
+                                <span style="flex:0 0 auto;color:var(--text-faint);align-self:center">/</span>
+                                <input type="number" id="bbMaxHp" style="flex:1">
+                            </div>
+                        </div>
+                        <div class="hp-bar"><span id="bbHpBar"></span></div>
+                        <div class="field"><label for="bbTraits">Traits &amp; legendary actions</label>
+                            <textarea id="bbTraits" rows="3"></textarea></div>
+                        <div class="field"><label for="bbNotes">Motives &amp; secret notes</label>
+                            <textarea id="bbNotes" rows="2"></textarea></div>
+                        <button id="bbToMap" class="btn btn-sm btn-arcane" type="button">➕ Drop onto the map</button>
+                    </div>
+                </div>
+            </details>
+
+            <details class="panel" data-panel="roster" open>
+                <summary>
+                    <h2><span aria-hidden="true">⚔️</span> Roster &amp; Combat</h2>
+                    <span class="panel-tools"><span class="badge" id="rosterCount">0</span><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button></span>
+                </summary>
+                <div class="panel-body">
+                    <form id="addTokenForm" class="row" style="align-items:flex-end">
+                        <div class="field" style="flex:2"><label for="ntName">Add token</label>
+                            <input type="text" id="ntName" placeholder="Name" required></div>
+                        <div class="field" style="flex:1"><label for="ntKind">Type</label>
+                            <select id="ntKind">
+                                <option value="player">Player</option>
+                                <option value="enemy" selected>Enemy</option>
+                                <option value="npc">NPC</option>
+                            </select></div>
+                        <div class="field" style="flex:0 0 54px"><label for="ntHp">HP</label>
+                            <input type="number" id="ntHp" value="10" min="0"></div>
+                        <button class="btn btn-gold" type="submit" style="flex:0 0 auto">Add</button>
+                    </form>
+                    <div id="roster" class="roster"></div>
+                    <p id="rosterEmpty" class="hint">No tokens on this location yet.</p>
+                </div>
+            </details>
+
+            <details class="panel" data-panel="items">
+                <summary>
+                    <h2><span aria-hidden="true">🧰</span> Items &amp; Props</h2>
+                    <span class="panel-tools"><span class="badge" id="itemCount">0</span><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button></span>
+                </summary>
+                <div class="panel-body">
+                    <p class="hint">Click a prop, then click the map to place it — or place it and drag it where you like.</p>
+                    <div id="palette" class="palette"></div>
+                    <div id="itemList" class="roster"></div>
+                </div>
+            </details>
+
+            <details class="panel" data-panel="initiative">
+                <summary>
+                    <h2><span aria-hidden="true">🎯</span> Initiative</h2>
+                    <span class="panel-tools"><span class="round-pill" id="roundPill">Round 1</span><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button></span>
+                </summary>
+                <div class="panel-body">
+                    <div class="row">
+                        <button id="rollInit" class="btn btn-sm" type="button">🎲 Auto-roll all</button>
+                        <button id="prevTurn" class="btn btn-sm" type="button">◀ Prev</button>
+                        <button id="nextTurn" class="btn btn-sm btn-gold" type="button">Next ▶</button>
+                        <button id="endCombat" class="btn btn-sm btn-ghost" type="button">End</button>
+                    </div>
+                    <div id="initList" class="init-list"></div>
+                    <p id="initEmpty" class="hint">Add tokens and set initiative, then press Next to begin.</p>
+                </div>
+            </details>
+
+            <details class="panel" data-panel="bestiary">
+                <summary>
+                    <h2><span aria-hidden="true">🐗</span> Bestiary</h2>
+                    <span class="panel-tools"><span class="badge" id="bestiaryCount">0</span><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button></span>
+                </summary>
+                <div class="panel-body">
+                    <form id="addBeastForm" class="grid-2">
+                        <input type="text" id="beName" placeholder="Creature name" required>
+                        <div class="row">
+                            <input type="text" id="beCr" placeholder="CR" style="flex:0 0 46px">
+                            <input type="number" id="beAc" placeholder="AC" style="flex:0 0 56px">
+                            <input type="number" id="beHp" placeholder="HP" style="flex:1">
+                        </div>
+                        <input type="text" id="beNotes" placeholder="Attacks / notes" style="grid-column:1/-1">
+                        <button class="btn btn-sm btn-arcane" type="submit" style="grid-column:1/-1">Add to bestiary</button>
+                    </form>
+                    <div id="bestiary" class="roster"></div>
+                    <p id="bestiaryEmpty" class="hint">Stat blocks you keep handy — press <em>spawn</em> to drop one on the map.</p>
+                </div>
+            </details>
+
+            <details class="panel" data-panel="inventory">
+                <summary>
+                    <h2><span aria-hidden="true">🎒</span> Party Inventory</h2>
+                    <span class="panel-tools"><span class="badge" id="invCount">0</span><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button></span>
+                </summary>
+                <div class="panel-body">
+                    <form id="addInvForm" class="row" style="align-items:flex-end">
+                        <div class="field" style="flex:2"><label for="invName">Item</label>
+                            <input type="text" id="invName" placeholder="Rope, potion, key…" required></div>
+                        <div class="field" style="flex:0 0 60px"><label for="invQty">Qty</label>
+                            <input type="number" id="invQty" value="1" min="0"></div>
+                        <button class="btn btn-gold" type="submit" style="flex:0 0 auto">Add</button>
+                    </form>
+                    <div id="invList" class="inv-list"></div>
+                    <label class="chip-toggle"><input type="checkbox" id="invShowPlayers">
+                        Show the inventory on the player screen</label>
+                </div>
+            </details>
+
+            <details class="panel" data-panel="dice">
+                <summary>
+                    <h2><span aria-hidden="true">🎲</span> Dice Roller</h2>
+                    <span class="panel-tools"><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button><span class="chevron">▶</span></span>
+                </summary>
+                <div class="panel-body">
+                    <div class="dice-tray">
+                        <button class="die" data-die="4" type="button">d4</button>
+                        <button class="die" data-die="6" type="button">d6</button>
+                        <button class="die" data-die="8" type="button">d8</button>
+                        <button class="die" data-die="10" type="button">d10</button>
+                        <button class="die" data-die="12" type="button">d12</button>
+                        <button class="die" data-die="20" type="button">d20</button>
+                        <button class="die" data-die="100" type="button">d100</button>
+                    </div>
+                    <div class="row" style="align-items:flex-end">
+                        <div class="field" style="flex:0 0 60px"><label for="diceQty">Count</label>
+                            <input type="number" id="diceQty" value="1" min="1" max="20"></div>
+                        <div class="field" style="flex:0 0 70px"><label for="diceMod">Modifier</label>
+                            <input type="number" id="diceMod" value="0"></div>
+                        <label class="chip-toggle" style="flex:1"><input type="checkbox" id="diceAdv"> Advantage (d20)</label>
+                    </div>
+                    <label class="chip-toggle"><input type="checkbox" id="diceToPlayers"> Show rolls to the players (with a flourish)</label>
+                    <div id="diceResult" class="dice-result">
+                        <div class="total">—</div>
+                        <div class="detail">Pick a die to roll</div>
+                    </div>
+                    <div id="diceLog" class="dice-log"></div>
+                </div>
+            </details>
+
+            <details class="panel" data-panel="settings">
+                <summary>
+                    <h2><span aria-hidden="true">⚙️</span> Settings</h2>
+                    <span class="panel-tools"><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button><span class="chevron">▶</span></span>
+                </summary>
+                <div class="panel-body">
+                    <div class="settings-grid" id="settingsGrid"></div>
+                </div>
+            </details>
+
+            <details class="panel" data-panel="notes">
+                <summary>
+                    <h2><span aria-hidden="true">📜</span> DM Notes</h2>
+                    <span class="panel-tools"><button class="pmove" data-dir="-1" title="Move up" type="button">▲</button><button class="pmove" data-dir="1" title="Move down" type="button">▼</button><span class="chevron">▶</span></span>
+                </summary>
+                <div class="panel-body">
+                    <textarea id="dmNotes" rows="6" placeholder="Private notes only you can see…"></textarea>
+                    <p class="hint">Never shown on the player screen.</p>
+                </div>
+            </details>
+
+            <p class="footer-note">
+                <a href="/workshop/">← Back to the Workshop</a> · <a href="README.md" target="_blank">Guide</a> ·
+                everything is stored locally in this browser
+            </p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="store.js"></script>
+    <script src="ambient.js"></script>
+    <script src="dm.js"></script>
+</body>
+
+</html>
