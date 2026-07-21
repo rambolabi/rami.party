@@ -152,6 +152,59 @@
     margin-right: .1rem;
 }
 
+/* ---- Collapsible toolbars ---- */
+.map-toolbar.collapsible {
+    align-items: center;
+}
+
+.tb-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    padding: .15rem .2rem;
+    flex: 0 0 auto;
+}
+
+.tb-toggle .tool-label {
+    margin: 0;
+    cursor: pointer;
+}
+
+.tb-chevron {
+    font-size: .7rem;
+    color: var(--gold);
+    transition: transform .2s ease;
+}
+
+.map-toolbar.collapsed .tb-chevron {
+    transform: rotate(-90deg);
+}
+
+.tb-toggle:hover .tool-label {
+    color: var(--text);
+}
+
+.tb-body {
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+    flex-wrap: wrap;
+    flex: 1;
+    min-width: 0;
+}
+
+.map-toolbar.collapsed {
+    padding-top: .35rem;
+    padding-bottom: .35rem;
+}
+
+.map-toolbar.collapsed .tb-body {
+    display: none;
+}
+
 .panel-col {
     display: flex;
     flex-direction: column;
@@ -833,6 +886,117 @@ textarea {
     color: var(--gold);
     min-width: 28px;
     text-align: center;
+}
+
+input.inv-qty {
+    width: 52px;
+    padding: .25rem;
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+}
+
+/* ---- Send-to-location + bench ---- */
+.send-row {
+    grid-column: 1 / -1;
+    margin-top: .3rem;
+}
+
+.send-row select {
+    font-size: .76rem;
+    padding: .3rem .4rem;
+}
+
+.bench-panel {
+    background: var(--panel);
+    border: 1px dashed var(--line);
+    border-radius: var(--radius);
+    padding: .7rem .85rem;
+}
+
+.bench-head {
+    display: flex;
+    align-items: baseline;
+    gap: .6rem;
+    flex-wrap: wrap;
+    margin-bottom: .5rem;
+}
+
+.bench-label {
+    font-family: var(--display);
+    color: var(--gold-soft);
+    font-size: .95rem;
+}
+
+.bench-note {
+    font-size: .72rem;
+    color: var(--text-faint);
+}
+
+.bench-list {
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+}
+
+.bench-chip {
+    display: flex;
+    align-items: center;
+    gap: .45rem;
+    background: var(--ink-2);
+    border: 1px solid var(--line-soft);
+    border-radius: 999px;
+    padding: .3rem .5rem .3rem .35rem;
+}
+
+.bench-token {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: .72rem;
+    color: #0b0810;
+    border: 2px solid rgba(0, 0, 0, .4);
+    cursor: grab;
+    touch-action: none;
+}
+
+.bench-token:active {
+    cursor: grabbing;
+}
+
+.bench-name {
+    font-size: .82rem;
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+}
+
+.bench-name small {
+    color: var(--text-faint);
+    font-size: .66rem;
+}
+
+.bench-ghost {
+    position: fixed;
+    transform: translate(-50%, -50%);
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: .78rem;
+    color: #0b0810;
+    border: 2px solid rgba(0, 0, 0, .5);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .5);
+    pointer-events: none;
+    z-index: 300;
+    opacity: .9;
 }
 
 .hint {

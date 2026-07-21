@@ -194,7 +194,16 @@
         return Object.assign({
             id: uid('tok'), name: 'New Token', kind: 'enemy', color: '#e5484d',
             c: 2, r: 2, size: 1, hp: 10, maxHp: 10, ac: 12, initiative: 10,
-            conditions: [], hidden: false, showHp: false,
+            conditions: [], hidden: false, showHp: false, staged: false, charId: null,
+        }, o || {});
+    }
+    function makeCharacter(o) {
+        return Object.assign({
+            id: uid('char'), name: 'New Hero', color: '#38bdf8',
+            cls: 'Adventurer', level: 1, race: 'Human', background: '',
+            ac: 12, hp: 10, maxHp: 10,
+            abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+            skills: '', magic: '', lore: '', inventory: '', notes: '',
         }, o || {});
     }
     function makeItem(o) {
@@ -211,7 +220,7 @@
             scene: '', revealScene: true,
             map: { bg: 'stone', imageUrl: '', cols: 24, rows: 16, grid: true, fogEnabled: true },
             terrain: {}, fog: [], tokens: [], items: [], ping: null,
-            weather: 'none', weatherExclude: [], weatherIndoorSafe: true,
+            weather: 'none', weatherExclude: [], weatherIndoorSafe: false,
             weatherCells: {}, drawings: [], laser: null,
         }, o || {});
     }
@@ -581,6 +590,9 @@
                 { id: uid('inv'), name: 'Rations', qty: 10, note: 'days' },
                 { id: uid('inv'), name: 'Gold (gp)', qty: 75, note: 'party purse' },
             ],
+            characters: [
+                makeCharacter({ name: 'Aria Duskwind', color: '#38bdf8', cls: 'Ranger', level: 3, race: 'Wood Elf', ac: 15, hp: 27, maxHp: 27, background: 'A scout raised in the Whispering Woods, hunting the thing that took her village.', abilities: { str: 11, dex: 16, con: 14, int: 12, wis: 15, cha: 10 }, skills: 'Stealth +6, Survival +5, Perception +5', magic: "Hunter's Mark, Cure Wounds", inventory: 'Longbow, 20 arrows, shortsword, cloak of elvenkind', notes: '' }),
+            ],
             locations: [start],
             turn: { activeId: null, round: 1 },
             lastRoll: null,
@@ -597,13 +609,14 @@
             saved.bigbad = Object.assign(base.bigbad, saved.bigbad || {});
             if (!saved.inventory) saved.inventory = base.inventory;
             if (!saved.bestiary) saved.bestiary = [];
+            if (!saved.characters) saved.characters = [];
             saved.locations.forEach((l) => {
                 if (!l.terrain) l.terrain = {};
                 if (!l.items) l.items = [];
                 if (l.revealScene === undefined) l.revealScene = true;
                 if (l.weather === undefined) l.weather = 'none';
                 if (!l.weatherExclude) l.weatherExclude = [];
-                if (l.weatherIndoorSafe === undefined) l.weatherIndoorSafe = true;
+                if (l.weatherIndoorSafe === undefined) l.weatherIndoorSafe = false;
                 if (!l.weatherCells) l.weatherCells = {};
                 if (!l.drawings) l.drawings = [];
                 if (l.laser === undefined) l.laser = null;
@@ -664,7 +677,7 @@
         reset() { this.replace(defaultState()); },
         defaults: defaultState,
         clone,
-        makeToken, makeItem, makeLocation,
+        makeToken, makeItem, makeLocation, makeCharacter,
         presets: PRESETS,
         drawStrokes(ctx, strokes, w, h) {
             (strokes || []).forEach((s) => {

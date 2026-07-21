@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loregate — Character Sheets</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#07060d">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%91%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="dm.css">
+    <link rel="stylesheet" href="characters.css">
+</head>
+
+<body class="dm chars-body">
+    <div class="chars-shell">
+        <header class="topbar">
+            <div class="brand">
+                <span class="sigil" aria-hidden="true">🧑</span>
+                <div>
+                    <h1>Character Sheets</h1>
+                    <span class="sub">Party stats, lore &amp; magic</span>
+                </div>
+            </div>
+            <div class="topbar-actions">
+                <button id="addChar" class="btn btn-gold" type="button">➕ New character</button>
+                <button id="exportChars" class="btn btn-sm" type="button" title="Export just the characters">⭳ Export sheets</button>
+                <button id="importChars" class="btn btn-sm" type="button" title="Import characters">⭱ Import sheets</button>
+                <a href="index.html" class="btn btn-sm btn-ghost">← DM screen</a>
+                <input id="importCharsFile" type="file" accept="application/json" hidden>
+            </div>
+        </header>
+
+        <div class="chars-body-grid">
+            <aside class="char-list-col">
+                <div id="charList" class="char-list"></div>
+                <p id="charEmpty" class="hint">No characters yet — add one above.</p>
+            </aside>
+
+            <main class="char-editor-col">
+                <form id="charEditor" class="sheet" hidden autocomplete="off">
+                    <div class="sheet-head">
+                        <input type="color" id="cColor" title="Colour" class="sheet-color">
+                        <input type="text" id="cName" class="sheet-name" placeholder="Character name">
+                        <button id="deleteChar" class="btn btn-sm btn-ghost" type="button" title="Delete this character">🗑️ Delete</button>
+                    </div>
+
+                    <div class="sheet-grid">
+                        <label class="fld"><span>Class</span><input type="text" id="cClass"></label>
+                        <label class="fld"><span>Level</span><input type="number" id="cLevel" min="1" max="20"></label>
+                        <label class="fld"><span>Race</span><input type="text" id="cRace"></label>
+                        <label class="fld"><span>AC</span><input type="number" id="cAc"></label>
+                        <label class="fld"><span>HP</span><input type="number" id="cHp"></label>
+                        <label class="fld"><span>Max HP</span><input type="number" id="cMaxHp"></label>
+                    </div>
+
+                    <div class="hp-bar big"><span id="cHpBar"></span></div>
+
+                    <h3 class="sheet-sub">Ability scores</h3>
+                    <div class="abilities">
+                        <label class="abil"><span>STR</span><input type="number" id="cStr"><em id="mStr">+0</em></label>
+                        <label class="abil"><span>DEX</span><input type="number" id="cDex"><em id="mDex">+0</em></label>
+                        <label class="abil"><span>CON</span><input type="number" id="cCon"><em id="mCon">+0</em></label>
+                        <label class="abil"><span>INT</span><input type="number" id="cInt"><em id="mInt">+0</em></label>
+                        <label class="abil"><span>WIS</span><input type="number" id="cWis"><em id="mWis">+0</em></label>
+                        <label class="abil"><span>CHA</span><input type="number" id="cCha"><em id="mCha">+0</em></label>
+                    </div>
+
+                    <div class="sheet-areas">
+                        <label class="area"><span>⚔️ Skills &amp; proficiencies</span><textarea id="cSkills" rows="3"></textarea></label>
+                        <label class="area"><span>✨ Magic &amp; spells</span><textarea id="cMagic" rows="3"></textarea></label>
+                        <label class="area"><span>🎒 Inventory &amp; gear</span><textarea id="cInventory" rows="3"></textarea></label>
+                        <label class="area"><span>📖 Background &amp; lore</span><textarea id="cLore" rows="4"></textarea></label>
+                        <label class="area full"><span>📝 Notes</span><textarea id="cNotes" rows="3"></textarea></label>
+                        <label class="fld"><span>Short background line</span><input type="text" id="cBackground"
+                                placeholder="e.g. A scout hunting the beast that razed her village"></label>
+                    </div>
+
+                    <div class="sheet-link">
+                        <label class="fld"><span>🔗 Linked map token (HP syncs both ways)</span>
+                            <select id="cLink"></select></label>
+                    </div>
+                </form>
+                <p id="editorEmpty" class="editor-empty">Select a character on the left, or add a new one.</p>
+            </main>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="store.js"></script>
+    <script src="characters.js"></script>
+</body>
+
+</html>

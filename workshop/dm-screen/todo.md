@@ -32,8 +32,16 @@ between the two screens via `BroadcastChannel` + `localStorage`.
 - Add players / enemies / NPCs; drag to move (grid-snapped).
 - HP +/- and direct entry, AC, initiative, 8 conditions, size (Medium → Gargantuan), per-token hide-from-players and show-HP-to-players.
 - Names &amp; HP are kept **inside the token square** (never floating outside); names appear on hover for the DM and in the player sidebar.
+- **Off-map bench / staging** — send any token to a bench beside the map (hidden from players) and **drag it onto the map** to deploy. Prepare ambushes and NPCs out of sight.
+- **Copy a character to another location** from the roster (staged there), so you can set up future scenes in advance.
+- When you generate a new location you're asked whether to **bring the party along**.
 - The **Big Bad** stat block with a chooseable size, one-click "drop onto the map".
 - Bestiary of reusable stat blocks that spawn onto the map.
+
+### Character sheets (separate screen)
+- A dedicated **Characters** screen (`characters.html`) with full party sheets: name, colour, class, level, race, AC, HP, the six ability scores (with live modifiers), skills, magic/spells, inventory, background/lore and notes.
+- **Link a sheet to a map token** — HP &amp; max HP sync **both ways** with the token, so the map, roster and player sidebar all update live.
+- Export the sheets **on their own**, or as part of the full campaign Save.
 
 ### Fog &amp; visibility
 - Fog of war with **Reveal** and **Hide** brushes and 1×1 / 3×3 / 5×5 brush sizes (Alt inverts).
@@ -45,8 +53,9 @@ between the two screens via `BroadcastChannel` + `localStorage`.
 ### Weather (per location &amp; per block)
 - Dedicated buttons: Rain, Storm (thunder flashes), Snow, Hail, Mist, Fog, Sun, Heat, Cold, Embers.
 - **Select a weather brush**, then apply it to the **whole map** or **paint it onto individual blocks** — several different weathers can play at once on the same map.
-- **Erase cells** removes weather from specific blocks; **Clear all** resets it; **Skip indoors** keeps weather off walls / floors automatically.
+- **Erase cells** removes weather from specific blocks; **Clear all** resets it; **Skip indoors** (off by default) keeps weather off walls / floors when enabled.
 - Water &amp; lava shimmer stay contained to their own cells.
+- Each map tool bar (Terrain, Fog, Weather, Draw) **folds away** with the ▾ next to its name to reclaim screen space (remembered per browser).
 - One global animations toggle pauses all of it.
 
 ### Drawing &amp; laser
@@ -58,7 +67,7 @@ between the two screens via `BroadcastChannel` + `localStorage`.
 - Initiative tracker (auto-roll, next / prev, round counter).
 - Dice roller (d4–d100, count, modifier, advantage, crit / fumble) with a roll log.
 - **Show rolls to the players** — broadcasts the result to the player screen with an animated flourish.
-- Party inventory, with a toggle to show it on the player screen.
+- Party inventory, with a toggle to show it on the player screen. Quantities are editable by typing or with +/-.
 - Measurement tool showing **squares · feet · metres**.
 - Ping the map for the players.
 - Party HP sidebar on the player screen.
@@ -67,7 +76,7 @@ between the two screens via `BroadcastChannel` + `localStorage`.
 - **Reorderable panels** — move up ▲, down ▼ or straight to the bottom ⤓ (persisted).
 - Dragging pieces no longer jumps the DM screen.
 - An in-app **HTML guide** (`guide.html`) plus this build log.
-- Big settings panel (animations, grid, coordinates, snap, dynamic light, sidebar, dice-to-players, HP as numbers, names on hover, confirm deletions, …).
+- Big settings panel (animations, grid, coordinates, snap, dynamic light *(off by default)*, sidebar, dice-to-players, HP as numbers, names on hover, confirm deletions, …).
 
 ---
 

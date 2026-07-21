@@ -151,7 +151,7 @@
         });
 
         tokenLayer.innerHTML = '';
-        L.tokens.forEach((t) => {
+        L.tokens.filter((t) => !t.staged).forEach((t) => {
             const el = document.createElement('div'); const dead = t.maxHp > 0 && t.hp <= 0; const isNew = !seenTokens.has(t.id);
             el.className = 'token draggable kind-' + t.kind + (t.hidden ? ' is-hidden' : '') + (dead ? ' is-dead' : '') + (st.turn.activeId === t.id ? ' is-active' : '') + (isNew && anim ? ' spawn-in' : '');
             if (isNew) seenTokens.add(t.id);
@@ -286,6 +286,11 @@
         else if (v === 'tavern') loc = S.presets.tavern(false);
         else if (S.presets[v]) loc = S.presets[v]();
         if (!loc) return;
+        // offer to bring the current party along to the new map
+        const party = S.loc().tokens.filter((t) => t.kind === 'player' && !t.staged);
+        if (party.length && confirm(`Bring the ${party.length} player character(s) onto “${loc.name}” too?`)) {
+            party.forEach((t, i) => { const nt = S.clone(t); nt.id = 'tok-' + Math.random().toString(36).slice(2, 9); nt.staged = false; nt.c = 1 + (i % Math.max(1, loc.map.cols - 2)); nt.r = 1; loc.tokens.push(nt); });
+        }
         S.update((st) => { st.locations.push(loc); st.activeLoc = st.locations.length - 1; });
         toast('New location: ' + loc.name);
     });
@@ -335,6 +340,27 @@
     $('#drawUndo').addEventListener('click', () => S.update((st) => { S.activeLocation(st).drawings.pop(); }));
     $('#drawClear').addEventListener('click', () => S.update((st) => { S.activeLocation(st).drawings = []; }));
 
+    // Collapsible toolbars (fold to reclaim screen space) — remembered per DM browser
+    (function initToolbars() {
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem('loregate.ui.tb') || '{}'); } catch { saved = {}; }
+        $$('.map-toolbar.collapsible').forEach((tb) => {
+            const key = tb.dataset.tb;
+            if (saved[key]) tb.classList.add('collapsed');
+            const toggle = tb.querySelector('.tb-toggle');
+            if (!toggle) return;
+            toggle.setAttribute('aria-expanded', String(!tb.classList.contains('collapsed')));
+            toggle.addEventListener('click', () => {
+                tb.classList.toggle('collapsed');
+                const collapsed = tb.classList.contains('collapsed');
+                toggle.setAttribute('aria-expanded', String(!collapsed));
+                saved[key] = collapsed;
+                try { localStorage.setItem('loregate.ui.tb', JSON.stringify(saved)); } catch { /* ignore */ }
+                renderMap();
+            });
+        });
+    })();
+
     /* ======================================================================
        ITEM PALETTE
        ====================================================================== */
@@ -371,30 +397,72 @@
     });
     function renderRoster() {
         const st = S.get(); const L = S.loc(); const wrap = $('#roster');
-        $('#rosterCount').textContent = L.tokens.length; $('#rosterEmpty').style.display = L.tokens.length ? 'none' : 'block'; wrap.innerHTML = '';
-        L.tokens.forEach((t) => {
+        const onMap = L.tokens.filter((t) => !t.staged);
+        $('#rosterCount').textContent = onMap.length; $('#rosterEmpty').style.display = onMap.length ? 'none' : 'block'; wrap.innerHTML = '';
+        const otherLocsOpts = st.locations.map((lc, i) => i === st.activeLoc ? '' : `<option value="${i}">${escapeHtml(lc.name)}</option>`).join('');
+        const syncChar = (tk, s) => { if (tk.charId) { const ch = s.characters.find((c) => c.id === tk.charId); if (ch) { ch.hp = tk.hp; ch.maxHp = tk.maxHp; } } };
+        onMap.forEach((t) => {
             const item = document.createElement('div'); item.className = 'roster-item' + (st.turn.activeId === t.id ? ' active' : ''); item.dataset.id = t.id; item.style.borderLeftColor = t.color; const ratio = t.maxHp > 0 ? clamp(t.hp / t.maxHp, 0, 1) : 0;
             item.innerHTML = `<div class="swatch" style="background:${t.color}">${(t.name || '?').slice(0, 2).toUpperCase()}</div>
-                <div class="roster-main"><div class="roster-name">${escapeHtml(t.name)} <span class="badge">${t.kind}</span></div>
+                <div class="roster-main"><div class="roster-name">${escapeHtml(t.name)} <span class="badge">${t.kind}</span>${t.charId ? '<span class="badge" title="Has a character sheet">🧑</span>' : ''}</div>
                     <div class="roster-meta"><span>AC ${t.ac}</span><span>Init <input class="hp-input j-init" type="number" value="${t.initiative}" style="width:40px"></span></div>
                     <div class="hp-bar"><span style="width:${ratio * 100}%;background:${hpColor(ratio)}"></span></div>
                     <div class="hp-controls" style="margin-top:.35rem"><button class="hp-step j-dmg" title="Damage 1">−</button><input class="hp-input j-hp" type="number" value="${t.hp}"><span style="color:var(--text-faint);font-size:.75rem">/ ${t.maxHp}</span><button class="hp-step j-heal" title="Heal 1">＋</button></div></div>
-                <div class="icon-actions"><button class="mini ${t.hidden ? '' : 'on'} j-vis" title="Show / hide on player screen">${t.hidden ? '🚫' : '👁️'}</button><button class="mini ${t.showHp ? 'on' : ''} j-hp-toggle" title="Show HP to players">❤️</button><button class="mini j-big" title="Cycle size">⤢</button><button class="mini j-center" title="Center on map">🎯</button><button class="mini danger j-del" title="Remove">🗑️</button></div>
-                <div class="conditions">${CONDITIONS.map((c) => `<span class="cond ${t.conditions.includes(c) ? '' : 'off'}" data-cond="${c}">${c}</span>`).join('')}</div>`;
+                <div class="icon-actions"><button class="mini ${t.hidden ? '' : 'on'} j-vis" title="Show / hide on player screen">${t.hidden ? '🚫' : '👁️'}</button><button class="mini ${t.showHp ? 'on' : ''} j-hp-toggle" title="Show HP to players">❤️</button><button class="mini j-big" title="Cycle size">⤢</button><button class="mini j-center" title="Center on map">🎯</button><button class="mini j-bench" title="Send to the off-map bench">🎭</button><button class="mini danger j-del" title="Remove">🗑️</button></div>
+                <div class="conditions">${CONDITIONS.map((c) => `<span class="cond ${t.conditions.includes(c) ? '' : 'off'}" data-cond="${c}">${c}</span>`).join('')}</div>
+                ${otherLocsOpts ? `<div class="send-row"><select class="j-send"><option value="">🚚 Copy to another location…</option>${otherLocsOpts}</select></div>` : ''}`;
             const upd = (fn) => S.update((s) => { const tk = S.activeLocation(s).tokens.find((x) => x.id === t.id); if (tk) fn(tk, s); });
             const hpInput = item.querySelector('.j-hp');
-            item.querySelector('.j-dmg').addEventListener('click', () => upd((tk) => tk.hp = clamp(tk.hp - 1, 0, tk.maxHp)));
-            item.querySelector('.j-heal').addEventListener('click', () => upd((tk) => tk.hp = clamp(tk.hp + 1, 0, tk.maxHp)));
-            hpInput.addEventListener('change', () => upd((tk) => tk.hp = clamp(Number(hpInput.value) || 0, 0, tk.maxHp)));
+            item.querySelector('.j-dmg').addEventListener('click', () => upd((tk, s) => { tk.hp = clamp(tk.hp - 1, 0, tk.maxHp); syncChar(tk, s); }));
+            item.querySelector('.j-heal').addEventListener('click', () => upd((tk, s) => { tk.hp = clamp(tk.hp + 1, 0, tk.maxHp); syncChar(tk, s); }));
+            hpInput.addEventListener('change', () => upd((tk, s) => { tk.hp = clamp(Number(hpInput.value) || 0, 0, tk.maxHp); syncChar(tk, s); }));
             item.querySelector('.j-init').addEventListener('change', (e) => upd((tk) => tk.initiative = Number(e.target.value) || 0));
             item.querySelector('.j-vis').addEventListener('click', () => upd((tk) => tk.hidden = !tk.hidden));
             item.querySelector('.j-hp-toggle').addEventListener('click', () => upd((tk) => tk.showHp = !tk.showHp));
             item.querySelector('.j-big').addEventListener('click', () => upd((tk) => tk.size = (tk.size % 4) + 1));
             item.querySelector('.j-center').addEventListener('click', () => upd((tk, s) => { const L2 = S.activeLocation(s); tk.c = Math.floor(L2.map.cols / 2); tk.r = Math.floor(L2.map.rows / 2); }));
+            item.querySelector('.j-bench').addEventListener('click', () => upd((tk) => tk.staged = true));
             item.querySelector('.j-del').addEventListener('click', () => { if (st.settings.confirmDelete && !confirm(`Remove ${t.name}?`)) return; S.update((s) => { const L2 = S.activeLocation(s); L2.tokens = L2.tokens.filter((x) => x.id !== t.id); if (s.turn.activeId === t.id) s.turn.activeId = null; }); });
+            const sendSel = item.querySelector('.j-send');
+            if (sendSel) sendSel.addEventListener('change', (e) => { const idx = Number(e.target.value); e.target.value = ''; if (Number.isNaN(idx)) return; S.update((s) => { const target = s.locations[idx]; if (!target) return; const nt = S.clone(t); nt.id = 'tok-' + Math.random().toString(36).slice(2, 9); nt.staged = true; target.tokens.push(nt); }); toast(`${t.name} staged in ${st.locations[idx].name}`); });
             item.querySelectorAll('.cond').forEach((chip) => chip.addEventListener('click', () => upd((tk) => { const cond = chip.dataset.cond; tk.conditions = tk.conditions.includes(cond) ? tk.conditions.filter((x) => x !== cond) : [...tk.conditions, cond]; })));
             wrap.appendChild(item);
         });
+    }
+
+    /* ---- Bench (off-map staging) ---- */
+    let benchGhost = null, benchDragId = null;
+    function renderBench() {
+        const L = S.loc(); const staged = L.tokens.filter((t) => t.staged);
+        const list = $('#benchList'); $('#benchEmpty').style.display = staged.length ? 'none' : 'block'; list.innerHTML = '';
+        staged.forEach((t) => {
+            const chip = document.createElement('div'); chip.className = 'bench-chip kind-' + t.kind; chip.dataset.id = t.id;
+            chip.innerHTML = `<span class="bench-token" style="background:${t.color}" title="Drag onto the map">${(t.name || '?').slice(0, 2).toUpperCase()}</span><span class="bench-name">${escapeHtml(t.name)}<small>${t.kind}${t.maxHp > 0 ? ' · ' + t.hp + '/' + t.maxHp : ''}</small></span><button class="mini j-deploy" title="Deploy to the centre">⬇</button><button class="mini danger j-unstage" title="Remove from this location">🗑️</button>`;
+            chip.querySelector('.j-deploy').addEventListener('click', () => S.update((s) => { const L2 = S.activeLocation(s); const tk = L2.tokens.find((x) => x.id === t.id); if (tk) { tk.staged = false; tk.c = Math.floor(L2.map.cols / 2); tk.r = Math.floor(L2.map.rows / 2); } }));
+            chip.querySelector('.j-unstage').addEventListener('click', () => { if (S.get().settings.confirmDelete && !confirm('Remove ' + t.name + ' from this location?')) return; S.update((s) => { const L2 = S.activeLocation(s); L2.tokens = L2.tokens.filter((x) => x.id !== t.id); }); });
+            chip.querySelector('.bench-token').addEventListener('pointerdown', (e) => startBenchDrag(e, t.id, t));
+            list.appendChild(chip);
+        });
+    }
+    function startBenchDrag(e, id, t) {
+        e.preventDefault(); benchDragId = id;
+        benchGhost = document.createElement('div'); benchGhost.className = 'bench-ghost'; benchGhost.style.background = t.color; benchGhost.textContent = (t.name || '?').slice(0, 2).toUpperCase();
+        document.body.appendChild(benchGhost); moveGhost(e);
+        window.addEventListener('pointermove', moveGhost); window.addEventListener('pointerup', endBenchDrag);
+    }
+    function moveGhost(e) { if (benchGhost) { benchGhost.style.left = e.clientX + 'px'; benchGhost.style.top = e.clientY + 'px'; } }
+    function endBenchDrag(e) {
+        window.removeEventListener('pointermove', moveGhost); window.removeEventListener('pointerup', endBenchDrag);
+        if (benchGhost) { benchGhost.remove(); benchGhost = null; }
+        const id = benchDragId; benchDragId = null; if (!id) return;
+        const rect = mapFrame.getBoundingClientRect();
+        if (e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom) {
+            const L = S.loc();
+            const c = clamp(Math.floor((e.clientX - rect.left) / rect.width * L.map.cols), 0, L.map.cols - 1);
+            const r = clamp(Math.floor((e.clientY - rect.top) / rect.height * L.map.rows), 0, L.map.rows - 1);
+            S.update((s) => { const tk = S.activeLocation(s).tokens.find((x) => x.id === id); if (tk) { tk.staged = false; tk.c = c; tk.r = r; } });
+            toast('Deployed to the map');
+        }
     }
 
     /* ======================================================================
@@ -430,10 +498,11 @@
         const st = S.get(); $('#invCount').textContent = st.inventory.length; const wrap = $('#invList'); wrap.innerHTML = '';
         st.inventory.forEach((it) => {
             const row = document.createElement('div'); row.className = 'inv-item';
-            row.innerHTML = `<span class="inv-name">${escapeHtml(it.name)}${it.note ? `<small>${escapeHtml(it.note)}</small>` : ''}</span><button class="hp-step j-minus">−</button><span class="inv-qty">${it.qty}</span><div style="display:flex;gap:.2rem"><button class="hp-step j-plus">＋</button><button class="mini danger j-del">🗑️</button></div>`;
+            row.innerHTML = `<span class="inv-name">${escapeHtml(it.name)}${it.note ? `<small>${escapeHtml(it.note)}</small>` : ''}</span><button class="hp-step j-minus">−</button><input class="inv-qty j-qty" type="number" value="${it.qty}" min="0"><div style="display:flex;gap:.2rem"><button class="hp-step j-plus">＋</button><button class="mini danger j-del">🗑️</button></div>`;
             const upd = (fn) => S.update((s) => { const o = s.inventory.find((x) => x.id === it.id); if (o) fn(o); });
             row.querySelector('.j-minus').addEventListener('click', () => upd((o) => o.qty = Math.max(0, o.qty - 1)));
             row.querySelector('.j-plus').addEventListener('click', () => upd((o) => o.qty += 1));
+            row.querySelector('.j-qty').addEventListener('change', (e) => upd((o) => o.qty = Math.max(0, Number(e.target.value) || 0)));
             row.querySelector('.j-del').addEventListener('click', () => S.update((s) => { s.inventory = s.inventory.filter((x) => x.id !== it.id); }));
             wrap.appendChild(row);
         });
@@ -541,6 +610,7 @@
        PLAYER SCREEN + IMPORT / EXPORT / RESET
        ====================================================================== */
     $('#openPlayer').addEventListener('click', () => { window.open('player.html', 'loregate_player', 'noopener'); toast('Drag that window to your second screen, then press F11'); });
+    $('#openChars').addEventListener('click', () => { window.open('characters.html', 'loregate_characters'); });
     $('#exportBtn').addEventListener('click', () => { const blob = new Blob([JSON.stringify(S.get(), null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'loregate-' + new Date().toISOString().slice(0, 10) + '.json'; a.click(); URL.revokeObjectURL(a.href); });
     $('#importBtn').addEventListener('click', () => $('#importFile').click());
     $('#importFile').addEventListener('change', (e) => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { S.replace(JSON.parse(reader.result)); toast('Campaign loaded'); } catch { toast('That file could not be read'); } }; reader.readAsText(file); e.target.value = ''; });
@@ -552,7 +622,7 @@
        ====================================================================== */
     function render() {
         applyPanelOrder();
-        renderMap(); renderItems(); renderRoster(); renderInitiative(); renderBestiary(); renderInventory(); syncFields(); syncSettings();
+        renderMap(); renderItems(); renderRoster(); renderBench(); renderInitiative(); renderBestiary(); renderInventory(); syncFields(); syncSettings();
         ambient.sync();
     }
     selectWeather(selectedWeather);

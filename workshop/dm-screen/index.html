@@ -36,6 +36,7 @@
                 </div>
                 <div class="topbar-actions">
                     <button id="openPlayer" class="btn btn-gold" type="button">🖥️ Open player screen</button>
+                    <button id="openChars" class="btn btn-sm" type="button" title="Open the character sheets screen">🧑 Characters</button>
                     <button id="exportBtn" class="btn btn-sm" type="button" title="Save the whole campaign to a file">⭳ Save</button>
                     <button id="importBtn" class="btn btn-sm" type="button" title="Load a saved campaign">⭱ Load</button>
                     <button id="resetBtn" class="btn btn-sm btn-ghost" type="button" title="Reset everything">↺ Reset</button>
@@ -76,76 +77,84 @@
             </div>
 
             <!-- terrain & tools -->
-            <div class="map-toolbar" role="toolbar" aria-label="Terrain tools">
-                <span class="tool-label">Terrain</span>
-                <select id="terrainSelect" title="Terrain to paint / fill" style="max-width:120px"></select>
-                <button id="paintBtn" class="btn btn-sm" type="button" title="Paint terrain on the cells you click">🖌️ Paint</button>
-                <button id="eraseBtn" class="btn btn-sm" type="button" title="Erase painted terrain">🧽 Erase</button>
-                <button id="fillBtn" class="btn btn-sm btn-ghost" type="button" title="Fill the whole base map">Fill map</button>
-                <input id="bgImage" type="url" placeholder="image url…" style="flex:1;min-width:90px;display:none">
-                <span class="spacer"></span>
-                <label class="chip-toggle"><input type="checkbox" id="gridToggle" checked> Grid</label>
-                <button id="pingBtn" class="btn btn-sm" type="button" title="Click the map to mark a spot">📍 Ping</button>
-                <button id="measureBtn" class="btn btn-sm" type="button" title="Drag to measure distance">📏 Measure</button>
+            <div class="map-toolbar collapsible" data-tb="terrain" role="toolbar" aria-label="Terrain tools">
+                <button class="tb-toggle" type="button" title="Fold this bar" aria-expanded="true"><span class="tb-chevron">▾</span><span class="tool-label">Terrain</span></button>
+                <div class="tb-body">
+                    <select id="terrainSelect" title="Terrain to paint / fill" style="max-width:120px"></select>
+                    <button id="paintBtn" class="btn btn-sm" type="button" title="Paint terrain on the cells you click">🖌️ Paint</button>
+                    <button id="eraseBtn" class="btn btn-sm" type="button" title="Erase painted terrain">🧽 Erase</button>
+                    <button id="fillBtn" class="btn btn-sm btn-ghost" type="button" title="Fill the whole base map">Fill map</button>
+                    <input id="bgImage" type="url" placeholder="image url…" style="flex:1;min-width:90px;display:none">
+                    <span class="spacer"></span>
+                    <label class="chip-toggle"><input type="checkbox" id="gridToggle" checked> Grid</label>
+                    <button id="pingBtn" class="btn btn-sm" type="button" title="Click the map to mark a spot">📍 Ping</button>
+                    <button id="measureBtn" class="btn btn-sm" type="button" title="Drag to measure distance">📏 Measure</button>
+                </div>
             </div>
 
             <!-- fog & visibility -->
-            <div class="map-toolbar" role="toolbar" aria-label="Fog tools">
-                <span class="tool-label">Fog</span>
-                <label class="chip-toggle"><input type="checkbox" id="fogToggle" checked> On</label>
-                <button id="brushBtn" class="btn btn-sm" type="button" title="Paint to reveal the map">🔦 Reveal</button>
-                <button id="hideBrushBtn" class="btn btn-sm" type="button" title="Paint to hide the map again">🌫️ Hide</button>
-                <select id="brushSize" title="Brush size" style="max-width:70px">
-                    <option value="1">1×1</option>
-                    <option value="3">3×3</option>
-                    <option value="5">5×5</option>
-                </select>
-                <button id="revealAll" class="btn btn-sm btn-ghost" type="button">Reveal all</button>
-                <button id="hideAll" class="btn btn-sm btn-ghost" type="button">Hide all</button>
-                <span class="spacer"></span>
-                <span class="tool-label">See-through</span>
-                <input type="range" id="dmFog" min="0" max="90" step="5" title="How see-through the fog is on your screen" style="max-width:100px">
-                <button id="blackoutBtn" class="btn btn-sm" type="button" title="Black out the player screen">⬛ Blackout</button>
+            <div class="map-toolbar collapsible" data-tb="fog" role="toolbar" aria-label="Fog tools">
+                <button class="tb-toggle" type="button" title="Fold this bar" aria-expanded="true"><span class="tb-chevron">▾</span><span class="tool-label">Fog</span></button>
+                <div class="tb-body">
+                    <label class="chip-toggle"><input type="checkbox" id="fogToggle" checked> On</label>
+                    <button id="brushBtn" class="btn btn-sm" type="button" title="Paint to reveal the map">🔦 Reveal</button>
+                    <button id="hideBrushBtn" class="btn btn-sm" type="button" title="Paint to hide the map again">🌫️ Hide</button>
+                    <select id="brushSize" title="Brush size" style="max-width:70px">
+                        <option value="1">1×1</option>
+                        <option value="3">3×3</option>
+                        <option value="5">5×5</option>
+                    </select>
+                    <button id="revealAll" class="btn btn-sm btn-ghost" type="button">Reveal all</button>
+                    <button id="hideAll" class="btn btn-sm btn-ghost" type="button">Hide all</button>
+                    <span class="spacer"></span>
+                    <span class="tool-label">See-through</span>
+                    <input type="range" id="dmFog" min="0" max="90" step="5" title="How see-through the fog is on your screen" style="max-width:100px">
+                    <button id="blackoutBtn" class="btn btn-sm" type="button" title="Black out the player screen">⬛ Blackout</button>
+                </div>
             </div>
 
             <!-- weather -->
-            <div class="map-toolbar weather-bar" role="toolbar" aria-label="Weather">
-                <span class="tool-label">Weather</span>
-                <button class="wx btn btn-sm" data-wx="rain" type="button">🌧️ Rain</button>
-                <button class="wx btn btn-sm" data-wx="thunder" type="button">⛈️ Storm</button>
-                <button class="wx btn btn-sm" data-wx="snow" type="button">❄️ Snow</button>
-                <button class="wx btn btn-sm" data-wx="hail" type="button">🧊 Hail</button>
-                <button class="wx btn btn-sm" data-wx="mist" type="button">🌫️ Mist</button>
-                <button class="wx btn btn-sm" data-wx="fog" type="button">🌁 Fog</button>
-                <button class="wx btn btn-sm" data-wx="sun" type="button">🔆 Sun</button>
-                <button class="wx btn btn-sm" data-wx="heat" type="button">🥵 Heat</button>
-                <button class="wx btn btn-sm" data-wx="cold" type="button">🥶 Cold</button>
-                <button class="wx btn btn-sm" data-wx="embers" type="button">🔥 Embers</button>
-                <span class="spacer"></span>
-                <button id="wxWholeBtn" class="btn btn-sm" type="button" title="Apply the selected weather to the whole map">🗺️ Whole map</button>
-                <button id="wxPaintBtn" class="btn btn-sm" type="button" title="Paint the selected weather onto the cells you click">🖌️ Paint</button>
-                <button id="wxEraseBtn" class="btn btn-sm" type="button" title="Click cells to clear weather there">✂️ Erase cells</button>
-                <button id="wxClearBtn" class="btn btn-sm btn-ghost" type="button" title="Clear all weather">🚫 Clear all</button>
-                <label class="chip-toggle" title="Skip weather over walls, floors and other indoor terrain"><input type="checkbox" id="wxIndoor"> Skip indoors</label>
+            <div class="map-toolbar weather-bar collapsible" data-tb="weather" role="toolbar" aria-label="Weather">
+                <button class="tb-toggle" type="button" title="Fold this bar" aria-expanded="true"><span class="tb-chevron">▾</span><span class="tool-label">Weather</span></button>
+                <div class="tb-body">
+                    <button class="wx btn btn-sm" data-wx="rain" type="button">🌧️ Rain</button>
+                    <button class="wx btn btn-sm" data-wx="thunder" type="button">⛈️ Storm</button>
+                    <button class="wx btn btn-sm" data-wx="snow" type="button">❄️ Snow</button>
+                    <button class="wx btn btn-sm" data-wx="hail" type="button">🧊 Hail</button>
+                    <button class="wx btn btn-sm" data-wx="mist" type="button">🌫️ Mist</button>
+                    <button class="wx btn btn-sm" data-wx="fog" type="button">🌁 Fog</button>
+                    <button class="wx btn btn-sm" data-wx="sun" type="button">🔆 Sun</button>
+                    <button class="wx btn btn-sm" data-wx="heat" type="button">🥵 Heat</button>
+                    <button class="wx btn btn-sm" data-wx="cold" type="button">🥶 Cold</button>
+                    <button class="wx btn btn-sm" data-wx="embers" type="button">🔥 Embers</button>
+                    <span class="spacer"></span>
+                    <button id="wxWholeBtn" class="btn btn-sm" type="button" title="Apply the selected weather to the whole map">🗺️ Whole map</button>
+                    <button id="wxPaintBtn" class="btn btn-sm" type="button" title="Paint the selected weather onto the cells you click">🖌️ Paint</button>
+                    <button id="wxEraseBtn" class="btn btn-sm" type="button" title="Click cells to clear weather there">✂️ Erase cells</button>
+                    <button id="wxClearBtn" class="btn btn-sm btn-ghost" type="button" title="Clear all weather">🚫 Clear all</button>
+                    <label class="chip-toggle" title="Skip weather over walls, floors and other indoor terrain"><input type="checkbox" id="wxIndoor"> Skip indoors</label>
+                </div>
             </div>
 
             <!-- drawing & laser -->
-            <div class="map-toolbar draw-bar" role="toolbar" aria-label="Drawing">
-                <span class="tool-label">Draw</span>
-                <button id="drawBtn" class="btn btn-sm" type="button" title="Draw on the map">✏️ Pen</button>
-                <button id="drawEraseBtn" class="btn btn-sm" type="button" title="Rub out drawings">🩹 Erase</button>
-                <button id="laserBtn" class="btn btn-sm" type="button" title="Laser pointer for the players">🔦 Laser</button>
-                <input type="color" id="drawColor" value="#e8b24c" title="Colour" style="width:36px;height:30px;padding:2px">
-                <select id="drawType" title="Pen style" style="max-width:96px">
-                    <option value="pen">Pen</option>
-                    <option value="marker">Marker</option>
-                    <option value="blur">Glow</option>
-                    <option value="dashed">Dashed</option>
-                </select>
-                <input type="range" id="drawWidth" min="1" max="24" value="4" title="Thickness" style="max-width:90px">
-                <span class="spacer"></span>
-                <button id="drawUndo" class="btn btn-sm btn-ghost" type="button" title="Undo last stroke">↶ Undo</button>
-                <button id="drawClear" class="btn btn-sm btn-ghost" type="button" title="Clear all drawings">🧹 Clear</button>
+            <div class="map-toolbar draw-bar collapsible" data-tb="draw" role="toolbar" aria-label="Drawing">
+                <button class="tb-toggle" type="button" title="Fold this bar" aria-expanded="true"><span class="tb-chevron">▾</span><span class="tool-label">Draw</span></button>
+                <div class="tb-body">
+                    <button id="drawBtn" class="btn btn-sm" type="button" title="Draw on the map">✏️ Pen</button>
+                    <button id="drawEraseBtn" class="btn btn-sm" type="button" title="Rub out drawings">🩹 Erase</button>
+                    <button id="laserBtn" class="btn btn-sm" type="button" title="Laser pointer for the players">🔦 Laser</button>
+                    <input type="color" id="drawColor" value="#e8b24c" title="Colour" style="width:36px;height:30px;padding:2px">
+                    <select id="drawType" title="Pen style" style="max-width:96px">
+                        <option value="pen">Pen</option>
+                        <option value="marker">Marker</option>
+                        <option value="blur">Glow</option>
+                        <option value="dashed">Dashed</option>
+                    </select>
+                    <input type="range" id="drawWidth" min="1" max="24" value="4" title="Thickness" style="max-width:90px">
+                    <span class="spacer"></span>
+                    <button id="drawUndo" class="btn btn-sm btn-ghost" type="button" title="Undo last stroke">↶ Undo</button>
+                    <button id="drawClear" class="btn btn-sm btn-ghost" type="button" title="Clear all drawings">🧹 Clear</button>
+                </div>
             </div>
 
             <div id="mapFrame" class="map-frame">
@@ -163,6 +172,16 @@
             </div>
             <p class="hint">Drag tokens &amp; items to move them · pick a tool above, then click the map ·
                 everything mirrors to the player screen live.</p>
+
+            <div id="benchPanel" class="bench-panel">
+                <div class="bench-head">
+                    <span class="bench-label">🎭 Off-map bench</span>
+                    <span class="bench-note">Hidden from players · drag a piece onto the map to deploy it</span>
+                </div>
+                <div id="benchList" class="bench-list"></div>
+                <p id="benchEmpty" class="hint">Nothing staged. Use a token's <strong>🎭</strong> button, or
+                    <strong>send</strong> a character here from another location, to prepare it out of sight.</p>
+            </div>
         </div>
 
         <!-- ============================ PANELS ============================ -->

@@ -150,7 +150,7 @@
         });
 
         tokenLayer.innerHTML = '';
-        L.tokens.filter((t) => !t.hidden).forEach((t) => {
+        L.tokens.filter((t) => !t.hidden && !t.staged).forEach((t) => {
             const el = document.createElement('div');
             const dead = t.maxHp > 0 && t.hp <= 0;
             el.className = 'token kind-' + t.kind + (dead ? ' is-dead' : '') + (st.turn.activeId === t.id ? ' is-active' : '');
@@ -192,8 +192,8 @@
         let members = [];
         if (set.showPlayerStats) {
             members = set.statsScope === 'all-visible'
-                ? L.tokens.filter((t) => !t.hidden && t.showHp)
-                : L.tokens.filter((t) => t.kind === 'player' && !t.hidden);
+                ? L.tokens.filter((t) => !t.hidden && !t.staged && t.showHp)
+                : L.tokens.filter((t) => t.kind === 'player' && !t.hidden && !t.staged);
         }
         party.classList.toggle('on', set.showPlayerStats && members.length > 0);
         $('#partyList').innerHTML = members.map((t) => {

@@ -1,0 +1,265 @@
+/* ==========================================================================
+   Loregate — character sheets screen
+   ========================================================================== */
+
+.chars-body {
+    padding: 0;
+}
+
+.chars-shell {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 100vh;
+}
+
+.chars-body-grid {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+@media (max-width: 800px) {
+    .chars-body-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.char-list-col {
+    position: sticky;
+    top: 1rem;
+}
+
+.char-list {
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+}
+
+.char-card {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    padding: .6rem .7rem;
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+}
+
+.char-card:hover {
+    border-color: var(--arcane);
+}
+
+.char-card.active {
+    border-color: var(--gold);
+    background: rgba(232, 178, 76, .08);
+}
+
+.char-avatar {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--display);
+    font-weight: 700;
+    color: #0b0810;
+    border: 2px solid rgba(0, 0, 0, .4);
+}
+
+.char-card-main {
+    min-width: 0;
+}
+
+.char-card-name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.char-card-meta {
+    font-size: .74rem;
+    color: var(--text-faint);
+    font-family: var(--mono);
+}
+
+/* ---- Sheet ---- */
+.sheet {
+    background: linear-gradient(180deg, var(--panel-2), var(--panel));
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.sheet-head {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+}
+
+.sheet-color {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.sheet-name {
+    flex: 1;
+    font-family: var(--display);
+    font-size: 1.4rem;
+    color: var(--gold-soft);
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+}
+
+.sheet-name:focus {
+    outline: none;
+    border-bottom-color: var(--gold);
+    box-shadow: none;
+}
+
+.sheet-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: .6rem;
+}
+
+@media (max-width: 620px) {
+    .sheet-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.fld {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+.fld>span {
+    font-size: .7rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-faint);
+    font-weight: 600;
+}
+
+.hp-bar.big {
+    height: 10px;
+    border-radius: 5px;
+}
+
+.sheet-sub {
+    font-family: var(--display);
+    color: var(--gold-soft);
+    font-size: 1rem;
+    margin-top: .3rem;
+}
+
+.abilities {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: .6rem;
+}
+
+@media (max-width: 620px) {
+    .abilities {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.abil {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .2rem;
+    background: var(--ink-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: .5rem;
+}
+
+.abil>span {
+    font-family: var(--display);
+    font-size: .8rem;
+    color: var(--text-faint);
+}
+
+.abil input {
+    text-align: center;
+    font-size: 1.1rem;
+    font-weight: 700;
+    padding: .2rem;
+    background: transparent;
+    border: 0;
+}
+
+.abil input:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+.abil em {
+    font-family: var(--mono);
+    font-style: normal;
+    font-size: .8rem;
+    color: var(--gold);
+    background: rgba(232, 178, 76, .12);
+    border-radius: 999px;
+    padding: 0 .5rem;
+}
+
+.sheet-areas {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .8rem;
+}
+
+@media (max-width: 620px) {
+    .sheet-areas {
+        grid-template-columns: 1fr;
+    }
+}
+
+.area {
+    display: flex;
+    flex-direction: column;
+    gap: .3rem;
+}
+
+.area.full {
+    grid-column: 1 / -1;
+}
+
+.area>span {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--text-soft);
+}
+
+.sheet-link {
+    border-top: 1px solid var(--line-soft);
+    padding-top: .8rem;
+}
+
+.editor-empty {
+    text-align: center;
+    color: var(--text-faint);
+    padding: 3rem 1rem;
+    font-family: var(--display);
+}
