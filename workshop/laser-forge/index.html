@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laser Forge · rami.party workshop</title>
+    <meta name="description"
+        content="Laser Forge — generate machine-ready files, images, text, emoji and QR codes for any laser engraver. 100% in your browser, nothing uploaded.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">🔥</span>
+            <span class="brand-name">Laser&nbsp;Forge</span>
+            <span class="brand-tag">workshop · rami.party</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn" id="btn-new" title="Start a new blank project">New</button>
+            <button class="btn" id="btn-undo" title="Undo (Ctrl+Z)">↶ Undo</button>
+            <button class="btn" id="btn-redo" title="Redo (Ctrl+Y)">↷ Redo</button>
+            <button class="btn" id="btn-fit" title="Fit artboard to view (F)">Fit</button>
+            <button class="btn btn-primary" id="btn-export" title="Export machine-ready files">⤓ Export</button>
+            <a class="btn btn-ghost" href="/workshop/" title="Back to the workshop">← Workshop</a>
+        </div>
+    </header>
+
+    <div class="app-body">
+        <!-- Left toolbar -->
+        <nav class="toolbar" aria-label="Add objects">
+            <button class="tool" data-action="add-text" title="Add text">🅣<span>Text</span></button>
+            <button class="tool" data-action="emoji" title="Insert emoji / symbol">☺<span>Emoji</span></button>
+            <button class="tool" data-action="add-image" title="Upload an image → grayscale engrave">🖼<span>Image</span></button>
+            <button class="tool" data-action="add-qr" title="Generate a QR code">▦<span>QR</span></button>
+            <button class="tool" data-action="add-puzzle" title="Puzzle generator (jigsaw / tessellation / tiling)">🧩<span>Puzzle</span></button>
+            <div class="tool-sep"></div>
+            <button class="tool" data-action="shape-rect" title="Rectangle">▭<span>Rect</span></button>
+            <button class="tool" data-action="shape-circle" title="Circle / ellipse">◯<span>Circle</span></button>
+            <button class="tool" data-action="shape-polygon" title="Polygon">⬡<span>Poly</span></button>
+            <button class="tool" data-action="shape-star" title="Star">★<span>Star</span></button>
+            <button class="tool" data-action="shape-heart" title="Heart">♥<span>Heart</span></button>
+            <button class="tool" data-action="shape-line" title="Line">╱<span>Line</span></button>
+        </nav>
+
+        <!-- Center stage -->
+        <main class="stage" id="stage">
+            <canvas id="board"></canvas>
+            <div class="hint" id="empty-hint">
+                <p><strong>The forge is empty.</strong></p>
+                <p>Add text, a shape, a QR code, or <em>upload an image</em> to make a perfect
+                    grayscale engraving. Everything stays in your browser.</p>
+            </div>
+        </main>
+
+        <!-- Right sidebar -->
+        <aside class="sidebar">
+            <section class="panel">
+                <h2 class="panel-title">Properties</h2>
+                <div id="props" class="props">
+                    <p class="muted">Nothing selected. Pick an object on the canvas, or add one from the left.</p>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title">Layers <span class="muted" id="layer-count"></span></h2>
+                <ul id="layers" class="layers"></ul>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title">Artboard</h2>
+                <div class="row">
+                    <label for="bed">Bed preset</label>
+                    <select id="bed"></select>
+                </div>
+                <div class="row two">
+                    <div><label for="ab-w">Width mm</label><input type="number" id="ab-w" min="10" max="2000" step="1"></div>
+                    <div><label for="ab-h">Height mm</label><input type="number" id="ab-h" min="10" max="2000" step="1"></div>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <footer class="statusbar">
+        <span id="status-doc"></span>
+        <span id="status-sel" class="muted"></span>
+        <span id="status-zoom" class="right muted"></span>
+    </footer>
+
+    <!-- Export modal -->
+    <div class="modal-backdrop" id="export-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+            <div class="modal-head">
+                <h2 id="export-title">Export</h2>
+                <button class="icon-btn" id="export-close" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <label for="preset">Target software</label>
+                    <select id="preset" title="Auto-pick the ideal format & settings">
+                        <option value="">— choose to auto-configure —</option>
+                        <option value="lightburn">LightBurn (SVG)</option>
+                        <option value="lasergrbl">LaserGRBL (BMP)</option>
+                        <option value="glowforge">Glowforge (SVG)</option>
+                        <option value="xtool">xTool Creative Space (SVG)</option>
+                        <option value="inkscape">Inkscape (SVG)</option>
+                        <option value="rayforge">Rayforge (SVG)</option>
+                        <option value="ruida">Ruida / RDWorks (DXF)</option>
+                        <option value="grbl">Direct G-code (GRBL)</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <label for="format">Format</label>
+                    <select id="format">
+                        <option value="svg">SVG — vector (cut / score / engrave)</option>
+                        <option value="dxf">DXF R12 — vector (CAD / Ruida)</option>
+                        <option value="pdf">PDF — vector + image</option>
+                        <option value="png">PNG — raster (grayscale / dithered)</option>
+                        <option value="bmp">BMP — raster (LaserGRBL)</option>
+                        <option value="jpg">JPG — raster</option>
+                        <option value="gcode">G-code — direct machine code</option>
+                    </select>
+                </div>
+
+                <div id="opt-raster" class="opt-group">
+                    <div class="row two">
+                        <div><label for="opt-dpi">DPI / resolution</label><input type="number" id="opt-dpi" min="50" max="1200" step="10" value="150"></div>
+                        <div id="opt-bits-wrap"><label for="opt-bits">BMP depth</label>
+                            <select id="opt-bits"><option value="8">8-bit grayscale</option><option value="1">1-bit mono</option></select>
+                        </div>
+                    </div>
+                    <div class="row" id="opt-quality-wrap">
+                        <label for="opt-quality">JPG quality</label>
+                        <input type="range" id="opt-quality" min="0.5" max="1" step="0.02" value="0.92">
+                    </div>
+                </div>
+
+                <div id="opt-gcode" class="opt-group" hidden>
+                    <div class="row two">
+                        <div><label for="g-mode">Mode</label>
+                            <select id="g-mode"><option value="vector">Vector (lines/cut)</option><option value="raster">Raster (image engrave)</option></select>
+                        </div>
+                        <div><label for="g-laser">Laser mode</label>
+                            <select id="g-laser"><option value="M4">M4 dynamic</option><option value="M3">M3 constant</option></select>
+                        </div>
+                    </div>
+                    <div class="row two">
+                        <div><label for="g-espeed">Engrave mm/min</label><input type="number" id="g-espeed" value="1500"></div>
+                        <div><label for="g-cspeed">Cut mm/min</label><input type="number" id="g-cspeed" value="600"></div>
+                    </div>
+                    <div class="row two">
+                        <div><label for="g-epow">Engrave power S</label><input type="number" id="g-epow" value="700"></div>
+                        <div><label for="g-cpow">Cut power S</label><input type="number" id="g-cpow" value="1000"></div>
+                    </div>
+                    <div class="row two">
+                        <div><label for="g-max">Max S</label><input type="number" id="g-max" value="1000"></div>
+                        <div id="g-dpi-wrap"><label for="g-dpi">Raster DPI</label><input type="number" id="g-dpi" value="120"></div>
+                    </div>
+                    <label class="check"><input type="checkbox" id="g-ack"> I understand — I will verify the code
+                        and never run my laser unattended (eyewear, fume extraction, fire safety).</label>
+                </div>
+
+                <p class="export-summary muted" id="export-summary"></p>
+                <div class="modal-foot">
+                    <button class="btn btn-primary" id="export-go">⤓ Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emoji popover -->
+    <div class="popover" id="emoji-pop" hidden>
+        <input type="search" id="emoji-search" placeholder="Search emoji…" aria-label="Search emoji">
+        <div class="emoji-grid" id="emoji-grid"></div>
+        <p class="muted tiny">Inserted as a monochrome silhouette — traced to clean vectors on export.</p>
+    </div>
+
+    <input type="file" id="file-input" accept="image/*" hidden>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
