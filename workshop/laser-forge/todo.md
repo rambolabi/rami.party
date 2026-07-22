@@ -378,7 +378,7 @@ safety gate on G-code. Friction that remains (planned below):
 
 - [x] **Beginner vs Pro mode** — a header toggle hides advanced fields (e.g. export kerf/overscan)
   by default; the Help modal gives a “1) add 2) tweak 3) export” quick start.
-- [x] **Inline explainers** — tooltips on every control + a Help modal (per-field “?” still to add).
+- [x] **Inline explainers** — tooltips + inline hint lines on key options + a full in-app **Guide** modal.
 - [x] **Drag-and-drop image onto the canvas**.
 - [x] **Undo/redo + shortcut cheatsheet** surfaced in the Help modal.
 - [x] **Touch / mobile** layout (responsive header/toolbar; deeper touch gestures still to add).
@@ -404,7 +404,7 @@ safety gate on G-code. Friction that remains (planned below):
 
 **Puzzles & tiling**
 - [ ] More tessellation families: Escher-style rotational/glide tiles, Penrose/aperiodic tiles,
-  and spiral / radial puzzles. *(Organic **Voronoi** puzzle done.)*
+  and spiral / radial puzzles. *(Organic **Voronoi** puzzle + interactive **custom draw-your-own tile** done.)*
 - [ ] **Image-into-puzzle**: drop a photo, auto-fit it across the pieces (engrave per-piece
   slices) for a printable photo puzzle.
 - [x] Numbered/lettered pieces (Voronoi + grid). *(Auto assembly-key sheet still to add.)*
@@ -456,3 +456,17 @@ Hershey single-line fonts, Web-Worker offloading, multi-select + align/distribut
 snapping, boolean operations, DXF/SVG **import**, tabs/bridges, material test-grid,
 Escher/Penrose tiles, image-into-puzzle, rep-tile explorer, CSV variable data, SVG paste,
 stipple/line-art, hatch fills, and nesting.
+
+## 21. Round-3 additions
+
+- [x] **Custom repeating-shape editor** — a “Custom” puzzle style with an interactive **tile
+  editor**: drag the top &amp; left edges of a square; the opposite edges mirror by translation,
+  so every piece is congruent and interlocks into one giant puzzle of the same shape
+  (the **“Connecting Cats”** / translational-tessellation principle). Live 3×3 tessellation
+  preview; click to add points, drag to shape, double-click to remove. Verified: all internal
+  edges come out congruent, and the puzzle tiles correctly.
+- [x] **In-app Guide** — the Help modal now explains every tool (when to use it), the three
+  operations (cut/score/engrave), which **export format** to pick, and the handy options
+  (dithering, kerf, overscan, array, save/share).
+- [x] **Inline explanations** — short hint lines under key controls (operation colours,
+  dithering, puzzle style, custom tile) so beginners know what each does.

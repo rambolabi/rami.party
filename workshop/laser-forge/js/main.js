@@ -9,6 +9,7 @@ import { QR_ECL } from './qr.js';
 import { runExport, DEFAULT_GCODE, estimate } from './exporters.js';
 import { OPERATIONS, OP_COLORS, clamp } from './geometry.js';
 import { t, setLang, applyI18n, getLang } from './i18n.js';
+import { openTileEditor } from './tileeditor.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -175,6 +176,7 @@ function commonHTML(sel) {
     return `
     <div class="row"><label>Name</label><input type="text" id="p-name" value="${escapeAttr(sel.name || '')}"></div>
     <div class="row"><label>Operation (colour = layer)</label>${opPills(sel)}</div>
+    <p class="hint-tip">Red = cut through · blue = score/mark · black = engrave/fill.</p>
     <div class="row two">
         <div><label>X mm</label><input type="number" id="p-x" step="0.5" value="${r1(sel.x)}"></div>
         <div><label>Y mm</label><input type="number" id="p-y" step="0.5" value="${r1(sel.y)}"></div>
@@ -246,7 +248,13 @@ function typeHTML(sel) {
             ${styleOpt('tessellation', 'Tessellation — one repeating self-fitting tile (SHMUZZLE-style)')}
             ${styleOpt('geometric', 'Geometric tiling — straight cuts')}
             ${styleOpt('voronoi', 'Voronoi — organic random cells')}
+            ${styleOpt('custom', 'Custom — draw your own repeating tile')}
         </select></div>
+        <p class="hint-tip" id="p-stylehint"></p>
+        <div class="row" id="p-customrow">
+            <button class="btn btn-primary" id="p-editile">✏️ Draw / edit tile…</button>
+            <p class="hint-tip">Shape one tile; every piece becomes that shape and interlocks (“Connecting Cats” style).</p>
+        </div>
         <div class="row two">
             <div><label>Columns</label><input type="number" id="p-cols" min="1" max="40" step="1" value="${sel.cols}"></div>
             <div><label>Rows</label><input type="number" id="p-rows" min="1" max="40" step="1" value="${sel.rows}"></div>
@@ -321,6 +329,7 @@ function typeHTML(sel) {
         ${sl('levelsWhite', 'Levels — white point', 1, 255, 1, p.levelsWhite)}
         <div class="row"><label>Dithering</label><select id="pi-dither">${DITHER_METHODS.map(([v, n]) =>
             `<option value="${v}" ${p.dither === v ? 'selected' : ''}>${n}</option>`).join('')}</select></div>
+        <p class="hint-tip">Dithering fakes grey shades with dots — best for photos on wood/acrylic.</p>
         ${sl('ditherCutoff', 'Threshold cutoff', 0, 255, 1, p.ditherCutoff)}
         <label class="check"><input type="checkbox" id="pi-invert" ${p.invert ? 'checked' : ''}> Invert (dark materials / slate)</label>
         <label class="check"><input type="checkbox" id="pi-removeBg" ${p.removeBg ? 'checked' : ''}> Remove white background</label>
@@ -453,15 +462,28 @@ function wirePuzzle(sel) {
     bindNum('p-iconsize', (v) => ({ iconSizeMM: Math.max(0, v) }));
     bindRaw('p-icon', 'input', (el) => store.patch(sel.id, { icon: el.value.slice(0, 2) }, { transient: true }), true);
     const nb = $('#p-numbered'); if (nb) nb.addEventListener('change', () => store.patch(sel.id, { numbered: nb.checked }));
+    const et = $('#p-editile');
+    if (et) et.addEventListener('click', () => openTileEditor(
+        { edgeH: sel.edgeH || [], edgeV: sel.edgeV || [] },
+        (res) => store.patch(sel.id, { edgeH: res.edgeH, edgeV: res.edgeV })));
     const sh = $('#p-shuffle');
     if (sh) sh.addEventListener('click', () => store.patch(sel.id, { seed: (Math.random() * 1e9) | 0 }));
     // show only the relevant controls for the chosen style
-    const isGeo = sel.style === 'geometric', isJig = sel.style === 'jigsaw', isVor = sel.style === 'voronoi';
+    const isGeo = sel.style === 'geometric', isJig = sel.style === 'jigsaw', isVor = sel.style === 'voronoi', isCustom = sel.style === 'custom';
     const show = (id, on) => { const e = $('#' + id); if (e) e.style.display = on ? '' : 'none'; };
-    show('p-tabrow', !isGeo && !isVor);
-    show('p-tabstylerow', !isGeo && !isVor);
+    show('p-tabrow', !isGeo && !isVor && !isCustom);
+    show('p-tabstylerow', !isGeo && !isVor && !isCustom);
     show('p-georow', isGeo);
     show('p-seedrow', isJig || isVor);
+    show('p-customrow', isCustom);
+    const hints = {
+        jigsaw: 'Classic puzzle with random interlocking tabs. “Tab size” changes the knobs.',
+        tessellation: 'One repeating tile that fits into itself — every piece is identical.',
+        geometric: 'Straight-cut tiles: square, triangle or hexagon. Simple and fast.',
+        voronoi: 'Organic random cells — change the seed for a new pattern.',
+        custom: 'Draw your own repeating tile — every piece becomes that shape and interlocks.',
+    };
+    const hintEl = $('#p-stylehint'); if (hintEl) hintEl.textContent = hints[sel.style] || '';
 }
 
 function wireImage(sel) {

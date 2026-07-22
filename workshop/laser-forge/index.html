@@ -207,6 +207,31 @@
     <input type="file" id="file-input" accept="image/*" hidden>
     <input type="file" id="project-input" accept="application/json,.json" hidden>
 
+    <!-- Tile editor modal -->
+    <div class="modal-backdrop" id="tile-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tile-title">
+            <div class="modal-head">
+                <h2 id="tile-title">Draw your repeating tile</h2>
+                <button class="icon-btn" id="tile-close" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="muted tiny">Drag the <b style="color:#22d3ee">cyan (top)</b> and
+                    <b style="color:#a855f7">violet (left)</b> edges to shape one tile. The opposite
+                    edges mirror automatically, so every piece interlocks into a giant puzzle of the
+                    same shape — like the “Connecting Cats” tessellation. <b>Click an edge</b> to add a
+                    point; <b>drag</b> to shape it; <b>double-click</b> a point to remove it. The faint
+                    grid shows how your tile repeats.</p>
+                <canvas id="tile-canvas" width="440" height="360"
+                    style="width:100%;height:360px;background:#0a061a;border:1px solid var(--border);border-radius:10px;touch-action:none"></canvas>
+                <div class="modal-foot" style="justify-content:space-between">
+                    <button class="btn" id="tile-reset">Reset to square</button>
+                    <span><button class="btn" id="tile-cancel">Cancel</button>
+                        <button class="btn btn-primary" id="tile-apply">Apply tile</button></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Help modal -->
     <div class="modal-backdrop" id="help-modal" hidden>
         <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
@@ -222,6 +247,45 @@
                     <li><b>2)</b> Tune it in the Properties panel (turn on <b>Pro mode</b> for advanced fields).</li>
                     <li><b>3)</b> Press <b>Export</b> and pick your laser software preset.</li>
                 </ul>
+
+                <h3 class="help-h3">The tools (left bar) — when to use what</h3>
+                <ul class="help-list guide">
+                    <li><b>🅣 Text</b> — words/labels. Any font; “Arc” bends it. Exported as outlines so the font isn’t needed on the machine.</li>
+                    <li><b>☺ Emoji</b> — drop a symbol; it’s traced to a clean engravable silhouette.</li>
+                    <li><b>🖼 Image</b> — a photo/logo for <b>grayscale engraving</b>. Use the sliders + dithering, then export PNG/BMP/JPG or G-code.</li>
+                    <li><b>▦ QR</b> / <b>▮▮ Barcode</b> — scannable codes (URL, Wi-Fi, product IDs).</li>
+                    <li><b>🧩 Puzzle</b> — jigsaw, tessellation, geometric, Voronoi, or <b>Custom</b> (draw your own repeating tile).</li>
+                    <li><b>▢ Box</b> — finger-joint enclosure net; set W×D×H + material thickness, then cut &amp; assemble.</li>
+                    <li><b>⚙ Gear</b> — a gear with chosen teeth + bore. <b>📏 Ruler</b> — graduated ruler; set length via Width.</li>
+                    <li><b>〜 Hinge</b> — living hinge (kerf slits) so flat wood bends. <b>✚ Marks</b> — registration crosshairs for print-and-cut.</li>
+                    <li><b>Shapes</b> — rectangle, circle, polygon, star, heart, line for building your own artwork.</li>
+                </ul>
+
+                <h3 class="help-h3">Operations (the colour of each object)</h3>
+                <ul class="help-list guide">
+                    <li><span style="color:#ff2d2d">● Cut</span> — cut all the way through (outlines).</li>
+                    <li><span style="color:#2d6bff">● Score</span> — light surface line (fold/mark).</li>
+                    <li><span style="color:#111">● Engrave</span> — fill/darken an area (text, photos).</li>
+                </ul>
+
+                <h3 class="help-h3">Which export format?</h3>
+                <ul class="help-list guide">
+                    <li><b>SVG</b> — best all-round vector (LightBurn, Glowforge, xTool, Inkscape, Rayforge).</li>
+                    <li><b>DXF</b> — vector for Ruida/RDWorks &amp; CAD. <b>PDF/AI/EPS</b> — vector for design apps.</li>
+                    <li><b>PLT</b> — plotter/HPGL vector. <b>PNG/BMP/JPG</b> — raster for photo engraving (BMP = LaserGRBL).</li>
+                    <li><b>G-code</b> — runs directly on a GRBL machine. Verify first — never run a laser unattended.</li>
+                    <li>Tip: pick your machine under <b>Target software</b> and it sets the format for you.</li>
+                </ul>
+
+                <h3 class="help-h3">Handy options</h3>
+                <ul class="help-list guide">
+                    <li><b>Dithering</b> (images) — fakes grey shades with dots; best for photos on wood/acrylic.</li>
+                    <li><b>Kerf comp.</b> (export) — grows cut lines by half the beam width so parts fit exactly.</li>
+                    <li><b>Overscan</b> (raster G-code) — runs past the edges to avoid dark burn marks.</li>
+                    <li><b>Array…</b> — duplicate the selection into a grid (e.g. 3x2x5 = 3×2 with 5&nbsp;mm gaps).</li>
+                    <li><b>Save/Open</b> keep your project as a file; <b>🔗 link</b> shares it via URL.</li>
+                </ul>
+
                 <h3 class="help-h3">Shortcuts</h3>
                 <ul class="help-list">
                     <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> — undo / redo</li>
@@ -230,8 +294,6 @@
                     <li>Drag a handle to resize, the top dot to rotate (hold <kbd>Shift</kbd> to snap).</li>
                     <li>Drag &amp; drop an image straight onto the canvas.</li>
                 </ul>
-                <p class="muted tiny">Colour = operation: <span style="color:#ff2d2d">red cut</span>,
-                    <span style="color:#2d6bff">blue score</span>, black engrave.</p>
             </div>
         </div>
     </div>

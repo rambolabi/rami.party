@@ -65,9 +65,10 @@ export function createPuzzle(props = {}) {
     return {
         id: uid('pz'), type: 'puzzle', name: 'Puzzle', op: 'cut',
         x: 20, y: 20, w: 120, h: 120, rotation: 0, visible: true,
-        style: 'jigsaw',        // 'jigsaw' | 'tessellation' | 'geometric' | 'voronoi'
+        style: 'jigsaw',        // 'jigsaw' | 'tessellation' | 'geometric' | 'voronoi' | 'custom'
         rows: 4, cols: 4, tab: 0.2, tabStyle: 'semicircle', numbered: false,
         geoShape: 'square',     // 'square' | 'triangle' | 'hexagon'
+        edgeH: [], edgeV: [],   // custom tessellation edge profiles ({t,o} interior points)
         seed: (Math.random() * 1e9) | 0,
         icon: '', iconSizeMM: 0,
         ...props,
@@ -404,6 +405,29 @@ function voronoiTiling(obj, out) {
     });
 }
 
+// Custom tessellation: a user-drawn tile whose opposite edges match by translation,
+// so every interior piece is congruent (the "Connecting Cats" principle).
+function customPuzzle(obj, out, rows, cols, cw, ch) {
+    const eh = [...(obj.edgeH || [])].sort((a, b) => a.t - b.t);
+    const ev = [...(obj.edgeV || [])].sort((a, b) => a.t - b.t);
+    // internal vertical edges use the left/vertical profile (offset is horizontal → ×cw)
+    for (let c = 1; c < cols; c++) for (let r = 0; r < rows; r++) {
+        const x = c * cw, y0 = r * ch;
+        const pts = [{ x, y: y0 }];
+        for (const p of ev) pts.push({ x: x + p.o * cw, y: y0 + p.t * ch });
+        pts.push({ x, y: (r + 1) * ch });
+        out.push({ pts, closed: false, op: 'cut' });
+    }
+    // internal horizontal edges use the top/horizontal profile (offset is vertical → ×ch)
+    for (let r = 1; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const y = r * ch, x0 = c * cw;
+        const pts = [{ x: x0, y }];
+        for (const p of eh) pts.push({ x: x0 + p.t * cw, y: y + p.o * ch });
+        pts.push({ x: (c + 1) * cw, y });
+        out.push({ pts, closed: false, op: 'cut' });
+    }
+}
+
 function puzzleLocalLoops(obj) {
     const { w, h } = obj;
     const rows = Math.max(1, obj.rows | 0), cols = Math.max(1, obj.cols | 0);
@@ -416,6 +440,8 @@ function puzzleLocalLoops(obj) {
         geometricTiling(obj, out, cw, ch, rows, cols);
     } else if (obj.style === 'voronoi') {
         voronoiTiling(obj, out);
+    } else if (obj.style === 'custom') {
+        customPuzzle(obj, out, rows, cols, cw, ch);
     } else {
         const tab = clamp(obj.tab ?? 0.2, 0.05, 0.4);
         const tess = obj.style === 'tessellation';
