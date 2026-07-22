@@ -4,6 +4,8 @@ import { uid, applyTransform, OP_COLORS, simplify, clamp } from './geometry.js';
 import { decodeImage, imageToImageData, processImageData, DEFAULT_IMAGE_PARAMS } from './image.js';
 import { traceBinary, binaryFromImageData } from './trace.js';
 import { qrGenerate } from './qr.js';
+import { boxLocalLoops, gearLocalLoops, rulerLoops, hingeLoops, registrationLoops } from './generators.js';
+import { encodeCode128B } from './barcode.js';
 
 // ---- shared measuring canvas ----------------------------------------------
 const measureCanvas = document.createElement('canvas');
@@ -32,7 +34,7 @@ export function createText(props = {}) {
         x: 10, y: 10, rotation: 0, visible: true,
         text: 'Laser', font: 'Quicksand, sans-serif', sizeMM: 20,
         bold: false, italic: false, align: 'left', lineHeight: 1.15,
-        fill: true, mirror: false, ...props,
+        fill: true, mirror: false, arc: 0, ...props,
     };
     const m = measureText(o);
     o.w = m.wMM; o.h = m.hMM;
@@ -63,8 +65,8 @@ export function createPuzzle(props = {}) {
     return {
         id: uid('pz'), type: 'puzzle', name: 'Puzzle', op: 'cut',
         x: 20, y: 20, w: 120, h: 120, rotation: 0, visible: true,
-        style: 'jigsaw',        // 'jigsaw' | 'tessellation' | 'geometric'
-        rows: 4, cols: 4, tab: 0.2,
+        style: 'jigsaw',        // 'jigsaw' | 'tessellation' | 'geometric' | 'voronoi'
+        rows: 4, cols: 4, tab: 0.2, tabStyle: 'semicircle', numbered: false,
         geoShape: 'square',     // 'square' | 'triangle' | 'hexagon'
         seed: (Math.random() * 1e9) | 0,
         icon: '', iconSizeMM: 0,
@@ -212,11 +214,25 @@ function textLocalLoops(obj) {
     m.lines.forEach((ln, i) => ctx.fillText(ln, ax, i * lineH));
     const img = ctx.getImageData(0, 0, W, H);
     const { bin, width, height } = binaryFromImageData(img, { threshold: 128 });
-    const loops = traceBinary(bin, width, height);
-    return loops.map((lp) => ({
+    const rawLoops = traceBinary(bin, width, height);
+    let loops = rawLoops.map((lp) => ({
         pts: simplify(lp.map((p) => ({ x: p.x / K, y: p.y / K })), 0.06, true),
         closed: true,
     }));
+    if (obj.arc) {
+        const arc = (obj.arc * Math.PI) / 180;
+        const Wm = m.wMM, Hm = m.hMM;
+        const R = Math.abs(arc) > 1e-3 ? Wm / arc : 1e6;
+        loops = loops.map((l) => ({
+            closed: l.closed,
+            pts: l.pts.map((p) => {
+                const ang = -arc / 2 + (p.x / Wm) * arc;
+                const rr = R - (Hm - p.y);
+                return { x: Wm / 2 + rr * Math.sin(ang), y: R - rr * Math.cos(ang) };
+            }),
+        }));
+    }
+    return loops;
 }
 
 function imageTraceLocalLoops(obj) {
@@ -242,12 +258,21 @@ function mulberry32(a) {
     };
 }
 
-// One edge with a semicircular interlocking tab (dir: +1/-1 bump side, 0 = straight).
-function tabbedEdge(A, B, tabFrac, dir) {
+// One edge with an interlocking tab. style 'neck' = locking dovetail, else semicircle.
+function tabbedEdge(A, B, tabFrac, dir, style) {
     if (!dir) return [{ x: A.x, y: A.y }, { x: B.x, y: B.y }];
     const dx = B.x - A.x, dy = B.y - A.y, L = Math.hypot(dx, dy) || 1;
     const ux = dx / L, uy = dy / L, nx = -uy * dir, ny = ux * dir;
-    const r = tabFrac * L, s0 = L / 2 - r, s1 = L / 2 + r, N = 18;
+    const r = tabFrac * L;
+    if (style === 'neck') {
+        const c = L / 2, base = r * 0.55, top = r * 0.95, depth = r;
+        const P = [{ s: c - base, o: 0 }, { s: c - top, o: depth }, { s: c + top, o: depth }, { s: c + base, o: 0 }];
+        const pts = [{ x: A.x, y: A.y }];
+        for (const p of P) pts.push({ x: A.x + ux * p.s + nx * p.o, y: A.y + uy * p.s + ny * p.o });
+        pts.push({ x: B.x, y: B.y });
+        return pts;
+    }
+    const s0 = L / 2 - r, s1 = L / 2 + r, N = 18;
     const pts = [{ x: A.x, y: A.y }];
     for (let i = 0; i <= N; i++) {
         const s = s0 + ((s1 - s0) * i) / N;
@@ -325,6 +350,60 @@ function geometricTiling(obj, out, cw, ch, rows, cols) {
             cut([{ x: c * cw, y: r * ch }, { x: (c + 1) * cw, y: (r + 1) * ch }]);
 }
 
+function clipHalf(poly, M, nx, ny) {
+    const out = [];
+    for (let i = 0; i < poly.length; i++) {
+        const a = poly[i], b = poly[(i + 1) % poly.length];
+        const da = (a.x - M.x) * nx + (a.y - M.y) * ny;
+        const db = (b.x - M.x) * nx + (b.y - M.y) * ny;
+        if (da <= 0) out.push(a);
+        if ((da < 0) !== (db < 0)) {
+            const t = da / (da - db);
+            out.push({ x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) });
+        }
+    }
+    return out;
+}
+
+function voronoiTiling(obj, out) {
+    const { w, h } = obj;
+    const rng = mulberry32((obj.seed | 0) || 1);
+    const n = Math.max(2, Math.min(200, (obj.rows | 0) * (obj.cols | 0)));
+    const sites = [];
+    for (let i = 0; i < n; i++) sites.push({ x: rng() * w, y: rng() * h });
+    const rect = [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }];
+    const seen = new Set();
+    const key = (a, b) => {
+        const k1 = a.x.toFixed(2) + ',' + a.y.toFixed(2), k2 = b.x.toFixed(2) + ',' + b.y.toFixed(2);
+        return k1 < k2 ? k1 + '|' + k2 : k2 + '|' + k1;
+    };
+    sites.forEach((s, idx) => {
+        let poly = rect;
+        for (const t of sites) {
+            if (t === s) continue;
+            poly = clipHalf(poly, { x: (s.x + t.x) / 2, y: (s.y + t.y) / 2 }, t.x - s.x, t.y - s.y);
+            if (poly.length < 3) break;
+        }
+        if (poly.length < 3) return;
+        for (let i = 0; i < poly.length; i++) {
+            const a = poly[i], b = poly[(i + 1) % poly.length];
+            if (Math.hypot(a.x - b.x, a.y - b.y) < 0.05) continue;
+            const kk = key(a, b);
+            if (seen.has(kk)) continue;
+            seen.add(kk);
+            out.push({ pts: [a, b], closed: false, op: 'cut' });
+        }
+        if (obj.numbered) {
+            let cx = 0, cy = 0;
+            for (const p of poly) { cx += p.x; cy += p.y; }
+            cx /= poly.length; cy /= poly.length;
+            const g = iconLoops(String(idx + 1), 'sans-serif', (Math.min(w, h) / Math.sqrt(n)) * 0.28);
+            for (const l of g.loops)
+                out.push({ pts: l.pts.map((p) => ({ x: cx - g.wMM / 2 + p.x, y: cy - g.hMM / 2 + p.y })), closed: l.closed, op: 'engrave' });
+        }
+    });
+}
+
 function puzzleLocalLoops(obj) {
     const { w, h } = obj;
     const rows = Math.max(1, obj.rows | 0), cols = Math.max(1, obj.cols | 0);
@@ -335,23 +414,25 @@ function puzzleLocalLoops(obj) {
 
     if (obj.style === 'geometric') {
         geometricTiling(obj, out, cw, ch, rows, cols);
+    } else if (obj.style === 'voronoi') {
+        voronoiTiling(obj, out);
     } else {
         const tab = clamp(obj.tab ?? 0.2, 0.05, 0.4);
         const tess = obj.style === 'tessellation';
+        const st = obj.tabStyle;
         const rng = mulberry32((obj.seed | 0) || 1);
-        // internal vertical edges (identical when tessellation → congruent, self-fitting tile)
         for (let c = 1; c < cols; c++) for (let r = 0; r < rows; r++) {
             const x = c * cw, dir = tess ? 1 : (rng() < 0.5 ? 1 : -1);
-            cut(tabbedEdge({ x, y: r * ch }, { x, y: (r + 1) * ch }, tab, dir));
+            cut(tabbedEdge({ x, y: r * ch }, { x, y: (r + 1) * ch }, tab, dir, st));
         }
         for (let r = 1; r < rows; r++) for (let c = 0; c < cols; c++) {
             const y = r * ch, dir = tess ? 1 : (rng() < 0.5 ? 1 : -1);
-            cut(tabbedEdge({ x: c * cw, y }, { x: (c + 1) * cw, y }, tab, dir));
+            cut(tabbedEdge({ x: c * cw, y }, { x: (c + 1) * cw, y }, tab, dir, st));
         }
     }
 
-    // optional repeating icon engraved in each cell
-    if (obj.icon && obj.icon.trim()) {
+    // optional repeating icon engraved in each cell (grid styles)
+    if (obj.icon && obj.icon.trim() && obj.style !== 'voronoi' && obj.geoShape !== 'hexagon') {
         const size = obj.iconSizeMM > 0 ? obj.iconSizeMM : Math.min(cw, ch) * 0.5;
         const ic = iconLoops(obj.icon.trim().slice(0, 2), 'sans-serif', size);
         for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
@@ -360,7 +441,51 @@ function puzzleLocalLoops(obj) {
                 out.push({ pts: l.pts.map((p) => ({ x: ox + p.x, y: oy + p.y })), closed: l.closed, op: 'engrave' });
         }
     }
+    // optional numbered pieces (grid styles)
+    if (obj.numbered && obj.style !== 'voronoi' && !(obj.style === 'geometric' && obj.geoShape === 'hexagon')) {
+        let nSeq = 1;
+        const size = Math.min(cw, ch) * 0.3;
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+            const g = iconLoops(String(nSeq++), 'sans-serif', size);
+            const ox = (c + 0.5) * cw - g.wMM / 2, oy = (r + 0.72) * ch - g.hMM / 2;
+            for (const l of g.loops)
+                out.push({ pts: l.pts.map((p) => ({ x: ox + p.x, y: oy + p.y })), closed: l.closed, op: 'engrave' });
+        }
+    }
     return out;
+}
+
+function barcodeLocalLoops(obj) {
+    const { bits, modules } = encodeCode128B(obj.data || '');
+    const quiet = obj.quiet ?? 10;
+    const total = modules + quiet * 2;
+    const unit = obj.w / total;
+    const barH = obj.showText ? obj.h * 0.78 : obj.h;
+    const out = [];
+    let i = 0;
+    while (i < bits.length) {
+        if (bits[i]) {
+            let j = i; while (j < bits.length && bits[j]) j++;
+            const x = (quiet + i) * unit, bw = (j - i) * unit;
+            out.push({ pts: [{ x, y: 0 }, { x: x + bw, y: 0 }, { x: x + bw, y: barH }, { x, y: barH }], closed: true, op: 'engrave' });
+            i = j;
+        } else i++;
+    }
+    if (obj.showText && (obj.data || '').length) {
+        const size = Math.min(obj.h * 0.18, (obj.w / (obj.data.length || 1)) * 1.3);
+        const g = iconLoops(obj.data, 'monospace', size);
+        for (const l of g.loops)
+            out.push({ pts: l.pts.map((p) => ({ x: (obj.w - g.wMM) / 2 + p.x, y: barH + 0.5 + p.y })), closed: l.closed, op: 'engrave' });
+    }
+    return out;
+}
+
+export function createBarcode(props = {}) {
+    return {
+        id: uid('bc'), type: 'barcode', name: 'Barcode', op: 'engrave',
+        x: 20, y: 20, w: 90, h: 30, rotation: 0, visible: true,
+        data: 'RAMI-1234', quiet: 10, showText: true, ...props,
+    };
 }
 
 // Returns local loops [{pts, closed, op?}]; null for pure-raster (image, unless traced).
@@ -368,6 +493,12 @@ export function localLoops(obj, { traceImage = false } = {}) {
     if (obj.type === 'shape') return shapeLocalLoops(obj);
     if (obj.type === 'qr') return qrLocalLoops(obj);
     if (obj.type === 'puzzle') return puzzleLocalLoops(obj);
+    if (obj.type === 'barcode') return barcodeLocalLoops(obj);
+    if (obj.type === 'box') return boxLocalLoops(obj);
+    if (obj.type === 'gear') return gearLocalLoops(obj);
+    if (obj.type === 'ruler') return rulerLoops(obj, iconLoops);
+    if (obj.type === 'hinge') return hingeLoops(obj);
+    if (obj.type === 'registration') return registrationLoops(obj);
     if (obj.type === 'text') return textLocalLoops(obj);
     if (obj.type === 'image') return traceImage ? imageTraceLocalLoops(obj) : null;
     return [];
@@ -461,7 +592,7 @@ export function drawObject(ctx, obj, scale, { requestRedraw, colorOverride, imag
         return;
     }
 
-    if (obj.type === 'text' && obj.fill && obj.op === 'engrave') {
+    if (obj.type === 'text' && obj.fill && obj.op === 'engrave' && !obj.arc) {
         const m = measureText(obj);
         ctx.fillStyle = color;
         ctx.textBaseline = 'top';

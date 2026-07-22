@@ -2,11 +2,13 @@
 
 import { Store, BED_PRESETS } from './store.js';
 import { Artboard } from './artboard.js';
-import { createText, createShape, createQR, createPuzzle, createImageFromFile, measureText } from './objects.js';
+import { createText, createShape, createQR, createPuzzle, createBarcode, createImageFromFile, measureText } from './objects.js';
+import { createBox, createGear, createRuler, createHinge, createRegistration, boxNetSize } from './generators.js';
 import { DITHER_METHODS } from './dither.js';
 import { QR_ECL } from './qr.js';
-import { runExport, DEFAULT_GCODE } from './exporters.js';
+import { runExport, DEFAULT_GCODE, estimate } from './exporters.js';
 import { OPERATIONS, OP_COLORS, clamp } from './geometry.js';
+import { t, setLang, applyI18n, getLang } from './i18n.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
@@ -21,6 +23,20 @@ const EMOJI = ['★', '☆', '♥', '♦', '♣', '♠', '☀', '☁', '☂', '�
 
 const store = new Store();
 store.load();
+// A shared link overrides the autosaved project.
+(() => {
+    const m = location.hash.match(/#p=(.+)$/);
+    if (!m) return;
+    try {
+        const d = JSON.parse(decodeURIComponent(escape(atob(m[1]))));
+        if (Array.isArray(d.objects)) {
+            store.state.artboard = d.artboard || store.state.artboard;
+            store.state.objects = d.objects;
+            store.state.selectedId = null;
+            store._lastSnapshot = store.snapshot();
+        }
+    } catch (_) { /* ignore malformed link */ }
+})();
 const art = new Artboard(store, $('#board'));
 art.onStatus = updateStatus;
 
@@ -41,7 +57,13 @@ $$('.tool').forEach((b) => b.addEventListener('click', () => doAction(b.dataset.
 async function doAction(action, btn) {
     if (action === 'add-text') store.addObject(createText());
     else if (action === 'add-qr') store.addObject(createQR());
+    else if (action === 'add-barcode') store.addObject(createBarcode());
     else if (action === 'add-puzzle') store.addObject(createPuzzle());
+    else if (action === 'gen-box') store.addObject(createBox());
+    else if (action === 'gen-gear') store.addObject(createGear());
+    else if (action === 'gen-ruler') store.addObject(createRuler());
+    else if (action === 'gen-hinge') store.addObject(createHinge());
+    else if (action === 'gen-reg') store.addObject(createRegistration());
     else if (action === 'add-image') $('#file-input').click();
     else if (action === 'emoji') toggleEmoji(btn);
     else if (action.startsWith('shape-')) {
@@ -66,6 +88,68 @@ $('#btn-undo').addEventListener('click', () => store.undo());
 $('#btn-redo').addEventListener('click', () => store.redo());
 $('#btn-fit').addEventListener('click', () => art.fit());
 $('#btn-export').addEventListener('click', openExport);
+
+// help modal
+$('#btn-help').addEventListener('click', () => $('#help-modal').hidden = false);
+$('#help-close').addEventListener('click', () => $('#help-modal').hidden = true);
+$('#help-modal').addEventListener('click', (e) => { if (e.target.id === 'help-modal') $('#help-modal').hidden = true; });
+
+// Pro mode
+const proMode = $('#pro-mode');
+proMode.checked = localStorage.getItem('laserforge.pro') === '1';
+const applyPro = () => { document.body.classList.toggle('pro', proMode.checked); localStorage.setItem('laserforge.pro', proMode.checked ? '1' : '0'); };
+proMode.addEventListener('change', applyPro); applyPro();
+
+// Language
+const langSel = $('#lang-select');
+langSel.value = getLang();
+langSel.addEventListener('change', () => { setLang(langSel.value); renderProps(); });
+
+// Save / Open / Share project
+$('#btn-save').addEventListener('click', saveProject);
+$('#btn-open').addEventListener('click', () => $('#project-input').click());
+$('#project-input').addEventListener('change', openProjectFile);
+
+// Drag & drop an image straight onto the canvas
+const stageEl = $('#stage');
+['dragover', 'drop'].forEach((ev) => stageEl.addEventListener(ev, (e) => e.preventDefault()));
+stageEl.addEventListener('drop', async (e) => {
+    const files = [...((e.dataTransfer && e.dataTransfer.files) || [])].filter((f) => f.type.startsWith('image/'));
+    for (const f of files) { try { store.addObject(await createImageFromFile(f)); } catch (_) { /* skip */ } }
+});
+
+function saveProject() {
+    const data = JSON.stringify({ artboard: store.state.artboard, objects: store.state.objects });
+    const blob = new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `laserforge-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+}
+async function openProjectFile(e) {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    try {
+        const data = JSON.parse(await f.text());
+        if (!Array.isArray(data.objects)) throw new Error('not a Laser Forge project');
+        store.state.artboard = data.artboard || store.state.artboard;
+        store.state.objects = data.objects;
+        store.state.selectedId = null;
+        store.commit('new');
+        art.fit();
+    } catch (err) { alert('Could not open project: ' + err.message); }
+}
+function shareLink() {
+    try {
+        const data = JSON.stringify({ artboard: store.state.artboard, objects: store.state.objects });
+        const url = location.origin + location.pathname + '#p=' + btoa(unescape(encodeURIComponent(data)));
+        if (navigator.clipboard) navigator.clipboard.writeText(url);
+        alert(url.length > 8000
+            ? 'Link copied — but it is very long (images bloat links; prefer Save for big projects).'
+            : 'Shareable link copied to clipboard!');
+    } catch (_) { alert('Could not create a link.'); }
+}
 
 // ---------------------------------------------------------------- keyboard
 window.addEventListener('keydown', (e) => {
@@ -105,6 +189,7 @@ function commonHTML(sel) {
     </div>
     <div class="btn-row">
         <button class="btn" id="p-dup" title="Duplicate (Ctrl+D)">Duplicate</button>
+        <button class="btn" id="p-array" title="Duplicate in a grid">Array…</button>
         <button class="btn" id="p-front" title="Bring forward">Forward</button>
         <button class="btn" id="p-back" title="Send backward">Back</button>
         <button class="btn danger" id="p-del" title="Delete (Del)">Delete</button>
@@ -125,6 +210,7 @@ function typeHTML(sel) {
                 `<option ${sel.align === a ? 'selected' : ''}>${a}</option>`).join('')}</select></div>
             <div><label>Line height</label><input type="number" id="p-lh" min="0.8" max="3" step="0.05" value="${sel.lineHeight}"></div>
         </div>
+        <div class="row"><label>Arc / curve °</label><input type="range" id="p-arc" min="-180" max="180" step="5" value="${sel.arc || 0}"></div>
         <div class="btn-row">
             <label class="check"><input type="checkbox" id="p-bold" ${sel.bold ? 'checked' : ''}> Bold</label>
             <label class="check"><input type="checkbox" id="p-italic" ${sel.italic ? 'checked' : ''}> Italic</label>
@@ -159,20 +245,65 @@ function typeHTML(sel) {
             ${styleOpt('jigsaw', 'Jigsaw — random interlocking tabs')}
             ${styleOpt('tessellation', 'Tessellation — one repeating self-fitting tile (SHMUZZLE-style)')}
             ${styleOpt('geometric', 'Geometric tiling — straight cuts')}
+            ${styleOpt('voronoi', 'Voronoi — organic random cells')}
         </select></div>
         <div class="row two">
             <div><label>Columns</label><input type="number" id="p-cols" min="1" max="40" step="1" value="${sel.cols}"></div>
             <div><label>Rows</label><input type="number" id="p-rows" min="1" max="40" step="1" value="${sel.rows}"></div>
         </div>
         <div class="row" id="p-tabrow"><label>Tab size (interlock)</label><input type="range" id="p-tab" min="0.08" max="0.35" step="0.01" value="${sel.tab}"></div>
+        <div class="row" id="p-tabstylerow"><label>Tab style</label><select id="p-tabstyle">
+            <option value="semicircle" ${sel.tabStyle === 'semicircle' ? 'selected' : ''}>Semicircle (smooth)</option>
+            <option value="neck" ${sel.tabStyle === 'neck' ? 'selected' : ''}>Dovetail (locking)</option>
+        </select></div>
         <div class="row" id="p-georow"><label>Tile shape</label><select id="p-geoshape">${geoOpt('square')}${geoOpt('triangle')}${geoOpt('hexagon')}</select></div>
         <div class="row" id="p-seedrow"><label>Random seed</label>
             <div class="row two" style="margin:0"><input type="number" id="p-seed" value="${sel.seed}"><button class="btn" id="p-shuffle">🎲 Shuffle</button></div></div>
+        <label class="check"><input type="checkbox" id="p-numbered" ${sel.numbered ? 'checked' : ''}> Number the pieces</label>
         <div class="row two">
             <div><label>Repeat icon (emoji/char)</label><input type="text" id="p-icon" maxlength="2" value="${escapeAttr(sel.icon || '')}"></div>
             <div><label>Icon size mm (0=auto)</label><input type="number" id="p-iconsize" min="0" step="0.5" value="${r1(sel.iconSizeMM)}"></div>
         </div>`;
     }
+
+    if (sel.type === 'barcode') return `
+        <hr class="sep">
+        <div class="row"><label>Data (Code 128)</label><input type="text" id="p-data" value="${escapeAttr(sel.data || '')}"></div>
+        <div class="row two">
+            <div><label>Quiet zone</label><input type="number" id="p-quiet" min="0" max="20" step="1" value="${sel.quiet}"></div>
+            <div><label class="check" style="margin-top:18px"><input type="checkbox" id="p-showtext" ${sel.showText ? 'checked' : ''}> Human-readable text</label></div>
+        </div>`;
+
+    if (sel.type === 'box') return `
+        <hr class="sep">
+        <div class="row three">
+            <div><label>W mm</label><input type="number" id="p-boxw" min="10" step="1" value="${r1(sel.boxW)}"></div>
+            <div><label>D mm</label><input type="number" id="p-boxd" min="10" step="1" value="${r1(sel.boxD)}"></div>
+            <div><label>H mm</label><input type="number" id="p-boxh" min="10" step="1" value="${r1(sel.boxH)}"></div>
+        </div>
+        <div class="row two">
+            <div><label>Thickness mm</label><input type="number" id="p-thick" min="1" max="12" step="0.5" value="${r1(sel.thickness)}"></div>
+            <div><label>Finger mm</label><input type="number" id="p-tabw" min="4" max="40" step="1" value="${r1(sel.tab)}"></div>
+        </div>
+        <p class="muted tiny">6 fingered panels — cut, then assemble. Match thickness to your material.</p>`;
+
+    if (sel.type === 'gear') return `
+        <hr class="sep">
+        <div class="row two">
+            <div><label>Teeth</label><input type="number" id="p-teeth" min="6" max="120" step="1" value="${sel.teeth}"></div>
+            <div><label>Bore mm</label><input type="number" id="p-bore" min="0" step="0.5" value="${r1(sel.bore)}"></div>
+        </div>`;
+
+    if (sel.type === 'hinge') return `
+        <hr class="sep">
+        <div class="row two">
+            <div><label>Column gap mm</label><input type="number" id="p-colgap" min="1.5" max="10" step="0.5" value="${r1(sel.colGap)}"></div>
+            <div><label>Slit length mm</label><input type="number" id="p-slit" min="4" max="40" step="1" value="${r1(sel.slit)}"></div>
+        </div>
+        <p class="muted tiny">Staggered kerf cuts make plywood/MDF bend. Test on scrap first.</p>`;
+
+    if (sel.type === 'ruler') return `<hr class="sep"><p class="muted tiny">Ticks every 1 mm, numbers every 10 mm — set the length via Width.</p>`;
+    if (sel.type === 'registration') return `<hr class="sep"><p class="muted tiny">Corner crosshairs for print-and-cut / camera alignment.</p>`;
 
     if (sel.type === 'image') {
         const p = sel.params;
@@ -226,6 +357,24 @@ function wireCommon(sel) {
     $('#p-del').addEventListener('click', () => store.removeSelected());
     $('#p-front').addEventListener('click', () => store.reorder(sel.id, 'up'));
     $('#p-back').addEventListener('click', () => store.reorder(sel.id, 'down'));
+    const arr = $('#p-array'); if (arr) arr.addEventListener('click', () => arrayGrid(sel));
+}
+
+function arrayGrid(sel) {
+    const spec = prompt('Array: cols x rows x gap(mm) — e.g. 3x2x5', '3x2x5');
+    if (!spec) return;
+    const m = spec.match(/(\d+)\s*[x\u00d7]\s*(\d+)\s*[x\u00d7]\s*([\d.]+)/i);
+    if (!m) { alert('Format: colsxrowsxgap, e.g. 3x2x5'); return; }
+    const cols = clamp(+m[1], 1, 50), rows = clamp(+m[2], 1, 50), gap = +m[3] || 0;
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        if (r === 0 && c === 0) continue;
+        const copy = JSON.parse(JSON.stringify(sel));
+        copy.id = `o${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+        copy.x = sel.x + c * (sel.w + gap);
+        copy.y = sel.y + r * (sel.h + gap);
+        store.state.objects.push(copy);
+    }
+    store.commit('array');
 }
 
 function sizePatch(sel, dim, v) {
@@ -256,6 +405,7 @@ function wireType(sel) {
         bindRaw('p-align', 'change', (el) => reflow({ align: el.value }, false));
         bindNum('p-size', (v) => { const m = measureText({ ...sel, sizeMM: v }); return { sizeMM: v, w: m.wMM, h: m.hMM }; });
         bindNum('p-lh', (v) => { const m = measureText({ ...sel, lineHeight: v }); return { lineHeight: v, w: m.wMM, h: m.hMM }; });
+        bindNum('p-arc', (v) => ({ arc: v }));
         ['bold', 'italic', 'fill'].forEach((k) => {
             const c = $('#p-' + k); if (c) c.addEventListener('change', () => reflow({ [k]: c.checked }, false));
         });
@@ -270,6 +420,23 @@ function wireType(sel) {
         bindNum('p-inner', (v) => ({ innerRatio: clamp(v, 0.1, 0.95) }));
     } else if (sel.type === 'puzzle') {
         wirePuzzle(sel);
+    } else if (sel.type === 'barcode') {
+        bindRaw('p-data', 'input', (el) => store.patch(sel.id, { data: el.value }, { transient: true }), true);
+        bindNum('p-quiet', (v) => ({ quiet: clamp(v | 0, 0, 20) }));
+        const st = $('#p-showtext'); if (st) st.addEventListener('change', () => store.patch(sel.id, { showText: st.checked }));
+    } else if (sel.type === 'box') {
+        const bx = (extra) => { const s = boxNetSize({ ...sel, ...extra }); return { ...extra, w: s.w, h: s.h }; };
+        bindNum('p-boxw', (v) => bx({ boxW: Math.max(10, v) }));
+        bindNum('p-boxd', (v) => bx({ boxD: Math.max(10, v) }));
+        bindNum('p-boxh', (v) => bx({ boxH: Math.max(10, v) }));
+        bindNum('p-thick', (v) => bx({ thickness: clamp(v, 1, 12) }));
+        bindNum('p-tabw', (v) => ({ tab: clamp(v, 4, 40) }));
+    } else if (sel.type === 'gear') {
+        bindNum('p-teeth', (v) => ({ teeth: clamp(v | 0, 6, 120) }));
+        bindNum('p-bore', (v) => ({ bore: Math.max(0, v) }));
+    } else if (sel.type === 'hinge') {
+        bindNum('p-colgap', (v) => ({ colGap: clamp(v, 1.5, 10) }));
+        bindNum('p-slit', (v) => ({ slit: clamp(v, 4, 40) }));
     } else if (sel.type === 'image') {
         wireImage(sel);
     }
@@ -281,17 +448,20 @@ function wirePuzzle(sel) {
     bindNum('p-rows', (v) => ({ rows: clamp(v | 0, 1, 40) }));
     bindNum('p-tab', (v) => ({ tab: clamp(v, 0.08, 0.35) }));
     bindRaw('p-geoshape', 'change', (el) => store.patch(sel.id, { geoShape: el.value }));
+    bindRaw('p-tabstyle', 'change', (el) => store.patch(sel.id, { tabStyle: el.value }));
     bindNum('p-seed', (v) => ({ seed: v | 0 }));
     bindNum('p-iconsize', (v) => ({ iconSizeMM: Math.max(0, v) }));
     bindRaw('p-icon', 'input', (el) => store.patch(sel.id, { icon: el.value.slice(0, 2) }, { transient: true }), true);
+    const nb = $('#p-numbered'); if (nb) nb.addEventListener('change', () => store.patch(sel.id, { numbered: nb.checked }));
     const sh = $('#p-shuffle');
     if (sh) sh.addEventListener('click', () => store.patch(sel.id, { seed: (Math.random() * 1e9) | 0 }));
     // show only the relevant controls for the chosen style
-    const isGeo = sel.style === 'geometric', isJig = sel.style === 'jigsaw';
+    const isGeo = sel.style === 'geometric', isJig = sel.style === 'jigsaw', isVor = sel.style === 'voronoi';
     const show = (id, on) => { const e = $('#' + id); if (e) e.style.display = on ? '' : 'none'; };
-    show('p-tabrow', !isGeo);
+    show('p-tabrow', !isGeo && !isVor);
+    show('p-tabstylerow', !isGeo && !isVor);
     show('p-georow', isGeo);
-    show('p-seedrow', isJig);
+    show('p-seedrow', isJig || isVor);
 }
 
 function wireImage(sel) {
@@ -478,12 +648,16 @@ function syncExportUI() {
         summary = `Vector output · ${a.widthMM}×${a.heightMM} mm · true 1:1 scale`;
     }
     $('#export-summary').textContent = summary;
+    const est = estimate(store, { engraveSpeed: +$('#g-espeed').value || 1500, cutSpeed: +$('#g-cspeed').value || 600 });
+    $('#export-estimate').textContent = (est.cutLen || est.engLen)
+        ? `~ ${(est.timeSec / 60).toFixed(1)} min vector · cut ${Math.round(est.cutLen)} mm · engrave ${Math.round(est.engLen)} mm (approx.)`
+        : '';
 }
 
 $('#export-go').addEventListener('click', async () => {
     const fmt = $('#format').value;
     if (!store.objects.length) { alert('Nothing to export yet — add some content first.'); return; }
-    let opts = {};
+    let opts = { kerf: +$('#opt-kerf').value || 0, overscan: +$('#opt-overscan').value || 0 };
     if (['png', 'jpg', 'bmp'].includes(fmt)) {
         opts.dpi = clamp(+$('#opt-dpi').value, 50, 1200);
         if (fmt === 'bmp') opts.bits = +$('#opt-bits').value;
@@ -491,7 +665,8 @@ $('#export-go').addEventListener('click', async () => {
     } else if (fmt === 'gcode') {
         if (!$('#g-ack').checked) { alert('Please confirm the safety acknowledgement before exporting G-code.'); return; }
         opts = {
-            ...DEFAULT_GCODE, mode: $('#g-mode').value, laserMode: $('#g-laser').value,
+            ...DEFAULT_GCODE, kerf: +$('#opt-kerf').value || 0, overscan: +$('#opt-overscan').value || 0,
+            mode: $('#g-mode').value, laserMode: $('#g-laser').value,
             engraveSpeed: +$('#g-espeed').value, cutSpeed: +$('#g-cspeed').value,
             powerEngrave: +$('#g-epow').value, powerCut: +$('#g-cpow').value,
             maxPower: +$('#g-max').value, dpi: +$('#g-dpi').value,
@@ -516,6 +691,17 @@ function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
 
 // ---------------------------------------------------------------- boot
 initArtboardControls();
+applyI18n();
+{
+    const hb = $('#help-modal .modal-body');
+    if (hb) {
+        const sb = document.createElement('button');
+        sb.className = 'btn'; sb.style.marginTop = '10px';
+        sb.textContent = '🔗 Copy shareable link';
+        sb.addEventListener('click', shareLink);
+        hb.appendChild(sb);
+    }
+}
 renderProps();
 renderLayers();
 toggleHint();

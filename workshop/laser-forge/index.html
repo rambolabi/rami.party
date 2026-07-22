@@ -23,38 +23,50 @@
             <span class="brand-tag">workshop · rami.party</span>
         </div>
         <div class="header-actions">
-            <button class="btn" id="btn-new" title="Start a new blank project">New</button>
-            <button class="btn" id="btn-undo" title="Undo (Ctrl+Z)">↶ Undo</button>
-            <button class="btn" id="btn-redo" title="Redo (Ctrl+Y)">↷ Redo</button>
-            <button class="btn" id="btn-fit" title="Fit artboard to view (F)">Fit</button>
-            <button class="btn btn-primary" id="btn-export" title="Export machine-ready files">⤓ Export</button>
-            <a class="btn btn-ghost" href="/workshop/" title="Back to the workshop">← Workshop</a>
+            <button class="btn" id="btn-new" data-i18n="new" title="Start a new blank project">New</button>
+            <button class="btn" id="btn-undo" data-i18n="undo" title="Undo (Ctrl+Z)">↶ Undo</button>
+            <button class="btn" id="btn-redo" data-i18n="redo" title="Redo (Ctrl+Y)">↷ Redo</button>
+            <button class="btn" id="btn-fit" data-i18n="fit" title="Fit artboard to view (F)">Fit</button>
+            <button class="btn" id="btn-save" data-i18n="save" title="Save project (.json)">Save</button>
+            <button class="btn" id="btn-open" data-i18n="open" title="Open project (.json)">Open</button>
+            <button class="btn" id="btn-help" title="Help & shortcuts">?</button>
+            <label class="pro-toggle" title="Show advanced controls"><input type="checkbox" id="pro-mode"> <span data-i18n="pro">Pro mode</span></label>
+            <select id="lang-select" title="Language"><option value="en">EN</option><option value="nl">NL</option><option value="fr">FR</option></select>
+            <button class="btn btn-primary" id="btn-export" data-i18n="export" title="Export machine-ready files">⤓ Export</button>
+            <a class="btn btn-ghost" href="/workshop/" data-i18n="workshop" title="Back to the workshop">← Workshop</a>
         </div>
     </header>
 
     <div class="app-body">
         <!-- Left toolbar -->
         <nav class="toolbar" aria-label="Add objects">
-            <button class="tool" data-action="add-text" title="Add text">🅣<span>Text</span></button>
-            <button class="tool" data-action="emoji" title="Insert emoji / symbol">☺<span>Emoji</span></button>
-            <button class="tool" data-action="add-image" title="Upload an image → grayscale engrave">🖼<span>Image</span></button>
-            <button class="tool" data-action="add-qr" title="Generate a QR code">▦<span>QR</span></button>
-            <button class="tool" data-action="add-puzzle" title="Puzzle generator (jigsaw / tessellation / tiling)">🧩<span>Puzzle</span></button>
+            <button class="tool" data-action="add-text" title="Add text">🅣<span data-i18n="t_text">Text</span></button>
+            <button class="tool" data-action="emoji" title="Insert emoji / symbol">☺<span data-i18n="t_emoji">Emoji</span></button>
+            <button class="tool" data-action="add-image" title="Upload an image → grayscale engrave">🖼<span data-i18n="t_image">Image</span></button>
+            <button class="tool" data-action="add-qr" title="Generate a QR code">▦<span data-i18n="t_qr">QR</span></button>
+            <button class="tool" data-action="add-barcode" title="Barcode (Code 128)">▮▮<span data-i18n="t_barcode">Barcode</span></button>
+            <button class="tool" data-action="add-puzzle" title="Puzzle generator (jigsaw / tessellation / tiling)">🧩<span data-i18n="t_puzzle">Puzzle</span></button>
             <div class="tool-sep"></div>
-            <button class="tool" data-action="shape-rect" title="Rectangle">▭<span>Rect</span></button>
-            <button class="tool" data-action="shape-circle" title="Circle / ellipse">◯<span>Circle</span></button>
-            <button class="tool" data-action="shape-polygon" title="Polygon">⬡<span>Poly</span></button>
-            <button class="tool" data-action="shape-star" title="Star">★<span>Star</span></button>
-            <button class="tool" data-action="shape-heart" title="Heart">♥<span>Heart</span></button>
-            <button class="tool" data-action="shape-line" title="Line">╱<span>Line</span></button>
+            <button class="tool" data-action="gen-box" title="Finger-joint box">▢<span data-i18n="t_box">Box</span></button>
+            <button class="tool" data-action="gen-gear" title="Gear">⚙<span data-i18n="t_gear">Gear</span></button>
+            <button class="tool" data-action="gen-ruler" title="Ruler">📏<span data-i18n="t_ruler">Ruler</span></button>
+            <button class="tool" data-action="gen-hinge" title="Living hinge">〜<span data-i18n="t_hinge">Hinge</span></button>
+            <button class="tool" data-action="gen-reg" title="Registration marks">✚<span data-i18n="t_reg">Marks</span></button>
+            <div class="tool-sep"></div>
+            <button class="tool" data-action="shape-rect" title="Rectangle">▭<span data-i18n="t_rect">Rect</span></button>
+            <button class="tool" data-action="shape-circle" title="Circle / ellipse">◯<span data-i18n="t_circle">Circle</span></button>
+            <button class="tool" data-action="shape-polygon" title="Polygon">⬡<span data-i18n="t_poly">Poly</span></button>
+            <button class="tool" data-action="shape-star" title="Star">★<span data-i18n="t_star">Star</span></button>
+            <button class="tool" data-action="shape-heart" title="Heart">♥<span data-i18n="t_heart">Heart</span></button>
+            <button class="tool" data-action="shape-line" title="Line">╱<span data-i18n="t_line">Line</span></button>
         </nav>
 
         <!-- Center stage -->
         <main class="stage" id="stage">
             <canvas id="board"></canvas>
             <div class="hint" id="empty-hint">
-                <p><strong>The forge is empty.</strong></p>
-                <p>Add text, a shape, a QR code, or <em>upload an image</em> to make a perfect
+                <p><strong data-i18n="hint_title">The forge is empty.</strong></p>
+                <p data-i18n="hint_body">Add text, a shape, a QR code, or upload an image to make a perfect
                     grayscale engraving. Everything stays in your browser.</p>
             </div>
         </main>
@@ -62,9 +74,9 @@
         <!-- Right sidebar -->
         <aside class="sidebar">
             <section class="panel">
-                <h2 class="panel-title">Properties</h2>
+                <h2 class="panel-title" data-i18n="properties">Properties</h2>
                 <div id="props" class="props">
-                    <p class="muted">Nothing selected. Pick an object on the canvas, or add one from the left.</p>
+                    <p class="muted" data-i18n="nothing">Nothing selected. Pick an object on the canvas, or add one from the left.</p>
                 </div>
             </section>
 
@@ -121,11 +133,21 @@
                         <option value="svg">SVG — vector (cut / score / engrave)</option>
                         <option value="dxf">DXF R12 — vector (CAD / Ruida)</option>
                         <option value="pdf">PDF — vector + image</option>
+                        <option value="ai">AI — Adobe Illustrator (PDF-based)</option>
+                        <option value="plt">PLT / HPGL — plotter vector</option>
+                        <option value="eps">EPS — PostScript vector</option>
                         <option value="png">PNG — raster (grayscale / dithered)</option>
                         <option value="bmp">BMP — raster (LaserGRBL)</option>
                         <option value="jpg">JPG — raster</option>
                         <option value="gcode">G-code — direct machine code</option>
                     </select>
+                </div>
+
+                <div id="opt-advanced" class="opt-group">
+                    <div class="row two">
+                        <div><label for="opt-kerf" data-i18n="kerf">Kerf comp. mm</label><input type="number" id="opt-kerf" min="0" max="2" step="0.05" value="0" title="Expand closed cut paths by half the beam width"></div>
+                        <div><label for="opt-overscan" data-i18n="overscan">Overscan mm</label><input type="number" id="opt-overscan" min="0" max="10" step="0.5" value="0" title="Raster run-in/out past the image edges"></div>
+                    </div>
                 </div>
 
                 <div id="opt-raster" class="opt-group">
@@ -167,8 +189,9 @@
                 </div>
 
                 <p class="export-summary muted" id="export-summary"></p>
+                <p class="export-summary muted" id="export-estimate"></p>
                 <div class="modal-foot">
-                    <button class="btn btn-primary" id="export-go">⤓ Download</button>
+                    <button class="btn btn-primary" id="export-go" data-i18n="download">⤓ Download</button>
                 </div>
             </div>
         </div>
@@ -182,6 +205,36 @@
     </div>
 
     <input type="file" id="file-input" accept="image/*" hidden>
+    <input type="file" id="project-input" accept="application/json,.json" hidden>
+
+    <!-- Help modal -->
+    <div class="modal-backdrop" id="help-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+            <div class="modal-head">
+                <h2 id="help-title" data-i18n="help_title">Help & shortcuts</h2>
+                <button class="icon-btn" id="help-close" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="muted">Laser Forge turns text, shapes, images, QR/barcodes, puzzles and
+                    parametric parts into machine-ready files — 100% in your browser.</p>
+                <ul class="help-list">
+                    <li><b>1)</b> Add an object from the left toolbar.</li>
+                    <li><b>2)</b> Tune it in the Properties panel (turn on <b>Pro mode</b> for advanced fields).</li>
+                    <li><b>3)</b> Press <b>Export</b> and pick your laser software preset.</li>
+                </ul>
+                <h3 class="help-h3">Shortcuts</h3>
+                <ul class="help-list">
+                    <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> — undo / redo</li>
+                    <li><kbd>Ctrl</kbd>+<kbd>D</kbd> — duplicate · <kbd>Del</kbd> — delete</li>
+                    <li><kbd>F</kbd> — fit view · scroll — zoom · <kbd>Space</kbd>+drag — pan</li>
+                    <li>Drag a handle to resize, the top dot to rotate (hold <kbd>Shift</kbd> to snap).</li>
+                    <li>Drag &amp; drop an image straight onto the canvas.</li>
+                </ul>
+                <p class="muted tiny">Colour = operation: <span style="color:#ff2d2d">red cut</span>,
+                    <span style="color:#2d6bff">blue score</span>, black engrave.</p>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="js/main.js"></script>
 </body>

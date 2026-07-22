@@ -46,30 +46,30 @@ Optional stretch: `PLT/HPGL`, `EPS`.
 ## 2. Export formats — spec & why (the heart of the tool)
 
 ### Vector (for **cutting**, **scoring**, **line/stroke engraving**)
-- [ ] **SVG** — the universal exchange format.
+- [x] **SVG** — the universal exchange format.
   - Real `width`/`height` in **mm** + matching `viewBox` (no unit ambiguity).
   - **Colour = operation** convention (cut = red, score = blue, engrave/fill = black) so
     LightBurn/Glowforge auto-map layers. Expose a legend + toggle.
   - Hairline strokes (`stroke-width:0.001mm`/`0.01`) option for "vector cut" lines.
   - Convert **text → outlines (paths)** so no font is required on import (critical!).
   - Optional: keep live `<text>` as a fallback copy on a hidden layer.
-- [ ] **DXF** (R12 ASCII — the most widely importable flavour).
+- [x] **DXF** (R12 ASCII — the most widely importable flavour).
   - Entities: `LINE`, `LWPOLYLINE`, `CIRCLE`, `ARC`, `SPLINE`→polyline-approx.
   - Layers by colour/operation. Units header (`$INSUNITS = 4` = mm).
   - This is what unlocks Ruida/EZCAD/industrial shops.
-- [ ] **PDF** (vector) — Glowforge & LightBurn friendly; also a "print & keep" artifact.
+- [x] **PDF** (vector) — Glowforge & LightBurn friendly; also a "print & keep" artifact.
   - Single page sized to the artboard in mm; vector paths preserved.
 
 ### Raster (for **photo / grayscale / filled engraving**)
-- [ ] **PNG** — lossless, **alpha transparency** preserved (transparent = "don't fire").
+- [x] **PNG** — lossless, **alpha transparency** preserved (transparent = "don't fire").
   - Exact pixel dimensions derived from **DPI × physical size**.
   - Modes: full grayscale, pure B/W (1-bit), dithered.
-- [ ] **BMP** — required/most reliable for **LaserGRBL** & some Ruida.
+- [x] **BMP** — required/most reliable for **LaserGRBL** & some Ruida.
   - Support **1-bit monochrome BMP** and 8-bit grayscale (write encoder by hand).
-- [ ] **JPG** — compatibility fallback; quality slider; warn "lossy, no transparency".
+- [x] **JPG** — compatibility fallback; quality slider; warn "lossy, no transparency".
 
 ### Direct machine code (optional, power users)
-- [ ] **G-code** (GRBL "laser mode" `M4`/`M3` dynamic power, `M5` off).
+- [x] **G-code** (GRBL "laser mode" `M4`/`M3` dynamic power, `M5` off).
   - Raster engrave: line-by-line scan, `S` power modulated per pixel, configurable
     speed / power / **line interval (LPI)** / travel-speed / overscan.
   - Vector: `G0` travel / `G1` burn with power + feed.
@@ -80,24 +80,24 @@ Optional stretch: `PLT/HPGL`, `EPS`.
 
 ## 3. Input / content generators (what users create)
 
-- [ ] **Text engine**
+- [x] **Text engine**
   - Font picker: bundled web-safe + **user font upload** (`.ttf/.otf/.woff`).
   - **Single-line / stroke ("engraving") fonts** support (Hershey / centerline) —
     hugely requested for fast vector engraving & CNC-style marking.
   - Size in **mm or pt**, letter-spacing, line-height, alignment, curved/arc text,
     bold/italic, outline vs fill, mirror (for reverse-acrylic & rotary).
-- [ ] **Emoji & symbol library**
+- [x] **Emoji & symbol library**
   - Render emoji as **monochrome vector outlines** (not colour glyphs) — pick an
     open outline emoji set (e.g. OpenMoji black/outline) so they engrave cleanly.
   - Categories + search; single-click insert.
-- [ ] **Shapes & primitives** — rect, rounded-rect, circle, polygon, star, line, arrow,
+- [x] **Shapes & primitives** — rect, rounded-rect, circle, polygon, star, line, arrow,
   heart; corner radius, sides, inner/outer radius controls.
-- [ ] **QR code generator** — text/URL/wifi/vcard; error-correction level; quiet zone;
+- [x] **QR code generator** — text/URL/wifi/vcard; error-correction level; quiet zone;
   export as crisp vector (module = filled square) → perfect engraves.
-- [ ] **Barcode generator** — Code128 / EAN / UPC (product marking use-case).
-- [ ] **Image / photo upload** → the processing pipeline (§4).
+- [x] **Barcode generator** — Code 128 (subset B). *(EAN/UPC still to add.)*
+- [x] **Image / photo upload** → the processing pipeline (§4).
 - [ ] **Icon / clipart trace** — drop any bitmap, auto-vectorize (§5).
-- [ ] **Puzzle generator** — turn the artboard into laser-cuttable puzzles:
+- [x] **Puzzle generator** — turn the artboard into laser-cuttable puzzles:
   - **Jigsaw** — classic grid with random interlocking tabs.
   - **Tessellation (SHMUZZLE-style)** — a single *repeating tile that fits into itself*: every
     internal edge shares one profile, so every interior piece is congruent (a self-tiling
@@ -114,19 +114,19 @@ Optional stretch: `PLT/HPGL`, `EPS`.
 The single most-requested capability set for laser photo engraving. All non-destructive,
 live-preview, GPU/Canvas-backed, order-configurable:
 
-- [ ] Grayscale conversion (luminance-weighted + selectable weightings).
-- [ ] **Brightness / Contrast / Gamma / Exposure** sliders.
-- [ ] **Levels / Curves** (black point, white point, midtones).
+- [x] Grayscale conversion (luminance-weighted + selectable weightings).
+- [x] **Brightness / Contrast / Gamma / Exposure** sliders.
+- [x] **Levels / Curves** (black point, white point, midtones).
 - [ ] Sharpen / Unsharp mask; blur; denoise.
-- [ ] **Invert** (for engraving light-on-dark materials, slate, anodized alu).
-- [ ] **Threshold** (pure 1-bit B/W) with adjustable cutoff.
-- [ ] **Dithering algorithms** (the crown jewel — offer all common ones):
+- [x] **Invert** (for engraving light-on-dark materials, slate, anodized alu).
+- [x] **Threshold** (pure 1-bit B/W) with adjustable cutoff.
+- [x] **Dithering algorithms** (the crown jewel — offer all common ones):
   - Floyd–Steinberg, Jarvis-Judice-Ninke, Stucki, Atkinson, Sierra, Burkes,
     Bayer/ordered (2×2,4×4,8×8), Halftone (dot), random/noise.
-- [ ] **Halftone** (newspaper dot) with angle + dot size.
+- [x] **Halftone** (newspaper dot) with angle + dot size.
 - [ ] **Edge detection / outline** (Sobel) → for line-art engraving.
-- [ ] **Background removal** (chroma / luminance key) → transparent PNG.
-- [ ] **DPI / resolution** control (150–1000+) with live px-dimension readout.
+- [x] **Background removal** (chroma / luminance key) → transparent PNG.
+- [x] **DPI / resolution** control (150–1000+) with live px-dimension readout.
 - [ ] **Line interval (LPI)** preview for scan engraving.
 - [ ] Material presets (wood, acrylic, slate, leather, anodized, coated metal, glass)
   that pre-load sensible dither + contrast + invert defaults.
@@ -136,20 +136,20 @@ live-preview, GPU/Canvas-backed, order-configurable:
 ## 5. Vectorization (bitmap → clean vectors)
 
 - [ ] **Centerline trace** (skeleton) — single-stroke paths for fast vector engraving.
-- [ ] **Outline / fill trace** (contour) — for cut/score.
-- [ ] Threshold, speckle-suppression, corner/curve smoothing controls.
+- [x] **Outline / fill trace** (contour) — for cut/score.
+- [x] Threshold, speckle-suppression, corner/curve smoothing controls.
 - [ ] Colour-count posterize → multi-layer separation (each colour = its own op layer).
 
 ---
 
 ## 6. Canvas / layout / artboard (shared workspace)
 
-- [ ] Physical artboard sized in **mm** (machine bed presets: 400×400, A4, 600×300, etc.).
+- [x] Physical artboard sized in **mm** (machine bed presets: 400×400, A4, 600×300, etc.).
 - [ ] Real-world ruler, grid, snapping, zoom/pan.
 - [ ] Multi-object canvas: move / scale / rotate / align / distribute / group.
-- [ ] **Layers = operations** (Cut / Score / Engrave-line / Engrave-fill) with colour map.
-- [ ] Mirror / flip (rotary + reverse-engraving), tile / array / grid duplication.
-- [ ] **Kerf offset** control (compensate beam width for precise cut fit).
+- [x] **Layers = operations** (Cut / Score / Engrave-line / Engrave-fill) with colour map.
+- [x] Mirror / flip (rotary + reverse-engraving), tile / array / grid duplication.
+- [x] **Kerf offset** control (compensate beam width for precise cut fit).
 - [ ] Boolean ops (union/subtract/intersect) for shape building.
 - [ ] Origin selector (which corner/center the machine treats as 0,0).
 
@@ -158,22 +158,22 @@ live-preview, GPU/Canvas-backed, order-configurable:
 ## 7. Export dialog (the payoff moment)
 
 - [ ] One panel, format tabs; live preview of the exact export per format.
-- [ ] Per-format options surfaced contextually (DPI for raster, hairline for SVG, etc.).
-- [ ] **"Target software" quick-preset** dropdown (LightBurn / LaserGRBL / Glowforge / xTool
+- [x] Per-format options surfaced contextually (DPI for raster, hairline for SVG, etc.).
+- [x] **"Target software" quick-preset** dropdown (LightBurn / LaserGRBL / Glowforge / xTool
   / Ruida …) that auto-sets format + conventions so beginners can't get it wrong.
-- [ ] Filename templating; download via Blob (no server round-trip).
-- [ ] Export summary: dimensions (mm), DPI, layer/op list, est. file integrity note.
+- [x] Filename templating; download via Blob (no server round-trip).
+- [x] Export summary: dimensions (mm), DPI, layer/op list, est. file integrity note.
 
 ---
 
 ## 8. UX / accessibility / polish
 
-- [ ] Match `rami.party` workshop theme (`../../theme.css`, `../../style.css`), dark UI.
-- [ ] Responsive; keyboard shortcuts; undo/redo history stack.
-- [ ] Drag-&-drop file import anywhere on canvas.
-- [ ] Tooltips explaining every laser term (LPI, kerf, dither) — teach while doing.
-- [ ] LocalStorage autosave of the working project; export/import project JSON.
-- [ ] i18n-ready string table (EN first; NL/FR to follow — matches other realms).
+- [x] Match `rami.party` workshop theme (`../../theme.css`, `../../style.css`), dark UI.
+- [x] Responsive; keyboard shortcuts; undo/redo history stack.
+- [x] Drag-&-drop file import anywhere on canvas.
+- [x] Tooltips explaining every laser term (LPI, kerf, dither) — teach while doing.
+- [x] LocalStorage autosave of the working project; export/import project JSON.
+- [x] i18n-ready string table (EN first; NL/FR to follow — matches other realms).
 - [ ] a11y: ARIA labels, focus states, reduced-motion honoring.
 
 ---
@@ -376,27 +376,26 @@ add-buttons with icons, an empty-state hint, live WYSIWYG preview, tooltips on e
 mm everywhere, a **“target software” preset** that auto-configures the export, autosave, and a
 safety gate on G-code. Friction that remains (planned below):
 
-- [ ] **Beginner vs Pro mode** — collapse the image pipeline / advanced fields by default;
-  show a short guided “1) add 2) tweak 3) export” strip on first visit.
-- [ ] **Inline explainers** — a one-line “what is this?” for dither / kerf / LPI / tabs.
-- [ ] **Drag-and-drop image onto the canvas** (currently only via the Image button).
-- [ ] **Undo/redo + shortcut cheatsheet** surfaced in the UI (currently keyboard-only).
-- [ ] **Touch / mobile** layout (sidebar is hidden < 900px; no touch gestures yet).
-- [ ] **Localisation** — NL / FR string tables (EN only today).
+- [x] **Beginner vs Pro mode** — a header toggle hides advanced fields (e.g. export kerf/overscan)
+  by default; the Help modal gives a “1) add 2) tweak 3) export” quick start.
+- [x] **Inline explainers** — tooltips on every control + a Help modal (per-field “?” still to add).
+- [x] **Drag-and-drop image onto the canvas**.
+- [x] **Undo/redo + shortcut cheatsheet** surfaced in the Help modal.
+- [x] **Touch / mobile** layout (responsive header/toolbar; deeper touch gestures still to add).
+- [x] **Localisation** — EN / NL / FR chrome with a language switcher (property labels fall back to EN).
 
 ## 18. Still to do (v1 polish backlog)
 
 - [ ] **True single-line / centerline engraving fonts** (Hershey) — currently text is exported
   as filled outlines; add stroke-font output for fast one-pass vector engraving.
-- [ ] **Jigsaw neck tabs** — richer interlocking tab profile (neck + bulb) as an option next to
-  the current clean semicircle; per-edge randomness controls.
+- [x] **Jigsaw neck tabs** — added a locking **dovetail** tab style beside the semicircle.
 - [ ] **Move heavy work to Web Workers** — dithering + tracing + raster G-code can block the UI
   on large images; offload for responsiveness and progress bars.
-- [ ] **Kerf compensation** for cut paths (offset by beam width) and **overscan** for raster.
-- [ ] **Multi-select + align/distribute/group**, snapping, and numeric duplication/arrays.
+- [x] **Kerf compensation** for cut paths (offset by beam width) and **overscan** for raster.
+- [~] **Multi-select + align/distribute/group**, snapping — *numeric grid **Array** done*; the rest pending.
 - [ ] **Boolean operations** (union/subtract/intersect) for shape building.
-- [ ] **Barcode generator** (Code128 / EAN / UPC) alongside QR.
-- [ ] **Project save/load as file** (`.json`) in addition to LocalStorage autosave.
+- [x] **Barcode generator** (Code 128). *(EAN/UPC still to add.)*
+- [x] **Project save/load as file** (`.json`) in addition to LocalStorage autosave.
 - [ ] **DXF/SVG import** (not just export) so users can bring existing art in.
 - [ ] **Per-object “tabs/bridges”** for cutouts so pieces don’t fall out mid-cut.
 - [ ] **Material test-grid generator** (speed × power matrix) as a first-class object.
@@ -405,27 +404,55 @@ safety gate on G-code. Friction that remains (planned below):
 
 **Puzzles & tiling**
 - [ ] More tessellation families: Escher-style rotational/glide tiles, Penrose/aperiodic tiles,
-  Voronoi/organic “amoeba” jigsaw, spiral and radial puzzles.
+  and spiral / radial puzzles. *(Organic **Voronoi** puzzle done.)*
 - [ ] **Image-into-puzzle**: drop a photo, auto-fit it across the pieces (engrave per-piece
   slices) for a printable photo puzzle.
-- [ ] Numbered/lettered pieces + auto-generated **assembly key** sheet.
+- [x] Numbered/lettered pieces (Voronoi + grid). *(Auto assembly-key sheet still to add.)*
 - [ ] Rep-tile explorer (L-tromino, sphinx, etc.) for true self-similar “fits-in-itself” shapes.
 
 **Content generators**
-- [ ] Parametric boxes / finger-joint (laser-cut enclosures), living hinges, gears, rulers.
-- [ ] Text-on-path, warp/arc text, variable-data batch (CSV → many engraved tags).
+- [x] Parametric boxes / finger-joint (laser-cut enclosures) + **living hinge** + **gear** + **ruler**.
+- [~] Text-on-path, **warp/arc text** *(arc done)*; variable-data batch (CSV → many tags) still to add.
 - [ ] Icon/clipart library + SVG paste; halftone/stipple/line-art photo styles.
 - [ ] Fill patterns (hatch, cross-hatch, spiral) for engrave regions.
 
 **Workflow & output**
-- [ ] Additional formats: **PLT/HPGL**, **EPS**, **AI**; SVG layers named per LightBurn convention.
+- [x] Additional formats: **PLT/HPGL**, **EPS**, **AI**; SVG layers named per LightBurn/Inkscape convention.
 - [ ] **Nesting / auto-layout** to pack many parts onto the sheet efficiently.
-- [ ] Print-and-cut **registration marks** + camera alignment helpers.
-- [ ] Cost/time estimator (path length, engrave area, speeds) before you burn.
-- [ ] Cloud-free **shareable project links** (encode project in URL) — still no server.
+- [x] Print-and-cut **registration marks** object *(camera alignment helpers still to add)*.
+- [x] Cost/time estimator (path length × speeds) shown in the export dialog.
+- [x] Cloud-free **shareable project links** (project encoded in the URL) — still no server.
 
 **Platform**
 - [ ] PWA / offline install; file-system access API for “open/save” round-trips.
 - [ ] Plugin hooks for custom generators and custom G-code dialects (Marlin, Smoothie, Ruida RD).
 - [ ] The big one: **§13 direct browser→laser control** (Web Serial streaming) as v2.
+> **Platform features are planned but on hold** — full step-by-step plan lives in
+> [`todo-platform.md`](todo-platform.md). Do not implement yet.
 
+---
+
+## 20. Round-2 implementation status
+
+Implemented and **verified in-browser** this round (no console errors; all exporters produce
+valid output):
+
+- **Software support:** Inkscape + Rayforge presets; SVG now writes **named operation layers**
+  (Inkscape/LightBurn friendly).
+- **New generators:** finger-joint **Box**, **Gear**, **Ruler**, **Living hinge**,
+  **Registration marks**, **Barcode (Code 128)**.
+- **Puzzles:** **Voronoi** organic style, **numbered pieces**, locking **dovetail** tab style
+  (beside jigsaw / tessellation / geometric).
+- **Text:** **arc / curved** text.
+- **Export:** **AI / PLT (HPGL) / EPS** formats, **kerf compensation**, raster **overscan**,
+  and a **cost/time estimate** in the dialog.
+- **Workflow:** **project Save/Open (.json)**, **shareable project links** (URL-encoded),
+  numeric **grid Array**.
+- **UX (§17):** **Beginner/Pro mode**, **drag-&-drop images**, **Help & shortcuts modal**,
+  **EN/NL/FR** localisation, responsive/mobile chrome.
+
+Deliberately deferred to a later round (higher risk / larger scope), tracked above:
+Hershey single-line fonts, Web-Worker offloading, multi-select + align/distribute/group +
+snapping, boolean operations, DXF/SVG **import**, tabs/bridges, material test-grid,
+Escher/Penrose tiles, image-into-puzzle, rep-tile explorer, CSV variable data, SVG paste,
+stipple/line-art, hatch fills, and nesting.

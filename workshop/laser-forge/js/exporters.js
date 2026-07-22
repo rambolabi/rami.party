@@ -1,6 +1,6 @@
 // exporters.js — SVG / DXF / PDF / PNG / BMP / JPG / G-code writers (pure JS)
 
-import { OP_COLORS, hexToRgb } from './geometry.js';
+import { OP_COLORS, hexToRgb, offsetClosed, pathLength } from './geometry.js';
 import { objectLoops, drawObject, produceProcessed } from './objects.js';
 
 const MM2PT = 72 / 25.4;
@@ -22,17 +22,21 @@ function visibleObjects(store) {
     return store.objects.filter((o) => o.visible !== false);
 }
 
+// Object loops with optional kerf compensation (expands closed cut paths).
+function objLoops(obj, kerf) {
+    const loops = objectLoops(obj);
+    if (!loops || !kerf) return loops;
+    return loops.map((l) => (l.closed && l.op === 'cut')
+        ? { ...l, pts: offsetClosed(l.pts, kerf / 2) } : l);
+}
+
 // =====================================================================
 // SVG (mm units, colour = operation, text/qr as paths, images embedded)
 // =====================================================================
-export async function toSVG(store) {
+export async function toSVG(store, opts = {}) {
     const { widthMM: W, heightMM: H } = store.state.artboard;
-    const parts = [];
-    parts.push(`<?xml version="1.0" encoding="UTF-8"?>`);
-    parts.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
-        `width="${num(W)}mm" height="${num(H)}mm" viewBox="0 0 ${num(W)} ${num(H)}">`);
-    parts.push(`<g fill="none" stroke-width="0.1">`);
-
+    const layers = { engrave: [], score: [], cut: [] };
+    const images = [];
     for (const obj of visibleObjects(store)) {
         if (obj.type === 'image') {
             const entry = await produceProcessed(obj, Math.max(obj.natW, obj.natH));
@@ -41,11 +45,11 @@ export async function toSVG(store) {
             const tf = [];
             if (obj.rotation) tf.push(`rotate(${num(obj.rotation)} ${num(cx)} ${num(cy)})`);
             if (obj.mirror) tf.push(`translate(${num(2 * obj.x + obj.w)} 0) scale(-1 1)`);
-            parts.push(`<image x="${num(obj.x)}" y="${num(obj.y)}" width="${num(obj.w)}" height="${num(obj.h)}" ` +
+            images.push(`<image x="${num(obj.x)}" y="${num(obj.y)}" width="${num(obj.w)}" height="${num(obj.h)}" ` +
                 `${tf.length ? `transform="${tf.join(' ')}" ` : ''}xlink:href="${href}" preserveAspectRatio="none"/>`);
             continue;
         }
-        const loops = objectLoops(obj);
+        const loops = objLoops(obj, opts.kerf);
         if (!loops || !loops.length) continue;
         const groups = new Map();
         for (const l of loops) { if (!groups.has(l.op)) groups.set(l.op, []); groups.get(l.op).push(l); }
@@ -56,18 +60,31 @@ export async function toSVG(store) {
                 l.pts.forEach((p, i) => { d += `${i === 0 ? 'M' : 'L'}${num(p.x)} ${num(p.y)} `; });
                 if (l.closed) d += 'Z ';
             }
-            if (op === 'engrave') parts.push(`<path d="${d.trim()}" fill="${color}" fill-rule="evenodd" stroke="none"/>`);
-            else parts.push(`<path d="${d.trim()}" fill="none" stroke="${color}" stroke-width="0.1"/>`);
+            if (!layers[op]) layers[op] = [];
+            layers[op].push(op === 'engrave'
+                ? `<path d="${d.trim()}" fill="${color}" fill-rule="evenodd" stroke="none"/>`
+                : `<path d="${d.trim()}" fill="none" stroke="${color}" stroke-width="0.1"/>`);
         }
     }
-    parts.push(`</g></svg>`);
+    const parts = [`<?xml version="1.0" encoding="UTF-8"?>`,
+        `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ` +
+        `xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" ` +
+        `width="${num(W)}mm" height="${num(H)}mm" viewBox="0 0 ${num(W)} ${num(H)}">`];
+    if (images.length)
+        parts.push(`<g inkscape:groupmode="layer" inkscape:label="Images" id="lf-images">${images.join('')}</g>`);
+    for (const op of Object.keys(layers)) {
+        const arr = layers[op];
+        if (!arr || !arr.length) continue;
+        parts.push(`<g inkscape:groupmode="layer" inkscape:label="${op}" id="lf-${op}" fill="none" stroke-width="0.1">${arr.join('')}</g>`);
+    }
+    parts.push(`</svg>`);
     return parts.join('\n');
 }
 
 // =====================================================================
 // DXF R12 (ASCII) — POLYLINE/VERTEX entities, layers by operation
 // =====================================================================
-export function toDXF(store) {
+export function toDXF(store, opts = {}) {
     const { heightMM: H } = store.state.artboard;
     const fy = (y) => H - y; // flip to Y-up
     const layers = { engrave: 7, cut: 1, score: 5 };
@@ -89,7 +106,7 @@ export function toDXF(store) {
     push(0, 'SECTION'); push(2, 'ENTITIES');
     for (const obj of visibleObjects(store)) {
         if (obj.type === 'image') continue; // raster not representable in DXF
-        const loops = objectLoops(obj);
+        const loops = objLoops(obj, opts.kerf);
         if (!loops) continue;
         for (const l of loops) {
             const layer = l.op;
@@ -112,7 +129,7 @@ export function toDXF(store) {
 // =====================================================================
 // PDF (vector paths + embedded JPEG images), 1 page in points
 // =====================================================================
-export async function toPDF(store) {
+export async function toPDF(store, opts = {}) {
     const { widthMM: W, heightMM: H } = store.state.artboard;
     const Wp = W * MM2PT, Hp = H * MM2PT;
     const fy = (y) => Hp - y * MM2PT;   // flip to PDF y-up
@@ -144,7 +161,7 @@ export async function toPDF(store) {
             content += `/${name} Do\nQ\n`;
             continue;
         }
-        const loops = objectLoops(obj);
+        const loops = objLoops(obj, opts.kerf);
         if (!loops) continue;
         const groups = new Map();
         for (const l of loops) { if (!groups.has(l.op)) groups.set(l.op, []); groups.get(l.op).push(l); }
@@ -351,6 +368,8 @@ const DEFAULT_GCODE = {
     maxPower: 1000,       // S range
     passes: 1,
     dpi: 120,             // raster only
+    kerf: 0,              // mm, expands closed cut paths
+    overscan: 0,          // mm, raster run-in/out
     origin: 'bottomleft',
 };
 
@@ -376,7 +395,7 @@ function gcodeVector(store, p) {
         if (p.passes > 1) lines.push(`; --- pass ${pass + 1}/${p.passes} ---`);
         for (const obj of visibleObjects(store)) {
             if (obj.type === 'image') continue;
-            const loops = objectLoops(obj);
+            const loops = objLoops(obj, p.kerf);
             if (!loops) continue;
             for (const l of loops) {
                 if (!l.pts.length) continue;
@@ -413,10 +432,14 @@ async function gcodeRaster(store, p) {
         for (let x = 0; x < width; x++) { if (g[row * width + x] < 250) { if (first < 0) first = x; last = x; } }
         if (first < 0) continue; // blank row
         const ltr = (row & 1) === 0;
-        lines.push('M5');
+        const dir = ltr ? 1 : -1;
+        const os = (p.overscan || 0) / mmPerPx;
         const startX = ltr ? first : last;
-        lines.push(`G0 X${num(startX * mmPerPx)} Y${y}`);
+        const endX = ltr ? last : first;
+        lines.push('M5');
+        lines.push(`G0 X${num((startX - dir * os) * mmPerPx)} Y${y}`);
         lines.push(`${p.laserMode} S0`);
+        if (os) lines.push(`G1 X${num(startX * mmPerPx)} S0 F${p.engraveSpeed}`);
         let prevS = -1;
         const emit = (x) => {
             const s = power(g[row * width + x]);
@@ -424,10 +447,82 @@ async function gcodeRaster(store, p) {
         };
         if (ltr) for (let x = first; x <= last; x++) emit(x);
         else for (let x = last; x >= first; x--) emit(x);
-        lines.push(`G1 X${num((ltr ? last : first) * mmPerPx)} S0`);
+        lines.push(`G1 X${num(endX * mmPerPx)} S0`);
+        if (os) lines.push(`G1 X${num((endX + dir * os) * mmPerPx)} S0 F${p.engraveSpeed}`);
     }
     lines.push('M5', 'G0 X0 Y0', '; done');
     return lines.join('\n');
+}
+
+// =====================================================================
+// PLT / HPGL (vector, plotter units = 0.025 mm)
+// =====================================================================
+export function toPLT(store, opts = {}) {
+    const { heightMM: H } = store.state.artboard;
+    const U = 40; // units per mm
+    const fx = (x) => Math.round(x * U);
+    const fy = (y) => Math.round((H - y) * U);
+    const cmds = ['IN;', 'SP1;'];
+    for (const obj of visibleObjects(store)) {
+        if (obj.type === 'image') continue;
+        const loops = objLoops(obj, opts.kerf);
+        if (!loops) continue;
+        for (const l of loops) {
+            if (!l.pts.length) continue;
+            const f = l.pts[0];
+            cmds.push(`PU${fx(f.x)},${fy(f.y)};`);
+            for (let i = 1; i < l.pts.length; i++) cmds.push(`PD${fx(l.pts[i].x)},${fy(l.pts[i].y)};`);
+            if (l.closed) cmds.push(`PD${fx(f.x)},${fy(f.y)};`);
+        }
+    }
+    cmds.push('PU;');
+    return cmds.join('');
+}
+
+// =====================================================================
+// EPS (PostScript vector)
+// =====================================================================
+export function toEPS(store, opts = {}) {
+    const { widthMM: W, heightMM: H } = store.state.artboard;
+    const Wp = W * MM2PT, Hp = H * MM2PT;
+    const fx = (x) => x * MM2PT, fy = (y) => Hp - y * MM2PT;
+    const b = ['%!PS-Adobe-3.0 EPSF-3.0', `%%BoundingBox: 0 0 ${Math.ceil(Wp)} ${Math.ceil(Hp)}`,
+        '%%EndComments', '1 setlinecap 1 setlinejoin 0.3 setlinewidth'];
+    for (const obj of visibleObjects(store)) {
+        if (obj.type === 'image') continue;
+        const loops = objLoops(obj, opts.kerf);
+        if (!loops) continue;
+        const groups = new Map();
+        for (const l of loops) { if (!groups.has(l.op)) groups.set(l.op, []); groups.get(l.op).push(l); }
+        for (const [op, gl] of groups) {
+            const { r, g, b: bb } = hexToRgb(OP_COLORS[op]);
+            b.push(`${num(r / 255)} ${num(g / 255)} ${num(bb / 255)} setrgbcolor`, 'newpath');
+            for (const l of gl) {
+                l.pts.forEach((p, i) => b.push(`${num(fx(p.x))} ${num(fy(p.y))} ${i === 0 ? 'moveto' : 'lineto'}`));
+                if (l.closed) b.push('closepath');
+            }
+            b.push(op === 'engrave' ? 'fill' : 'stroke');
+        }
+    }
+    b.push('showpage', '%%EOF');
+    return b.join('\n');
+}
+
+// Rough cut/engrave path length + time estimate (ignores travel & raster).
+export function estimate(store, opts = {}) {
+    const g = { ...DEFAULT_GCODE, ...opts };
+    let cutLen = 0, engLen = 0;
+    for (const obj of visibleObjects(store)) {
+        if (obj.type === 'image') continue;
+        const loops = objectLoops(obj);
+        if (!loops) continue;
+        for (const l of loops) {
+            const len = pathLength(l.pts, l.closed);
+            if (l.op === 'cut') cutLen += len; else engLen += len;
+        }
+    }
+    const timeSec = (cutLen / (g.cutSpeed || 600)) * 60 + (engLen / (g.engraveSpeed || 1500)) * 60;
+    return { cutLen, engLen, timeSec };
 }
 
 // =====================================================================
@@ -437,9 +532,12 @@ export async function runExport(store, format, opts = {}) {
     const stamp = new Date().toISOString().slice(0, 10);
     const base = `laserforge-${stamp}`;
     switch (format) {
-        case 'svg': download(`${base}.svg`, textBlob(await toSVG(store), 'image/svg+xml')); break;
-        case 'dxf': download(`${base}.dxf`, textBlob(toDXF(store), 'application/dxf')); break;
-        case 'pdf': download(`${base}.pdf`, await toPDF(store)); break;
+        case 'svg': download(`${base}.svg`, textBlob(await toSVG(store, opts), 'image/svg+xml')); break;
+        case 'dxf': download(`${base}.dxf`, textBlob(toDXF(store, opts), 'application/dxf')); break;
+        case 'pdf': download(`${base}.pdf`, await toPDF(store, opts)); break;
+        case 'ai': download(`${base}.ai`, await toPDF(store, opts)); break;
+        case 'plt': download(`${base}.plt`, textBlob(toPLT(store, opts), 'application/vnd.hp-hpgl')); break;
+        case 'eps': download(`${base}.eps`, textBlob(toEPS(store, opts), 'application/postscript')); break;
         case 'png': download(`${base}.png`, await toPNG(store, opts)); break;
         case 'jpg': download(`${base}.jpg`, await toJPG(store, opts)); break;
         case 'bmp': download(`${base}-${opts.bits || 8}bit.bmp`, await toBMP(store, opts)); break;
