@@ -467,7 +467,12 @@ function wirePuzzle(sel) {
         { edgeH: sel.edgeH || [], edgeV: sel.edgeV || [] },
         (res) => store.patch(sel.id, { edgeH: res.edgeH, edgeV: res.edgeV })));
     const sh = $('#p-shuffle');
-    if (sh) sh.addEventListener('click', () => store.patch(sel.id, { seed: (Math.random() * 1e9) | 0 }));
+    if (sh) sh.addEventListener('click', () => {
+        const s = (Math.random() * 1e9) | 0;
+        store.patch(sel.id, { seed: s });
+        const seedInput = $('#p-seed');
+        if (seedInput) seedInput.value = s;   // keep the visible field in sync
+    });
     // show only the relevant controls for the chosen style
     const isGeo = sel.style === 'geometric', isJig = sel.style === 'jigsaw', isVor = sel.style === 'voronoi', isCustom = sel.style === 'custom';
     const show = (id, on) => { const e = $('#' + id); if (e) e.style.display = on ? '' : 'none'; };
