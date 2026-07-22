@@ -39,7 +39,50 @@ export const DEFAULT_IMAGE_PARAMS = {
     ditherCutoff: 128,  // 0..255
     removeBg: false,
     bgThreshold: 245,   // luminance considered "background/white"
+    blur: 0,            // 0..5 box-blur radius
+    sharpen: 0,         // 0..100 unsharp amount
+    edge: false,        // Sobel edge / line-art
+    posterize: 0,       // 0 = off, else 2..16 tone bands
 };
+
+const clampi = (v, lo, hi) => (v < lo ? lo : v > hi ? hi : v);
+
+function boxBlur(src, w, h, r) {
+    if (r <= 0) return src;
+    const out = new Float32Array(w * h);
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        let s = 0, c = 0;
+        for (let dy = -r; dy <= r; dy++) {
+            const yy = y + dy; if (yy < 0 || yy >= h) continue;
+            for (let dx = -r; dx <= r; dx++) {
+                const xx = x + dx; if (xx < 0 || xx >= w) continue;
+                s += src[yy * w + xx]; c++;
+            }
+        }
+        out[y * w + x] = s / c;
+    }
+    return out;
+}
+function sobel(src, w, h) {
+    const out = new Float32Array(w * h);
+    const gxK = [-1, 0, 1, -2, 0, 2, -1, 0, 1], gyK = [-1, -2, -1, 0, 0, 0, 1, 2, 1];
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+        let gx = 0, gy = 0, k = 0;
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+            const v = src[clampi(y + dy, 0, h - 1) * w + clampi(x + dx, 0, w - 1)];
+            gx += v * gxK[k]; gy += v * gyK[k]; k++;
+        }
+        out[y * w + x] = Math.min(255, Math.hypot(gx, gy));
+    }
+    return out;
+}
+function posterize(src, levels) {
+    if (levels < 2 || levels >= 256) return src;
+    const step = 255 / (levels - 1);
+    const out = new Float32Array(src.length);
+    for (let i = 0; i < src.length; i++) out[i] = Math.round(Math.round(src[i] / step) * step);
+    return out;
+}
 
 // Returns a NEW ImageData (same dimensions) after the full engrave pipeline.
 export function processImageData(src, params) {
@@ -75,7 +118,22 @@ export function processImageData(src, params) {
         alpha[q] = outA;
     }
 
-    const toned = dither(gray, width, height, p.dither, p.ditherCutoff);
+    // spatial filters (blur → sharpen → edge/line-art → posterize)
+    let g = gray;
+    if (p.blur > 0) g = boxBlur(g, width, height, Math.round(p.blur));
+    if (p.sharpen > 0) {
+        const bl = boxBlur(g, width, height, 1), amt = p.sharpen / 100, s = new Float32Array(n);
+        for (let i = 0; i < n; i++) s[i] = clamp(g[i] + amt * (g[i] - bl[i]), 0, 255);
+        g = s;
+    }
+    if (p.edge) {
+        const e = sobel(g, width, height), s = new Float32Array(n);
+        for (let i = 0; i < n; i++) s[i] = clamp(255 - e[i], 0, 255);
+        g = s;
+    }
+    if (p.posterize >= 2) g = posterize(g, p.posterize | 0);
+
+    const toned = dither(g, width, height, p.dither, p.ditherCutoff);
 
     const out = new ImageData(width, height);
     for (let q = 0, i = 0; q < n; q++, i += 4) {

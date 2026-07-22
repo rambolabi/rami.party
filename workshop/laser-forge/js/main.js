@@ -2,7 +2,7 @@
 
 import { Store, BED_PRESETS } from './store.js';
 import { Artboard } from './artboard.js';
-import { createText, createShape, createQR, createPuzzle, createBarcode, createImageFromFile, measureText } from './objects.js';
+import { createText, createShape, createQR, createPuzzle, createBarcode, createImageFromFile, measureText, createTestGrid, createPath, traceImageToVector, produceProcessed } from './objects.js';
 import { createBox, createGear, createRuler, createHinge, createRegistration, boxNetSize } from './generators.js';
 import { DITHER_METHODS } from './dither.js';
 import { QR_ECL } from './qr.js';
@@ -65,6 +65,7 @@ async function doAction(action, btn) {
     else if (action === 'gen-ruler') store.addObject(createRuler());
     else if (action === 'gen-hinge') store.addObject(createHinge());
     else if (action === 'gen-reg') store.addObject(createRegistration());
+    else if (action === 'gen-test') store.addObject(createTestGrid());
     else if (action === 'add-image') $('#file-input').click();
     else if (action === 'emoji') toggleEmoji(btn);
     else if (action.startsWith('shape-')) {
@@ -217,7 +218,9 @@ function typeHTML(sel) {
             <label class="check"><input type="checkbox" id="p-bold" ${sel.bold ? 'checked' : ''}> Bold</label>
             <label class="check"><input type="checkbox" id="p-italic" ${sel.italic ? 'checked' : ''}> Italic</label>
             <label class="check"><input type="checkbox" id="p-fill" ${sel.fill ? 'checked' : ''}> Filled</label>
-        </div>`;
+        </div>
+        <label class="check"><input type="checkbox" id="p-single" ${sel.singleLine ? 'checked' : ''}> Single-line (centreline / Hershey-style)</label>
+        <p class="hint-tip">Single-line engraves a skeleton stroke instead of a filled outline — far faster on the laser.</p>`;
 
     if (sel.type === 'qr') return `
         <hr class="sep">
@@ -234,8 +237,28 @@ function typeHTML(sel) {
         else if (sel.shape === 'polygon') extra = row('Sides', `<input type="number" id="p-sides" min="3" max="60" step="1" value="${sel.sides}">`);
         else if (sel.shape === 'star') extra = `${row('Points', `<input type="number" id="p-points" min="3" max="30" step="1" value="${sel.points}">`)}
             ${row('Inner ratio', `<input type="range" id="p-inner" min="0.15" max="0.9" step="0.01" value="${sel.innerRatio}">`)}`;
-        return extra ? `<hr class="sep">${extra}` : '';
+        return `<hr class="sep">${extra}${cutcraftHTML(sel)}`;
     }
+
+    if (sel.type === 'path') return `<hr class="sep">
+        <p class="muted tiny">✒️ Vector path (traced / imported / boolean result). Resize via Width/Height.</p>
+        ${cutcraftHTML(sel)}`;
+
+    if (sel.type === 'testgrid') return `
+        <hr class="sep">
+        <p class="muted tiny">🧪 Material test — each cell engraves; set the matching power (columns) and speed (rows) per cell in your laser software.</p>
+        <div class="row two">
+            <div><label>Columns (power)</label><input type="number" id="p-cols" min="1" max="20" step="1" value="${sel.cols}"></div>
+            <div><label>Rows (speed)</label><input type="number" id="p-rows" min="1" max="20" step="1" value="${sel.rows}"></div>
+        </div>
+        <div class="row two">
+            <div><label>Power min %</label><input type="number" id="p-pmin" min="0" max="100" step="1" value="${sel.powerMin}"></div>
+            <div><label>Power max %</label><input type="number" id="p-pmax" min="0" max="100" step="1" value="${sel.powerMax}"></div>
+        </div>
+        <div class="row two">
+            <div><label>Speed min</label><input type="number" id="p-smin" min="1" step="10" value="${sel.speedMin}"></div>
+            <div><label>Speed max</label><input type="number" id="p-smax" min="1" step="10" value="${sel.speedMax}"></div>
+        </div>`;
 
     if (sel.type === 'puzzle') {
         const styleOpt = (v, label) => `<option value="${v}" ${sel.style === v ? 'selected' : ''}>${label}</option>`;
@@ -248,6 +271,7 @@ function typeHTML(sel) {
             ${styleOpt('tessellation', 'Tessellation — one repeating self-fitting tile (SHMUZZLE-style)')}
             ${styleOpt('geometric', 'Geometric tiling — straight cuts')}
             ${styleOpt('voronoi', 'Voronoi — organic random cells')}
+            ${styleOpt('spiral', 'Spiral — one continuous spiral cut')}
             ${styleOpt('custom', 'Custom — draw your own repeating tile')}
         </select></div>
         <p class="hint-tip" id="p-stylehint"></p>
@@ -334,12 +358,39 @@ function typeHTML(sel) {
         <label class="check"><input type="checkbox" id="pi-invert" ${p.invert ? 'checked' : ''}> Invert (dark materials / slate)</label>
         <label class="check"><input type="checkbox" id="pi-removeBg" ${p.removeBg ? 'checked' : ''}> Remove white background</label>
         ${sl('bgThreshold', 'Background threshold', 150, 255, 1, p.bgThreshold)}
+        <hr class="sep">
+        <p class="muted tiny">🎛 Pre-filters (applied before dithering)</p>
+        ${sl('blur', 'Blur (denoise)', 0, 8, 1, p.blur ?? 0)}
+        ${sl('sharpen', 'Sharpen', 0, 100, 1, p.sharpen ?? 0)}
+        ${sl('posterize', 'Posterize (colour count, 0=off)', 0, 16, 1, p.posterize ?? 0)}
+        <label class="check"><input type="checkbox" id="pi-edge" ${p.edge ? 'checked' : ''}> Edge detect (line-art outline)</label>
+        <hr class="sep">
+        <p class="muted tiny">✒️ Convert this image to editable vector paths:</p>
+        <div class="btn-row">
+            <button class="btn" id="pi-trace-outline">Trace outline → cut</button>
+            <button class="btn" id="pi-trace-center">Centerline → engrave</button>
+        </div>
         <div class="btn-row"><button class="btn" id="pi-reset">Reset image adjustments</button></div>`;
     }
     return '';
 }
 
 const row = (label, control) => `<div class="row"><label>${label}</label>${control}</div>`;
+
+// Hatch-fill + bridge/tab controls shared by shapes and paths.
+function cutcraftHTML(sel) {
+    return `
+    <hr class="sep">
+    <p class="muted tiny">🪚 Cut craft — hatch fill (engrave) &amp; bridges/tabs (hold parts in place).</p>
+    <div class="row two">
+        <div><label>Hatch spacing mm (0=off)</label><input type="number" id="p-hatch" min="0" max="20" step="0.2" value="${r1(sel.hatch || 0)}"></div>
+        <div><label>Hatch angle °</label><input type="number" id="p-hatchang" min="0" max="180" step="5" value="${sel.hatchAngle || 0}"></div>
+    </div>
+    <div class="row two">
+        <div><label>Bridges / edge (0=off)</label><input type="number" id="p-bridges" min="0" max="8" step="1" value="${sel.bridges || 0}"></div>
+        <div><label>Bridge gap mm</label><input type="number" id="p-bridgegap" min="0.3" max="5" step="0.1" value="${r1(sel.bridgeGap || 1.5)}"></div>
+    </div>`;
+}
 
 function renderProps() {
     const sel = store.selected;
@@ -418,6 +469,7 @@ function wireType(sel) {
         ['bold', 'italic', 'fill'].forEach((k) => {
             const c = $('#p-' + k); if (c) c.addEventListener('change', () => reflow({ [k]: c.checked }, false));
         });
+        const sng = $('#p-single'); if (sng) sng.addEventListener('change', () => store.patch(sel.id, { singleLine: sng.checked }));
     } else if (sel.type === 'qr') {
         bindRaw('p-data', 'input', (el) => store.patch(sel.id, { data: el.value }, { transient: true }), true);
         bindRaw('p-ecl', 'change', (el) => store.patch(sel.id, { ecl: el.value }));
@@ -427,6 +479,16 @@ function wireType(sel) {
         bindNum('p-sides', (v) => ({ sides: clamp(v | 0, 3, 60) }));
         bindNum('p-points', (v) => ({ points: clamp(v | 0, 3, 30) }));
         bindNum('p-inner', (v) => ({ innerRatio: clamp(v, 0.1, 0.95) }));
+        wireCutcraft(sel);
+    } else if (sel.type === 'path') {
+        wireCutcraft(sel);
+    } else if (sel.type === 'testgrid') {
+        bindNum('p-cols', (v) => ({ cols: clamp(v | 0, 1, 20) }));
+        bindNum('p-rows', (v) => ({ rows: clamp(v | 0, 1, 20) }));
+        bindNum('p-pmin', (v) => ({ powerMin: clamp(v, 0, 100) }));
+        bindNum('p-pmax', (v) => ({ powerMax: clamp(v, 0, 100) }));
+        bindNum('p-smin', (v) => ({ speedMin: Math.max(1, v) }));
+        bindNum('p-smax', (v) => ({ speedMax: Math.max(1, v) }));
     } else if (sel.type === 'puzzle') {
         wirePuzzle(sel);
     } else if (sel.type === 'barcode') {
@@ -449,6 +511,13 @@ function wireType(sel) {
     } else if (sel.type === 'image') {
         wireImage(sel);
     }
+}
+
+function wireCutcraft(sel) {
+    bindNum('p-hatch', (v) => ({ hatch: clamp(v, 0, 20) }));
+    bindNum('p-hatchang', (v) => ({ hatchAngle: clamp(v, 0, 180) }));
+    bindNum('p-bridges', (v) => ({ bridges: clamp(v | 0, 0, 8) }));
+    bindNum('p-bridgegap', (v) => ({ bridgeGap: clamp(v, 0.3, 5) }));
 }
 
 function wirePuzzle(sel) {
@@ -474,10 +543,10 @@ function wirePuzzle(sel) {
         if (seedInput) seedInput.value = s;   // keep the visible field in sync
     });
     // show only the relevant controls for the chosen style
-    const isGeo = sel.style === 'geometric', isJig = sel.style === 'jigsaw', isVor = sel.style === 'voronoi', isCustom = sel.style === 'custom';
+    const isGeo = sel.style === 'geometric', isJig = sel.style === 'jigsaw', isVor = sel.style === 'voronoi', isCustom = sel.style === 'custom', isSpiral = sel.style === 'spiral';
     const show = (id, on) => { const e = $('#' + id); if (e) e.style.display = on ? '' : 'none'; };
-    show('p-tabrow', !isGeo && !isVor && !isCustom);
-    show('p-tabstylerow', !isGeo && !isVor && !isCustom);
+    show('p-tabrow', !isGeo && !isVor && !isCustom && !isSpiral);
+    show('p-tabstylerow', !isGeo && !isVor && !isCustom && !isSpiral);
     show('p-georow', isGeo);
     show('p-seedrow', isJig || isVor);
     show('p-customrow', isCustom);
@@ -488,11 +557,12 @@ function wirePuzzle(sel) {
         voronoi: 'Organic random cells — change the seed for a new pattern.',
         custom: 'Draw your own repeating tile — every piece becomes that shape and interlocks.',
     };
+    hints.spiral = 'One continuous spiral cut — rows + columns control the number of turns.';
     const hintEl = $('#p-stylehint'); if (hintEl) hintEl.textContent = hints[sel.style] || '';
 }
 
 function wireImage(sel) {
-    const keys = ['brightness', 'contrast', 'gamma', 'levelsBlack', 'levelsWhite', 'ditherCutoff', 'bgThreshold'];
+    const keys = ['brightness', 'contrast', 'gamma', 'levelsBlack', 'levelsWhite', 'ditherCutoff', 'bgThreshold', 'blur', 'sharpen', 'posterize'];
     keys.forEach((k) => {
         const rng = $('#pi-' + k), nb = $('#pin-' + k);
         if (!rng) return;
@@ -507,13 +577,22 @@ function wireImage(sel) {
         nb.addEventListener('change', () => apply(nb.value, false));
     });
     bindRaw('pi-dither', 'change', (el) => store.patch(sel.id, { params: { ...sel.params, dither: el.value } }));
-    ['invert', 'removeBg'].forEach((k) => {
+    ['invert', 'removeBg', 'edge'].forEach((k) => {
         const c = $('#pi-' + k); if (c) c.addEventListener('change', () => store.patch(sel.id, { params: { ...sel.params, [k]: c.checked } }));
     });
+    const trace = async (mode) => {
+        await produceProcessed(sel, 900);
+        const loops = traceImageToVector(sel, mode);
+        if (!loops || !loops.length) { alert('Nothing traceable — adjust threshold / contrast first.'); return; }
+        store.addObject(createPath(loops, { name: `${sel.name} (${mode})` }));
+    };
+    const to = $('#pi-trace-outline'); if (to) to.addEventListener('click', () => trace('outline'));
+    const tc = $('#pi-trace-center'); if (tc) tc.addEventListener('click', () => trace('centerline'));
     $('#pi-reset').addEventListener('click', () => {
         store.patch(sel.id, { params: {
             brightness: 0, contrast: 0, gamma: 1, levelsBlack: 0, levelsWhite: 255,
             invert: false, dither: 'none', ditherCutoff: 128, removeBg: false, bgThreshold: 245,
+            blur: 0, sharpen: 0, edge: false, posterize: 0,
         } });
         renderProps();
     });

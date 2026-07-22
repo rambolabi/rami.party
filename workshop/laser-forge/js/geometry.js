@@ -151,3 +151,64 @@ function intersectLines(p1, p2, p3, p4) {
     };
 }
 
+// Parallel-line hatch fill of a region (array of closed point-loops, even-odd).
+// Returns an array of [pA, pB] segments in the original coordinate space.
+export function hatchFill(loops, spacing, angleDeg = 0) {
+    if (spacing <= 0) return [];
+    const a = deg2rad(angleDeg), ca = Math.cos(a), sa = Math.sin(a);
+    const rot = (p) => ({ x: p.x * ca + p.y * sa, y: -p.x * sa + p.y * ca });
+    const inv = (p) => ({ x: p.x * ca - p.y * sa, y: p.x * sa + p.y * ca });
+    const R = loops.map((l) => l.map(rot));
+    let minY = Infinity, maxY = -Infinity;
+    for (const l of R) for (const p of l) { if (p.y < minY) minY = p.y; if (p.y > maxY) maxY = p.y; }
+    const out = [];
+    for (let y = Math.ceil(minY / spacing) * spacing; y <= maxY; y += spacing) {
+        const xs = [];
+        for (const l of R) {
+            const n = l.length;
+            for (let i = 0; i < n; i++) {
+                const p = l[i], q = l[(i + 1) % n];
+                if ((p.y <= y && q.y > y) || (q.y <= y && p.y > y)) {
+                    xs.push(p.x + ((y - p.y) / (q.y - p.y)) * (q.x - p.x));
+                }
+            }
+        }
+        xs.sort((m, n) => m - n);
+        for (let i = 0; i + 1 < xs.length; i += 2) out.push([inv({ x: xs[i], y }), inv({ x: xs[i + 1], y })]);
+    }
+    return out;
+}
+
+// Break a closed loop into open polylines, leaving `count` small bridge gaps.
+export function applyBridges(pts, count, gap) {
+    if (!count || count < 1 || pts.length < 3) return [{ pts: pts.slice(), closed: true }];
+    const P = pts.concat([pts[0]]);
+    const segLen = []; let total = 0;
+    for (let i = 1; i < P.length; i++) { const d = Math.hypot(P[i].x - P[i - 1].x, P[i].y - P[i - 1].y); segLen.push(d); total += d; }
+    const half = gap / 2;
+    const inGap = (s) => {
+        for (let k = 0; k < count; k++) {
+            const c = (k / count) * total + total / (2 * count);
+            let d = Math.abs(s - c); d = Math.min(d, total - d);
+            if (d < half) return true;
+        }
+        return false;
+    };
+    const lines = []; let cur = [];
+    const push = (pt, s) => { if (inGap(s)) { if (cur.length >= 2) lines.push({ pts: cur, closed: false }); cur = []; } else cur.push(pt); };
+    push(P[0], 0);
+    let acc = 0;
+    for (let i = 1; i < P.length; i++) {
+        const d = segLen[i - 1];
+        const steps = Math.max(1, Math.ceil(d / Math.max(0.5, half)));
+        for (let s = 1; s <= steps; s++) {
+            const t = s / steps;
+            push({ x: P[i - 1].x + (P[i].x - P[i - 1].x) * t, y: P[i - 1].y + (P[i].y - P[i - 1].y) * t }, acc + d * t);
+        }
+        acc += d;
+    }
+    if (cur.length >= 2) lines.push({ pts: cur, closed: false });
+    return lines;
+}
+
+

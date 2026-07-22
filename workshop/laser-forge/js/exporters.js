@@ -55,15 +55,27 @@ export async function toSVG(store, opts = {}) {
         for (const l of loops) { if (!groups.has(l.op)) groups.set(l.op, []); groups.get(l.op).push(l); }
         for (const [op, gl] of groups) {
             const color = OP_COLORS[op];
-            let d = '';
-            for (const l of gl) {
-                l.pts.forEach((p, i) => { d += `${i === 0 ? 'M' : 'L'}${num(p.x)} ${num(p.y)} `; });
-                if (l.closed) d += 'Z ';
-            }
             if (!layers[op]) layers[op] = [];
-            layers[op].push(op === 'engrave'
-                ? `<path d="${d.trim()}" fill="${color}" fill-rule="evenodd" stroke="none"/>`
-                : `<path d="${d.trim()}" fill="none" stroke="${color}" stroke-width="0.1"/>`);
+            if (op === 'engrave') {
+                const closed = gl.filter((l) => l.closed), open = gl.filter((l) => !l.closed);
+                if (closed.length) {
+                    let d = '';
+                    for (const l of closed) { l.pts.forEach((p, i) => { d += `${i === 0 ? 'M' : 'L'}${num(p.x)} ${num(p.y)} `; }); d += 'Z '; }
+                    layers[op].push(`<path d="${d.trim()}" fill="${color}" fill-rule="evenodd" stroke="none"/>`);
+                }
+                if (open.length) {
+                    let d = '';
+                    for (const l of open) l.pts.forEach((p, i) => { d += `${i === 0 ? 'M' : 'L'}${num(p.x)} ${num(p.y)} `; });
+                    layers[op].push(`<path d="${d.trim()}" fill="none" stroke="${color}" stroke-width="0.1"/>`);
+                }
+            } else {
+                let d = '';
+                for (const l of gl) {
+                    l.pts.forEach((p, i) => { d += `${i === 0 ? 'M' : 'L'}${num(p.x)} ${num(p.y)} `; });
+                    if (l.closed) d += 'Z ';
+                }
+                layers[op].push(`<path d="${d.trim()}" fill="none" stroke="${color}" stroke-width="0.1"/>`);
+            }
         }
     }
     const parts = [`<?xml version="1.0" encoding="UTF-8"?>`,
@@ -167,15 +179,21 @@ export async function toPDF(store, opts = {}) {
         for (const l of loops) { if (!groups.has(l.op)) groups.set(l.op, []); groups.get(l.op).push(l); }
         for (const [op, gl] of groups) {
             const { r, g, b } = hexToRgb(OP_COLORS[op]);
-            const fillable = op === 'engrave';
-            content += `${num(r / 255)} ${num(g / 255)} ${num(b / 255)} ${fillable ? 'rg' : 'RG'}\n`;
-            for (const l of gl) {
-                l.pts.forEach((p, i) => {
-                    content += `${num(fx(p.x))} ${num(fy(p.y))} ${i === 0 ? 'm' : 'l'}\n`;
-                });
-                if (l.closed) content += 'h\n';
+            const emit = (list, fillable) => {
+                if (!list.length) return;
+                content += `${num(r / 255)} ${num(g / 255)} ${num(b / 255)} ${fillable ? 'rg' : 'RG'}\n`;
+                for (const l of list) {
+                    l.pts.forEach((p, i) => { content += `${num(fx(p.x))} ${num(fy(p.y))} ${i === 0 ? 'm' : 'l'}\n`; });
+                    if (l.closed) content += 'h\n';
+                }
+                content += fillable ? 'f*\n' : 'S\n';
+            };
+            if (op === 'engrave') {
+                emit(gl.filter((l) => l.closed), true);
+                emit(gl.filter((l) => !l.closed), false);
+            } else {
+                emit(gl, false);
             }
-            content += fillable ? 'f*\n' : 'S\n';
         }
     }
 
@@ -496,12 +514,21 @@ export function toEPS(store, opts = {}) {
         for (const l of loops) { if (!groups.has(l.op)) groups.set(l.op, []); groups.get(l.op).push(l); }
         for (const [op, gl] of groups) {
             const { r, g, b: bb } = hexToRgb(OP_COLORS[op]);
-            b.push(`${num(r / 255)} ${num(g / 255)} ${num(bb / 255)} setrgbcolor`, 'newpath');
-            for (const l of gl) {
-                l.pts.forEach((p, i) => b.push(`${num(fx(p.x))} ${num(fy(p.y))} ${i === 0 ? 'moveto' : 'lineto'}`));
-                if (l.closed) b.push('closepath');
+            const emit = (list, paint) => {
+                if (!list.length) return;
+                b.push(`${num(r / 255)} ${num(g / 255)} ${num(bb / 255)} setrgbcolor`, 'newpath');
+                for (const l of list) {
+                    l.pts.forEach((p, i) => b.push(`${num(fx(p.x))} ${num(fy(p.y))} ${i === 0 ? 'moveto' : 'lineto'}`));
+                    if (l.closed) b.push('closepath');
+                }
+                b.push(paint);
+            };
+            if (op === 'engrave') {
+                emit(gl.filter((l) => l.closed), 'fill');
+                emit(gl.filter((l) => !l.closed), 'stroke');
+            } else {
+                emit(gl, 'stroke');
             }
-            b.push(op === 'engrave' ? 'fill' : 'stroke');
         }
     }
     b.push('showpage', '%%EOF');

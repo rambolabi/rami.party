@@ -1,8 +1,8 @@
 // objects.js — object factories, preview drawing, and vector geometry (pure JS)
 
-import { uid, applyTransform, OP_COLORS, simplify, clamp } from './geometry.js';
+import { uid, applyTransform, OP_COLORS, simplify, clamp, hatchFill, applyBridges } from './geometry.js';
 import { decodeImage, imageToImageData, processImageData, DEFAULT_IMAGE_PARAMS } from './image.js';
-import { traceBinary, binaryFromImageData } from './trace.js';
+import { traceBinary, binaryFromImageData, centerlineTrace } from './trace.js';
 import { qrGenerate } from './qr.js';
 import { boxLocalLoops, gearLocalLoops, rulerLoops, hingeLoops, registrationLoops } from './generators.js';
 import { encodeCode128B } from './barcode.js';
@@ -215,17 +215,25 @@ function textLocalLoops(obj) {
     m.lines.forEach((ln, i) => ctx.fillText(ln, ax, i * lineH));
     const img = ctx.getImageData(0, 0, W, H);
     const { bin, width, height } = binaryFromImageData(img, { threshold: 128 });
-    const rawLoops = traceBinary(bin, width, height);
-    let loops = rawLoops.map((lp) => ({
-        pts: simplify(lp.map((p) => ({ x: p.x / K, y: p.y / K })), 0.06, true),
-        closed: true,
-    }));
+    let loops;
+    if (obj.singleLine) {
+        loops = centerlineTrace(bin, width, height).map((lp) => ({
+            pts: simplify(lp.map((p) => ({ x: p.x / K, y: p.y / K })), 0.08, false),
+            closed: false, op: 'engrave',
+        })).filter((l) => l.pts.length >= 2);
+    } else {
+        loops = traceBinary(bin, width, height).map((lp) => ({
+            pts: simplify(lp.map((p) => ({ x: p.x / K, y: p.y / K })), 0.06, true),
+            closed: true,
+        }));
+    }
     if (obj.arc) {
         const arc = (obj.arc * Math.PI) / 180;
         const Wm = m.wMM, Hm = m.hMM;
         const R = Math.abs(arc) > 1e-3 ? Wm / arc : 1e6;
         loops = loops.map((l) => ({
             closed: l.closed,
+            op: l.op,
             pts: l.pts.map((p) => {
                 const ang = -arc / 2 + (p.x / Wm) * arc;
                 const rr = R - (Hm - p.y);
@@ -442,6 +450,8 @@ function puzzleLocalLoops(obj) {
         voronoiTiling(obj, out);
     } else if (obj.style === 'custom') {
         customPuzzle(obj, out, rows, cols, cw, ch);
+    } else if (obj.style === 'spiral') {
+        spiralPuzzle(obj, out);
     } else {
         const tab = clamp(obj.tab ?? 0.2, 0.05, 0.4);
         const tess = obj.style === 'tessellation';
@@ -514,17 +524,179 @@ export function createBarcode(props = {}) {
     };
 }
 
+function spiralPuzzle(obj, out) {
+    const { w, h } = obj;
+    const cx = w / 2, cy = h / 2;
+    const turns = Math.max(2, (obj.rows | 0) + (obj.cols | 0));
+    const rMax = (Math.min(w, h) / 2) * 0.96;
+    const b = rMax / (turns * 2 * Math.PI);
+    const pts = [];
+    const steps = turns * 120;
+    for (let i = 0; i <= steps; i++) {
+        const th = (i / steps) * turns * 2 * Math.PI, r = b * th;
+        pts.push({ x: cx + r * Math.cos(th), y: cy + r * Math.sin(th) });
+    }
+    out.push({ pts, closed: false, op: 'cut' });
+}
+
+// ---- path object (imported / traced / boolean output) ---------------------
+export function createPath(absLoops, props = {}) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const l of absLoops) for (const p of l.pts) {
+        if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
+    }
+    if (!isFinite(minX)) { minX = 0; minY = 0; maxX = 1; maxY = 1; }
+    const w = Math.max(0.1, maxX - minX), h = Math.max(0.1, maxY - minY);
+    const loops = absLoops.map((l) => ({
+        pts: l.pts.map((p) => ({ x: p.x - minX, y: p.y - minY })),
+        closed: l.closed !== false, op: l.op,
+    }));
+    return {
+        id: uid('pa'), type: 'path', name: 'Path', op: 'cut',
+        x: minX, y: minY, w, h, _basew: w, _baseh: h, rotation: 0, visible: true,
+        loops, hatch: 0, hatchAngle: 0, bridges: 0, bridgeGap: 1.5, ...props,
+    };
+}
+function pathLocalLoops(obj) {
+    const sx = obj._basew ? obj.w / obj._basew : 1, sy = obj._baseh ? obj.h / obj._baseh : 1;
+    return obj.loops.map((l) => ({ pts: l.pts.map((p) => ({ x: p.x * sx, y: p.y * sy })), closed: l.closed, op: l.op }));
+}
+
+// Trace an image object to vector loops (absolute mm). mode: 'outline' | 'centerline'.
+export function traceImageToVector(obj, mode = 'outline') {
+    const cache = getValidProcessed(obj, 900) || getStaleProcessed(obj, 900);
+    if (!cache || !cache.imageData) return null;
+    const { bin, width, height } = binaryFromImageData(cache.imageData, { threshold: 128 });
+    const sx = obj.w / width, sy = obj.h / height;
+    let loops;
+    if (mode === 'centerline') {
+        loops = centerlineTrace(bin, width, height).map((l) => ({
+            pts: simplify(l.map((p) => ({ x: obj.x + p.x * sx, y: obj.y + p.y * sy })), 0.12, false),
+            closed: false, op: 'engrave',
+        }));
+    } else {
+        loops = traceBinary(bin, width, height).map((l) => ({
+            pts: simplify(l.map((p) => ({ x: obj.x + p.x * sx, y: obj.y + p.y * sy })), 0.1, true),
+            closed: true, op: 'cut',
+        }));
+    }
+    return loops.filter((l) => l.pts.length >= 2);
+}
+
+// Combine selected objects' filled areas via a raster mask, trace back to vectors.
+export function booleanObjects(objs, mode) {
+    const all = objs.map((o) => objectLoops(o)).filter(Boolean);
+    if (all.length < 2) return null;
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const loops of all) for (const l of loops) for (const p of l.pts) {
+        if (p.x < minX) minX = p.x; if (p.y < minY) minY = p.y;
+        if (p.x > maxX) maxX = p.x; if (p.y > maxY) maxY = p.y;
+    }
+    const scale = 6;
+    const W = Math.max(2, Math.ceil((maxX - minX) * scale) + 2), H = Math.max(2, Math.ceil((maxY - minY) * scale) + 2);
+    const maskOf = (loops) => {
+        const c = document.createElement('canvas'); c.width = W; c.height = H;
+        const ctx = c.getContext('2d', { willReadFrequently: true });
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = '#fff'; ctx.beginPath();
+        for (const l of loops) {
+            if (!l.closed) continue;
+            l.pts.forEach((p, i) => { const X = (p.x - minX) * scale + 1, Y = (p.y - minY) * scale + 1; i === 0 ? ctx.moveTo(X, Y) : ctx.lineTo(X, Y); });
+            ctx.closePath();
+        }
+        ctx.fill('evenodd');
+        const d = ctx.getImageData(0, 0, W, H).data, m = new Uint8Array(W * H);
+        for (let i = 0, q = 0; i < d.length; i += 4, q++) m[q] = d[i] > 128 ? 1 : 0;
+        return m;
+    };
+    const acc = maskOf(all[0]);
+    for (let k = 1; k < all.length; k++) {
+        const b = maskOf(all[k]);
+        for (let i = 0; i < acc.length; i++) {
+            if (mode === 'union') acc[i] = acc[i] | b[i];
+            else if (mode === 'intersect') acc[i] = acc[i] & b[i];
+            else if (mode === 'subtract') acc[i] = acc[i] & (b[i] ? 0 : 1);
+            else if (mode === 'xor') acc[i] = acc[i] ^ b[i];
+        }
+    }
+    const loops = traceBinary(acc, W, H).map((l) => ({
+        pts: simplify(l.map((p) => ({ x: minX + (p.x - 1) / scale, y: minY + (p.y - 1) / scale })), 0.18, true),
+        closed: true, op: 'cut',
+    })).filter((l) => l.pts.length >= 3);
+    return loops.length ? loops : null;
+}
+
+// ---- material test grid ---------------------------------------------------
+function testGridLoops(obj, glyph) {
+    const { w, h } = obj;
+    const rows = Math.max(1, obj.rows | 0), cols = Math.max(1, obj.cols | 0);
+    const cw = w / (cols + 1), ch = h / (rows + 1);
+    const out = [];
+    for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const x = (c + 1) * cw + cw * 0.15, y = (r + 1) * ch + ch * 0.15, sw = cw * 0.7, sh = ch * 0.7;
+        out.push({ pts: [{ x, y }, { x: x + sw, y }, { x: x + sw, y: y + sh }, { x, y: y + sh }], closed: true, op: 'engrave' });
+    }
+    const label = (str, ox, oy) => {
+        const g = glyph(str, 'sans-serif', Math.min(cw, ch) * 0.26);
+        for (const l of g.loops) out.push({ pts: l.pts.map((p) => ({ x: ox - g.wMM / 2 + p.x, y: oy - g.hMM / 2 + p.y })), closed: l.closed, op: 'engrave' });
+    };
+    for (let c = 0; c < cols; c++) {
+        const val = Math.round(obj.powerMin + (obj.powerMax - obj.powerMin) * (cols > 1 ? c / (cols - 1) : 0));
+        label(String(val), (c + 1) * cw + cw * 0.5, ch * 0.5);
+    }
+    for (let r = 0; r < rows; r++) {
+        const val = Math.round(obj.speedMin + (obj.speedMax - obj.speedMin) * (rows > 1 ? r / (rows - 1) : 0));
+        label(String(val), cw * 0.5, (r + 1) * ch + ch * 0.5);
+    }
+    out.push({ pts: [{ x: 0, y: 0 }, { x: w, y: 0 }, { x: w, y: h }, { x: 0, y: h }], closed: true, op: 'score' });
+    return out;
+}
+export function createTestGrid(props = {}) {
+    return {
+        id: uid('tg'), type: 'testgrid', name: 'Material test', op: 'engrave',
+        x: 15, y: 15, w: 120, h: 120, rotation: 0, visible: true,
+        rows: 5, cols: 5, powerMin: 10, powerMax: 100, speedMin: 100, speedMax: 1000, ...props,
+    };
+}
+
+// hatch fill + bridge gaps (options on shapes / paths)
+function applyLoopOptions(obj, loops) {
+    if (!loops) return loops;
+    let out = loops;
+    if (obj.hatch > 0) {
+        const region = out.filter((l) => l.closed).map((l) => l.pts);
+        if (region.length) {
+            const lines = hatchFill(region, obj.hatch, obj.hatchAngle || 0);
+            out = out.map((l) => (l.closed ? { pts: l.pts, closed: false, op: 'engrave' } : l));
+            for (const [a, b] of lines) out.push({ pts: [a, b], closed: false, op: 'engrave' });
+        }
+    }
+    if (obj.bridges > 0) {
+        const res = [];
+        for (const l of out) {
+            if (l.closed && (l.op || obj.op) === 'cut') {
+                for (const seg of applyBridges(l.pts, obj.bridges | 0, obj.bridgeGap || 1.5)) res.push({ ...seg, op: l.op });
+            } else res.push(l);
+        }
+        out = res;
+    }
+    return out;
+}
+
 // Returns local loops [{pts, closed, op?}]; null for pure-raster (image, unless traced).
 export function localLoops(obj, { traceImage = false } = {}) {
-    if (obj.type === 'shape') return shapeLocalLoops(obj);
+    if (obj.type === 'shape') return applyLoopOptions(obj, shapeLocalLoops(obj));
+    if (obj.type === 'path') return applyLoopOptions(obj, pathLocalLoops(obj));
     if (obj.type === 'qr') return qrLocalLoops(obj);
     if (obj.type === 'puzzle') return puzzleLocalLoops(obj);
     if (obj.type === 'barcode') return barcodeLocalLoops(obj);
     if (obj.type === 'box') return boxLocalLoops(obj);
-    if (obj.type === 'gear') return gearLocalLoops(obj);
+    if (obj.type === 'gear') return applyLoopOptions(obj, gearLocalLoops(obj));
     if (obj.type === 'ruler') return rulerLoops(obj, iconLoops);
     if (obj.type === 'hinge') return hingeLoops(obj);
     if (obj.type === 'registration') return registrationLoops(obj);
+    if (obj.type === 'testgrid') return testGridLoops(obj, iconLoops);
     if (obj.type === 'text') return textLocalLoops(obj);
     if (obj.type === 'image') return traceImage ? imageTraceLocalLoops(obj) : null;
     return [];
@@ -549,7 +721,8 @@ function procKey(obj) {
     const p = obj.params || {};
     return [obj.src.length, obj.src.slice(-24),
         p.brightness, p.contrast, p.gamma, p.levelsBlack, p.levelsWhite, p.invert,
-        p.dither, p.ditherCutoff, p.removeBg, p.bgThreshold].join('|');
+        p.dither, p.ditherCutoff, p.removeBg, p.bgThreshold,
+        p.blur, p.sharpen, p.edge, p.posterize].join('|');
 }
 const cacheId = (obj, longSide) => `${obj.id}@${longSide}`;
 
@@ -618,7 +791,7 @@ export function drawObject(ctx, obj, scale, { requestRedraw, colorOverride, imag
         return;
     }
 
-    if (obj.type === 'text' && obj.fill && obj.op === 'engrave' && !obj.arc) {
+    if (obj.type === 'text' && obj.fill && obj.op === 'engrave' && !obj.arc && !obj.singleLine) {
         const m = measureText(obj);
         ctx.fillStyle = color;
         ctx.textBaseline = 'top';
@@ -645,16 +818,32 @@ export function drawObject(ctx, obj, scale, { requestRedraw, colorOverride, imag
         }
         for (const [op, gl] of groups) {
             const c = colorOverride || OP_COLORS[op] || '#111';
-            ctx.beginPath();
-            for (const l of gl) {
-                l.pts.forEach((p, i) => {
-                    const X = obj.x + p.x, Y = obj.y + p.y;
-                    if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y);
-                });
-                if (l.closed) ctx.closePath();
+            if (op === 'engrave') {
+                // filled (closed) areas
+                const closed = gl.filter((l) => l.closed);
+                if (closed.length) {
+                    ctx.beginPath();
+                    for (const l of closed) {
+                        l.pts.forEach((p, i) => { const X = obj.x + p.x, Y = obj.y + p.y; if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); });
+                        ctx.closePath();
+                    }
+                    ctx.fillStyle = c; ctx.fill('evenodd');
+                }
+                // single-line / hatch (open) strokes
+                const open = gl.filter((l) => !l.closed);
+                if (open.length) {
+                    ctx.beginPath();
+                    for (const l of open) l.pts.forEach((p, i) => { const X = obj.x + p.x, Y = obj.y + p.y; if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); });
+                    ctx.strokeStyle = c; ctx.stroke();
+                }
+            } else {
+                ctx.beginPath();
+                for (const l of gl) {
+                    l.pts.forEach((p, i) => { const X = obj.x + p.x, Y = obj.y + p.y; if (i === 0) ctx.moveTo(X, Y); else ctx.lineTo(X, Y); });
+                    if (l.closed) ctx.closePath();
+                }
+                ctx.strokeStyle = c; ctx.stroke();
             }
-            if (op === 'engrave') { ctx.fillStyle = c; ctx.fill('evenodd'); }
-            else { ctx.strokeStyle = c; ctx.stroke(); }
         }
     }
     ctx.restore();

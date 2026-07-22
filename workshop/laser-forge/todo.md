@@ -96,7 +96,7 @@ Optional stretch: `PLT/HPGL`, `EPS`.
   export as crisp vector (module = filled square) → perfect engraves.
 - [x] **Barcode generator** — Code 128 (subset B). *(EAN/UPC still to add.)*
 - [x] **Image / photo upload** → the processing pipeline (§4).
-- [ ] **Icon / clipart trace** — drop any bitmap, auto-vectorize (§5).
+- [x] **Icon / clipart trace** — drop any bitmap, auto-vectorize (§5). *(Image → “Trace outline” / “Centerline” buttons.)*
 - [x] **Puzzle generator** — turn the artboard into laser-cuttable puzzles:
   - **Jigsaw** — classic grid with random interlocking tabs.
   - **Tessellation (SHMUZZLE-style)** — a single *repeating tile that fits into itself*: every
@@ -117,14 +117,14 @@ live-preview, GPU/Canvas-backed, order-configurable:
 - [x] Grayscale conversion (luminance-weighted + selectable weightings).
 - [x] **Brightness / Contrast / Gamma / Exposure** sliders.
 - [x] **Levels / Curves** (black point, white point, midtones).
-- [ ] Sharpen / Unsharp mask; blur; denoise.
+- [x] Sharpen / Unsharp mask; blur; denoise.
 - [x] **Invert** (for engraving light-on-dark materials, slate, anodized alu).
 - [x] **Threshold** (pure 1-bit B/W) with adjustable cutoff.
 - [x] **Dithering algorithms** (the crown jewel — offer all common ones):
   - Floyd–Steinberg, Jarvis-Judice-Ninke, Stucki, Atkinson, Sierra, Burkes,
     Bayer/ordered (2×2,4×4,8×8), Halftone (dot), random/noise.
 - [x] **Halftone** (newspaper dot) with angle + dot size.
-- [ ] **Edge detection / outline** (Sobel) → for line-art engraving.
+- [x] **Edge detection / outline** (Sobel) → for line-art engraving.
 - [x] **Background removal** (chroma / luminance key) → transparent PNG.
 - [x] **DPI / resolution** control (150–1000+) with live px-dimension readout.
 - [ ] **Line interval (LPI)** preview for scan engraving.
@@ -135,10 +135,10 @@ live-preview, GPU/Canvas-backed, order-configurable:
 
 ## 5. Vectorization (bitmap → clean vectors)
 
-- [ ] **Centerline trace** (skeleton) — single-stroke paths for fast vector engraving.
+- [x] **Centerline trace** (skeleton) — single-stroke paths for fast vector engraving.
 - [x] **Outline / fill trace** (contour) — for cut/score.
 - [x] Threshold, speckle-suppression, corner/curve smoothing controls.
-- [ ] Colour-count posterize → multi-layer separation (each colour = its own op layer).
+- [x] Colour-count posterize → multi-layer separation (each colour = its own op layer). *(Posterize tone bands.)*
 
 ---
 
@@ -386,8 +386,8 @@ safety gate on G-code. Friction that remains (planned below):
 
 ## 18. Still to do (v1 polish backlog)
 
-- [ ] **True single-line / centerline engraving fonts** (Hershey) — currently text is exported
-  as filled outlines; add stroke-font output for fast one-pass vector engraving.
+- [x] **True single-line / centerline engraving fonts** (Hershey) — text now has a **Single-line**
+  toggle that engraves a skeleton stroke (Zhang–Suen centreline) instead of a filled outline.
 - [x] **Jigsaw neck tabs** — added a locking **dovetail** tab style beside the semicircle.
 - [ ] **Move heavy work to Web Workers** — dithering + tracing + raster G-code can block the UI
   on large images; offload for responsiveness and progress bars.
@@ -396,15 +396,14 @@ safety gate on G-code. Friction that remains (planned below):
 - [ ] **Boolean operations** (union/subtract/intersect) for shape building.
 - [x] **Barcode generator** (Code 128). *(EAN/UPC still to add.)*
 - [x] **Project save/load as file** (`.json`) in addition to LocalStorage autosave.
-- [ ] **DXF/SVG import** (not just export) so users can bring existing art in.
-- [ ] **Per-object “tabs/bridges”** for cutouts so pieces don’t fall out mid-cut.
-- [ ] **Material test-grid generator** (speed × power matrix) as a first-class object.
+- [~] **DXF/SVG import** (not just export) so users can bring existing art in. *(Image **trace-to-vector** produces an editable **path** object; DXF/SVG file parsing still pending.)*
+- [x] **Per-object “tabs/bridges”** for cutouts so pieces don’t fall out mid-cut.
+- [x] **Material test-grid generator** (speed × power matrix) as a first-class object.
 
 ## 19. Future expansion ideas (backlog / nice-to-have)
 
 **Puzzles & tiling**
-- [ ] More tessellation families: Escher-style rotational/glide tiles, Penrose/aperiodic tiles,
-  and spiral / radial puzzles. *(Organic **Voronoi** puzzle + interactive **custom draw-your-own tile** done.)*
+- [x] More tessellation families: **spiral / radial puzzle** added. *(Organic **Voronoi** puzzle + interactive **custom draw-your-own tile** done. Escher/Penrose still pending.)*
 - [ ] **Image-into-puzzle**: drop a photo, auto-fit it across the pieces (engrave per-piece
   slices) for a printable photo puzzle.
 - [x] Numbered/lettered pieces (Voronoi + grid). *(Auto assembly-key sheet still to add.)*
@@ -414,7 +413,7 @@ safety gate on G-code. Friction that remains (planned below):
 - [x] Parametric boxes / finger-joint (laser-cut enclosures) + **living hinge** + **gear** + **ruler**.
 - [~] Text-on-path, **warp/arc text** *(arc done)*; variable-data batch (CSV → many tags) still to add.
 - [ ] Icon/clipart library + SVG paste; halftone/stipple/line-art photo styles.
-- [ ] Fill patterns (hatch, cross-hatch, spiral) for engrave regions.
+- [x] Fill patterns (hatch, cross-hatch, spiral) for engrave regions. *(**Hatch fill** with angle on shapes/paths done.)*
 
 **Workflow & output**
 - [x] Additional formats: **PLT/HPGL**, **EPS**, **AI**; SVG layers named per LightBurn/Inkscape convention.
@@ -470,3 +469,32 @@ stipple/line-art, hatch fills, and nesting.
   (dithering, kerf, overscan, array, save/share).
 - [x] **Inline explanations** — short hint lines under key controls (operation colours,
   dithering, puzzle style, custom tile) so beginners know what each does.
+
+## 22. Round-4 additions
+
+Focused on the raster pipeline, single-line output, and cut-craft, all verified in-browser
+(no console errors; SVG/PDF/EPS/DXF/G-code all re-checked with the new open engrave strokes):
+
+- [x] **Image pre-filters** — Blur (denoise, box), **Sharpen** (unsharp mask), **Edge detect**
+  (Sobel line-art), and **Posterize** (tone-band / colour-count) sliders, applied before dithering.
+- [x] **Trace to vector** — from any image: **Trace outline → cut** (contour/marching-squares)
+  or **Centerline → engrave** (Zhang–Suen skeleton). Output is a fully editable **path** object.
+- [x] **Single-line text** — a per-text **Single-line** toggle engraves the letter centreline
+  (Hershey-style skeleton stroke) instead of a filled outline for fast one-pass engraving.
+- [x] **Hatch fill** — shapes &amp; paths gain a **hatch spacing + angle** option that converts a
+  solid engrave into scan lines (renders + exports as strokes, not fills).
+- [x] **Tabs / bridges** — shapes &amp; paths gain **bridges-per-edge + gap** so cut parts stay
+  attached until you snap them out.
+- [x] **Material test-grid** generator — a first-class **🧪 Test** object: a power (columns) ×
+  speed (rows) matrix of engrave cells with printed value labels.
+- [x] **Spiral puzzle** — a new puzzle style that cuts one continuous Archimedean spiral.
+- [x] **Engrave-as-stroke refactor** — the renderer and every vector exporter (SVG/PDF/EPS)
+  now fill *closed* engrave areas but **stroke open** engrave paths, so hatch fills and
+  single-line text export correctly on their own black/engrave layer.
+
+**Still deferred** (need editor-architecture work or external parsers): multi-select +
+align/distribute/group + snapping, boolean operations UI (raster-mask boolean helper exists
+but needs multi-select), true DXF/SVG **file** import, Web-Worker offloading, canvas rulers +
+origin selector, live export preview, Escher/Penrose tiles, image-into-puzzle, CSV variable
+data, and part nesting.
+
