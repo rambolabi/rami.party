@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laser Forge — Direct Control (v2) · rami.party workshop</title>
+    <meta name="description"
+        content="Laser Forge Direct Control (v2) — design AND run laser jobs entirely in the browser: machine-ready files plus direct Web Serial control. 100% client-side, nothing uploaded.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">🔥</span>
+            <span class="brand-name">Laser&nbsp;Forge</span>
+            <span class="brand-tag">Direct Control · v2 · rami.party</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn" id="btn-new" data-i18n="new" title="Start a new blank project">New</button>
+            <button class="btn" id="btn-undo" data-i18n="undo" title="Undo (Ctrl+Z)">↶ Undo</button>
+            <button class="btn" id="btn-redo" data-i18n="redo" title="Redo (Ctrl+Y)">↷ Redo</button>
+            <button class="btn" id="btn-fit" data-i18n="fit" title="Fit artboard to view (F)">Fit</button>
+            <button class="btn" id="btn-save" data-i18n="save" title="Save project (.json)">Save</button>
+            <button class="btn" id="btn-open" data-i18n="open" title="Open project (.json)">Open</button>
+            <button class="btn" id="btn-help" title="Help & shortcuts">?</button>
+            <label class="pro-toggle" title="Show advanced controls"><input type="checkbox" id="pro-mode"> <span data-i18n="pro">Pro mode</span></label>
+            <select id="lang-select" title="Language"><option value="en">EN</option><option value="nl">NL</option><option value="fr">FR</option></select>
+            <button class="btn btn-primary" id="btn-export" data-i18n="export" title="Export machine-ready files">⤓ Export</button>
+            <a class="btn btn-ghost" href="/workshop/" data-i18n="workshop" title="Back to the workshop">← Workshop</a>
+        </div>
+    </header>
+
+    <div class="app-body">
+        <!-- Left toolbar -->
+        <nav class="toolbar" aria-label="Add objects">
+            <button class="tool" data-action="add-text" title="Add text">🅣<span data-i18n="t_text">Text</span></button>
+            <button class="tool" data-action="emoji" title="Insert emoji / symbol">☺<span data-i18n="t_emoji">Emoji</span></button>
+            <button class="tool" data-action="add-image" title="Upload an image → grayscale engrave">🖼<span data-i18n="t_image">Image</span></button>
+            <button class="tool" data-action="add-qr" title="Generate a QR code">▦<span data-i18n="t_qr">QR</span></button>
+            <button class="tool" data-action="add-barcode" title="Barcode (Code 128)">▮▮<span data-i18n="t_barcode">Barcode</span></button>
+            <button class="tool" data-action="add-puzzle" title="Puzzle generator (jigsaw / tessellation / tiling)">🧩<span data-i18n="t_puzzle">Puzzle</span></button>
+            <div class="tool-sep"></div>
+            <button class="tool" data-action="gen-box" title="Finger-joint box">▢<span data-i18n="t_box">Box</span></button>
+            <button class="tool" data-action="gen-gear" title="Gear">⚙<span data-i18n="t_gear">Gear</span></button>
+            <button class="tool" data-action="gen-ruler" title="Ruler">📏<span data-i18n="t_ruler">Ruler</span></button>
+            <button class="tool" data-action="gen-hinge" title="Living hinge">〜<span data-i18n="t_hinge">Hinge</span></button>
+            <button class="tool" data-action="gen-reg" title="Registration marks">✚<span data-i18n="t_reg">Marks</span></button>
+            <button class="tool" data-action="gen-test" title="Material power/speed test grid">🧪<span data-i18n="t_test">Test</span></button>
+            <div class="tool-sep"></div>
+            <button class="tool" data-action="shape-rect" title="Rectangle">▭<span data-i18n="t_rect">Rect</span></button>
+            <button class="tool" data-action="shape-circle" title="Circle / ellipse">◯<span data-i18n="t_circle">Circle</span></button>
+            <button class="tool" data-action="shape-polygon" title="Polygon">⬡<span data-i18n="t_poly">Poly</span></button>
+            <button class="tool" data-action="shape-star" title="Star">★<span data-i18n="t_star">Star</span></button>
+            <button class="tool" data-action="shape-heart" title="Heart">♥<span data-i18n="t_heart">Heart</span></button>
+            <button class="tool" data-action="shape-line" title="Line">╱<span data-i18n="t_line">Line</span></button>
+        </nav>
+
+        <!-- Center stage -->
+        <main class="stage" id="stage">
+            <canvas id="board"></canvas>
+            <div class="hint" id="empty-hint">
+                <p><strong data-i18n="hint_title">The forge is empty.</strong></p>
+                <p data-i18n="hint_body">Add text, a shape, a QR code, or upload an image to make a perfect
+                    grayscale engraving. Everything stays in your browser.</p>
+            </div>
+        </main>
+
+        <!-- Right sidebar -->
+        <aside class="sidebar">
+            <section class="panel">
+                <h2 class="panel-title" data-i18n="properties">Properties</h2>
+                <div id="props" class="props">
+                    <p class="muted" data-i18n="nothing">Nothing selected. Pick an object on the canvas, or add one from the left.</p>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title">Layers <span class="muted" id="layer-count"></span></h2>
+                <ul id="layers" class="layers"></ul>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title">Artboard</h2>
+                <div class="row">
+                    <label for="bed">Bed preset</label>
+                    <select id="bed"></select>
+                </div>
+                <div class="row two">
+                    <div><label for="ab-w">Width mm</label><input type="number" id="ab-w" min="10" max="2000" step="1"></div>
+                    <div><label for="ab-h">Height mm</label><input type="number" id="ab-h" min="10" max="2000" step="1"></div>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <footer class="statusbar">
+        <span id="status-doc"></span>
+        <span id="status-sel" class="muted"></span>
+        <span id="status-zoom" class="right muted"></span>
+    </footer>
+
+    <!-- Export modal -->
+    <div class="modal-backdrop" id="export-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+            <div class="modal-head">
+                <h2 id="export-title">Export</h2>
+                <button class="icon-btn" id="export-close" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <label for="preset">Target software</label>
+                    <select id="preset" title="Auto-pick the ideal format & settings">
+                        <option value="">— choose to auto-configure —</option>
+                        <option value="lightburn">LightBurn (SVG)</option>
+                        <option value="lasergrbl">LaserGRBL (BMP)</option>
+                        <option value="glowforge">Glowforge (SVG)</option>
+                        <option value="xtool">xTool Creative Space (SVG)</option>
+                        <option value="inkscape">Inkscape (SVG)</option>
+                        <option value="rayforge">Rayforge (SVG)</option>
+                        <option value="ruida">Ruida / RDWorks (DXF)</option>
+                        <option value="grbl">Direct G-code (GRBL)</option>
+                    </select>
+                </div>
+                <div class="row">
+                    <label for="format">Format</label>
+                    <select id="format">
+                        <option value="svg">SVG — vector (cut / score / engrave)</option>
+                        <option value="dxf">DXF R12 — vector (CAD / Ruida)</option>
+                        <option value="pdf">PDF — vector + image</option>
+                        <option value="ai">AI — Adobe Illustrator (PDF-based)</option>
+                        <option value="plt">PLT / HPGL — plotter vector</option>
+                        <option value="eps">EPS — PostScript vector</option>
+                        <option value="png">PNG — raster (grayscale / dithered)</option>
+                        <option value="bmp">BMP — raster (LaserGRBL)</option>
+                        <option value="jpg">JPG — raster</option>
+                        <option value="gcode">G-code — direct machine code</option>
+                    </select>
+                </div>
+
+                <div id="opt-advanced" class="opt-group">
+                    <div class="row two">
+                        <div><label for="opt-kerf" data-i18n="kerf">Kerf comp. mm</label><input type="number" id="opt-kerf" min="0" max="2" step="0.05" value="0" title="Expand closed cut paths by half the beam width"></div>
+                        <div><label for="opt-overscan" data-i18n="overscan">Overscan mm</label><input type="number" id="opt-overscan" min="0" max="10" step="0.5" value="0" title="Raster run-in/out past the image edges"></div>
+                    </div>
+                </div>
+
+                <div id="opt-raster" class="opt-group">
+                    <div class="row two">
+                        <div><label for="opt-dpi">DPI / resolution</label><input type="number" id="opt-dpi" min="50" max="1200" step="10" value="150"></div>
+                        <div id="opt-bits-wrap"><label for="opt-bits">BMP depth</label>
+                            <select id="opt-bits"><option value="8">8-bit grayscale</option><option value="1">1-bit mono</option></select>
+                        </div>
+                    </div>
+                    <div class="row" id="opt-quality-wrap">
+                        <label for="opt-quality">JPG quality</label>
+                        <input type="range" id="opt-quality" min="0.5" max="1" step="0.02" value="0.92">
+                    </div>
+                </div>
+
+                <div id="opt-gcode" class="opt-group" hidden>
+                    <div class="row two">
+                        <div><label for="g-mode">Mode</label>
+                            <select id="g-mode"><option value="vector">Vector (lines/cut)</option><option value="raster">Raster (image engrave)</option></select>
+                        </div>
+                        <div><label for="g-laser">Laser mode</label>
+                            <select id="g-laser"><option value="M4">M4 dynamic</option><option value="M3">M3 constant</option></select>
+                        </div>
+                    </div>
+                    <div class="row two">
+                        <div><label for="g-espeed">Engrave mm/min</label><input type="number" id="g-espeed" value="1500"></div>
+                        <div><label for="g-cspeed">Cut mm/min</label><input type="number" id="g-cspeed" value="600"></div>
+                    </div>
+                    <div class="row two">
+                        <div><label for="g-epow">Engrave power S</label><input type="number" id="g-epow" value="700"></div>
+                        <div><label for="g-cpow">Cut power S</label><input type="number" id="g-cpow" value="1000"></div>
+                    </div>
+                    <div class="row two">
+                        <div><label for="g-max">Max S</label><input type="number" id="g-max" value="1000"></div>
+                        <div id="g-dpi-wrap"><label for="g-dpi">Raster DPI</label><input type="number" id="g-dpi" value="120"></div>
+                    </div>
+                    <label class="check"><input type="checkbox" id="g-ack"> I understand — I will verify the code
+                        and never run my laser unattended (eyewear, fume extraction, fire safety).</label>
+                </div>
+
+                <p class="export-summary muted" id="export-summary"></p>
+                <p class="export-summary muted" id="export-estimate"></p>
+                <div class="modal-foot">
+                    <button class="btn btn-primary" id="export-go" data-i18n="download">⤓ Download</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Emoji popover -->
+    <div class="popover" id="emoji-pop" hidden>
+        <input type="search" id="emoji-search" placeholder="Search emoji…" aria-label="Search emoji">
+        <div class="emoji-grid" id="emoji-grid"></div>
+        <p class="muted tiny">Inserted as a monochrome silhouette — traced to clean vectors on export.</p>
+    </div>
+
+    <input type="file" id="file-input" accept="image/*" hidden>
+    <input type="file" id="project-input" accept="application/json,.json" hidden>
+
+    <!-- Tile editor modal -->
+    <div class="modal-backdrop" id="tile-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="tile-title">
+            <div class="modal-head">
+                <h2 id="tile-title">Draw your repeating tile</h2>
+                <button class="icon-btn" id="tile-close" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="muted tiny">Drag the <b style="color:#22d3ee">cyan (top)</b> and
+                    <b style="color:#a855f7">violet (left)</b> edges to shape one tile. The opposite
+                    edges mirror automatically, so every piece interlocks into a giant puzzle of the
+                    same shape — like the “Connecting Cats” tessellation. <b>Click an edge</b> to add a
+                    point; <b>drag</b> to shape it; <b>double-click</b> a point to remove it. The faint
+                    grid shows how your tile repeats.</p>
+                <canvas id="tile-canvas" width="440" height="360"
+                    style="width:100%;height:360px;background:#0a061a;border:1px solid var(--border);border-radius:10px;touch-action:none"></canvas>
+                <div class="modal-foot" style="justify-content:space-between">
+                    <button class="btn" id="tile-reset">Reset to square</button>
+                    <span><button class="btn" id="tile-cancel">Cancel</button>
+                        <button class="btn btn-primary" id="tile-apply">Apply tile</button></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help modal -->
+    <div class="modal-backdrop" id="help-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+            <div class="modal-head">
+                <h2 id="help-title" data-i18n="help_title">Help & shortcuts</h2>
+                <button class="icon-btn" id="help-close" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="muted">Laser Forge turns text, shapes, images, QR/barcodes, puzzles and
+                    parametric parts into machine-ready files — 100% in your browser.</p>
+                <ul class="help-list">
+                    <li><b>1)</b> Add an object from the left toolbar.</li>
+                    <li><b>2)</b> Tune it in the Properties panel (turn on <b>Pro mode</b> for advanced fields).</li>
+                    <li><b>3)</b> Press <b>Export</b> and pick your laser software preset.</li>
+                </ul>
+
+                <h3 class="help-h3">The tools (left bar) — when to use what</h3>
+                <ul class="help-list guide">
+                    <li><b>🅣 Text</b> — words/labels. Any font; “Arc” bends it. Exported as outlines so the font isn’t needed on the machine.</li>
+                    <li><b>☺ Emoji</b> — drop a symbol; it’s traced to a clean engravable silhouette.</li>
+                    <li><b>🖼 Image</b> — a photo/logo for <b>grayscale engraving</b>. Use the sliders + dithering, then export PNG/BMP/JPG or G-code.</li>
+                    <li><b>▦ QR</b> / <b>▮▮ Barcode</b> — scannable codes (URL, Wi-Fi, product IDs).</li>
+                    <li><b>🧩 Puzzle</b> — jigsaw, tessellation, geometric, Voronoi, or <b>Custom</b> (draw your own repeating tile).</li>
+                    <li><b>▢ Box</b> — finger-joint enclosure net; set W×D×H + material thickness, then cut &amp; assemble.</li>
+                    <li><b>⚙ Gear</b> — a gear with chosen teeth + bore. <b>📏 Ruler</b> — graduated ruler; set length via Width.</li>
+                    <li><b>〜 Hinge</b> — living hinge (kerf slits) so flat wood bends. <b>✚ Marks</b> — registration crosshairs for print-and-cut.</li>
+                    <li><b>Shapes</b> — rectangle, circle, polygon, star, heart, line for building your own artwork.</li>
+                </ul>
+
+                <h3 class="help-h3">Operations (the colour of each object)</h3>
+                <ul class="help-list guide">
+                    <li><span style="color:#ff2d2d">● Cut</span> — cut all the way through (outlines).</li>
+                    <li><span style="color:#2d6bff">● Score</span> — light surface line (fold/mark).</li>
+                    <li><span style="color:#111">● Engrave</span> — fill/darken an area (text, photos).</li>
+                </ul>
+
+                <h3 class="help-h3">Which export format?</h3>
+                <ul class="help-list guide">
+                    <li><b>SVG</b> — best all-round vector (LightBurn, Glowforge, xTool, Inkscape, Rayforge).</li>
+                    <li><b>DXF</b> — vector for Ruida/RDWorks &amp; CAD. <b>PDF/AI/EPS</b> — vector for design apps.</li>
+                    <li><b>PLT</b> — plotter/HPGL vector. <b>PNG/BMP/JPG</b> — raster for photo engraving (BMP = LaserGRBL).</li>
+                    <li><b>G-code</b> — runs directly on a GRBL machine. Verify first — never run a laser unattended.</li>
+                    <li>Tip: pick your machine under <b>Target software</b> and it sets the format for you.</li>
+                </ul>
+
+                <h3 class="help-h3">Handy options</h3>
+                <ul class="help-list guide">
+                    <li><b>Dithering</b> (images) — fakes grey shades with dots; best for photos on wood/acrylic.</li>
+                    <li><b>Kerf comp.</b> (export) — grows cut lines by half the beam width so parts fit exactly.</li>
+                    <li><b>Overscan</b> (raster G-code) — runs past the edges to avoid dark burn marks.</li>
+                    <li><b>Array…</b> — duplicate the selection into a grid (e.g. 3x2x5 = 3×2 with 5&nbsp;mm gaps).</li>
+                    <li><b>Save/Open</b> keep your project as a file; <b>🔗 link</b> shares it via URL.</li>
+                </ul>
+
+                <h3 class="help-h3">Shortcuts</h3>
+                <ul class="help-list">
+                    <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> — undo / redo</li>
+                    <li><kbd>Ctrl</kbd>+<kbd>D</kbd> — duplicate · <kbd>Del</kbd> — delete</li>
+                    <li><kbd>F</kbd> — fit view · scroll — zoom · <kbd>Space</kbd>+drag — pan</li>
+                    <li>Drag a handle to resize, the top dot to rotate (hold <kbd>Shift</kbd> to snap).</li>
+                    <li>Drag &amp; drop an image straight onto the canvas.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>
