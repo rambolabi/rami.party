@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Surrounded By… — Workshop</title>
+  <meta name="description" id="metaDesc" content="An educational workshop inspired by Thomas Erikson's books." />
+  <meta name="author" content="rami.party" />
+  <meta name="theme-color" content="#2e6fd6" id="metaTheme" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topbar" id="top">
+    <nav class="nav" aria-label="Primary">
+      <a href="#top" class="brand" data-nav>
+        <span class="brand-badge" id="brandBadge">📘</span>
+        <span class="brand-text" id="brandText">Workshop</span>
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#learn" data-nav>Learn</a></li>
+        <li><a href="#test" data-nav id="navTest">Assess</a></li>
+        <li><a href="#handle" data-nav id="navHandle">Handle</a></li>
+        <li><a href="#faq" data-nav>FAQ</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section class="hero" id="home">
+      <div class="wrap hero-inner">
+        <p class="eyebrow" id="heroEyebrow">A Thomas Erikson Workshop</p>
+        <h1 class="hero-title" id="heroTitle"></h1>
+        <p class="hero-lead" id="heroLead"></p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#test" data-nav id="heroCta"></a>
+          <a class="btn btn-ghost" href="#learn" data-nav>Learn the ideas</a>
+        </div>
+        <div class="hero-cards" id="heroCards" aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <!-- LEARN -->
+    <section class="section" id="learn">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker" id="learnKicker">The Ideas</p>
+          <h2 id="learnHeading"></h2>
+          <p class="section-sub" id="learnSub"></p>
+        </header>
+        <div class="concept-grid" id="conceptGrid"></div>
+        <div class="detail" id="conceptDetail" hidden></div>
+      </div>
+    </section>
+
+    <!-- ASSESSMENT -->
+    <section class="section alt" id="test">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker" id="testKicker">Assessment</p>
+          <h2 id="testHeading"></h2>
+          <p class="section-sub" id="testSub"></p>
+        </header>
+
+        <div class="quiz-shell" id="assessQuiz">
+          <div class="quiz-stage" data-stage="intro">
+            <div class="quiz-intro">
+              <span class="quiz-intro-icon" id="introIcon">📝</span>
+              <h3 id="introTitle"></h3>
+              <p id="introText"></p>
+              <button class="btn btn-primary" data-action="start">Begin</button>
+            </div>
+          </div>
+
+          <div class="quiz-stage" data-stage="run" hidden>
+            <div class="quiz-progress">
+              <div class="quiz-progress-bar"><span id="aBar"></span></div>
+              <span class="quiz-progress-text" id="aCount"></span>
+            </div>
+            <p class="quiz-question" id="aQ"></p>
+            <div class="options" id="aOptions"></div>
+            <button class="quiz-back" data-action="back" hidden>← Previous</button>
+          </div>
+
+          <div class="quiz-stage" data-stage="result" hidden>
+            <div id="aResult"></div>
+            <div class="result-actions">
+              <button class="btn btn-ghost" data-action="restart">Retake</button>
+              <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
+              <a class="btn btn-primary" href="#handle" data-nav id="resultCta">How to handle it →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HANDLE / TIPS -->
+    <section class="section" id="handle">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker" id="handleKicker">Field Guide</p>
+          <h2 id="handleHeading"></h2>
+          <p class="section-sub" id="handleSub"></p>
+        </header>
+        <div class="tips-grid" id="tipsGrid"></div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="section alt" id="faq">
+      <div class="wrap wrap-narrow">
+        <header class="section-head">
+          <p class="kicker">Questions</p>
+          <h2>Frequently asked</h2>
+        </header>
+        <div class="faq" id="faqList"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <p class="footer-note" id="footerNote"></p>
+      <p class="footer-support" id="footerSupport"></p>
+      <p class="footer-meta">
+        <a href="../../index.html">rami.party</a> · Workshop edition · <span id="year"></span>
+      </p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
