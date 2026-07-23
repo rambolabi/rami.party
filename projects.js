@@ -74,19 +74,6 @@ window.RAMI_REALMS = [
         aura: 'cyan',
         status: 'live',
     },
-    {
-        category: 'gallery',
-        title: 'The BBQ',
-        href: 'https://lebon.info/bbq',
-        glyph: '🔥',
-        tagline: 'A feast of flames',
-        description: 'Gather round the coals — a crackling little BBQ companion living over on lebon.info.',
-        search: 'A barbecue helper and grilling companion tool hosted on lebon.info. BBQ cooking guide, meat temperatures and timing for grilling.',
-        tags: ['tool', 'food'],
-        aura: 'gold',
-        status: 'live',
-        external: true,
-    },
 
     /* ---- The Workshop (WIP / playthings) ---- */
     {
@@ -94,7 +81,7 @@ window.RAMI_REALMS = [
         title: 'Enter the Workshop',
         href: './workshop/',
         glyph: '⚗️',
-        tagline: '20 spells brewing',
+        tagline: 'spells brewing',
         description: 'A whole cauldron of half-finished spells — tools, toys and curiosities still being brewed. Step inside to browse the full workbench.',
         search: 'The workshop index page listing all work in progress tools, toys, utilities and experiments hosted on rami.party.',
         tags: ['wip', 'tools'],
@@ -413,6 +400,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'BBQ Mailer',
+        href: './bbq/',
+        glyph: '🍖',
+        tagline: 'Tax the unlocked',
+        description: 'Left a computer unlocked? A cheeky Dutch mailer fires off a funny “I forgot to lock my PC” confession — the classic office BBQ tax.',
+        search: 'A prank email tool in Dutch for unlocked computers. When someone leaves their computer unlocked, send a funny joke confession email that they forgot to lock their PC, with random prank messages. The office BBQ punishment tradition.',
+        tags: ['prank', 'fun'],
+        aura: 'pink',
+        status: 'live',
+    },
+    {
         title: 'Markdown Scribe',
         href: './md/',
         glyph: '📝',
@@ -498,4 +496,21 @@ window.RAMI_WORKSHOP = [
    ========================================================================== */
 window.RAMI_PLANNED = [
     { name: 'Screen Fill', note: 'Fill the screen with solid colours to hunt dead pixels.' },
+    { name: 'D&D', note: 'A Dungeons & Dragons companion — folder claimed, spell not yet cast.' },
+    { name: 'DISC Profile', note: 'A “Surrounded by Idiots” DISC personality colour quiz.' },
 ];
+
+/* ==========================================================================
+   Auto-count — keep the Workshop realm’s tagline in sync with the number of
+   live projects in RAMI_WORKSHOP. Add a project above and the count updates
+   itself; nothing else to touch.
+   ========================================================================== */
+(function () {
+    var count = window.RAMI_WORKSHOP.length;
+    var workshop = window.RAMI_REALMS.find(function (r) {
+        return r.category === 'workshop' && r.href === './workshop/';
+    });
+    if (workshop) {
+        workshop.tagline = count + ' spell' + (count === 1 ? '' : 's') + ' brewing';
+    }
+})();
