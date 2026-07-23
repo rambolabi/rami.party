@@ -418,9 +418,20 @@
               <input id="dur" type="range" min="2" max="60" value="10" />
             </label>
             <label class="ctl">
-              <span>Random seed</span>
-              <input id="seed" type="text" value="demoforge" spellcheck="false" />
+              <span>Video seed</span>
+              <span class="seed-row">
+                <input id="videoSeed" type="text" value="demoforge" spellcheck="false" />
+                <button id="videoSeedDice" class="seed-dice" type="button" title="Roll a new video seed" aria-label="Roll a new video seed">🎲</button>
+              </span>
             </label>
+            <label class="ctl">
+              <span>Audio seed</span>
+              <span class="seed-row">
+                <input id="audioSeed" type="text" value="demoforge" spellcheck="false" />
+                <button id="audioSeedDice" class="seed-dice" type="button" title="Roll a new audio seed" aria-label="Roll a new audio seed">🎲</button>
+              </span>
+            </label>
+            <p class="seed-hint">Same seeds → same result. Type any word or number, or roll 🎲. Video and audio are independent.</p>
             <label class="ctl toggle">
               <input id="livePreview" type="checkbox" checked />
               <span>View creation live (overlay)</span>
@@ -433,7 +444,7 @@
               <input id="chaos" type="checkbox" />
               <span>⚡ CHAOS MODE ⚡</span>
             </label>
-            <p class="egg-hint">psst… try the seeds: <i>matrix, vaporwave, c64, amiga, rainbow, demo</i></p>
+            <p class="egg-hint">psst… try these video seeds: <i>matrix, vaporwave, c64, amiga, rainbow, demo</i></p>
           </div>
         </section>
       </div>
@@ -443,6 +454,7 @@
         <div class="btn-row">
           <button id="playBtn" class="btn primary" type="button">▶ Play</button>
           <button id="randomBtn" class="btn" type="button">⚄ Randomize</button>
+          <button id="fullscreenBtn" class="btn" type="button">⛶ Fullscreen</button>
         </div>
         <div class="btn-row">
           <button id="recVideoBtn" class="btn" type="button">● Export Video</button>
@@ -460,7 +472,8 @@
     <!-- ============ STAGE ============ -->
     <main id="stage">
       <canvas id="scene"></canvas>
-      <div id="watermark" class="watermark">A compyra.be project</div>
+      <div id="watermark" class="watermark">A compyra.com project</div>
+      <button id="fsDice" class="fs-dice" type="button" title="Randomize" aria-label="Randomize">🎲</button>
       <div id="recDot" class="rec-dot" hidden>● REC</div>
     </main>
   </div>

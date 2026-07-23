@@ -53,7 +53,7 @@ Create a single-page web application with demoscene aesthetics for generating sh
 - **Randomize Button**: Toggle all options randomly on/off
 - **Live Preview Toggle**: "View creation live" checkbox for semi-transparent preview overlay beneath settings
 - **Advanced Options Section**: Collapsible advanced settings panel
-- **Hidden Watermark Removal**: Secret option in advanced settings to remove "A compyra.be project" watermark
+- **Hidden Watermark Removal**: Secret option in advanced settings to remove "A compyra.com project" watermark
 
 ### User Interface
 - Full-screen option panel on one side/top

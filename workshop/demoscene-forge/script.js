@@ -52,7 +52,7 @@
     swing: $("swing"), cutoff: $("cutoff"), filterLfo: $("filterLfo"), vibrato: $("vibrato"),
     bitcrush: $("bitcrush"), echo: $("echo"), echoAmt: $("echoAmt"),
     audioReactive: $("audioReactive"), vol: $("vol"),
-    resolution: $("resolution"), dur: $("dur"), seed: $("seed"),
+    resolution: $("resolution"), dur: $("dur"), videoSeed: $("videoSeed"), audioSeed: $("audioSeed"),
     livePreview: $("livePreview"), removeWatermark: $("removeWatermark"), chaos: $("chaos"),
   };
 
@@ -171,7 +171,8 @@
     S.audioReactive = els.audioReactive.checked;
     S.vol = +els.vol.value / 100;
     S.dur = +els.dur.value;
-    S.seed = els.seed.value || "demoforge";
+    S.videoSeed = els.videoSeed.value || "demoforge";
+    S.audioSeed = els.audioSeed.value || "demoforge";
     S.livePreview = els.livePreview.checked;
     S.removeWatermark = els.removeWatermark.checked;
     S.chaos = els.chaos.checked;
@@ -216,7 +217,7 @@
   let objects = [];
   let stars = [];
   function seedObjects() {
-    rand = mulberry32(hashSeed(S.seed || "demoforge"));
+    rand = mulberry32(hashSeed(S.videoSeed || "demoforge"));
     const w = canvas.width, h = canvas.height;
     objects = [];
     const n = S.count || 24;
@@ -727,7 +728,7 @@
   let actx = null, master = null, crusher = null, filter = null, masterOut = null;
   let delay = null, feedback = null, delayWet = null, analyser = null, freqData = null;
   let seqTimer = null, nextNoteTime = 0, stepN = 0;
-  let audioRand = mulberry32(hashSeed("demoforge-audio"));
+  let audioRand = mulberry32(hashSeed("demoforge"));
   let melody = [];
 
   const SCALES = {
@@ -792,7 +793,7 @@
   function startAudio() {
     ensureAudioCtx();
     if (actx.state === "suspended") actx.resume();
-    audioRand = mulberry32(hashSeed((S.seed || "demoforge") + "-audio"));
+    audioRand = mulberry32(hashSeed(S.audioSeed || "demoforge"));
     buildMelody();
     updateAudioFX();
     stepN = 0;
@@ -1007,7 +1008,7 @@
     const bus = oFilter; // instruments connect here
 
     const scale = SCALES[S.scale] || SCALES.pentatonic;
-    const arand = mulberry32(hashSeed((S.seed || "demoforge") + "-audio"));
+    const arand = mulberry32(hashSeed(S.audioSeed || "demoforge"));
     const secPerStep = 60 / S.bpm / 4;
     const nSteps = Math.ceil(dur / secPerStep);
     const patLen = S.steps || 16;
@@ -1203,7 +1204,8 @@
     els.echoAmt.value = Math.floor(10 + r() * 60);
     [els.drums, els.snare, els.hats, els.bass].forEach((c) => (c.checked = r() > 0.25));
     [els.pads, els.evolve, els.echo].forEach((c) => (c.checked = r() > 0.5));
-    els.seed.value = Math.random().toString(36).slice(2, 9);
+    els.videoSeed.value = Math.random().toString(36).slice(2, 9);
+    els.audioSeed.value = Math.random().toString(36).slice(2, 9);
     refreshReadouts();
     readState();
     seedObjects();
@@ -1249,8 +1251,9 @@
       refreshReadouts();
       readState();
       if (el === els.resolution) applyResolution();
-      if (el === els.count || el === els.seed) seedObjects();
-      if (el === els.seed) applySeedEasterEgg(els.seed.value);
+      if (el === els.count || el === els.videoSeed) seedObjects();
+      if (el === els.videoSeed) applySeedEasterEgg(els.videoSeed.value);
+      if (el === els.audioSeed && running && S.audioOn) startAudio();
       if (el === els.removeWatermark) applyWatermark();
       if (el === els.livePreview) applyLivePreview();
       if (el === els.chaos) applyChaos();
@@ -1262,11 +1265,50 @@
   // Buttons
   $("playBtn").addEventListener("click", () => (running ? stop() : start()));
   $("randomBtn").addEventListener("click", randomize);
+
+  // Live creation → full screen (stage element, so watermark & REC dot come too)
+  const stageEl = $("stage");
+  function fsElement() { return document.fullscreenElement || document.webkitFullscreenElement; }
+  function toggleFullscreen() {
+    if (fsElement()) {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+      const req = stageEl.requestFullscreen || stageEl.webkitRequestFullscreen;
+      if (req) {
+        const p = req.call(stageEl, { navigationUI: "hide" });
+        if (p && p.catch) p.catch(() => setStatus("Full screen was blocked."));
+      }
+      if (!running) start();
+    }
+  }
+  function onFullscreenChange() {
+    const inFs = !!fsElement();
+    $("fullscreenBtn").textContent = inFs ? "⛶ Exit full screen" : "⛶ Fullscreen";
+  }
+  $("fullscreenBtn").addEventListener("click", toggleFullscreen);
+  document.addEventListener("fullscreenchange", onFullscreenChange);
+  document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+  $("fsDice").addEventListener("click", randomize);
+
   $("recVideoBtn").addEventListener("click", exportVideo);
   $("recAudioBtn").addEventListener("click", exportAudio);
   $("exportJsonBtn").addEventListener("click", exportPreset);
   $("importJsonBtn").addEventListener("click", () => $("importFile").click());
   $("importFile").addEventListener("change", (e) => { if (e.target.files[0]) importPreset(e.target.files[0]); });
+
+  // Per-seed reroll dice
+  $("videoSeedDice").addEventListener("click", () => {
+    els.videoSeed.value = Math.random().toString(36).slice(2, 9);
+    refreshReadouts(); readState(); seedObjects();
+    applySeedEasterEgg(els.videoSeed.value);
+    setStatus("New video seed: " + els.videoSeed.value);
+  });
+  $("audioSeedDice").addEventListener("click", () => {
+    els.audioSeed.value = Math.random().toString(36).slice(2, 9);
+    readState();
+    if (running && S.audioOn) startAudio();
+    setStatus("New audio seed: " + els.audioSeed.value);
+  });
 
   // =====================================================================
   //  EASTER EGGS
