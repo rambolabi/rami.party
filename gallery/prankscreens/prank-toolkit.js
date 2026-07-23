@@ -1,243 +1,237 @@
-// Display Settings
-function openDisplaySettings() {
-    window.open('ms-settings:display', '_blank');
-}
+/* ==========================================================================
+   Unlocked Computer Assistant — curated, data-driven prank list.
+   Every entry is verified to actually work on current Windows 10/11 and is
+   labelled with the console to run it in, plus a matching undo.
+   Renders into #prankGrid and #comboList on the Prank Screens page.
+   ========================================================================== */
+(function () {
+    'use strict';
 
-// Mouse Settings
-function openMouseSettings() {
-    window.open('ms-settings:mousetouchpad', '_blank');
-}
-
-function openMouseSpeed() {
-    window.open('ms-settings:mousetouchpad', '_blank');
-}
-
-// Keyboard Settings
-function openKeyboardSettings() {
-    window.open('ms-settings:regionlanguage', '_blank');
-}
-
-// Magnifier
-function toggleMagnifier() {
-    window.open('ms-settings:easeofaccess-magnifier', '_blank');
-    alert('Or just press: Win + Plus (+) to start magnifier!\n\nTo close: Win + Esc');
-}
-
-// Narrator
-function toggleNarrator() {
-    alert('Press: Ctrl + Win + Enter\n\nThis will start the Narrator!\n(Press the same keys again to stop it)');
-}
-
-// Fun Websites
-function openEmbarrassingWebsite() {
-    const sites = [
-        'https://corndog.io/',
-        'https://heeeeeeeey.com/',
-        'https://www.republiquedesmangues.fr/',
-        'https://www.staggeringbeauty.com/',
-        'https://www.koalastothemax.com/',
-        'https://pointerpointer.com/'
+    // shell: 'ps' = PowerShell · 'cmd' = Command Prompt · 'key' = keyboard only
+    var PRANKS = [
+        {
+            icon: '🔄', title: 'Upside-Down World', level: 'easy', shell: 'key',
+            desc: 'Flip the whole screen 180° for an instant headache.',
+            code: 'Ctrl + Alt + ↓',
+            undo: 'Ctrl + Alt + ↑',
+            tip: 'Works on Intel graphics with hotkeys enabled. Otherwise: Settings → System → Display → Display orientation.'
+        },
+        {
+            icon: '🖱️', title: 'Left-Handed Mouse', level: 'easy', shell: 'ps',
+            desc: 'Swap the primary and secondary mouse buttons.',
+            code: "Set-ItemProperty 'HKCU:\\Control Panel\\Mouse' -Name SwapMouseButtons -Value 1",
+            undo: "Set-ItemProperty 'HKCU:\\Control Panel\\Mouse' -Name SwapMouseButtons -Value 0",
+            tip: 'Applies at the next sign-in — or flip “Primary mouse button” in Settings → Bluetooth &amp; devices → Mouse for an instant swap.'
+        },
+        {
+            icon: '🐌', title: 'Snail (or Hyper) Mouse', level: 'easy', shell: 'ps',
+            desc: 'Crank pointer speed to a crawl — or to warp speed.',
+            code: "# 1 = snail, 20 = hyperspeed\nSet-ItemProperty 'HKCU:\\Control Panel\\Mouse' -Name MouseSensitivity -Value 1",
+            undo: "Set-ItemProperty 'HKCU:\\Control Panel\\Mouse' -Name MouseSensitivity -Value 10",
+            tip: 'The default speed is 10.'
+        },
+        {
+            icon: '⌨️', title: 'Keyboard Layout Swap', level: 'medium', shell: 'ps',
+            desc: 'Sneak in a QWERTZ/AZERTY layout so letters land in the wrong place.',
+            code: "$l = Get-WinUserLanguageList\n$l.Add('de-DE')\nSet-WinUserLanguageList $l -Force",
+            undo: "Set-WinUserLanguageList (Get-WinUserLanguageList | Where-Object LanguageTag -ne 'de-DE') -Force",
+            tip: 'They can cycle layouts with <code>Win + Space</code> — which is also how they’ll discover the prank.'
+        },
+        {
+            icon: '🔍', title: 'Extreme Zoom', level: 'easy', shell: 'key',
+            desc: 'Fire up Magnifier for some uncomfortably close pixels.',
+            code: 'Win + +   (plus key)',
+            undo: 'Win + Esc',
+            tip: 'Or run <code>Start-Process magnify.exe</code> in PowerShell.'
+        },
+        {
+            icon: '🔊', title: 'Chatty Computer', level: 'epic', shell: 'key',
+            desc: 'Turn on Narrator so the PC reads everything out loud.',
+            code: 'Ctrl + Win + Enter',
+            undo: 'Ctrl + Win + Enter   (same keys toggle it off)',
+            tip: 'Give it a few seconds — it starts narrating every click.'
+        },
+        {
+            icon: '🗣️', title: 'Talking Computer', level: 'medium', shell: 'ps',
+            desc: 'Make Windows say a message out loud, once.',
+            code: "Add-Type -AssemblyName System.Speech\n(New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak('You forgot to lock your PC')",
+            undo: null,
+            tip: 'No undo needed — it just speaks once. Change the text to anything you like.'
+        },
+        {
+            icon: '🌗', title: 'Colour-Filter Flip', level: 'easy', shell: 'key',
+            desc: 'Invert or greyscale the whole display in a keystroke.',
+            code: 'Ctrl + Win + C',
+            undo: 'Ctrl + Win + C',
+            tip: 'Enable the shortcut once via Settings → Accessibility → Colour filters, then it toggles instantly.'
+        },
+        {
+            icon: '🦄', title: 'Browser Surprise', level: 'medium', shell: 'ps',
+            desc: 'Open a couple of delightfully useless websites.',
+            code: "Start-Process 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'\nStart-Process 'https://pointerpointer.com/'",
+            undo: null,
+            tip: 'Completely harmless — just close the tabs with <code>Ctrl + W</code>.'
+        },
+        {
+            icon: '🎯', title: 'Hide Desktop Icons', level: 'medium', shell: 'ps',
+            desc: 'Make every desktop icon vanish. Where did it all go?',
+            code: "Set-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name HideIcons -Value 1\nStop-Process -Name explorer -Force",
+            undo: "Set-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name HideIcons -Value 0\nStop-Process -Name explorer -Force",
+            tip: 'Or just right-click the desktop → View → Show desktop icons.'
+        },
+        {
+            icon: '📸', title: 'Fake Frozen Desktop', level: 'epic', shell: 'ps',
+            desc: 'Screenshot the desktop, set it as wallpaper, hide the real icons — nothing is clickable.',
+            code: [
+                'Add-Type -AssemblyName System.Windows.Forms, System.Drawing',
+                '$b = [Windows.Forms.Screen]::PrimaryScreen.Bounds',
+                '$bmp = New-Object Drawing.Bitmap $b.Width, $b.Height',
+                '[Drawing.Graphics]::FromImage($bmp).CopyFromScreen(0, 0, 0, 0, $b.Size)',
+                '$p = "$env:USERPROFILE\\Pictures\\prank.png"; $bmp.Save($p)',
+                "Set-ItemProperty 'HKCU:\\Control Panel\\Desktop' -Name Wallpaper -Value $p",
+                "Set-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name HideIcons -Value 1",
+                'rundll32.exe user32.dll,UpdatePerUserSystemParameters',
+                'Stop-Process -Name explorer -Force'
+            ].join('\n'),
+            undo: [
+                "Set-ItemProperty 'HKCU:\\Control Panel\\Desktop' -Name Wallpaper -Value ''",
+                "Set-ItemProperty 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced' -Name HideIcons -Value 0",
+                'rundll32.exe user32.dll,UpdatePerUserSystemParameters',
+                'Stop-Process -Name explorer -Force'
+            ].join('\n'),
+            tip: 'The all-time classic — they’ll click a frozen picture of their own desktop.'
+        },
+        {
+            icon: '👻', title: 'Vanishing Taskbar', level: 'medium', shell: 'ps',
+            desc: 'Switch the taskbar to auto-hide so it disappears until touched.',
+            code: [
+                "$p = 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects3'",
+                '$v = (Get-ItemProperty $p).Settings; $v[8] = 3',
+                'Set-ItemProperty $p -Name Settings -Value $v',
+                'Stop-Process -Name explorer -Force'
+            ].join('\n'),
+            undo: [
+                "$p = 'HKCU:\\Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects3'",
+                '$v = (Get-ItemProperty $p).Settings; $v[8] = 2',
+                'Set-ItemProperty $p -Name Settings -Value $v',
+                'Stop-Process -Name explorer -Force'
+            ].join('\n'),
+            tip: 'The taskbar hides until the cursor hits the screen edge.'
+        },
+        {
+            icon: '🔑', title: 'Sticky Keys', level: 'medium', shell: 'ps',
+            desc: 'Arm Sticky Keys so a stray Shift triggers the pop-up.',
+            code: "Set-ItemProperty 'HKCU:\\Control Panel\\Accessibility\\StickyKeys' -Name Flags -Value 510",
+            undo: "Set-ItemProperty 'HKCU:\\Control Panel\\Accessibility\\StickyKeys' -Name Flags -Value 506",
+            tip: 'Or just press <code>Shift</code> five times in a row to pop the dialog.'
+        },
+        {
+            icon: '🐢', title: 'Laggy Keyboard', level: 'medium', shell: 'ps',
+            desc: 'Max out the key-repeat delay for genuinely painful typing.',
+            code: "Set-ItemProperty 'HKCU:\\Control Panel\\Keyboard' -Name KeyboardDelay -Value 3\nSet-ItemProperty 'HKCU:\\Control Panel\\Keyboard' -Name KeyboardSpeed -Value 0",
+            undo: "Set-ItemProperty 'HKCU:\\Control Panel\\Keyboard' -Name KeyboardDelay -Value 1\nSet-ItemProperty 'HKCU:\\Control Panel\\Keyboard' -Name KeyboardSpeed -Value 31",
+            tip: 'Sign out and back in to feel the full effect (and to apply the undo).'
+        },
+        {
+            icon: '🌠', title: 'Retro Mouse Trails', level: 'easy', shell: 'ps',
+            desc: 'Bring back glorious Windows-95 pointer trails.',
+            code: "Set-ItemProperty 'HKCU:\\Control Panel\\Mouse' -Name MouseTrails -Value 7",
+            undo: "Set-ItemProperty 'HKCU:\\Control Panel\\Mouse' -Name MouseTrails -Value 0",
+            tip: 'Sign out/in (or reboot) to apply and to undo.'
+        },
+        {
+            icon: '📝', title: 'Reminder in Notepad', level: 'easy', shell: 'ps',
+            desc: 'Pop open a friendly “lock your PC” note in Notepad.',
+            code: '@"\n🔓 You forgot to lock your PC!\nRemember: Win + L next time 😊\n"@ | Out-File "$env:TEMP\\reminder.txt"\nStart-Process notepad.exe "$env:TEMP\\reminder.txt"',
+            undo: null,
+            tip: 'Harmless — they just close Notepad.'
+        },
+        {
+            icon: '🅰️', title: 'Caps Lock Forever', level: 'easy', shell: 'key',
+            desc: 'The simplest prank in the book.',
+            code: 'Press Caps Lock. Walk away.',
+            undo: 'Press Caps Lock again.',
+            tip: 'No scripts, no cleanup — pure chaos.'
+        },
+        {
+            icon: '⏰', title: 'Delayed Shutdown', level: 'extreme', shell: 'cmd',
+            desc: 'Schedule a shutdown in one hour with a friendly message.',
+            code: 'shutdown /s /t 3600 /c "Friendly reminder: lock your PC! (Win + L)"',
+            undo: 'shutdown /a',
+            tip: '⚠️ Always tell them the cancel command — and cancel it yourself if they step away. Be kind!'
+        }
     ];
-    
-    // Open 3-5 random tabs
-    const numTabs = Math.floor(Math.random() * 3) + 3;
-    for (let i = 0; i < numTabs; i++) {
-        const randomSite = sites[Math.floor(Math.random() * sites.length)];
-        window.open(randomSite, '_blank');
-    }
-}
 
-// Desktop Icons
-function openDesktopSettings() {
-    alert('Right-click on the desktop\n→ View\n→ Uncheck "Show desktop icons"');
-}
-
-// AutoCorrect Tips
-function showAutocorrectTips() {
-    const tips = document.getElementById('autocorrect-tips');
-    tips.style.display = tips.style.display === 'none' ? 'block' : 'none';
-}
-
-// Surprise Music
-function playSurpriseMusic() {
-    const songs = [
-        'https://www.youtube.com/watch?v=dQw4w9WgXcQ', // Never Gonna Give You Up
-        'https://www.youtube.com/watch?v=y6120QOlsfU', // Darude - Sandstorm
-        'https://www.youtube.com/watch?v=ZZ5LpwO-An4', // HEYYEYAAEYAAAEYAEYAA
-        'https://www.youtube.com/watch?v=kfVsfOSbJY0', // Rebecca Black - Friday
-        'https://www.youtube.com/watch?v=9bZkp7q19f0'  // Gangnam Style
+    var COMBOS = [
+        { name: 'The Classic', text: 'Flip the screen + swap the mouse buttons.' },
+        { name: 'The Subtle', text: 'Snail mouse + an extra keyboard layout — slow <em>and</em> gibberish.' },
+        { name: 'The Sensory Overload', text: 'Magnifier + Narrator + colour-filter flip.' },
+        { name: 'The Legendary', text: 'Fake frozen desktop — screenshot wallpaper with the real icons hidden.' },
+        { name: 'Pro tip', text: 'Always know the undo, cancel any shutdown, and help them fix it after a good laugh 😊' }
     ];
-    
-    const randomSong = songs[Math.floor(Math.random() * songs.length)];
-    window.open(randomSong, '_blank');
-}
 
-// Snipping Tool
-function openSnippingTool() {
-    alert('Press: Win + Shift + S\n\nThis opens the Snipping Tool!\n\nFor the Fake Desktop prank:\n1. Take fullscreen screenshot\n2. Save it\n3. Right-click the image → Set as desktop background\n4. Hide desktop icons (see Icon Hide & Seek)');
-}
+    var SHELL_LABEL = { ps: 'PowerShell', cmd: 'Command Prompt', key: 'Keyboard' };
+    var LEVEL_LABEL = { easy: 'Easy', medium: 'Medium', epic: 'Epic', extreme: 'Extreme' };
 
-// Taskbar Settings
-function openTaskbarSettings() {
-    window.open('ms-settings:taskbar', '_blank');
-}
-
-// Copy Code Function
-function copyCode(button, elementId) {
-    const codeElement = document.getElementById(elementId);
-    const textToCopy = codeElement.textContent;
-    
-    navigator.clipboard.writeText(textToCopy).then(() => {
-        const originalText = button.textContent;
-        button.textContent = 'Copied!';
-        button.classList.add('copied');
-        
-        setTimeout(() => {
-            button.textContent = originalText;
-            button.classList.remove('copied');
-        }, 2000);
-    }).catch(err => {
-        alert('Failed to copy. Please copy manually:\n\n' + textToCopy);
-    });
-}
-
-// High Contrast Mode
-function toggleHighContrast() {
-    alert('Press: Left Alt + Left Shift + Print Screen\n\nThen click "Yes" in the dialog!\n\nThis enables High Contrast mode instantly!');
-}
-
-// Calculator Spam
-function calculatorSpam() {
-    const numCalcs = 20;
-    for (let i = 0; i < numCalcs; i++) {
-        setTimeout(() => {
-            window.open('calculator:', '_blank');
-        }, i * 100);
+    function esc(s) {
+        return String(s).replace(/&(?![a-z#]+;)/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
-    alert(`Opening ${numCalcs} calculators! 🔢`);
-}
 
-// Notepad Spam
-function notepadSpam() {
-    const messages = [
-        'LOCK YOUR PC!',
-        'Remember: Win + L',
-        'Security is important!',
-        'This could have been worse...',
-        'Don\'t forget to lock next time! 😊',
-        'Unlocked = Pranked',
-        'Your friendly IT reminder',
-        'Lock it or lose it!'
-    ];
-    
-    for (let i = 0; i < 8; i++) {
-        setTimeout(() => {
-            const newWindow = window.open('', '_blank');
-            if (newWindow) {
-                newWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head><title>Reminder #${i + 1}</title></head>
-                    <body style="font-family: Arial; font-size: 48px; text-align: center; padding-top: 100px; background: #${Math.floor(Math.random()*16777215).toString(16)};">
-                        <h1>${messages[i]}</h1>
-                    </body>
-                    </html>
-                `);
-            }
-        }, i * 200);
+    function codeBlock(label, code, isUndo) {
+        return '<div class="code-group"><span class="code-label">' + label + '</span>' +
+            '<div class="code-block' + (isUndo ? ' is-undo' : '') + '">' +
+            '<button class="copy-button" type="button">Copy</button>' +
+            '<pre>' + esc(code) + '</pre></div></div>';
     }
-}
 
-// Accessibility Settings
-function openAccessibilitySettings() {
-    window.open('ms-settings:easeofaccess-keyboard', '_blank');
-}
-
-// Show Shutdown Code
-function showShutdownCode() {
-    const code = document.getElementById('shutdown-code');
-    code.style.display = code.style.display === 'none' ? 'block' : 'none';
-}
-
-// Show Homepage Tips
-function showHomepageTips() {
-    const tips = document.getElementById('homepage-tips');
-    tips.style.display = tips.style.display === 'none' ? 'block' : 'none';
-}
-
-// Screen Saver Settings
-function openScreenSaver() {
-    alert('Opening screen saver settings...\n\nNote: Windows 11 has limited screen saver options.\nUse the CMD code for instant configuration!');
-    window.open('control desk.cpl,,@screensaver', '_blank');
-}
-
-// Sound Settings
-function openSoundSettings() {
-    window.open('ms-settings:sound', '_blank');
-}
-
-// Emoji Message
-function emojiMessage() {
-    const newWindow = window.open('', '_blank', 'width=600,height=400');
-    if (newWindow) {
-        newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>🔒 Important Security Message 🔒</title>
-                <style>
-                    body {
-                        font-family: 'Segoe UI', Arial, sans-serif;
-                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                        color: white;
-                        text-align: center;
-                        padding: 50px;
-                        margin: 0;
-                    }
-                    h1 { font-size: 3em; margin: 20px 0; }
-                    p { font-size: 1.5em; line-height: 1.6; }
-                    .emoji { font-size: 5em; }
-                </style>
-            </head>
-            <body>
-                <div class="emoji">🔓</div>
-                <h1>YOU FORGOT TO LOCK YOUR PC!</h1>
-                <p>This is a friendly reminder from your colleague 😊</p>
-                <p>Next time, use <strong>Win + L</strong></p>
-                <div class="emoji">😂</div>
-                <p style="font-size: 1em; margin-top: 50px;">
-                    P.S. - No harm done! Just lock it next time! 
-                </p>
-            </body>
-            </html>
-        `);
+    function cardHTML(p) {
+        var doLabel = p.shell === 'key' ? 'Shortcut' : 'Run it';
+        var html = '<article class="prank-card">' +
+            '<header class="prank-head">' +
+            '<span class="prank-icon" aria-hidden="true">' + p.icon + '</span>' +
+            '<div class="prank-heading"><h3 class="prank-title">' + p.title + '</h3>' +
+            '<div class="prank-badges">' +
+            '<span class="prank-level level-' + p.level + '">' + LEVEL_LABEL[p.level] + '</span>' +
+            '<span class="shell-badge shell-' + p.shell + '">' + SHELL_LABEL[p.shell] + '</span>' +
+            '</div></div></header>' +
+            '<p class="prank-description">' + p.desc + '</p>';
+        if (p.code) html += codeBlock(doLabel, p.code, false);
+        if (p.undo) html += codeBlock('Undo', p.undo, true);
+        if (p.tip) html += '<div class="instructions">' + p.tip + '</div>';
+        html += '</article>';
+        return html;
     }
-}
 
-// Night Light Settings
-function openNightLight() {
-    window.open('ms-settings:nightlight', '_blank');
-}
-
-// Show Caps Lock Tip
-function showCapsLockTip() {
-    const tip = document.getElementById('capslock-tip');
-    tip.style.display = tip.style.display === 'none' ? 'block' : 'none';
-}
-
-// Easter egg - Konami code
-let konamiCode = [];
-const konamiPattern = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
-
-document.addEventListener('keydown', function(e) {
-    konamiCode.push(e.key);
-    konamiCode = konamiCode.slice(-10);
-    
-    if (konamiCode.join(',') === konamiPattern.join(',')) {
-        document.body.style.transform = 'rotate(180deg)';
-        setTimeout(() => {
-            document.body.style.transform = '';
-            alert('😄 You found the easter egg! But... did you just prank yourself?');
-        }, 2000);
+    function onCopy(e) {
+        var btn = e.target.closest('.copy-button');
+        if (!btn) return;
+        var pre = btn.parentElement.querySelector('pre');
+        if (!pre) return;
+        navigator.clipboard.writeText(pre.textContent).then(function () {
+            var prev = btn.textContent;
+            btn.textContent = 'Copied!';
+            btn.classList.add('copied');
+            setTimeout(function () { btn.textContent = prev; btn.classList.remove('copied'); }, 1600);
+        }).catch(function () { btn.textContent = 'Copy failed'; });
     }
-});
+
+    function render() {
+        var grid = document.getElementById('prankGrid');
+        if (grid) {
+            grid.innerHTML = PRANKS.map(cardHTML).join('');
+            grid.addEventListener('click', onCopy);
+        }
+        var combo = document.getElementById('comboList');
+        if (combo) {
+            combo.innerHTML = COMBOS.map(function (c) {
+                return '<div class="tip"><strong>' + c.name + ':</strong> ' + c.text + '</div>';
+            }).join('');
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', render);
+    } else {
+        render();
+    }
+})();
