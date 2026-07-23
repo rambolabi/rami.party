@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>How to communicate with me — DISC Communication Card</title>
+  <meta name="description" content="A shareable DISC communication card: the critical do's, don'ts and phrases for communicating with each colour and two-colour blend. Inspired by 'Surrounded by Idiots' by Thomas Erikson." />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#2e6fd6" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Communication-card page specifics */
+    .comm-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; height: 64px; }
+    .comm-top .brand { font-size: 1.1rem; }
+    .comm-top a.back { text-decoration: none; font-weight: 600; color: var(--ink-2); font-size: 0.92rem; }
+    .comm-top a.back:hover { color: var(--brand-ink); }
+
+    .comm-hero { --c: var(--blue); text-align: center; padding: clamp(40px, 7vw, 76px) 0 clamp(28px, 4vw, 44px); }
+    .comm-badge {
+      width: 76px; height: 76px; border-radius: 20px; margin: 0 auto 18px;
+      display: grid; place-items: center; font-size: 2.4rem;
+      background: color-mix(in srgb, var(--c) 16%, transparent);
+    }
+    .comm-duo { display: inline-flex; margin: 0 auto 18px; }
+    .comm-duo i { width: 42px; height: 42px; border-radius: 50%; display: inline-block; border: 4px solid var(--bg); }
+    .comm-duo i:last-child { margin-left: -16px; }
+    .comm-hero h1 {
+      font-family: var(--font-display); font-weight: 900; letter-spacing: -0.02em;
+      font-size: clamp(2rem, 6vw, 3.4rem); line-height: 1.05; color: var(--ink); margin-bottom: 12px;
+    }
+    .comm-hero h1 span { color: var(--c); }
+    .comm-essence { max-width: 560px; margin: 0 auto; color: var(--ink-2); font-size: 1.12rem; }
+    .comm-share { margin-top: 16px; font-size: 0.88rem; color: var(--muted); }
+
+    .comm-body { --c: var(--blue); display: grid; gap: 18px; padding-bottom: 24px; }
+    .comm-card {
+      background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--c);
+      border-radius: var(--radius); padding: clamp(20px, 3.5vw, 30px); box-shadow: var(--shadow-sm);
+    }
+    .comm-card h2 { font-family: var(--font-display); font-weight: 800; font-size: 1.3rem; margin-bottom: 12px; color: var(--ink); }
+    .comm-card p { color: var(--ink-2); }
+    .comm-card p em { font-style: italic; color: var(--ink); }
+    .comm-rules { list-style: none; counter-reset: r; margin-top: 4px; }
+    .comm-rules li {
+      counter-increment: r; position: relative; padding: 10px 0 10px 46px; color: var(--ink);
+      border-bottom: 1px solid var(--line); font-size: 1.02rem;
+    }
+    .comm-rules li:last-child { border-bottom: 0; }
+    .comm-rules li::before {
+      content: counter(r); position: absolute; left: 0; top: 8px;
+      width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+      background: var(--c); color: #fff; font-weight: 800; font-size: 0.9rem;
+    }
+    .comm-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .comm-two .comm-card { border-left-width: 6px; }
+    .do-card { border-left-color: var(--green); }
+    .dont-card { border-left-color: var(--red); }
+    .comm-list { list-style: none; }
+    .comm-list li { padding-left: 26px; position: relative; color: var(--ink-2); margin-bottom: 8px; }
+    .do-card .comm-list li::before { content: "✓"; position: absolute; left: 2px; color: var(--green); font-weight: 800; }
+    .dont-card .comm-list li::before { content: "✕"; position: absolute; left: 2px; color: var(--red); font-weight: 800; }
+    .phrase { list-style: none; }
+    .phrase li {
+      background: var(--card-2); border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 14px; margin-bottom: 8px; color: var(--ink); font-size: 0.98rem;
+    }
+    .phrase.good li { border-left: 4px solid var(--green); }
+    .phrase.bad li { border-left: 4px solid var(--red); }
+    .comm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
+    .comm-mini h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
+    .comm-mini p { color: var(--ink-2); font-size: 0.96rem; }
+    .comm-howto { list-style: none; }
+    .comm-howto li { padding-left: 24px; position: relative; color: var(--ink-2); margin-bottom: 10px; font-size: 1.02rem; }
+    .comm-howto li::before { content: "→"; position: absolute; left: 0; color: var(--c); font-weight: 800; }
+
+    .comm-nav { border-top: 1px solid var(--line); padding: 34px 0; margin-top: 20px; }
+    .comm-nav h3 { font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; margin-bottom: 14px; }
+    .comm-related { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 26px; }
+
+    @media (max-width: 640px) { .comm-two { grid-template-columns: 1fr; } }
+    @media print { .topbar, .comm-nav, .comm-share { display: none !important; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap comm-top">
+      <a class="brand" href="index.html">
+        <span class="brand-dots" aria-hidden="true">
+          <i style="--c:#e63946"></i><i style="--c:#f0a500"></i><i style="--c:#2a9d5c"></i><i style="--c:#2e6fd6"></i>
+        </span>
+        <span class="brand-text">Four&nbsp;Colours</span>
+      </a>
+      <a class="back" href="index.html#cards">← All cards & workshop</a>
+    </div>
+  </header>
+
+  <main class="wrap wrap-narrow" id="commMain">
+    <section class="comm-hero" id="commHero"></section>
+    <div class="comm-body" id="commBody"></div>
+
+    <nav class="comm-nav">
+      <h3>Other communication cards</h3>
+      <div class="comm-related" id="commSingles"></div>
+      <h3>Two-colour blends</h3>
+      <div class="comm-related" id="commPairs"></div>
+      <a class="btn btn-primary" href="index.html">← Back to the workshop</a>
+    </nav>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <p class="footer-support">
+        Want the full picture? <strong>Read <em>Surrounded by Idiots</em> by Thomas Erikson</strong> —
+        buy the book and support the author.
+      </p>
+      <p class="footer-meta"><a href="index.html">The Four Colours workshop</a> · <span id="year"></span></p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="shared.js"></script>
+  <script src="communicate.js"></script>
+</body>
+</html>

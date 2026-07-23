@@ -830,9 +830,62 @@ a { color: var(--brand-ink); }
 .footer-inner { text-align: center; }
 .footer-note { max-width: 620px; margin: 0 auto 14px; font-size: 0.92rem; line-height: 1.6; }
 .footer-note em { font-style: italic; color: #fff; }
+.footer-support {
+  max-width: 620px;
+  margin: 0 auto 16px;
+  font-size: 0.95rem;
+  color: #e7ecf5;
+}
+.footer-support strong { color: #fff; }
+.footer-support em { font-style: italic; }
 .footer-meta { font-size: 0.85rem; color: #8b95a8; }
 .footer-meta a { color: #fff; text-decoration: none; }
 .footer-meta a:hover { text-decoration: underline; }
+
+/* ============================ EXTRAS (v2) ============================ */
+.quiz-alt { margin-top: 18px; font-size: 0.9rem; color: var(--muted); }
+.quiz-alt a { color: var(--brand-ink); font-weight: 600; }
+
+.result-cta { text-align: center; margin-bottom: 22px; }
+
+/* Communication card links (index #cards) */
+.cards-subhead {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--ink);
+  margin: 8px 0 16px;
+}
+.cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 34px; }
+.cards-grid-pairs { grid-template-columns: repeat(3, 1fr); margin-bottom: 0; }
+.comm-link {
+  --c: var(--blue);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--c);
+  border-radius: var(--radius-sm);
+  padding: 16px 18px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.comm-link:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.comm-link-icon { font-size: 1.5rem; flex: none; }
+.comm-link-duo { display: inline-flex; flex: none; }
+.comm-link-duo i {
+  width: 16px; height: 16px; border-radius: 50%;
+  display: inline-block; border: 2px solid var(--card);
+}
+.comm-link-duo i:last-child { margin-left: -7px; }
+.comm-link-body { flex: 1; min-width: 0; }
+.comm-link-body b { display: block; color: var(--ink); font-size: 1.02rem; }
+.comm-link-body small { color: var(--muted); font-size: 0.82rem; }
+.comm-link-pair { border-left: 0; border-top: 4px solid var(--c1); }
+.comm-link-go { color: var(--c, var(--brand)); font-weight: 800; font-size: 1.2rem; flex: none; }
+.comm-link-pair .comm-link-go { color: var(--c2); }
 
 /* ============================ RESPONSIVE ============================ */
 @media (max-width: 900px) {
@@ -841,6 +894,7 @@ a { color: var(--brand-ink); }
   .live-panel { position: static; order: -1; }
   .result-body { grid-template-columns: 1fr; }
   .result-chart { max-width: 280px; margin: 0 auto; }
+  .cards-grid-pairs { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 720px) {
   .nav-toggle { display: flex; }
@@ -864,6 +918,7 @@ a { color: var(--brand-ink); }
   .nav-links.open { transform: none; opacity: 1; pointer-events: auto; }
   .nav-links a { padding: 12px 14px; border-radius: 10px; }
   .hero-cards { grid-template-columns: repeat(2, 1fr); }
+  .cards-grid, .cards-grid-pairs { grid-template-columns: 1fr; }
 }
 @media (max-width: 460px) {
   .color-grid { grid-template-columns: 1fr; }

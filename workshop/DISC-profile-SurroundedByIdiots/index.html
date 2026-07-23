@@ -39,6 +39,7 @@
         <li><a href="#observe" data-nav>Read Someone</a></li>
         <li><a href="#quick" data-nav>Quick&nbsp;ID</a></li>
         <li><a href="#tips" data-nav>Tips</a></li>
+        <li><a href="#cards" data-nav>Cards</a></li>
         <li><a href="#faq" data-nav>FAQ</a></li>
       </ul>
     </nav>
@@ -125,6 +126,8 @@
               <h3>20 quick statements</h3>
               <p>Answer honestly and instinctively — go with your first reaction. Takes about three minutes.</p>
               <button class="btn btn-primary" data-action="start-self">Begin assessment</button>
+              <p class="quiz-alt">Prefer a different method? Try the
+                <a href="self-forced-choice.html">forced-choice test</a> (most / least like me) and compare.</p>
             </div>
           </div>
 
@@ -159,6 +162,7 @@
               <div class="result-bars" id="selfBars"></div>
             </div>
             <div class="result-detail" id="selfResultDetail"></div>
+            <div class="result-cta" id="selfPairCta"></div>
             <div class="result-actions">
               <button class="btn btn-ghost" data-action="restart-self">Retake</button>
               <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
@@ -176,8 +180,9 @@
           <p class="kicker">Assessment 2</p>
           <h2>Read someone else</h2>
           <p class="section-sub">
-            Think of one specific person — a colleague, partner or friend. Answer what you observe
-            about <em>them</em>. Watch the graph shift live after every answer.
+            Think of one specific person — a colleague, partner or friend. First read their
+            <em>natural</em> style (watch the graph shift live), then a short second pass reveals
+            their <em>adapted</em> style under pressure.
           </p>
         </header>
 
@@ -193,7 +198,7 @@
             </div>
           </div>
 
-          <!-- Live run: question + live chart side by side -->
+          <!-- Pass 1 — natural: question + live chart side by side -->
           <div class="quiz-stage observe-run" data-stage="run" hidden>
             <div class="observe-question-col">
               <div class="quiz-progress">
@@ -215,21 +220,45 @@
             </aside>
           </div>
 
+          <!-- Bridge into pass 2 -->
+          <div class="quiz-stage" data-stage="bridge" hidden>
+            <div class="quiz-intro">
+              <span class="quiz-intro-icon">🔥</span>
+              <h3>Now — under pressure</h3>
+              <p id="obsBridgeText"></p>
+              <button class="btn btn-primary" data-action="start-adapt">Continue</button>
+            </div>
+          </div>
+
+          <!-- Pass 2 — adapted / under pressure -->
+          <div class="quiz-stage" data-stage="adapt" hidden>
+            <div class="quiz-progress">
+              <div class="quiz-progress-bar"><span id="obsAdaptBar"></span></div>
+              <span class="quiz-progress-text" id="obsAdaptCount"></span>
+            </div>
+            <p class="reading-who">Under pressure &amp; stress</p>
+            <p class="quiz-question" id="obsAdaptQ"></p>
+            <div class="options" id="obsAdaptOptions"></div>
+            <button class="quiz-back" data-action="back-adapt">← Previous</button>
+          </div>
+
           <!-- Result -->
           <div class="quiz-stage" data-stage="result" hidden>
             <div class="result-head">
-              <p class="result-eyebrow" id="obsResultEyebrow">Their dominant style</p>
+              <p class="result-eyebrow" id="obsResultEyebrow">Their natural style</p>
               <h3 class="result-title" id="obsResultTitle"></h3>
               <p class="result-blurb" id="obsResultBlurb"></p>
               <p class="confidence" id="obsConfidence"></p>
             </div>
             <div class="result-body">
               <div class="result-chart">
-                <canvas id="obsResultChart" width="320" height="320" role="img" aria-label="Their DISC colour balance"></canvas>
+                <canvas id="obsResultChart" width="340" height="340" role="img" aria-label="Natural vs under-pressure colour balance"></canvas>
               </div>
               <div class="result-bars" id="obsResultBars"></div>
             </div>
+            <div class="result-detail" id="obsShift"></div>
             <div class="result-detail" id="obsResultDetail"></div>
+            <div class="result-cta" id="obsPairCta"></div>
             <div class="result-actions">
               <button class="btn btn-ghost" data-action="restart-obs">Read another person</button>
               <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
@@ -274,6 +303,27 @@
       </div>
     </section>
 
+    <!-- ===================== COMMUNICATION CARDS ===================== -->
+    <section class="section" id="cards">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker">Shareable</p>
+          <h2>“How to communicate with me” cards</h2>
+          <p class="section-sub">
+            One focused page per colour — and one for every two-colour blend — with the critical
+            do's, don'ts and phrases. Send yours to a colleague, or open someone else's before your
+            next conversation.
+          </p>
+        </header>
+
+        <h3 class="cards-subhead">Single colours</h3>
+        <div class="cards-grid" id="cardsSingles"></div>
+
+        <h3 class="cards-subhead">Two-colour blends</h3>
+        <div class="cards-grid cards-grid-pairs" id="cardsPairs"></div>
+      </div>
+    </section>
+
     <!-- ===================== FAQ ===================== -->
     <section class="section alt" id="faq">
       <div class="wrap wrap-narrow">
@@ -294,6 +344,10 @@
         DISC behavioural model of William Moulton Marston. Built for reflection and better
         conversations — not clinical diagnosis.
       </p>
+      <p class="footer-support">
+        Want the full picture? <strong>Read <em>Surrounded by Idiots</em> by Thomas Erikson</strong> —
+        buy the book and support the author.
+      </p>
       <p class="footer-meta">
         <a href="../../index.html">rami.party</a> · Workshop edition · <span id="year"></span>
       </p>
@@ -302,6 +356,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="data.js"></script>
+  <script src="shared.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

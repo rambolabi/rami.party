@@ -402,7 +402,233 @@ const DISC = {
     },
     {
       q: "Why do I behave differently at work and at home?",
-      a: "People often adapt their behaviour to the situation. You may lead with one colour under pressure at work and another when relaxed at home. That flexibility is normal and healthy.",
+      a: "People often adapt their behaviour to the situation. You may lead with one colour under pressure at work and another when relaxed at home. That flexibility is normal and healthy. This is the difference between your <em>natural</em> style and your <em>adapted</em> style.",
     },
   ],
+
+  /* ---- Observer PASS 2: adapted / under-pressure style -------------------- */
+  /* A short second pass. Compared with pass 1 it reveals how a person shifts  */
+  /* from their natural style to their adapted (work / stress) style.          */
+  othersAdaptedQuestions: [
+    {
+      q: "Under a tight deadline, they tend to…",
+      options: [
+        { color: "red", text: "Take over and drive everyone hard" },
+        { color: "yellow", text: "Talk it up and rally the mood" },
+        { color: "green", text: "Quietly keep things steady" },
+        { color: "blue", text: "Retreat into detail and double-check everything" },
+      ],
+    },
+    {
+      q: "When a conflict erupts, they…",
+      options: [
+        { color: "red", text: "Confront it head-on" },
+        { color: "yellow", text: "Try to smooth it over with charm" },
+        { color: "green", text: "Withdraw and avoid taking sides" },
+        { color: "blue", text: "Step back and analyse who is right" },
+      ],
+    },
+    {
+      q: "Under stress, their tone becomes…",
+      options: [
+        { color: "red", text: "Sharper and more commanding" },
+        { color: "yellow", text: "Louder and more scattered" },
+        { color: "green", text: "Quieter and more reserved" },
+        { color: "blue", text: "Colder and more critical" },
+      ],
+    },
+    {
+      q: "When the pressure is on, they focus on…",
+      options: [
+        { color: "red", text: "Winning and finishing first" },
+        { color: "yellow", text: "Keeping everyone motivated" },
+        { color: "green", text: "Holding the team together" },
+        { color: "blue", text: "Getting every detail exactly right" },
+      ],
+    },
+    {
+      q: "If plans change suddenly, they…",
+      options: [
+        { color: "red", text: "Push a new direction immediately" },
+        { color: "yellow", text: "Improvise and stay upbeat" },
+        { color: "green", text: "Feel unsettled and need reassurance" },
+        { color: "blue", text: "Want time to reassess the facts" },
+      ],
+    },
+    {
+      q: "At their most stretched, others say they can be…",
+      options: [
+        { color: "red", text: "Domineering" },
+        { color: "yellow", text: "Unfocused" },
+        { color: "green", text: "Overly passive" },
+        { color: "blue", text: "Nit-picking" },
+      ],
+    },
+  ],
+
+  /* ---- Forced-choice self test (ipsative) -------------------------------- */
+  /* Each group has one word per colour. The taker picks MOST and LEAST like   */
+  /* them. This is the classic DISC method some purists prefer — offered as an */
+  /* alternative to the Likert test so the two can be compared.                */
+  forcedChoiceGroups: [
+    { red: "Direct", yellow: "Enthusiastic", green: "Patient", blue: "Precise" },
+    { red: "Decisive", yellow: "Sociable", green: "Loyal", blue: "Analytical" },
+    { red: "Competitive", yellow: "Optimistic", green: "Calm", blue: "Careful" },
+    { red: "Bold", yellow: "Talkative", green: "Supportive", blue: "Systematic" },
+    { red: "Results-driven", yellow: "Persuasive", green: "Reliable", blue: "Detailed" },
+    { red: "Commanding", yellow: "Charming", green: "Easy-going", blue: "Reserved" },
+    { red: "Impatient", yellow: "Spontaneous", green: "Steady", blue: "Thorough" },
+    { red: "Demanding", yellow: "Playful", green: "Agreeable", blue: "Cautious" },
+    { red: "Ambitious", yellow: "Inspiring", green: "Dependable", blue: "Logical" },
+    { red: "Forceful", yellow: "Expressive", green: "Gentle", blue: "Accurate" },
+  ],
+
+  /* ---- Communication cards: "How to communicate with a …" ---------------- */
+  /* Critical, shareable handling info per colour. Reuses colours[] plus the   */
+  /* extra fields below.                                                       */
+  comms: {
+    red: {
+      essence: "Be fast, be brief, be gone. Reds want the point, not the preamble.",
+      intro:
+        "A Red is driven, direct and impatient. They measure conversations in results and hate having their time wasted. Respect their pace and their need for control and they will respect you.",
+      rules: [
+        "Lead with the conclusion, then the reasons — never the other way round.",
+        "Offer clear options and let them make the call.",
+        "Keep it short: headlines, not essays.",
+      ],
+      goodPhrases: ["\"Bottom line: …\"", "\"Here are two options — your call.\"", "\"This gets us the result faster.\""],
+      badPhrases: ["\"Let me give you all the background first…\"", "\"I'm not sure, what do you think we should…\"", "\"Can we talk through my feelings on this?\""],
+      email: "One screen max. Subject line states the ask. Bullet points, decision needed, deadline. No small talk.",
+      conflict: "Stay calm and factual, push back directly, and don't take the bluntness personally. Reds respect people who hold their ground.",
+      motivate: "Give them a challenge, autonomy and a clear win to chase. Remove obstacles from their path.",
+    },
+    yellow: {
+      essence: "Be warm, be social, let them shine. Yellows connect through energy and people.",
+      intro:
+        "A Yellow is enthusiastic, talkative and craves connection and recognition. They think out loud and decide on feeling. Match their energy and they'll bring you along with them.",
+      rules: [
+        "Open with warmth and a bit of small talk — the relationship comes first.",
+        "Let them talk, then gently help pin down the details and next steps.",
+        "Recognise their ideas and contributions out loud.",
+      ],
+      goodPhrases: ["\"Great idea — tell me more!\"", "\"You'd be brilliant at this.\"", "\"Let's make this fun.\""],
+      badPhrases: ["\"Just stick to the facts, please.\"", "\"That will never work.\"", "\"Here's a 12-page spec to read.\""],
+      email: "Keep it upbeat and personal. A friendly opener, colour and enthusiasm, and a clear but light call to action. Bullet the details so they don't get lost.",
+      conflict: "Address issues gently and in person, never in a cold written telling-off. Reassure the relationship is fine while you fix the problem.",
+      motivate: "Give them recognition, an audience, variety and social contact. Celebrate wins publicly.",
+    },
+    green: {
+      essence: "Be patient, be personal, be reassuring. Greens open up when they feel safe.",
+      intro:
+        "A Green is calm, loyal and values harmony and security above all. They dislike pressure, sudden change and conflict. Slow down, be sincere, and give them time to feel comfortable.",
+      rules: [
+        "Slow the pace and keep it personal and sincere.",
+        "Introduce change gradually and explain the 'why' and the safety net.",
+        "Ask for their view directly — they rarely push it forward themselves.",
+      ],
+      goodPhrases: ["\"Take your time, there's no rush.\"", "\"How do you feel about this?\"", "\"We'll do this together, step by step.\""],
+      badPhrases: ["\"I need this decided right now.\"", "\"Everything is changing on Monday.\"", "\"Just deal with it.\""],
+      email: "Warm and friendly, not curt. Explain context, reassure about impact, and give plenty of notice. Avoid abrupt demands.",
+      conflict: "Never corner them. Raise issues gently, in private, and reassure the relationship is secure. Watch for quiet, unspoken disagreement.",
+      motivate: "Offer security, appreciation, a stable routine and the chance to help others. Recognise their reliability sincerely.",
+    },
+    blue: {
+      essence: "Be prepared, be accurate, be logical. Blues trust facts, not enthusiasm.",
+      intro:
+        "A Blue is precise, analytical and quality-driven. They want facts, detail and time to think, and they distrust hype and pressure. Come prepared and get your details right.",
+      rules: [
+        "Bring facts, data and detail — and get them exactly right.",
+        "Give them time and space to analyse; don't rush the decision.",
+        "Keep emotion low and logic high.",
+      ],
+      goodPhrases: ["\"Here's the data and the sources.\"", "\"Take the time you need to review it.\"", "\"Let's get this exactly right.\""],
+      badPhrases: ["\"Just trust me on this.\"", "\"We need to decide in the next five minutes.\"", "\"Don't worry about the details.\""],
+      email: "Structured, accurate and complete. Provide the full picture, supporting data and clear references. No exaggeration — they will spot every error.",
+      conflict: "Stay calm, factual and unemotional. Argue with evidence, not feelings, and give them time to consider before responding.",
+      motivate: "Give them clear standards, quality work, expertise to master and time to do it properly. Respect their need to be right.",
+    },
+  },
+
+  /* ---- Communication cards for two-colour blends ------------------------- */
+  /* Keys are alphabetically ordered colour pairs.                            */
+  pairComms: {
+    "blue-red": {
+      title: "Red · Blue",
+      intro:
+        "A Red-Blue blend is a driven perfectionist: they want results fast <em>and</em> done exactly right. Task-focused and low on warmth, they can be blunt, demanding and hard to please.",
+      tension: "Red says 'ship it now'; Blue says 'not until it's perfect.' Internally they push for speed and quality at once, which can make them critical of anyone who delivers neither.",
+      howTo: [
+        "Come with both the bottom line and the supporting detail ready.",
+        "Be efficient but accurate — sloppy speed loses the Blue, endless detail loses the Red.",
+        "Expect directness and high standards; don't take critique personally.",
+        "Give them control and get your facts straight.",
+      ],
+      watch: "Very little patience for waffle, feelings or errors. Keep it tight, correct and to the point.",
+    },
+    "red-yellow": {
+      title: "Red · Yellow",
+      intro:
+        "A Red-Yellow blend is a fast, forceful, charismatic driver: bold and results-hungry but also outgoing and persuasive. They lead from the front and love to win in style.",
+      tension: "Red wants results, Yellow wants applause — so they chase big, visible wins and can steamroll quieter people while doing it.",
+      howTo: [
+        "Be energetic and get to the point — match their pace and their buzz.",
+        "Give them both a challenge and recognition.",
+        "Let them lead and shine, but hold them to the follow-through and details.",
+        "Don't be timid — they respect confidence.",
+      ],
+      watch: "Impatient and dominant. They can talk over you and skip the detail — pin down specifics before they move on.",
+    },
+    "green-red": {
+      title: "Red · Green",
+      intro:
+        "A Red-Green blend is unusual — a driven achiever with a caring, people-first streak. They can push for results yet genuinely look after their team, switching between forceful and supportive.",
+      tension: "Red wants to charge ahead, Green wants harmony and stability — so they can seem inconsistent, decisive one moment and accommodating the next.",
+      howTo: [
+        "Read which mode they're in: results-driver or supporter.",
+        "Be direct but personal — respect both the goal and the relationship.",
+        "Give them time on people-decisions, speed on task-decisions.",
+        "Be sincere; they dislike pure politics.",
+      ],
+      watch: "The two sides can conflict internally. Don't mistake their supportive moments for a lack of drive.",
+    },
+    "blue-yellow": {
+      title: "Yellow · Blue",
+      intro:
+        "A Yellow-Blue blend is a rarer opposite-pairing: creative and sociable yet also precise and analytical. They can dream up big ideas and then scrutinise every detail of them.",
+      tension: "Yellow wants to enthuse and improvise, Blue wants facts and structure — so they swing between excited and exacting, sometimes in the same sentence.",
+      howTo: [
+        "Bring both warmth and evidence — they respond to enthusiasm backed by facts.",
+        "Allow space for ideas, then help structure them.",
+        "Don't be too pushy or too vague; they'll resist both.",
+        "Acknowledge their creativity and their accuracy.",
+      ],
+      watch: "They can flip from optimistic to critical quickly. Give them facts to trust the excitement.",
+    },
+    "green-yellow": {
+      title: "Yellow · Green",
+      intro:
+        "A Yellow-Green blend is the warmest combination: sociable, kind, supportive and easy to like. They put people and relationships first and keep the mood positive.",
+      tension: "Both dislike conflict and hard decisions, so they may over-promise, avoid tough messages, or struggle to say no.",
+      howTo: [
+        "Be friendly, warm and unhurried — the relationship matters most.",
+        "Give reassurance and genuine appreciation.",
+        "Help them with structure, deadlines and difficult decisions.",
+        "Never be harsh or cold — they take it to heart.",
+      ],
+      watch: "They avoid conflict and can agree just to keep the peace. Check that a 'yes' is a real yes.",
+    },
+    "blue-green": {
+      title: "Green · Blue",
+      intro:
+        "A Green-Blue blend is calm, careful and thoroughly dependable: quiet, precise and steady. They value stability, quality and doing things properly, and rarely seek the spotlight.",
+      tension: "Both are cautious and change-averse, so they can be slow to decide and resistant to anything sudden or risky.",
+      howTo: [
+        "Be patient, prepared and precise all at once.",
+        "Give them detail, reassurance and time — never rush them.",
+        "Introduce change slowly, with facts and a clear plan.",
+        "Respect their standards and their need for security.",
+      ],
+      watch: "Slow, quiet and risk-averse. Silence may hide disagreement — invite their honest view.",
+    },
+  },
 };

@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forced-Choice Test — The Four Colours (DISC Workshop)</title>
+  <meta name="description" content="An alternative DISC self-test using the classic forced-choice method — pick what is MOST and LEAST like you. Compare it with the Likert test in the Four Colours workshop." />
+  <meta name="theme-color" content="#2e6fd6" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .fc-top { display: flex; align-items: center; justify-content: space-between; gap: 1rem; height: 64px; }
+    .fc-top .brand { font-size: 1.1rem; }
+    .fc-top a.back { text-decoration: none; font-weight: 600; color: var(--ink-2); font-size: 0.92rem; }
+    .fc-top a.back:hover { color: var(--brand-ink); }
+
+    .fc-legend { display: flex; gap: 18px; justify-content: center; margin-bottom: 20px; font-size: 0.86rem; color: var(--muted); flex-wrap: wrap; }
+    .fc-legend b { font-weight: 700; }
+    .fc-legend .m { color: var(--green); }
+    .fc-legend .l { color: var(--red); }
+
+    .fc-rows { display: flex; flex-direction: column; gap: 12px; }
+    .fc-row {
+      display: flex; align-items: center; gap: 14px;
+      border: 1.5px solid var(--line); background: var(--card-2);
+      border-radius: var(--radius-sm); padding: 12px 14px 12px 18px;
+      transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+    }
+    .fc-row.is-most { border-color: var(--green); background: color-mix(in srgb, var(--green) 8%, transparent); }
+    .fc-row.is-least { border-color: var(--red); background: color-mix(in srgb, var(--red) 8%, transparent); }
+    .fc-word { flex: 1; font-weight: 600; font-size: 1.05rem; color: var(--ink); }
+    .fc-btns { display: flex; gap: 8px; flex: none; }
+    .fc-btns button {
+      border: 1.5px solid var(--line); background: var(--card); color: var(--ink-2);
+      border-radius: 999px; padding: 7px 16px; font-family: var(--font-body);
+      font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.15s var(--ease);
+    }
+    .fc-btns .fc-most:hover, .fc-row.is-most .fc-most { background: var(--green); border-color: var(--green); color: #fff; }
+    .fc-btns .fc-least:hover, .fc-row.is-least .fc-least { background: var(--red); border-color: var(--red); color: #fff; }
+
+    .fc-note {
+      background: var(--card-2); border: 1px solid var(--line); border-left: 6px solid var(--brand);
+      border-radius: var(--radius-sm); padding: 18px 22px; margin-bottom: 24px; color: var(--ink-2);
+    }
+    .fc-note b { color: var(--ink); }
+    @media (max-width: 460px) {
+      .fc-row { flex-wrap: wrap; }
+      .fc-btns { width: 100%; }
+      .fc-btns button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap fc-top">
+      <a class="brand" href="index.html">
+        <span class="brand-dots" aria-hidden="true">
+          <i style="--c:#e63946"></i><i style="--c:#f0a500"></i><i style="--c:#2a9d5c"></i><i style="--c:#2e6fd6"></i>
+        </span>
+        <span class="brand-text">Four&nbsp;Colours</span>
+      </a>
+      <a class="back" href="index.html#self">← Back to workshop</a>
+    </div>
+  </header>
+
+  <main class="section">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="kicker">Alternative method</p>
+        <h2>Forced-choice self-test</h2>
+        <p class="section-sub">
+          The classic DISC approach some practitioners prefer: for each group of four words, pick the
+          one that is <em>most</em> like you and the one that is <em>least</em> like you. Compare your
+          result with the <a href="index.html#self">Likert test</a> to see which feels truer.
+        </p>
+      </header>
+
+      <div class="quiz-shell" id="fcQuiz">
+        <!-- Intro -->
+        <div class="quiz-stage" data-stage="intro">
+          <div class="quiz-intro">
+            <span class="quiz-intro-icon">⚖️</span>
+            <h3>10 word groups</h3>
+            <p>In each group of four, choose your <b>Most</b> and your <b>Least</b>. Quick and instinctive is best.</p>
+            <button class="btn btn-primary" data-action="fc-start">Begin test</button>
+          </div>
+        </div>
+
+        <!-- Run -->
+        <div class="quiz-stage" data-stage="run" hidden>
+          <div class="quiz-progress">
+            <div class="quiz-progress-bar"><span id="fcBar"></span></div>
+            <span class="quiz-progress-text" id="fcCount"></span>
+          </div>
+          <p class="quiz-question">Which is most &amp; least like you?</p>
+          <div class="fc-legend">
+            <span><b class="m">● Most</b> — most like me</span>
+            <span><b class="l">● Least</b> — least like me</span>
+          </div>
+          <div class="fc-rows" id="fcRows"></div>
+          <button class="quiz-back" data-action="fc-back" hidden>← Previous</button>
+        </div>
+
+        <!-- Result -->
+        <div class="quiz-stage" data-stage="result" hidden>
+          <div class="result-head">
+            <p class="result-eyebrow">Your dominant style (forced-choice)</p>
+            <h3 class="result-title" id="fcResultTitle"></h3>
+            <p class="result-blurb" id="fcResultBlurb"></p>
+          </div>
+          <div class="result-body">
+            <div class="result-chart">
+              <canvas id="fcChart" width="320" height="320" role="img" aria-label="Your DISC colour balance"></canvas>
+            </div>
+            <div class="result-bars" id="fcBars"></div>
+          </div>
+          <div class="result-detail" id="fcResultDetail"></div>
+          <div class="fc-note">
+            <b>Comparing methods:</b> forced-choice (ipsative) scoring exaggerates your strongest and
+            weakest colours because every pick trades one colour off against another. The
+            <a href="index.html#self">Likert test</a> lets colours score independently, so mild blends
+            show up more softly. Neither is “correct” — together they triangulate the real you.
+          </div>
+          <div class="result-cta" id="fcPairCta"></div>
+          <div class="result-actions">
+            <button class="btn btn-ghost" data-action="fc-restart">Retake</button>
+            <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
+            <a class="btn btn-primary" href="index.html#self">Try the Likert test →</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <p class="footer-support">
+        Want the full picture? <strong>Read <em>Surrounded by Idiots</em> by Thomas Erikson</strong> —
+        buy the book and support the author.
+      </p>
+      <p class="footer-meta"><a href="index.html">The Four Colours workshop</a> · <span id="year"></span></p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="data.js"></script>
+  <script src="shared.js"></script>
+  <script src="forced-choice.js"></script>
+</body>
+</html>

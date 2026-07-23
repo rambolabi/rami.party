@@ -63,30 +63,60 @@ Information sourced from "Surrounded by Idiots" and established DISC methodology
 
 ---
 
-## Build Status — DELIVERED (v1)
-A complete, self-contained application has been built:
-- `index.html` — single-page workshop with 7 sections + sticky nav + mobile menu
-- `style.css` — clean, modern, professional light theme with the 4 DISC accents, fully responsive + print styles
-- `data.js` — all educational content, 20 self statements, 16 observer questions, 4 quick picks, tips, FAQ
-- `app.js` — quiz engines, live radar/doughnut charts (Chart.js), interaction matrix, scoring
+## Build Status — DELIVERED (v2, incorporating Thomas Erikson's feedback)
+Files:
+- `index.html` — workshop hub (Learn, Test Yourself, Read Someone, Quick ID, Tips, **Cards**, FAQ)
+- `style.css` — clean professional light theme, responsive, print styles
+- `data.js` — content, questions, **adapted-style questions, forced-choice groups, comms + pairComms**
+- `shared.js` — shared scoring/chart/blend helpers (`window.DUI`) used by all pages
+- `app.js` — workshop engine (nav, learn, matrix, self, two-pass observer, quick, cards)
+- `communicate.html` + `communicate.js` — shareable "how to communicate with me" cards (single + pair)
+- `self-forced-choice.html` + `forced-choice.js` — alternative most/least test
 
-Delivered features vs. requirements:
-- [x] Educational content for all 4 colours (traits, communication, decisions, work env, strengths, watch-outs, motivators, stress, how-to-connect)
+v2 changes from feedback:
+1. [x] Colours kept front and centre (DISC letters secondary)
+2. [x] Results always name the top **two** colours; 3- and 4-way close mixes get explicit "bigger situational mix" wording
+3. [x] Marston behavioural model referenced alongside Erikson
+4. [x] Separate **forced-choice** test page (most/least) built for side-by-side comparison with the Likert test
+5. [x] Observer test now runs **two passes** — natural style (live graph) + adapted/under-pressure style — with an overlay radar and a "what changes under pressure" note
+6. [x] Footer now invites visitors to **buy the book and support the author**
+7. [x] Per-colour **communication cards** + all six **two-colour blend** cards, cross-linked and linking back to the workshop
+8. [x] Strengths/watch-outs kept as-is
+
+## Original build (v1) requirements — all still met
+- [x] Educational content for all 4 colours
 - [x] Colour-to-colour interaction matrix
-- [x] Self-assessment (20 Likert statements, one at a time, result only at end, % breakdown + radar)
-- [x] Others-assessment (16 questions, REAL-TIME radar + live bars updating after each answer, confidence level, multiple people via name label)
-- [x] Quick identifier (4 rapid picks)
-- [x] Tips (do/don't per colour) + FAQ
-- [x] Responsive, accessible (skip link, ARIA), print-friendly results
-- [x] Chart.js via CDN, no backend
+- [x] Self-assessment (Likert, one at a time, result only at end, % + radar)
+- [x] Others-assessment (live real-time graph, confidence, multiple people)
+- [x] Quick identifier, Tips, FAQ
+- [x] Responsive, accessible, print-friendly, Chart.js via CDN, no backend
 
 ## Questions for Thomas Erikson (collaboration notes)
 Please confirm / advise so v2 stays faithful to the book:
 1. **Terminology** — For a general audience, do you prefer the plain colour names (Red/Yellow/Green/Blue) foregrounded over the DISC letters? Current build leads with colours and shows DISC labels as secondary. OK?
+Yes stay with the colors.
+
 2. **Blend messaging** — The book stresses ~80% of people are two-colour blends. I surface the top-two blend when the gap is small. Would you like the results to *always* name a primary + secondary pair rather than a single colour?
+Unless there are no other colors, speak of both top colors.
+If all three or four colors are a close mix, add in some more specific text to show this person is a bigger mix depending on the situation than just one or two colors.
+
 3. **Question wording** — Any statements/observations you'd rephrase to match the book's voice? Happy to swap in your preferred phrasings verbatim.
+You are allowed to take parts from William Moulton Marston his behavioral model as well.
+
 4. **Scoring weights** — Self-test maps Likert 1–5 to weight 0–4 per colour. Do you want forced-choice ("most/least like me") ranking instead, which some DISC purists prefer?
+Make a seperate test as an example in a different webpage, we will see the difference and what we prefer.
+
 5. **Stress vs. baseline** — Should the observer test distinguish a person's *adapted* (work/pressure) style from their *natural* style, as the book discusses? Could add a second short pass.
+Yes
+
 6. **Attribution / licensing** — Any specific credit line, disclaimer, or trademark wording you want on the footer regarding the book and the DISC model?
+If the visitor wants more information they should buy the book and support the author.
+
 7. **Facilitation guide** — The todo mentions a workshop facilitation guide. Do you want a printable facilitator's script/slide companion added as a separate page?
+Make a seperate page regarding each color so people can send each other a "how to communicate with me/him/her" page.
+This page should contain the most critical information on how to handle this color.
+These pages should forward back to each other and to the main page.
+There should also be mixed pages, a mix between each two colors and how to handle these double color people.
+
 8. **Colour meanings nuance** — Any corrections to the strengths/watch-outs lists you'd like adjusted to avoid stereotyping?
+No, the current explanation is perfectly fine.
