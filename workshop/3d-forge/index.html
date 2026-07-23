@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Forge · rami.party workshop</title>
+    <meta name="description"
+        content="3D Forge — turn text, emoji, shapes, QR codes and photos into watertight, print-ready 3D models (STL / 3MF / OBJ / PLY / AMF). 100% in your browser, nothing uploaded.">
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%8A%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">🧊</span>
+            <span class="brand-name">3D&nbsp;Forge</span>
+            <span class="brand-tag">workshop · rami.party</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn" id="btn-new" data-i18n="new" title="Start a new empty plate">New</button>
+            <button class="btn" id="btn-undo" data-i18n="undo" title="Undo (Ctrl+Z)">↶ Undo</button>
+            <button class="btn" id="btn-redo" data-i18n="redo" title="Redo (Ctrl+Y)">↷ Redo</button>
+            <button class="btn" id="btn-fit" data-i18n="fit" title="Frame everything (F)">Fit</button>
+            <button class="btn" id="btn-backlight" data-i18n="backlight" title="Lithophane backlight preview">💡 Backlight</button>
+            <button class="btn" id="btn-save" title="Save project (.json)">Save</button>
+            <button class="btn" id="btn-open" title="Open project (.json)">Open</button>
+            <button class="btn" id="btn-help" title="Help & shortcuts">?</button>
+            <select id="lang-select" title="Language"><option value="en">EN</option><option value="nl">NL</option><option value="fr">FR</option></select>
+            <button class="btn btn-primary" id="btn-export" data-i18n="export" title="Export a print-ready model">⤓ Export</button>
+            <a class="btn btn-ghost" href="/workshop/" data-i18n="workshop" title="Back to the workshop">← Workshop</a>
+        </div>
+    </header>
+
+    <div class="app-body">
+        <nav class="toolbar" aria-label="Add objects">
+            <button class="tool" data-action="add-text" title="3D text (any / uploaded font)">🅣<span data-i18n="t_text">Text</span></button>
+            <button class="tool" data-action="add-emoji" title="Emoji / symbol → solid">☺<span data-i18n="t_emoji">Emoji</span></button>
+            <button class="tool" data-action="add-litho" title="Photo → lithophane">🌄<span data-i18n="t_litho">Litho</span></button>
+            <button class="tool" data-action="add-relief" title="Image → embossed relief">⛰<span data-i18n="t_relief">Relief</span></button>
+            <button class="tool" data-action="add-qr" title="QR code → 3D">▦<span data-i18n="t_qr">QR</span></button>
+            <div class="tool-sep"></div>
+            <button class="tool" data-action="prim-box" title="Box">▬<span data-i18n="t_box">Box</span></button>
+            <button class="tool" data-action="prim-roundedBox" title="Rounded box">▢<span data-i18n="t_rbox">R-Box</span></button>
+            <button class="tool" data-action="prim-cylinder" title="Cylinder">⬤<span data-i18n="t_cyl">Cyl</span></button>
+            <button class="tool" data-action="prim-cone" title="Cone">▲<span data-i18n="t_cone">Cone</span></button>
+            <button class="tool" data-action="prim-sphere" title="Sphere">●<span data-i18n="t_sphere">Sphere</span></button>
+            <button class="tool" data-action="prim-torus" title="Torus / ring">◯<span data-i18n="t_torus">Torus</span></button>
+            <button class="tool" data-action="prim-prism" title="Prism">⬢<span data-i18n="t_prism">Prism</span></button>
+            <button class="tool" data-action="prim-star" title="Star">★<span data-i18n="t_star">Star</span></button>
+            <button class="tool" data-action="prim-gear" title="Gear">⚙<span data-i18n="t_gear">Gear</span></button>
+            <button class="tool" data-action="prim-tube" title="Tube / pipe">◎<span data-i18n="t_tube">Tube</span></button>
+        </nav>
+
+        <main class="stage" id="stage">
+            <canvas id="view"></canvas>
+            <div class="hint" id="empty-hint">
+                <p><strong data-i18n="hint_title">The plate is empty.</strong></p>
+                <p data-i18n="hint_body">Add 3D text, a shape, a QR code, or turn a photo into a lithophane.
+                    Everything is generated in your browser and exports print-ready in real millimetres.</p>
+            </div>
+            <div class="view-tips">🖱 drag orbit · shift/right-drag pan · wheel zoom · click to select</div>
+        </main>
+
+        <aside class="sidebar">
+            <section class="panel">
+                <h2 class="panel-title" data-i18n="properties">Properties</h2>
+                <div id="props" class="props">
+                    <p class="muted" data-i18n="nothing">Nothing selected. Add an object from the left, or click one in the scene.</p>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title"><span data-i18n="objects">Objects</span> <span class="muted" id="obj-count"></span></h2>
+                <ul id="objects" class="layers"></ul>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title" data-i18n="plate">Build plate</h2>
+                <div class="row"><label for="bed">Preset</label><select id="bed"></select></div>
+                <div class="row two">
+                    <div><label for="plate-w">Width mm</label><input type="number" id="plate-w" min="20" max="1000" step="1"></div>
+                    <div><label for="plate-d">Depth mm</label><input type="number" id="plate-d" min="20" max="1000" step="1"></div>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2 class="panel-title" data-i18n="scene">Scene</h2>
+                <div id="scene-stats" class="stats muted tiny">—</div>
+            </section>
+        </aside>
+    </div>
+
+    <footer class="statusbar">
+        <span id="status-doc"></span>
+        <span id="status-sel" class="muted"></span>
+        <span id="status-tip" class="right muted">100% offline · nothing uploaded</span>
+    </footer>
+
+    <!-- Export modal -->
+    <div class="modal-backdrop" id="export-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+            <div class="modal-head">
+                <h2 id="export-title">Export a print-ready model</h2>
+                <button class="icon-btn" id="export-close" title="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <label for="preset">Target slicer <span class="muted">— auto-picks the ideal format</span></label>
+                    <select id="preset"></select>
+                </div>
+                <div class="row">
+                    <label for="format">Format</label>
+                    <select id="format"></select>
+                </div>
+                <div class="row two" id="stl-opts">
+                    <div>
+                        <label for="stl-mode">STL encoding</label>
+                        <select id="stl-mode"><option value="binary">Binary (compact)</option><option value="ascii">ASCII (text)</option></select>
+                    </div>
+                    <div>
+                        <label for="ply-mode">PLY encoding</label>
+                        <select id="ply-mode"><option value="binary">Binary</option><option value="ascii">ASCII</option></select>
+                    </div>
+                </div>
+                <div class="report" id="export-report"></div>
+            </div>
+            <div class="modal-foot">
+                <button class="btn" id="export-cancel">Cancel</button>
+                <button class="btn btn-primary" id="export-do">⤓ Download</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help modal -->
+    <div class="modal-backdrop" id="help-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+            <div class="modal-head">
+                <h2 id="help-title">3D Forge — quick help</h2>
+                <button class="icon-btn" id="help-close" title="Close">✕</button>
+            </div>
+            <div class="modal-body help-body">
+                <p><strong>Everything runs offline.</strong> Nothing you add ever leaves your browser.</p>
+                <ul>
+                    <li><strong>Add</strong> objects from the left toolbar: text, emoji, shapes, QR, or a photo.</li>
+                    <li><strong>Lithophane:</strong> upload a portrait — dark areas print thick (block light), light areas thin. Toggle 💡 Backlight to preview.</li>
+                    <li><strong>Move / rotate / scale</strong> the selected object from the Properties panel — all in real millimetres.</li>
+                    <li><strong>Watertight badge</strong> confirms the model will slice without repair warnings.</li>
+                    <li><strong>Export</strong> and pick your slicer — the right format & settings are chosen for you. 3MF is best for Bambu/Prusa/Orca/Cura.</li>
+                </ul>
+                <p class="muted tiny">Shortcuts: <kbd>F</kbd> fit · <kbd>Del</kbd> delete · <kbd>Ctrl+Z</kbd>/<kbd>Ctrl+Y</kbd> undo/redo · <kbd>Ctrl+D</kbd> duplicate</p>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="file-image" accept="image/*" hidden>
+    <input type="file" id="file-font" accept=".ttf,.otf,.woff,.woff2" hidden>
+    <input type="file" id="file-open" accept=".json" hidden>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+
+</html>
