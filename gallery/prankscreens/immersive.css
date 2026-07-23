@@ -1,0 +1,27 @@
+/* ==========================================================================
+   Prank Screens — immersive layer (shared)
+   Hides scrollbars on every full-screen illusion so no bar ever intrudes,
+   while still letting content scroll if it must. Also blocks overscroll
+   gestures (pull-to-refresh / swipe-to-go-back) that could break the spell.
+   Loaded by every screen under /gallery/prankscreens/<name>/.
+   ========================================================================== */
+html,
+body {
+    overscroll-behavior: none;
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* legacy Edge / IE */
+}
+
+/* Hide the scrollbar everywhere (Chromium / WebKit / Safari), including any
+   inner scroll containers, without disabling scrolling itself. */
+*,
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+    scrollbar-width: none;
+}
+
+*::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+}
