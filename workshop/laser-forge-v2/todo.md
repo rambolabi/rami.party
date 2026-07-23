@@ -188,8 +188,34 @@ Web Serial streaming. Detail in [`todo-platform.md`](todo-platform.md) §4 and v
 
 - [x] Forked from v1 into `workshop/laser-forge-v2/` (feature-identical copy, rebranded).
 - [x] v2 plan written (this file) + platform detail retained in `todo-platform.md`.
-- [ ] Track A — editor backlog (multi-select, boolean, rulers/origin, import, preview, a11y, workers).
-- [ ] Track B — PWA/offline, File System Access, plugin hooks.
-- [ ] Track C — Web Serial direct control (connect → stream → DRO → jog/frame → overrides/E-STOP → profiles → safety → fallbacks).
+- [x] Track A — editor backlog: multi-select + marquee + group move, align/distribute, group/ungroup,
+  **boolean ops** (union/intersect/subtract/xor), canvas **rulers**, **origin selector** + marker,
+  **LPI preview**, **material presets**, grid **snapping**, **SVG/DXF import**, **live export preview**,
+  a11y (aria-labels, focus-visible, reduced-motion). *(Web-Worker offload intentionally deferred — see note.)*
+- [x] Track B — **PWA** (manifest + service worker + install/update toast + offline font cache),
+  **File System Access** (open/save-back + Save-As + recents in IndexedDB + dirty ●), **plugin hooks**
+  (`LaserForge.registerGenerator`/`registerDialect`, untrusted-code gate, IndexedDB persistence, plugins modal).
+- [x] Track C — **Web Serial direct control**: connect + console, character-counted streamer,
+  `?` status/DRO, jog/home/unlock/set-origin/go-origin, **frame** bounding box, run/pause/resume/stop,
+  feed/power **overrides**, always-visible **E-STOP**, **safety gate** (motion disabled until acknowledged),
+  **watchdog** (auto feed-hold on tab-hide/blur; abort + laser-off on disconnect), origin-aware G-code.
 
-> **Awaiting go-ahead to start Track A.** Nothing in Tracks A–C is implemented yet.
+### Verified in-browser (Playwright, no console errors)
+- Multi-select (Ctrl+A → 8/8 active), align/distribute panel, boolean **union** → single path.
+- SVG path/rect/circle + DXF LINE/CIRCLE/LWPOLYLINE import → editable path.
+- Origin-aware G-code for all five origins; SVG/DXF/PDF/EPS/PLT/raster all valid.
+- Streamer character-count flow (load → start → ok×N → done), `parseStatus` DRO parse.
+- Machine panel mounts in Pro mode; motion + E-STOP disabled until connected **and** armed.
+- Plugin generator registered + instanced + rendered via `localLoops`; service worker registered.
+- Export live preview renders; dirty-state ● title; PWA installable.
+
+### Intentional deferral (with rationale)
+- [~] **Web-Worker offload** of dithering/tracing/raster-G-code. The synchronous pipeline is
+  responsive for typical artwork, and moving the hot path to a module worker carries real
+  regression risk for marginal gain. Left as a clean future optimisation rather than rushed.
+- [~] **WebUSB / Web Bluetooth** transport fallbacks — Web Serial covers the vast majority of
+  GRBL diode/CO₂ controllers; alternates can be added behind the same `GrblController` seam.
+- [~] **Ruida RD** binary dialect — documented; needs a separate binary encoder.
+
+> **Status: v2 implemented and verified.** All three tracks are functional and safety-gated.
+

@@ -1,6 +1,6 @@
 // store.js — application state, pub/sub, undo/redo, autosave (pure JS)
 
-const LS_KEY = 'laserforge.project.v1';
+const LS_KEY = 'laserforge2.project.v1';
 
 const BED_PRESETS = {
     'Diode 400×400': { w: 400, h: 400 },
@@ -13,9 +13,10 @@ const BED_PRESETS = {
 
 function defaultState() {
     return {
-        artboard: { widthMM: 300, heightMM: 300, bed: 'Diode 300×300' },
+        artboard: { widthMM: 300, heightMM: 300, bed: 'Diode 300×300', origin: 'bottom-left' },
         objects: [],
         selectedId: null,
+        selectedIds: [],
         view: { zoom: 1, panX: 40, panY: 40, fitted: false },
     };
 }
@@ -32,9 +33,15 @@ export class Store {
 
     get objects() { return this.state.objects; }
     get selectedId() { return this.state.selectedId; }
+    get selectedIds() { return this.state.selectedIds || []; }
     get selected() {
         return this.state.objects.find((o) => o.id === this.state.selectedId) || null;
     }
+    get selectedObjects() {
+        const set = new Set(this.selectedIds);
+        return this.state.objects.filter((o) => set.has(o.id));
+    }
+    isSelected(id) { return (this.state.selectedIds || []).includes(id); }
 
     subscribe(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
     emit(reason = 'change') { for (const fn of this.listeners) fn(this.state, reason); }
@@ -57,8 +64,10 @@ export class Store {
         const data = JSON.parse(snap);
         this.state.artboard = data.artboard;
         this.state.objects = data.objects;
-        if (!this.state.objects.some((o) => o.id === this.state.selectedId)) {
-            this.state.selectedId = null;
+        const ids = new Set(this.state.objects.map((o) => o.id));
+        this.state.selectedIds = (this.state.selectedIds || []).filter((id) => ids.has(id));
+        if (!ids.has(this.state.selectedId)) {
+            this.state.selectedId = this.state.selectedIds[this.state.selectedIds.length - 1] ?? null;
         }
         this._lastSnapshot = this.snapshot();
         this.autosave();
@@ -78,36 +87,74 @@ export class Store {
     // --- mutations ---------------------------------------------------------
     addObject(obj, { select = true } = {}) {
         this.state.objects.push(obj);
-        if (select) this.state.selectedId = obj.id;
+        if (select) { this.state.selectedId = obj.id; this.state.selectedIds = [obj.id]; }
         this.commit('add');
         return obj;
     }
     removeSelected() {
-        const id = this.state.selectedId;
-        if (!id) return;
-        this.state.objects = this.state.objects.filter((o) => o.id !== id);
+        const ids = new Set(this.selectedIds);
+        if (!ids.size) return;
+        this.state.objects = this.state.objects.filter((o) => !ids.has(o.id));
         this.state.selectedId = null;
+        this.state.selectedIds = [];
         this.commit('remove');
     }
     duplicateSelected() {
-        const sel = this.selected;
-        if (!sel) return;
-        const copy = JSON.parse(JSON.stringify(sel));
-        copy.id = `o${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
-        copy.x += 4; copy.y += 4;
-        copy.name = (copy.name || copy.type) + ' copy';
-        this.addObject(copy);
+        const sels = this.selectedObjects;
+        if (!sels.length) return;
+        const copies = sels.map((sel) => {
+            const copy = JSON.parse(JSON.stringify(sel));
+            copy.id = `o${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+            copy.x += 4; copy.y += 4;
+            copy.name = (copy.name || copy.type) + ' copy';
+            return copy;
+        });
+        this.state.objects.push(...copies);
+        this.state.selectedIds = copies.map((c) => c.id);
+        this.state.selectedId = copies[copies.length - 1].id;
+        this.commit('add');
     }
-    select(id) {
-        if (this.state.selectedId === id) return;
-        this.state.selectedId = id;
+    // Selection: additive toggles membership; otherwise replaces.
+    select(id, { additive = false } = {}) {
+        if (id == null) {
+            if (!this.selectedIds.length && this.state.selectedId == null) return;
+            this.state.selectedIds = []; this.state.selectedId = null;
+            this.emit('select'); return;
+        }
+        let ids = this.state.selectedIds || [];
+        if (additive) {
+            ids = ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id];
+        } else {
+            if (ids.length === 1 && ids[0] === id && this.state.selectedId === id) return;
+            ids = [id];
+        }
+        this.state.selectedIds = ids;
+        this.state.selectedId = ids.includes(id) ? id : (ids[ids.length - 1] ?? null);
         this.emit('select');
     }
+    selectMany(ids) {
+        this.state.selectedIds = [...new Set(ids)];
+        this.state.selectedId = this.state.selectedIds[this.state.selectedIds.length - 1] ?? null;
+        this.emit('select');
+    }
+    selectAll() {
+        this.selectMany(this.state.objects.map((o) => o.id));
+    }
+    clearSelection() { this.select(null); }
     // Live update without pushing history (during drags / slider input)
     patch(id, props, { transient = false } = {}) {
         const o = this.state.objects.find((x) => x.id === id);
         if (!o) return;
         Object.assign(o, props);
+        if (transient) this.emit('live');
+        else this.commit('patch');
+    }
+    // Patch several objects in one shot (group drags), single emit/commit.
+    patchMany(updates, { transient = false } = {}) {
+        for (const u of updates) {
+            const o = this.state.objects.find((x) => x.id === u.id);
+            if (o) Object.assign(o, u.props);
+        }
         if (transient) this.emit('live');
         else this.commit('patch');
     }
@@ -127,6 +174,36 @@ export class Store {
         this._lastSnapshot = this.snapshot();
         this.autosave();
         this.emit('new');
+    }
+
+    // Replace the whole object list (import / boolean / group ops).
+    setObjects(objects, selectIds = null) {
+        this.state.objects = objects;
+        if (selectIds) {
+            this.state.selectedIds = [...selectIds];
+            this.state.selectedId = selectIds[selectIds.length - 1] ?? null;
+        }
+        this.commit('edit');
+    }
+
+    // --- grouping ----------------------------------------------------------
+    groupMembers(id) {
+        const o = this.state.objects.find((x) => x.id === id);
+        if (!o || !o.groupId) return o ? [o.id] : [];
+        return this.state.objects.filter((x) => x.groupId === o.groupId).map((x) => x.id);
+    }
+    group() {
+        const sels = this.selectedObjects;
+        if (sels.length < 2) return;
+        const gid = `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
+        for (const o of sels) o.groupId = gid;
+        this.commit('edit');
+    }
+    ungroup() {
+        const sels = this.selectedObjects;
+        if (!sels.length) return;
+        for (const o of sels) delete o.groupId;
+        this.commit('edit');
     }
 
     // --- persistence -------------------------------------------------------

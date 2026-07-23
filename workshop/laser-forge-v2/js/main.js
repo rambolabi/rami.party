@@ -2,11 +2,11 @@
 
 import { Store, BED_PRESETS } from './store.js';
 import { Artboard } from './artboard.js';
-import { createText, createShape, createQR, createPuzzle, createBarcode, createImageFromFile, measureText, createTestGrid, createPath, traceImageToVector, produceProcessed } from './objects.js';
+import { createText, createShape, createQR, createPuzzle, createBarcode, createImageFromFile, measureText, createTestGrid, createPath, traceImageToVector, produceProcessed, booleanObjects } from './objects.js';
 import { createBox, createGear, createRuler, createHinge, createRegistration, boxNetSize } from './generators.js';
 import { DITHER_METHODS } from './dither.js';
 import { QR_ECL } from './qr.js';
-import { runExport, DEFAULT_GCODE, estimate } from './exporters.js';
+import { runExport, DEFAULT_GCODE, estimate, toSVG } from './exporters.js';
 import { OPERATIONS, OP_COLORS, clamp } from './geometry.js';
 import { t, setLang, applyI18n, getLang } from './i18n.js';
 import { openTileEditor } from './tileeditor.js';
@@ -34,6 +34,7 @@ store.load();
             store.state.artboard = d.artboard || store.state.artboard;
             store.state.objects = d.objects;
             store.state.selectedId = null;
+            store.state.selectedIds = [];
             store._lastSnapshot = store.snapshot();
         }
     } catch (_) { /* ignore malformed link */ }
@@ -42,14 +43,15 @@ const art = new Artboard(store, $('#board'));
 art.onStatus = updateStatus;
 
 // ---------------------------------------------------------------- structural render
-const STRUCTURAL = new Set(['select', 'add', 'remove', 'history', 'new', 'reorder', 'artboard']);
+const STRUCTURAL = new Set(['select', 'add', 'remove', 'history', 'new', 'reorder', 'artboard', 'edit']);
 store.subscribe((state, reason) => {
     renderLayers();
     toggleHint();
     if (STRUCTURAL.has(reason) || reason === 'select') renderProps();
     else syncFields();
     if (reason === 'artboard' || reason === 'new' || reason === 'history') syncArtboardInputs();
-    if (reason === 'new') art.fit();
+    if (reason === 'new') { art.fit(); document.title = document.title.replace(/^● /, ''); }
+    else if (!['select', 'live'].includes(reason) && !/^● /.test(document.title)) document.title = '● ' + document.title;
 });
 
 // ---------------------------------------------------------------- toolbar
@@ -84,6 +86,22 @@ $('#file-input').addEventListener('change', async (e) => {
     e.target.value = '';
 });
 
+// SVG / DXF import → editable path objects
+$('#btn-import').addEventListener('click', () => $('#import-input').click());
+$('#import-input').addEventListener('change', async (e) => {
+    const f = e.target.files[0]; e.target.value = '';
+    if (!f) return;
+    try {
+        const { importVector } = await import('./importers.js');
+        const loops = importVector(f.name, await f.text());
+        const path = createPath(loops, { name: f.name.replace(/\.[^.]+$/, ''), op: 'cut' });
+        // place near the origin corner
+        path.x = 10; path.y = 10;
+        store.addObject(path);
+        art.fit();
+    } catch (err) { alert('Import failed: ' + err.message); }
+});
+
 // ---------------------------------------------------------------- header buttons
 $('#btn-new').addEventListener('click', () => { if (confirm('Start a new blank project? Unsaved work is lost.')) store.newProject(); });
 $('#btn-undo').addEventListener('click', () => store.undo());
@@ -108,8 +126,45 @@ langSel.value = getLang();
 langSel.addEventListener('change', () => { setLang(langSel.value); renderProps(); });
 
 // Save / Open / Share project
-$('#btn-save').addEventListener('click', saveProject);
-$('#btn-open').addEventListener('click', () => $('#project-input').click());
+let currentHandle = null;
+async function fsMod() { return import('./fs.js'); }
+$('#btn-save').addEventListener('click', async () => {
+    const { fsSupported, pickSave, writeHandle } = await fsMod();
+    const data = { artboard: store.state.artboard, objects: store.state.objects };
+    if (fsSupported) {
+        try {
+            if (!currentHandle) currentHandle = await pickSave(`laserforge-${new Date().toISOString().slice(0, 10)}.json`);
+            await writeHandle(currentHandle, data);
+            document.title = document.title.replace(/^● /, '');
+            toast('Saved to ' + currentHandle.name);
+            return;
+        } catch (err) { if (err.name === 'AbortError') return; /* else fall back */ }
+    }
+    saveProject();
+});
+$('#btn-save').addEventListener('contextmenu', async (e) => {
+    e.preventDefault();
+    const { fsSupported, pickSave, writeHandle } = await fsMod();
+    if (!fsSupported) return saveProject();
+    try { currentHandle = await pickSave(`laserforge-${new Date().toISOString().slice(0, 10)}.json`); await writeHandle(currentHandle, { artboard: store.state.artboard, objects: store.state.objects }); toast('Saved as ' + currentHandle.name); } catch (_) {}
+});
+$('#btn-open').addEventListener('click', async () => {
+    const { fsSupported, pickOpen } = await fsMod();
+    if (fsSupported) {
+        try {
+            const { handle, data, name } = await pickOpen();
+            if (!Array.isArray(data.objects)) throw new Error('not a Laser Forge project');
+            currentHandle = handle;
+            store.state.artboard = data.artboard || store.state.artboard;
+            store.state.objects = data.objects;
+            store.state.selectedId = null; store.state.selectedIds = [];
+            store.commit('new'); art.fit();
+            toast('Opened ' + name);
+            return;
+        } catch (err) { if (err.name === 'AbortError') return; alert('Open failed: ' + err.message); return; }
+    }
+    $('#project-input').click();
+});
 $('#project-input').addEventListener('change', openProjectFile);
 
 // Drag & drop an image straight onto the canvas
@@ -138,6 +193,7 @@ async function openProjectFile(e) {
         store.state.artboard = data.artboard || store.state.artboard;
         store.state.objects = data.objects;
         store.state.selectedId = null;
+        store.state.selectedIds = [];
         store.commit('new');
         art.fit();
     } catch (err) { alert('Could not open project: ' + err.message); }
@@ -162,8 +218,19 @@ window.addEventListener('keydown', (e) => {
     if (ctrl && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? store.redo() : store.undo(); }
     else if (ctrl && e.key.toLowerCase() === 'y') { e.preventDefault(); store.redo(); }
     else if (ctrl && e.key.toLowerCase() === 'd') { e.preventDefault(); store.duplicateSelected(); }
+    else if (ctrl && e.key.toLowerCase() === 'a') { e.preventDefault(); store.selectAll(); }
+    else if (ctrl && e.key.toLowerCase() === 'g') { e.preventDefault(); e.shiftKey ? store.ungroup() : store.group(); }
+    else if (e.key === 'Escape') { store.clearSelection(); }
     else if (e.key === 'Delete' || e.key === 'Backspace') { store.removeSelected(); }
     else if (e.key === 'f' || e.key === 'F') { art.fit(); }
+    else if (e.key.startsWith('Arrow')) {
+        const sels = store.selectedObjects; if (!sels.length) return;
+        e.preventDefault();
+        const d = e.shiftKey ? 10 : 1;
+        const dx = e.key === 'ArrowLeft' ? -d : e.key === 'ArrowRight' ? d : 0;
+        const dy = e.key === 'ArrowUp' ? -d : e.key === 'ArrowDown' ? d : 0;
+        store.patchMany(sels.map((o) => ({ id: o.id, props: { x: o.x + dx, y: o.y + dy } })));
+    }
 });
 
 // ---------------------------------------------------------------- properties
@@ -393,12 +460,113 @@ function cutcraftHTML(sel) {
 }
 
 function renderProps() {
-    const sel = store.selected;
+    const selObjs = store.selectedObjects;
     const box = $('#props');
-    if (!sel) { box.innerHTML = '<p class="muted">Nothing selected. Pick an object on the canvas, or add one from the left.</p>'; return; }
+    if (selObjs.length > 1) { box.innerHTML = groupHTML(selObjs); wireGroup(selObjs); return; }
+    const sel = store.selected;
+    if (!sel) { box.innerHTML = '<p class="muted">Nothing selected. Pick an object on the canvas, or add one from the left. Drag a box on empty canvas to marquee-select; Shift-click to add.</p>'; return; }
     box.innerHTML = commonHTML(sel) + typeHTML(sel);
     wireCommon(sel);
     wireType(sel);
+}
+
+function groupHTML(objs) {
+    const grouped = objs.some((o) => o.groupId);
+    return `
+    <p class="muted"><strong>${objs.length} objects selected.</strong> Move together by dragging; use the tools below.</p>
+    <hr class="sep">
+    <p class="muted tiny">Align</p>
+    <div class="btn-row">
+        <button class="btn" id="al-left" title="Align left">⇤</button>
+        <button class="btn" id="al-hcenter" title="Centre horizontally">⇔</button>
+        <button class="btn" id="al-right" title="Align right">⇥</button>
+        <button class="btn" id="al-top" title="Align top">⤒</button>
+        <button class="btn" id="al-vcenter" title="Centre vertically">⇕</button>
+        <button class="btn" id="al-bottom" title="Align bottom">⤓</button>
+    </div>
+    <p class="muted tiny">Distribute</p>
+    <div class="btn-row">
+        <button class="btn" id="dist-h" title="Distribute horizontally">↔ spread</button>
+        <button class="btn" id="dist-v" title="Distribute vertically">↕ spread</button>
+    </div>
+    <hr class="sep">
+    <p class="muted tiny">Boolean (raster-combined into one path)</p>
+    <div class="btn-row">
+        <button class="btn" id="bool-union" title="Union">Union</button>
+        <button class="btn" id="bool-intersect" title="Intersect">Intersect</button>
+        <button class="btn" id="bool-subtract" title="Subtract (first − rest)">Subtract</button>
+        <button class="btn" id="bool-xor" title="Exclusive OR">XOR</button>
+    </div>
+    <hr class="sep">
+    <div class="btn-row">
+        <button class="btn" id="grp-group" ${grouped ? 'disabled' : ''}>Group</button>
+        <button class="btn" id="grp-ungroup" ${grouped ? '' : 'disabled'}>Ungroup</button>
+        <button class="btn" id="grp-dup">Duplicate</button>
+        <button class="btn danger" id="grp-del">Delete</button>
+    </div>`;
+}
+
+function wireGroup(objs) {
+    const ids = objs.map((o) => o.id);
+    const on = (id, fn) => { const e = $('#' + id); if (e) e.addEventListener('click', fn); };
+    on('al-left', () => alignObjects(ids, 'left'));
+    on('al-hcenter', () => alignObjects(ids, 'hcenter'));
+    on('al-right', () => alignObjects(ids, 'right'));
+    on('al-top', () => alignObjects(ids, 'top'));
+    on('al-vcenter', () => alignObjects(ids, 'vcenter'));
+    on('al-bottom', () => alignObjects(ids, 'bottom'));
+    on('dist-h', () => distributeObjects(ids, 'h'));
+    on('dist-v', () => distributeObjects(ids, 'v'));
+    on('bool-union', () => doBoolean(objs, 'union'));
+    on('bool-intersect', () => doBoolean(objs, 'intersect'));
+    on('bool-subtract', () => doBoolean(objs, 'subtract'));
+    on('bool-xor', () => doBoolean(objs, 'xor'));
+    on('grp-group', () => store.group());
+    on('grp-ungroup', () => store.ungroup());
+    on('grp-dup', () => store.duplicateSelected());
+    on('grp-del', () => store.removeSelected());
+}
+
+function alignObjects(ids, mode) {
+    const objs = store.objects.filter((o) => ids.includes(o.id));
+    if (objs.length < 2) return;
+    const xs = objs.map((o) => o.x), ys = objs.map((o) => o.y);
+    const rs = objs.map((o) => o.x + o.w), bs = objs.map((o) => o.y + o.h);
+    const minX = Math.min(...xs), maxR = Math.max(...rs), minY = Math.min(...ys), maxB = Math.max(...bs);
+    const cx = (minX + maxR) / 2, cy = (minY + maxB) / 2;
+    const upd = objs.map((o) => {
+        const p = {};
+        if (mode === 'left') p.x = minX;
+        else if (mode === 'right') p.x = maxR - o.w;
+        else if (mode === 'hcenter') p.x = cx - o.w / 2;
+        else if (mode === 'top') p.y = minY;
+        else if (mode === 'bottom') p.y = maxB - o.h;
+        else if (mode === 'vcenter') p.y = cy - o.h / 2;
+        return { id: o.id, props: p };
+    });
+    store.patchMany(upd);
+}
+
+function distributeObjects(ids, axis) {
+    const objs = store.objects.filter((o) => ids.includes(o.id));
+    if (objs.length < 3) { alert('Select 3+ objects to distribute.'); return; }
+    const key = axis === 'h' ? 'x' : 'y', dim = axis === 'h' ? 'w' : 'h';
+    const sorted = [...objs].sort((a, b) => (a[key] + a[dim] / 2) - (b[key] + b[dim] / 2));
+    const first = sorted[0], last = sorted[sorted.length - 1];
+    const span = (last[key] + last[dim] / 2) - (first[key] + first[dim] / 2);
+    const stepC = span / (sorted.length - 1);
+    const c0 = first[key] + first[dim] / 2;
+    const upd = sorted.map((o, i) => ({ id: o.id, props: { [key]: c0 + stepC * i - o[dim] / 2 } }));
+    store.patchMany(upd);
+}
+
+function doBoolean(objs, mode) {
+    const result = booleanObjects(objs, mode);
+    if (!result || !result.length) { alert('Boolean produced nothing — check the shapes overlap.'); return; }
+    const ids = new Set(objs.map((o) => o.id));
+    const rest = store.objects.filter((o) => !ids.has(o.id));
+    const path = createPath(result, { name: `Boolean (${mode})`, op: objs[0].op || 'cut' });
+    store.setObjects([...rest, path], [path.id]);
 }
 
 function wireCommon(sel) {
@@ -639,11 +807,14 @@ function renderLayers() {
     for (let i = objs.length - 1; i >= 0; i--) {
         const o = objs[i];
         const li = document.createElement('li');
-        li.className = 'layer' + (o.id === store.selectedId ? ' active' : '');
+        li.className = 'layer' + (store.isSelected(o.id) ? ' active' : '');
         li.innerHTML = `<span class="op-dot" style="background:${OP_COLORS[o.op]}"></span>
             <span class="lname">${escapeHtml(o.name || o.type)}</span>
             <button class="lvis" title="Show / hide">${o.visible === false ? '🚫' : '👁'}</button>`;
-        li.addEventListener('click', (e) => { if (!e.target.classList.contains('lvis')) store.select(o.id); });
+        li.addEventListener('click', (e) => {
+            if (e.target.classList.contains('lvis')) return;
+            store.select(o.id, { additive: e.shiftKey || e.ctrlKey || e.metaKey });
+        });
         li.querySelector('.lvis').addEventListener('click', (e) => {
             e.stopPropagation();
             store.patch(o.id, { visible: o.visible === false });
@@ -663,12 +834,50 @@ function initArtboardControls() {
     });
     $('#ab-w').addEventListener('change', () => { store.setArtboard({ widthMM: clamp(+$('#ab-w').value, 10, 2000) }); art.fit(); });
     $('#ab-h').addEventListener('change', () => { store.setArtboard({ heightMM: clamp(+$('#ab-h').value, 10, 2000) }); art.fit(); });
+    const origin = $('#ab-origin');
+    if (origin) origin.addEventListener('change', () => { store.setArtboard({ origin: origin.value }); art.render(); });
+    const snap = $('#ab-snap');
+    if (snap) snap.addEventListener('change', () => { art.snap = snap.checked ? ((store.state.artboard.widthMM > 400) ? 5 : 1) : 0; });
+    const lpi = $('#ab-lpi'), lpiVal = $('#ab-lpi-val');
+    if (lpi) lpi.addEventListener('input', () => {
+        const v = +lpi.value; art.lpi = v; lpiVal.textContent = v ? `${v} LPI` : 'off'; art.render();
+    });
+    const mat = $('#ab-material');
+    if (mat) mat.addEventListener('change', () => applyMaterial(mat.value));
     syncArtboardInputs();
+}
+
+const MATERIALS = {
+    wood: { params: { contrast: 15, gamma: 1.1, dither: 'floyd-steinberg', invert: false }, gEngrave: 3000, gCut: 400, pEngrave: 550, pCut: 1000 },
+    acrylic: { params: { contrast: 25, gamma: 1, dither: 'none', invert: true }, gEngrave: 4000, gCut: 350, pEngrave: 500, pCut: 1000 },
+    slate: { params: { contrast: 20, gamma: 1, dither: 'atkinson', invert: true }, gEngrave: 3500, gCut: 0, pEngrave: 900, pCut: 0 },
+    leather: { params: { contrast: 10, gamma: 1.2, dither: 'floyd-steinberg', invert: false }, gEngrave: 3000, gCut: 250, pEngrave: 600, pCut: 900 },
+    anodized: { params: { contrast: 30, gamma: 1, dither: 'none', invert: true }, gEngrave: 5000, gCut: 0, pEngrave: 800, pCut: 0 },
+    coated: { params: { contrast: 30, gamma: 1, dither: 'none', invert: false }, gEngrave: 5000, gCut: 0, pEngrave: 700, pCut: 0 },
+    glass: { params: { contrast: 10, gamma: 1, dither: 'bayer-4', invert: false }, gEngrave: 3000, gCut: 0, pEngrave: 350, pCut: 0 },
+    paper: { params: { contrast: 20, gamma: 1, dither: 'none', invert: false }, gEngrave: 6000, gCut: 800, pEngrave: 200, pCut: 500 },
+};
+function applyMaterial(key) {
+    store.setArtboard({ material: key || '' });
+    const m = MATERIALS[key];
+    if (!m) return;
+    // apply to a selected image
+    const sel = store.selected;
+    if (sel && sel.type === 'image') {
+        store.patch(sel.id, { params: { ...sel.params, ...m.params } });
+        renderProps();
+    }
+    // pre-load g-code defaults for the export dialog
+    const set = (id, v) => { const e = $('#' + id); if (e && v) e.value = v; };
+    set('g-espeed', m.gEngrave); set('g-cspeed', m.gCut);
+    set('g-epow', m.pEngrave); set('g-cpow', m.pCut);
 }
 function syncArtboardInputs() {
     const a = store.state.artboard;
     $('#bed').value = a.bed || '';
     $('#ab-w').value = a.widthMM; $('#ab-h').value = a.heightMM;
+    const o = $('#ab-origin'); if (o) o.value = a.origin || 'top-left';
+    const m = $('#ab-material'); if (m) m.value = a.material || '';
 }
 
 // ---------------------------------------------------------------- status
@@ -758,6 +967,22 @@ function syncExportUI() {
     $('#export-estimate').textContent = (est.cutLen || est.engLen)
         ? `~ ${(est.timeSec / 60).toFixed(1)} min vector · cut ${Math.round(est.cutLen)} mm · engrave ${Math.round(est.engLen)} mm (approx.)`
         : '';
+    renderExportPreview();
+}
+
+let _previewSeq = 0;
+async function renderExportPreview() {
+    const img = $('#export-preview');
+    if (!img) return;
+    const seq = ++_previewSeq;
+    if (!store.objects.length) { img.hidden = true; return; }
+    try {
+        const kerf = +$('#opt-kerf').value || 0;
+        const svg = await toSVG(store, { kerf });
+        if (seq !== _previewSeq) return; // superseded
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        img.hidden = false;
+    } catch (_) { img.hidden = true; }
 }
 
 $('#export-go').addEventListener('click', async () => {
@@ -798,6 +1023,109 @@ function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
 // ---------------------------------------------------------------- boot
 initArtboardControls();
 applyI18n();
+// a11y: give icon-only controls accessible names from their titles
+$$('button[title]:not([aria-label])').forEach((b) => b.setAttribute('aria-label', b.title));
+const boardEl = $('#board');
+if (boardEl) { boardEl.setAttribute('role', 'application'); boardEl.setAttribute('aria-label', 'Design canvas — drag to select or move objects'); boardEl.setAttribute('tabindex', '0'); }
+// Machine control panel (Web Serial) — mounts into the sidebar.
+import('./machine.js').then(({ mountMachinePanel }) => {
+    const mount = $('#machine-mount');
+    if (mount) mountMachinePanel(mount, { store });
+}).catch((err) => console.warn('machine panel unavailable', err));
+
+// ---------------------------------------------------------------- toast helper
+function toast(msg, actionLabel, onAction, ms = 6000) {
+    const t = $('#toast');
+    t.innerHTML = `<span>${escapeHtml(msg)}</span>`;
+    if (actionLabel) {
+        const b = document.createElement('button');
+        b.className = 'btn btn-primary'; b.textContent = actionLabel;
+        b.addEventListener('click', () => { t.hidden = true; onAction && onAction(); });
+        t.appendChild(b);
+    }
+    t.hidden = false;
+    clearTimeout(toast._t);
+    if (!actionLabel) toast._t = setTimeout(() => { t.hidden = true; }, ms);
+}
+
+// ---------------------------------------------------------------- PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').then((reg) => {
+            reg.addEventListener('updatefound', () => {
+                const nw = reg.installing;
+                nw && nw.addEventListener('statechange', () => {
+                    if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                        toast('Update available.', 'Reload', () => { nw.postMessage('skipWaiting'); location.reload(); });
+                    }
+                });
+            });
+        }).catch(() => {});
+    });
+}
+let deferredInstall = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); deferredInstall = e;
+    const b = $('#btn-install'); if (b) b.hidden = false;
+});
+$('#btn-install')?.addEventListener('click', async () => {
+    if (!deferredInstall) return;
+    deferredInstall.prompt();
+    await deferredInstall.userChoice;
+    deferredInstall = null; $('#btn-install').hidden = true;
+});
+
+// ---------------------------------------------------------------- plugins
+import('./plugins.js').then(async (P) => {
+    P.installGlobal();
+    // auto-run previously-approved plugins (no re-prompt)
+    for (const pl of await P.listPlugins()) {
+        if (pl.enabled) { try { new Function('LaserForge', pl.code)(window.LaserForge); } catch (_) {} }
+    }
+    P.onPluginsChanged(() => { renderPluginList(P); renderLayers(); art.render(); });
+    wirePluginsModal(P);
+}).catch((err) => console.warn('plugins unavailable', err));
+
+async function wirePluginsModal(P) {
+    const { createPluginObject } = await import('./objects.js');
+    const modal = $('#plugins-modal');
+    $('#btn-plugins').addEventListener('click', () => { modal.hidden = false; renderPluginList(P); });
+    $('#plugins-close').addEventListener('click', () => { modal.hidden = true; });
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; });
+    $('#plugin-run').addEventListener('click', async () => {
+        const code = $('#plugin-code').value.trim();
+        if (!code) return;
+        const res = P.runPluginCode(code);
+        if (!res.ok) { if (res.reason !== 'declined') alert('Plugin error: ' + res.reason); return; }
+        const id = 'pl' + Date.now();
+        await P.savePlugin(id, code.slice(0, 40), code, true);
+        $('#plugin-code').value = '';
+        renderPluginList(P);
+        toast('Plugin installed.');
+    });
+    window._addPluginObject = (type) => {
+        const desc = P.getGenerator(type); if (!desc) return;
+        store.addObject(createPluginObject(desc));
+        $('#plugins-modal').hidden = true;
+    };
+    renderPluginList(P);
+}
+function renderPluginList(P) {
+    const gens = $('#plugin-gens'); if (!gens) return;
+    const list = P.listGenerators();
+    gens.innerHTML = list.length
+        ? list.map((g) => `<div class="plugin-item"><span>${escapeHtml(g.label || g.type)} <span class="muted tiny">(${escapeHtml(g.type)})</span></span><button class="btn" onclick="window._addPluginObject('${escapeAttr(g.type)}')">Add</button></div>`).join('')
+        : '<p class="muted tiny">None yet.</p>';
+    const dl = P.listDialects();
+    P.listPlugins().then((saved) => {
+        const box = $('#plugin-saved'); if (!box) return;
+        box.innerHTML = saved.length
+            ? saved.map((s) => `<div class="plugin-item"><span>${escapeHtml(s.name)}</span><button class="btn danger" data-del="${escapeAttr(s.id)}">Remove</button></div>`).join('')
+            : '<p class="muted tiny">None saved.</p>';
+        box.querySelectorAll('[data-del]').forEach((b) => b.addEventListener('click', async () => { await P.deletePlugin(b.dataset.del); renderPluginList(P); }));
+    });
+    if (dl.length) gens.innerHTML += `<p class="muted tiny">Dialects: ${dl.map((d) => escapeHtml(d.name || d.id)).join(', ')}</p>`;
+}
 {
     const hb = $('#help-modal .modal-body');
     if (hb) {

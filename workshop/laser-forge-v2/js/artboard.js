@@ -80,12 +80,154 @@ export class Artboard {
             drawObject(ctx, obj, v.zoom, { requestRedraw: () => this.requestRedraw() });
         }
 
+        // origin marker (machine 0,0)
+        this._drawOrigin(ctx, W, H, v.zoom);
+
+        // LPI scan-line preview (world space)
+        if (this.lpi > 0) {
+            const gap = 25.4 / this.lpi;
+            ctx.save();
+            ctx.lineWidth = 0.5 / v.zoom;
+            ctx.strokeStyle = 'rgba(239,68,68,0.35)';
+            ctx.beginPath();
+            for (let y = 0; y <= H + 0.001; y += gap) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+            ctx.stroke();
+            ctx.restore();
+        }
+
         // selection overlay (screen space)
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        const sel = this.store.selected;
-        if (sel) this._drawSelection(sel);
+        const selObjs = this.store.selectedObjects;
+        if (selObjs.length === 1) {
+            this._drawSelection(selObjs[0]);
+        } else if (selObjs.length > 1) {
+            for (const o of selObjs) this._drawOutline(o);
+            this._drawGroupBox(selObjs);
+        }
+
+        // marquee rubber-band
+        if (this.drag && this.drag.type === 'marquee') this._drawMarquee();
+
+        // rulers
+        if (this.rulers !== false) this._drawRulers(W, H);
 
         if (this.onStatus) this.onStatus();
+    }
+
+    _originPoint(W, H) {
+        const o = this.store.state.artboard.origin || 'top-left';
+        const map = {
+            'top-left': { x: 0, y: 0 }, 'top-right': { x: W, y: 0 },
+            'bottom-left': { x: 0, y: H }, 'bottom-right': { x: W, y: H },
+            'center': { x: W / 2, y: H / 2 },
+        };
+        return map[o] || map['top-left'];
+    }
+
+    _drawOrigin(ctx, W, H, zoom) {
+        const p = this._originPoint(W, H);
+        const r = 6 / zoom;
+        ctx.save();
+        ctx.lineWidth = 1.4 / zoom;
+        ctx.strokeStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(p.x - r, p.y); ctx.lineTo(p.x + r, p.y);
+        ctx.moveTo(p.x, p.y - r); ctx.lineTo(p.x, p.y + r);
+        ctx.stroke();
+        ctx.beginPath(); ctx.arc(p.x, p.y, r * 0.6, 0, 7); ctx.stroke();
+        ctx.restore();
+    }
+
+    _drawOutline(obj) {
+        const ctx = this.ctx;
+        const c = this._corners(obj);
+        ctx.lineWidth = 1.4; ctx.strokeStyle = '#22d3ee';
+        ctx.beginPath(); ctx.moveTo(c[0].x, c[0].y);
+        for (let i = 1; i < 4; i++) ctx.lineTo(c[i].x, c[i].y);
+        ctx.closePath(); ctx.stroke();
+    }
+
+    _drawGroupBox(objs) {
+        const ctx = this.ctx;
+        const b = this._groupBBox(objs);
+        const a = this.w2s(b.x, b.y), c = this.w2s(b.x + b.w, b.y + b.h);
+        ctx.save();
+        ctx.setLineDash([6, 4]);
+        ctx.lineWidth = 1.5; ctx.strokeStyle = '#a78bfa';
+        ctx.strokeRect(a.x, a.y, c.x - a.x, c.y - a.y);
+        ctx.restore();
+    }
+
+    _groupBBox(objs) {
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const o of objs) {
+            const cx = o.x + o.w / 2, cy = o.y + o.h / 2;
+            const pts = [
+                { x: o.x, y: o.y }, { x: o.x + o.w, y: o.y },
+                { x: o.x + o.w, y: o.y + o.h }, { x: o.x, y: o.y + o.h },
+            ].map((p) => rotatePoint(p.x, p.y, cx, cy, o.rotation || 0));
+            for (const p of pts) { minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); maxX = Math.max(maxX, p.x); maxY = Math.max(maxY, p.y); }
+        }
+        return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    }
+
+    _drawMarquee() {
+        const ctx = this.ctx;
+        const m = this.drag;
+        const x = Math.min(m.sx, m.cx), y = Math.min(m.sy, m.cy);
+        const w = Math.abs(m.cx - m.sx), h = Math.abs(m.cy - m.sy);
+        ctx.save();
+        ctx.fillStyle = 'rgba(34,211,238,0.12)';
+        ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 1;
+        ctx.setLineDash([4, 3]);
+        ctx.fillRect(x, y, w, h); ctx.strokeRect(x, y, w, h);
+        ctx.restore();
+    }
+
+    _drawRulers(W, H) {
+        const ctx = this.ctx;
+        const dpr = this.dpr, v = this.view;
+        const cw = this.canvas.width / dpr, ch = this.canvas.height / dpr;
+        const SIZE = 18;
+        ctx.save();
+        ctx.fillStyle = 'rgba(12,7,32,0.92)';
+        ctx.fillRect(0, 0, cw, SIZE);
+        ctx.fillRect(0, 0, SIZE, ch);
+        ctx.font = '9px system-ui, sans-serif';
+        ctx.fillStyle = '#b9a7e8';
+        ctx.strokeStyle = 'rgba(150,130,220,0.5)';
+        ctx.lineWidth = 1;
+        // choose a nice step so labels don't collide
+        const targetPx = 60;
+        const raw = targetPx / v.zoom;
+        const nice = [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000];
+        let step = nice[nice.length - 1];
+        for (const n of nice) { if (n >= raw) { step = n; break; } }
+        // top ruler (X)
+        ctx.beginPath();
+        const x0 = this.s2w(SIZE, 0).x, x1 = this.s2w(cw, 0).x;
+        for (let mm = Math.ceil(x0 / step) * step; mm <= x1; mm += step) {
+            const sx = this.w2s(mm, 0).x;
+            if (sx < SIZE) continue;
+            ctx.moveTo(sx, SIZE); ctx.lineTo(sx, SIZE - 5);
+            ctx.fillText(String(mm), sx + 2, 10);
+        }
+        // left ruler (Y)
+        const y0 = this.s2w(0, SIZE).y, y1 = this.s2w(0, ch).y;
+        for (let mm = Math.ceil(y0 / step) * step; mm <= y1; mm += step) {
+            const sy = this.w2s(0, mm).y;
+            if (sy < SIZE) continue;
+            ctx.moveTo(SIZE, sy); ctx.lineTo(SIZE - 5, sy);
+            ctx.save(); ctx.translate(10, sy - 2); ctx.rotate(-Math.PI / 2);
+            ctx.fillText(String(mm), 0, 0); ctx.restore();
+        }
+        ctx.stroke();
+        // corner
+        ctx.fillStyle = 'rgba(12,7,32,1)';
+        ctx.fillRect(0, 0, SIZE, SIZE);
+        ctx.fillStyle = '#7c6bb0';
+        ctx.fillText('mm', 2, 12);
+        ctx.restore();
     }
 
     _corners(obj) {
@@ -190,8 +332,11 @@ export class Artboard {
             this.drag = { type: 'pan', sx, sy, panX: this.view.panX, panY: this.view.panY };
             return;
         }
-        const sel = this.store.selected;
-        if (sel) {
+        const additive = e.shiftKey || e.ctrlKey || e.metaKey;
+        const selObjs = this.store.selectedObjects;
+        // single-selection transform handles (resize/rotate) only when exactly one selected
+        if (selObjs.length === 1 && !additive) {
+            const sel = selObjs[0];
             const h = this._hitHandle(sel, sx, sy);
             if (h === 'rot') {
                 const cx = sel.x + sel.w / 2, cy = sel.y + sel.h / 2;
@@ -204,11 +349,21 @@ export class Artboard {
         }
         const hit = this._hitObject(w.x, w.y);
         if (hit) {
-            this.store.select(hit.id);
-            this.drag = { type: 'move', obj: hit, w0: w, x0: hit.x, y0: hit.y };
+            const members = this.store.groupMembers(hit.id);
+            if (additive) {
+                if (members.length > 1) this.store.selectMany([...new Set([...this.store.selectedIds, ...members])]);
+                else this.store.select(hit.id, { additive: true });
+            } else if (!this.store.isSelected(hit.id)) {
+                if (members.length > 1) this.store.selectMany(members);
+                else this.store.select(hit.id);
+            }
+            // group move of everything selected
+            const items = this.store.selectedObjects.map((o) => ({ id: o.id, x0: o.x, y0: o.y }));
+            this.drag = { type: 'move', items, w0: w, moved: false };
         } else {
-            this.store.select(null);
-            this.drag = { type: 'pan', sx, sy, panX: this.view.panX, panY: this.view.panY };
+            // empty canvas → marquee select (additive keeps existing)
+            this.drag = { type: 'marquee', sx, sy, cx: sx, cy: sy, additive, base: additive ? this.store.selectedIds.slice() : [] };
+            if (!additive) this.store.select(null);
         }
     }
 
@@ -222,8 +377,14 @@ export class Artboard {
             this.view.panY = d.panY + (sy - d.sy);
             this.render();
         } else if (d.type === 'move') {
-            const nx = d.x0 + (w.x - d.w0.x), ny = d.y0 + (w.y - d.w0.y);
-            this.store.patch(d.obj.id, { x: nx, y: ny }, { transient: true });
+            let dx = w.x - d.w0.x, dy = w.y - d.w0.y;
+            if (this.snap) { const s = this.snap; dx = Math.round(dx / s) * s; dy = Math.round(dy / s) * s; }
+            d.moved = true;
+            const updates = d.items.map((it) => ({ id: it.id, props: { x: it.x0 + dx, y: it.y0 + dy } }));
+            this.store.patchMany(updates, { transient: true });
+        } else if (d.type === 'marquee') {
+            d.cx = sx; d.cy = sy;
+            this.render();
         } else if (d.type === 'rotate') {
             const a = Math.atan2(sy - d.cs.y, sx - d.cs.x);
             let deg = d.rot0 + ((a - d.a0) * 180) / Math.PI;
@@ -257,8 +418,25 @@ export class Artboard {
 
     _up() {
         if (!this.drag) return;
-        const wasEdit = ['move', 'resize', 'rotate'].includes(this.drag.type);
+        const d = this.drag;
+        if (d.type === 'marquee') {
+            const x = Math.min(d.sx, d.cx), y = Math.min(d.sy, d.cy);
+            const w = Math.abs(d.cx - d.sx), h = Math.abs(d.cy - d.sy);
+            if (w < 3 && h < 3) { this.drag = null; this.render(); return; }
+            const a = this.s2w(x, y), b = this.s2w(x + w, y + h);
+            const hits = this.store.objects.filter((o) => {
+                if (o.visible === false) return false;
+                const bb = this._groupBBox([o]);
+                return bb.x >= a.x - 0.01 && bb.y >= a.y - 0.01 &&
+                    bb.x + bb.w <= b.x + 0.01 && bb.y + bb.h <= b.y + 0.01;
+            }).map((o) => o.id);
+            this.store.selectMany([...new Set([...(d.base || []), ...hits])]);
+            this.drag = null; this.render();
+            return;
+        }
+        const wasEdit = (['resize', 'rotate'].includes(d.type)) || (d.type === 'move' && d.moved);
         this.drag = null;
         if (wasEdit) this.store.commit('transform');
+        else this.render();
     }
 }

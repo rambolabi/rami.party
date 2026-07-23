@@ -10,6 +10,10 @@
     <meta name="robots" content="noindex, nofollow">
     <link rel="icon"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%A5%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0b0524">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Laser Forge">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -29,6 +33,9 @@
             <button class="btn" id="btn-fit" data-i18n="fit" title="Fit artboard to view (F)">Fit</button>
             <button class="btn" id="btn-save" data-i18n="save" title="Save project (.json)">Save</button>
             <button class="btn" id="btn-open" data-i18n="open" title="Open project (.json)">Open</button>
+            <button class="btn" id="btn-import" title="Import SVG or DXF art">Import</button>
+            <button class="btn" id="btn-plugins" title="Plugins (custom generators & G-code dialects)">Plugins</button>
+            <button class="btn" id="btn-install" title="Install as an app" hidden>Install</button>
             <button class="btn" id="btn-help" title="Help & shortcuts">?</button>
             <label class="pro-toggle" title="Show advanced controls"><input type="checkbox" id="pro-mode"> <span data-i18n="pro">Pro mode</span></label>
             <select id="lang-select" title="Language"><option value="en">EN</option><option value="nl">NL</option><option value="fr">FR</option></select>
@@ -96,6 +103,40 @@
                     <div><label for="ab-w">Width mm</label><input type="number" id="ab-w" min="10" max="2000" step="1"></div>
                     <div><label for="ab-h">Height mm</label><input type="number" id="ab-h" min="10" max="2000" step="1"></div>
                 </div>
+                <div class="row two">
+                    <div><label for="ab-origin" title="Which corner the machine treats as 0,0">Origin (0,0)</label>
+                        <select id="ab-origin">
+                            <option value="bottom-left">Bottom-left</option>
+                            <option value="top-left">Top-left</option>
+                            <option value="top-right">Top-right</option>
+                            <option value="bottom-right">Bottom-right</option>
+                            <option value="center">Centre</option>
+                        </select>
+                    </div>
+                    <div><label for="ab-material" title="Pre-load engraving defaults">Material</label>
+                        <select id="ab-material">
+                            <option value="">— none —</option>
+                            <option value="wood">Wood / plywood</option>
+                            <option value="acrylic">Acrylic</option>
+                            <option value="slate">Slate</option>
+                            <option value="leather">Leather</option>
+                            <option value="anodized">Anodized alu</option>
+                            <option value="coated">Coated metal</option>
+                            <option value="glass">Glass</option>
+                            <option value="paper">Paper / card</option>
+                        </select>
+                    </div>
+                </div>
+                <label class="check" title="Snap moves to the grid"><input type="checkbox" id="ab-snap"> Snap to grid</label>
+                <div class="row pro-only">
+                    <label for="ab-lpi">Scan LPI preview <span id="ab-lpi-val" class="muted"></span></label>
+                    <input type="range" id="ab-lpi" min="0" max="500" step="10" value="0" title="Overlay scan-line interval for raster engraving">
+                </div>
+            </section>
+
+            <section class="panel pro-only" id="machine-panel">
+                <h2 class="panel-title">🔌 Machine (Web Serial)</h2>
+                <div id="machine-mount"></div>
             </section>
         </aside>
     </div>
@@ -191,6 +232,7 @@
 
                 <p class="export-summary muted" id="export-summary"></p>
                 <p class="export-summary muted" id="export-estimate"></p>
+                <img id="export-preview" class="export-preview" alt="Export preview" hidden>
                 <div class="modal-foot">
                     <button class="btn btn-primary" id="export-go" data-i18n="download">⤓ Download</button>
                 </div>
@@ -207,6 +249,31 @@
 
     <input type="file" id="file-input" accept="image/*" hidden>
     <input type="file" id="project-input" accept="application/json,.json" hidden>
+    <input type="file" id="import-input" accept=".svg,.dxf,image/svg+xml" hidden>
+
+    <!-- Plugins modal -->
+    <div class="modal-backdrop" id="plugins-modal" hidden>
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="plugins-title">
+            <div class="modal-head">
+                <h2 id="plugins-title">Plugins</h2>
+                <button class="icon-btn" id="plugins-close" title="Close" aria-label="Close">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="hint-tip">Extend Laser Forge with your own object generators or G-code dialects.
+                    Plugins are JavaScript that runs in this page — only run code you trust.</p>
+                <p class="muted tiny">Example: <code>LaserForge.registerGenerator({ type:'tri', label:'Triangle', defaults:{w:40,h:40}, localLoops:o=>[{pts:[{x:0,y:o.h},{x:o.w/2,y:0},{x:o.w,y:o.h}],closed:true,op:'cut'}] })</code></p>
+                <textarea id="plugin-code" rows="6" placeholder="// paste plugin code here" style="width:100%;font-family:ui-monospace,monospace"></textarea>
+                <div class="btn-row"><button class="btn btn-primary" id="plugin-run">▶ Run &amp; install</button></div>
+                <hr class="sep">
+                <p class="muted tiny">Installed generators</p>
+                <div id="plugin-gens" class="plugin-list"></div>
+                <p class="muted tiny">Saved plugins</p>
+                <div id="plugin-saved" class="plugin-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
 
     <!-- Tile editor modal -->
     <div class="modal-backdrop" id="tile-modal" hidden>

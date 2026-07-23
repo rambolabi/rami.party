@@ -406,7 +406,7 @@ function gcodeHeader(p) {
 
 function gcodeVector(store, p) {
     const { heightMM: H } = store.state.artboard;
-    const fy = (y) => H - y;
+    const mp = machineMap(store);
     const lines = gcodeHeader(p);
     const on = p.laserMode;
     for (let pass = 0; pass < Math.max(1, p.passes); pass++) {
@@ -420,19 +420,56 @@ function gcodeVector(store, p) {
                 const isCut = l.op === 'cut';
                 const feed = isCut ? p.cutSpeed : p.engraveSpeed;
                 const power = isCut ? p.powerCut : p.powerEngrave;
-                const first = l.pts[0];
+                const first = mp(l.pts[0].x, l.pts[0].y);
                 lines.push('M5');
-                lines.push(`G0 X${num(first.x)} Y${num(fy(first.y))}`);
+                lines.push(`G0 X${num(first.x)} Y${num(first.y)}`);
                 lines.push(`${on} S${power}`);
-                for (let i = 1; i < l.pts.length; i++)
-                    lines.push(`G1 X${num(l.pts[i].x)} Y${num(fy(l.pts[i].y))} F${feed}`);
-                if (l.closed) lines.push(`G1 X${num(first.x)} Y${num(fy(first.y))} F${feed}`);
+                for (let i = 1; i < l.pts.length; i++) {
+                    const q = mp(l.pts[i].x, l.pts[i].y);
+                    lines.push(`G1 X${num(q.x)} Y${num(q.y)} F${feed}`);
+                }
+                if (l.closed) lines.push(`G1 X${num(first.x)} Y${num(first.y)} F${feed}`);
                 lines.push('M5');
             }
         }
     }
     lines.push('M5', 'G0 X0 Y0', '; done');
     return lines.join('\n');
+}
+
+// Map artboard (x,y) mm → machine (x,y) mm honouring the chosen origin.
+// Base machine convention is Y-up (bottom-left), matching common GRBL diode lasers.
+export function machineMap(store) {
+    const { widthMM: W, heightMM: H, origin = 'bottom-left' } = store.state.artboard;
+    return (x, y) => {
+        switch (origin) {
+            case 'top-left': return { x, y };
+            case 'top-right': return { x: W - x, y };
+            case 'bottom-right': return { x: W - x, y: H - y };
+            case 'center': return { x: x - W / 2, y: (H - y) - H / 2 };
+            case 'bottom-left':
+            default: return { x, y: H - y };
+        }
+    };
+}
+
+// Axis-aligned bounding box of all visible geometry in artboard mm.
+export function artboardBBox(store) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const obj of visibleObjects(store)) {
+        const loops = objLoops(obj, 0);
+        if (loops) {
+            for (const l of loops) for (const pt of l.pts) {
+                minX = Math.min(minX, pt.x); minY = Math.min(minY, pt.y);
+                maxX = Math.max(maxX, pt.x); maxY = Math.max(maxY, pt.y);
+            }
+        } else {
+            minX = Math.min(minX, obj.x); minY = Math.min(minY, obj.y);
+            maxX = Math.max(maxX, obj.x + obj.w); maxY = Math.max(maxY, obj.y + obj.h);
+        }
+    }
+    if (!isFinite(minX)) return null;
+    return { minX, minY, maxX, maxY };
 }
 
 async function gcodeRaster(store, p) {

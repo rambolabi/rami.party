@@ -4,15 +4,35 @@ The **v2** evolution of [Laser Forge](../laser-forge/): not just a file *generat
 browser-based laser **workbench** — design your art **and drive the machine directly** over
 **Web Serial**, plus PWA/offline install, real file open/save, and plugin hooks.
 
-> **Status:** forked from the stable v1 as a working copy. The v2 feature build is planned in
-> [`todo.md`](todo.md) (editor backlog + platform + direct control) and has **not** been
-> implemented yet — this copy is currently feature-identical to v1.
+> **Status:** v2 is implemented. On top of the full v1 design/export toolset it adds
+> multi-select editing, boolean ops, SVG/DXF import, canvas rulers + origin, material presets,
+> a live export preview, **PWA offline install**, **File System Access** open/save, **plugin
+> hooks**, and — the headline — **direct laser control over Web Serial** (connect, jog, frame,
+> stream, overrides, and an always-visible E-STOP behind a mandatory safety gate). See
+> [`todo.md`](todo.md) for the full build log.
 
 **100% client-side.** Nothing is uploaded — every design stays in your browser, and the
 serial port is user-picked per session. Built with plain HTML + CSS + vanilla JavaScript
 (ES modules), no build step, no third-party runtime dependencies.
 
 Part of the [rami.party](https://rami.party) **workshop**.
+
+---
+
+## What v2 adds on top of v1
+
+- **Editor:** multi-select (Shift-click + marquee), group move, align / distribute, group /
+  ungroup, boolean union / intersect / subtract / xor, arrow-key nudge, canvas rulers, origin
+  (0,0) selector, snapping, LPI scan preview, and material presets.
+- **Import:** bring in **SVG** (paths/shapes, curves flattened) and **DXF R12** as editable paths.
+- **Export:** a live preview in the dialog; origin-aware G-code.
+- **Platform:** installable **PWA** that works fully offline; **File System Access** for real
+  open/save round-trips with recents; a **plugin** system for custom generators and G-code
+  dialects (behind a run-untrusted-code gate).
+- **Direct control (Web Serial):** Connect to a GRBL laser, jog/home/set-origin, **frame** the
+  job, stream with character-counted flow control, live DRO + status, feed/power overrides,
+  pause/resume, and an always-visible **E-STOP** — all gated behind a safety acknowledgement,
+  with a watchdog that feed-holds on tab-hide and cuts power on disconnect.
 
 ---
 

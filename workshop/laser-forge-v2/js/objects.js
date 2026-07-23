@@ -3,6 +3,16 @@
 import { uid, applyTransform, OP_COLORS, simplify, clamp, hatchFill, applyBridges } from './geometry.js';
 import { decodeImage, imageToImageData, processImageData, DEFAULT_IMAGE_PARAMS } from './image.js';
 import { traceBinary, binaryFromImageData, centerlineTrace } from './trace.js';
+import { getGenerator as pluginGenerator } from './plugins.js';
+
+// Create an object instance for a plugin-registered generator descriptor.
+export function createPluginObject(desc, props = {}) {
+    return {
+        id: uid('pl'), type: desc.type, name: desc.label || desc.type, op: 'cut',
+        x: 20, y: 20, w: 60, h: 60, rotation: 0, visible: true,
+        ...(desc.defaults || {}), ...props,
+    };
+}
 import { qrGenerate } from './qr.js';
 import { boxLocalLoops, gearLocalLoops, rulerLoops, hingeLoops, registrationLoops } from './generators.js';
 import { encodeCode128B } from './barcode.js';
@@ -699,6 +709,8 @@ export function localLoops(obj, { traceImage = false } = {}) {
     if (obj.type === 'testgrid') return testGridLoops(obj, iconLoops);
     if (obj.type === 'text') return textLocalLoops(obj);
     if (obj.type === 'image') return traceImage ? imageTraceLocalLoops(obj) : null;
+    const gen = pluginGenerator(obj.type);
+    if (gen) { try { return gen.localLoops(obj) || []; } catch (_) { return []; } }
     return [];
 }
 
