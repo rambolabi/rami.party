@@ -40,18 +40,6 @@ window.RAMI_REALMS = [
     /* ---- The Gallery of Wonders (finished) ---- */
     {
         category: 'gallery',
-        title: 'Lore Gallery',
-        href: './gallery/lore/',
-        glyph: '📜',
-        tagline: 'A grimoire of images',
-        description: 'Leaf through a living grimoire of magical lore, muggle mischief and impossibly cute creatures.',
-        search: 'An image gallery of fantasy and Harry Potter themed artwork, magical creatures, wizards and humorous memes. Browse and view a curated picture collection of magic art and cute animals.',
-        tags: ['gallery', 'magic'],
-        aura: 'violet',
-        status: 'live',
-    },
-    {
-        category: 'gallery',
         title: 'Prank Screens',
         href: './gallery/prankscreens/',
         glyph: '🖥️',
@@ -190,6 +178,17 @@ window.RAMI_REALMS = [
       status: 'live' (clickable) · 'soon' (locked teaser).
    ========================================================================== */
 window.RAMI_WORKSHOP = [
+    {
+        title: 'Lore Gallery',
+        href: '../gallery/lore/',
+        glyph: '📜',
+        tagline: 'A grimoire of images',
+        description: 'Leaf through a living grimoire of magical lore, muggle mischief and impossibly cute creatures.',
+        search: 'An image gallery of fantasy and Harry Potter themed artwork, magical creatures, wizards and humorous memes. Browse and view a curated picture collection of magic art and cute animals.',
+        tags: ['gallery', 'magic'],
+        aura: 'violet',
+        status: 'live',
+    },
     {
         title: 'Loregate',
         href: './dm-screen/',
