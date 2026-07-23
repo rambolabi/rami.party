@@ -137,6 +137,98 @@ const BOOK = {
     ],
   },
 
+  assessment2: {
+    mode: "classify",
+    kicker: "Second assessment",
+    heading: "The path of lies",
+    sub: "Deception escalates in stages. Think of a specific situation and see how far along the path it has travelled.",
+    nav: "The path",
+    icon: "\uD83E\uDDEC",
+    introTitle: "8 observations",
+    introText: "Hold one situation in mind and choose the option that fits it best.",
+    resultEyebrow: "How far the deception has escalated",
+    categories: {
+      white: {
+        name: "The White Lie", icon: "\uD83D\uDD4A\uFE0F", color: "#64748b",
+        summary: "Harmless social lies that smooth everyday life. Not a problem in themselves — but the doorway the others walk through.",
+        signsTitle: "What it looks like", handleTitle: "What to do now",
+        signs: ["Small, kind fibs", "No real cost to the truth", "Occasional and social", "Trust intact"],
+        handle: ["Don't over-police normal social grace", "Model honesty where it matters", "Notice if 'harmless' starts creeping", "Keep the truth cheap to tell"],
+      },
+      cover: {
+        name: "The Cover-Up", icon: "\uD83E\uDDE5", color: "#0891b2",
+        summary: "A lie to hide a specific mistake or avoid a consequence. Still contained — but this is where escalation begins.",
+        signsTitle: "What it looks like", handleTitle: "What to do now",
+        signs: ["Hiding one specific thing", "Motive is avoiding fallout", "A single crack in trust", "Doubles down if cornered"],
+        handle: ["Make it safe to own the mistake", "Address the fear driving the lie", "Catch it before it needs a second lie", "Don't punish the honesty you want"],
+      },
+      web: {
+        name: "The Web", icon: "\uD83D\uDD78\uFE0F", color: "#b45309",
+        summary: "Lies multiplying to support each other. Each new lie raises the cost of the truth, and the story starts to run the person.",
+        signsTitle: "What it looks like", handleTitle: "What to do now",
+        signs: ["Lies propping up lies", "Constant, to stay consistent", "Trust seriously eroded", "Adds a lie when challenged"],
+        handle: ["Offer a clear, low-drama off-ramp to the truth", "Reduce the punishment for coming clean", "Create safety instead of playing detective", "Expect it to worsen before it improves"],
+      },
+      culture: {
+        name: "The Culture of Lies", icon: "\uD83C\uDFAD", color: "#b91c1c",
+        summary: "Dishonesty has become normal — systemic, expected, even rewarded. The problem is the environment, not one person.",
+        signsTitle: "What it looks like", handleTitle: "What to do now",
+        signs: ["Lying is the norm", "Honesty seen as naive", "Trust basically gone", "A whole team or system involved"],
+        handle: ["Change what gets rewarded and punished", "Protect and celebrate honesty publicly", "Model it relentlessly from the top", "Reduce the pressures that make lying pay"],
+      },
+    },
+    questions: [
+      { q: "The lies you're seeing are…", options: [
+        { text: "Small and socially smoothing", cat: "white" },
+        { text: "Aimed at hiding a specific mistake", cat: "cover" },
+        { text: "Multiplying to prop each other up", cat: "web" },
+        { text: "Everywhere — it's just how things run here", cat: "culture" },
+      ]},
+      { q: "The motive seems to be…", options: [
+        { text: "Sparing feelings", cat: "white" },
+        { text: "Avoiding consequences", cat: "cover" },
+        { text: "Protecting earlier lies", cat: "web" },
+        { text: "Getting ahead in a dishonest system", cat: "culture" },
+      ]},
+      { q: "The cost of the truth now is…", options: [
+        { text: "Basically nothing", cat: "white" },
+        { text: "A bit of embarrassment", cat: "cover" },
+        { text: "Unravelling a whole story", cat: "web" },
+        { text: "Your standing in the group", cat: "culture" },
+      ]},
+      { q: "How often does it happen?", options: [
+        { text: "Occasionally and harmlessly", cat: "white" },
+        { text: "When they're cornered", cat: "cover" },
+        { text: "Constantly, to stay consistent", cat: "web" },
+        { text: "It's the norm, not the exception", cat: "culture" },
+      ]},
+      { q: "If challenged, they…", options: [
+        { text: "Admit it with a laugh", cat: "white" },
+        { text: "Double down to save face", cat: "cover" },
+        { text: "Add another lie", cat: "web" },
+        { text: "Act like honesty is naive", cat: "culture" },
+      ]},
+      { q: "The effect on trust is…", options: [
+        { text: "None to speak of", cat: "white" },
+        { text: "A small crack", cat: "cover" },
+        { text: "Seriously eroded", cat: "web" },
+        { text: "Trust is basically gone", cat: "culture" },
+      ]},
+      { q: "Who is involved?", options: [
+        { text: "Just a kind fib", cat: "white" },
+        { text: "One person hiding one thing", cat: "cover" },
+        { text: "One person tangled in many lies", cat: "web" },
+        { text: "A whole team or system", cat: "culture" },
+      ]},
+      { q: "The honest path now needs…", options: [
+        { text: "Nothing — it's fine", cat: "white" },
+        { text: "A quick, low-stakes admission", cat: "cover" },
+        { text: "Untangling several lies at once", cat: "web" },
+        { text: "Changing the whole environment", cat: "culture" },
+      ]},
+    ],
+  },
+
   handle: {
     kicker: "Field Guide",
     heading: "How to get closer to the truth",
@@ -164,4 +256,36 @@ const BOOK = {
     { q: "How do I stop people lying to me?", a: "Make the truth safe. When honesty isn't punished and mistakes can be admitted, people have far less reason to deceive." },
     { q: "Can I use this to prove someone lied?", a: "No. This is an educational tool about how deception works, not a method to accuse or 'prove' anything about a real person." },
   ],
+
+  disc: {
+    kicker: "The Four Colours",
+    heading: "Lying and the four colours",
+    sub: "Each DISC colour bends the truth in its own style. Know the tell — and your own.",
+    nav: "Colours",
+    labels: { relate: "How this colour tends to lie", reflect: "If this is you — self-check", treat: "How to get the truth from them" },
+    link: "../DISC-profile-SurroundedByIdiots/index.html",
+    linkLabel: "Explore the DISC colour workshop →",
+    colors: {
+      red: {
+        relate: "Reds lie by bulldozing — bold overstatement and 'just trust me' to win and move on.",
+        reflect: "Check whether your confidence is outrunning the actual facts.",
+        treat: "Ask for specifics and evidence; don't be steamrolled by sheer certainty.",
+      },
+      yellow: {
+        relate: "Yellows exaggerate and embellish to look good and keep the story exciting.",
+        reflect: "Notice when a better story is quietly replacing the true one.",
+        treat: "Enjoy the tale, then gently check the details against reality.",
+      },
+      green: {
+        relate: "Greens tell peace-keeping lies — saying yes to avoid a conflict they don't actually accept.",
+        reflect: "Ask whether your 'yes' is honest, or just avoiding a hard moment.",
+        treat: "Make it safe to disagree so their real answer can surface.",
+      },
+      blue: {
+        relate: "Blues rarely lie outright but may mislead by omission or hide behind technicalities.",
+        reflect: "Check whether precise wording is concealing the fuller truth.",
+        treat: "Ask complete, specific questions — they tend to answer exactly what you ask.",
+      },
+    },
+  },
 };

@@ -233,4 +233,36 @@ const BOOK = {
     { q: "Can a manipulator change?", a: "Sometimes, but only if they genuinely want to and do the work — which is uncommon. Your wellbeing shouldn't depend on waiting for it. Protect yourself in the meantime." },
     { q: "It's my boss or partner — what now?", a: "Focus on boundaries, documentation and support rather than confrontation. For close relationships or anything that feels unsafe, talk to a counsellor or local support service." },
   ],
+
+  disc: {
+    kicker: "The Four Colours",
+    heading: "Manipulation and the four colours",
+    sub: "Manipulators press different buttons in each DISC colour. Know which is yours — and defend it.",
+    nav: "Colours",
+    labels: { relate: "How a manipulator hooks this colour", reflect: "If this is you — protect yourself", treat: "Your strongest defence" },
+    link: "../DISC-profile-SurroundedByIdiots/index.html",
+    linkLabel: "Find your colour in the DISC workshop →",
+    colors: {
+      red: {
+        relate: "Manipulators flatter a Red's drive and dangle fast wins and status to rush them into bad calls.",
+        reflect: "Your impatience is the opening — a manipulator counts on your snap decisions. Slow down.",
+        treat: "Insist on proof and time. A real deal survives a pause; a manipulation rarely does.",
+      },
+      yellow: {
+        relate: "Yellows are hooked through charm, praise and the promise of being liked and admired.",
+        reflect: "Your need for approval is the lever. Notice when the praise arrives right before a request.",
+        treat: "Check the facts behind the flattery, and keep grounded friends who'll tell you the truth.",
+      },
+      green: {
+        relate: "Greens are exploited through guilt, loyalty and their dislike of conflict.",
+        reflect: "Your urge to keep the peace lets boundaries quietly slide. It is okay to say no.",
+        treat: "Set one clear boundary and hold it — a manipulator relies on you folding.",
+      },
+      blue: {
+        relate: "Blues are drawn in with fake logic, detail and appeals to being 'the reasonable one'.",
+        reflect: "You can over-analyse the argument and miss the emotional manipulation underneath it.",
+        treat: "Trust the pattern, not just the words — weigh claims against what they actually do.",
+      },
+    },
+  },
 };

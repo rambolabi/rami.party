@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Surrounded By… — Workshop</title>
-  <meta name="description" id="metaDesc" content="An educational workshop inspired by Thomas Erikson's books." />
+  <title>Personality Workshop</title>
+  <meta name="description" id="metaDesc" content="An educational personality & behaviour workshop." />
   <meta name="author" content="rami.party" />
   <meta name="theme-color" content="#2e6fd6" id="metaTheme" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -27,7 +27,9 @@
       <ul class="nav-links" id="nav-links">
         <li><a href="#learn" data-nav>Learn</a></li>
         <li><a href="#test" data-nav id="navTest">Assess</a></li>
+        <li hidden id="navTest2Li"><a href="#test2" data-nav id="navTest2">More</a></li>
         <li><a href="#handle" data-nav id="navHandle">Handle</a></li>
+        <li hidden id="navDiscLi"><a href="#disc" data-nav id="navDisc">Colours</a></li>
         <li><a href="#faq" data-nav>FAQ</a></li>
       </ul>
     </nav>
@@ -37,7 +39,7 @@
     <!-- HERO -->
     <section class="hero" id="home">
       <div class="wrap hero-inner">
-        <p class="eyebrow" id="heroEyebrow">A Thomas Erikson Workshop</p>
+        <p class="eyebrow" id="heroEyebrow">A Personality Workshop</p>
         <h1 class="hero-title" id="heroTitle"></h1>
         <p class="hero-lead" id="heroLead"></p>
         <div class="hero-cta">
@@ -61,7 +63,7 @@
       </div>
     </section>
 
-    <!-- ASSESSMENT -->
+    <!-- ASSESSMENT 1 -->
     <section class="section alt" id="test">
       <div class="wrap">
         <header class="section-head">
@@ -69,29 +71,26 @@
           <h2 id="testHeading"></h2>
           <p class="section-sub" id="testSub"></p>
         </header>
-
-        <div class="quiz-shell" id="assessQuiz">
+        <div class="quiz-shell assess" id="assessQuiz">
           <div class="quiz-stage" data-stage="intro">
             <div class="quiz-intro">
-              <span class="quiz-intro-icon" id="introIcon">📝</span>
-              <h3 id="introTitle"></h3>
-              <p id="introText"></p>
+              <span class="quiz-intro-icon a-icon">📝</span>
+              <h3 class="a-introTitle"></h3>
+              <p class="a-introText"></p>
               <button class="btn btn-primary" data-action="start">Begin</button>
             </div>
           </div>
-
           <div class="quiz-stage" data-stage="run" hidden>
             <div class="quiz-progress">
-              <div class="quiz-progress-bar"><span id="aBar"></span></div>
-              <span class="quiz-progress-text" id="aCount"></span>
+              <div class="quiz-progress-bar"><span class="a-bar"></span></div>
+              <span class="quiz-progress-text a-count"></span>
             </div>
-            <p class="quiz-question" id="aQ"></p>
-            <div class="options" id="aOptions"></div>
+            <p class="quiz-question a-q"></p>
+            <div class="options a-options"></div>
             <button class="quiz-back" data-action="back" hidden>← Previous</button>
           </div>
-
           <div class="quiz-stage" data-stage="result" hidden>
-            <div id="aResult"></div>
+            <div class="a-result"></div>
             <div class="result-actions">
               <button class="btn btn-ghost" data-action="restart">Retake</button>
               <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
@@ -102,8 +101,46 @@
       </div>
     </section>
 
+    <!-- ASSESSMENT 2 (optional) -->
+    <section class="section" id="test2" hidden>
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker" id="testKicker2">Assessment</p>
+          <h2 id="testHeading2"></h2>
+          <p class="section-sub" id="testSub2"></p>
+        </header>
+        <div class="quiz-shell assess" id="assessQuiz2">
+          <div class="quiz-stage" data-stage="intro">
+            <div class="quiz-intro">
+              <span class="quiz-intro-icon a-icon">📝</span>
+              <h3 class="a-introTitle"></h3>
+              <p class="a-introText"></p>
+              <button class="btn btn-primary" data-action="start">Begin</button>
+            </div>
+          </div>
+          <div class="quiz-stage" data-stage="run" hidden>
+            <div class="quiz-progress">
+              <div class="quiz-progress-bar"><span class="a-bar"></span></div>
+              <span class="quiz-progress-text a-count"></span>
+            </div>
+            <p class="quiz-question a-q"></p>
+            <div class="options a-options"></div>
+            <button class="quiz-back" data-action="back" hidden>← Previous</button>
+          </div>
+          <div class="quiz-stage" data-stage="result" hidden>
+            <div class="a-result"></div>
+            <div class="result-actions">
+              <button class="btn btn-ghost" data-action="restart">Retake</button>
+              <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
+              <a class="btn btn-primary" href="#handle" data-nav>How to handle it →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- HANDLE / TIPS -->
-    <section class="section" id="handle">
+    <section class="section alt" id="handle">
       <div class="wrap">
         <header class="section-head">
           <p class="kicker" id="handleKicker">Field Guide</p>
@@ -111,6 +148,19 @@
           <p class="section-sub" id="handleSub"></p>
         </header>
         <div class="tips-grid" id="tipsGrid"></div>
+      </div>
+    </section>
+
+    <!-- DISC COLOURS (optional) -->
+    <section class="section" id="disc" hidden>
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker" id="discKicker">The Four Colours</p>
+          <h2 id="discHeading"></h2>
+          <p class="section-sub" id="discSub"></p>
+        </header>
+        <div class="disc-grid" id="discGrid"></div>
+        <div class="disc-cta" id="discCta"></div>
       </div>
     </section>
 
@@ -131,7 +181,8 @@
       <p class="footer-note" id="footerNote"></p>
       <p class="footer-support" id="footerSupport"></p>
       <p class="footer-meta">
-        <a href="../../index.html">rami.party</a> · Workshop edition · <span id="year"></span>
+        <a href="../personality-library/index.html">The People Library</a> ·
+        <a href="../../index.html">rami.party</a> · <span id="year"></span>
       </p>
     </div>
   </footer>

@@ -221,6 +221,47 @@ const BOOK = {
     ],
   },
 
+  assessment2: {
+    mode: "score",
+    shuffle: false,
+    shuffleOptions: false,
+    kicker: "Second assessment",
+    heading: "Are you draining others?",
+    sub: "The bravest question of all. Rate how often each is true of you — honestly. This is a private mirror, not a verdict.",
+    nav: "Is it me?",
+    icon: "\uD83E\uDE9E",
+    introTitle: "10 honest statements",
+    introText: "Answer about your <em>own</em> habits, as truthfully as you can.",
+    resultEyebrow: "Your own draining tendency",
+    scaleLow: "You lift others",
+    scaleHigh: "You drain others",
+    bands: [
+      { min: 0, color: "#2a9d5c", label: "Low", title: "You lift more than you drain", blurb: "Your habits mostly leave others energised. Keep it up — and stay aware on your hard days.", adviceTitle: "Keep it strong", advice: ["Keep giving others airtime and calm.", "Notice your stress default and manage it.", "Recharge yourself so you have energy to give."] },
+      { min: 34, color: "#f0a500", label: "Some", title: "A few draining habits to watch", blurb: "You lift others often, but some habits can wear people down. Small tweaks make a big difference.", adviceTitle: "Adjust", advice: ["Catch the habit that scored highest and soften it.", "Ask a trusted friend for honest feedback.", "Vent less, connect more — and take responsibility for your state.", "Recharge yourself instead of leaning on one person."] },
+      { min: 60, color: "#b3123a", label: "High", title: "You may be draining those around you", blurb: "Some of your habits likely leave people depleted. That's very changeable — and self-awareness is the whole first step.", adviceTitle: "Start here", advice: ["Own your own state instead of outsourcing it.", "Give others space, airtime and calm.", "Swap complaint for a request or an action.", "Consider talking to a coach or counsellor about the pattern."] },
+    ],
+    questions: [
+      "I often vent my problems without really wanting a solution.",
+      "I frequently point out what's wrong with things and people.",
+      "I tend to turn situations into a crisis or a drama.",
+      "I use guilt or pressure to get people to do what I want.",
+      "When someone shares good news, I redirect it to myself.",
+      "People seem tired or flat after spending time with me.",
+      "I rarely take responsibility when things go wrong.",
+      "I struggle to let a conversation stay light and positive.",
+      "I expect others to fix my problems for me.",
+      "I push past people's boundaries when I want something.",
+    ].map((q) => ({
+      q,
+      options: [
+        { text: "Never", points: 0 },
+        { text: "Rarely", points: 1 },
+        { text: "Sometimes", points: 2 },
+        { text: "Often", points: 3 },
+      ],
+    })),
+  },
+
   handle: {
     kicker: "Field Guide",
     heading: "How to protect your energy",
@@ -248,4 +289,36 @@ const BOOK = {
     { q: "When should I walk away?", a: "If someone consistently drains you and won't respect any boundary — or the relationship turns coercive — reducing or ending contact is a legitimate, healthy choice." },
     { q: "Isn't everyone draining sometimes?", a: "Yes. Everyone has hard days. The concern is a persistent <em>pattern</em> where one person's habits reliably leave you depleted." },
   ],
+
+  disc: {
+    kicker: "The Four Colours",
+    heading: "Energy and the four colours",
+    sub: "Each DISC colour both drains others and gets drained in its own way. Knowing both protects everyone.",
+    nav: "Colours",
+    labels: { relate: "How this colour drains others", reflect: "How this colour gets drained", treat: "The fix" },
+    link: "../DISC-profile-SurroundedByIdiots/index.html",
+    linkLabel: "Explore the DISC colour workshop →",
+    colors: {
+      red: {
+        relate: "Reds drain others by steamrolling, impatience and turning everything into pressure.",
+        reflect: "Reds get drained by inefficiency, dithering and people who won't get to the point.",
+        treat: "Slow down for others; protect your own energy by delegating and dropping low-value battles.",
+      },
+      yellow: {
+        relate: "Yellows drain others with non-stop talking, drama and a need for constant attention.",
+        reflect: "Yellows get drained by isolation, criticism and dull, detail-heavy routines.",
+        treat: "Give others airtime; recharge with variety and people, not by dumping on one friend.",
+      },
+      green: {
+        relate: "Greens drain others through passive resistance, guilt and never stating what they need.",
+        reflect: "Greens get drained by conflict, pushiness and carrying everyone's problems.",
+        treat: "Say what you need directly; protect yourself by not absorbing every burden.",
+      },
+      blue: {
+        relate: "Blues drain others with relentless criticism, negativity and 'that will never work'.",
+        reflect: "Blues get drained by chaos, vagueness and being rushed.",
+        treat: "Balance critique with what's working; protect your energy with structure and clear information.",
+      },
+    },
+  },
 };

@@ -248,4 +248,36 @@ const BOOK = {
     { q: "Isn't calling people 'narcissists' unfair?", a: "It can be. This workshop is about recognising <em>behaviour patterns</em> and protecting yourself — not slapping labels on people. Use it privately, to make sense of what you're experiencing." },
     { q: "What if it's malignant and I feel unsafe?", a: "Prioritise your safety. Reduce contact, document incidents, avoid confronting them alone, and reach out to a counsellor, trusted people, or local support services." },
   ],
+
+  disc: {
+    kicker: "The Four Colours",
+    heading: "Narcissists and the four colours",
+    sub: "Each DISC colour gets caught by a narcissist differently. Know your reflex — and protect it.",
+    nav: "Colours",
+    labels: { relate: "How this colour reacts", reflect: "If this is you — watch for", treat: "Your best protection" },
+    link: "../DISC-profile-SurroundedByIdiots/index.html",
+    linkLabel: "Find your colour in the DISC workshop →",
+    colors: {
+      red: {
+        relate: "Reds clash head-on, turning every interaction into a power struggle a narcissist relishes.",
+        reflect: "Your need to win can keep you locked in a fight the narcissist will never concede.",
+        treat: "Pick your battles and disengage from ego contests. Protect your goals, not your pride.",
+      },
+      yellow: {
+        relate: "Yellows are love-bombed easily and crave the narcissist's dazzling approval.",
+        reflect: "Your hunger for admiration makes the idealise phase intoxicating — and the discard crushing.",
+        treat: "Anchor your worth outside their applause, and keep honest friends close.",
+      },
+      green: {
+        relate: "Greens absorb the blame and keep the peace, which a narcissist happily exploits.",
+        reflect: "Your loyalty and dislike of conflict can trap you in the cycle far too long.",
+        treat: "Practise saying no. Keeping the peace is not yours alone to carry.",
+      },
+      blue: {
+        relate: "Blues try to reason and prove points a narcissist will never genuinely accept.",
+        reflect: "You can waste energy chasing a logical acknowledgement that never comes.",
+        treat: "Stop debating for validation. Rely on facts, records and firm boundaries instead.",
+      },
+    },
+  },
 };

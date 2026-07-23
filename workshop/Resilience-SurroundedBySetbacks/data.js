@@ -58,15 +58,42 @@ const BOOK = {
     },
     {
       icon: "🔁",
-      name: "The reframe",
+      name: "The reframe (the 3 P's)",
       tag: "Temporary, specific, not you.",
       summary:
-        "Resilient people explain setbacks differently. Instead of permanent, pervasive and personal ('it'll always be like this, it ruins everything, it's all my fault'), they see them as temporary, specific and workable.",
+        "Resilient people explain setbacks differently. Psychologist Martin Seligman named the three traps of a pessimistic explanation — the <strong>3 P's</strong>: <em>Permanent, Pervasive, Personal</em>. Resilient people flip each one: temporary, specific, and workable rather than a verdict on their worth.",
       points: [
-        "<strong>Temporary,</strong> not permanent — 'this is hard right now'.",
-        "<strong>Specific,</strong> not pervasive — one area, not your whole life.",
-        "<strong>Workable,</strong> not a verdict on your worth.",
-        "How you explain a setback shapes what you do next.",
+        "<strong>Permanent → Temporary:</strong> 'this is hard right now', not forever.",
+        "<strong>Pervasive → Specific:</strong> one area, not your whole life.",
+        "<strong>Personal → Workable:</strong> a problem to solve, not proof you're worthless.",
+        "Credit: the 3 P's come from Martin Seligman's work on learned optimism.",
+      ],
+    },
+    {
+      icon: "🔤",
+      name: "The ABCDE method",
+      tag: "Dispute the pessimistic story.",
+      summary:
+        "Also from Martin Seligman, the ABCDE method is a simple way to argue back against a defeatist inner voice — turning an automatic negative belief into a more accurate, energising one.",
+      points: [
+        "<strong>A — Adversity:</strong> name the setback plainly.",
+        "<strong>B — Belief:</strong> notice the story you're telling about it.",
+        "<strong>C — Consequence:</strong> see how that belief makes you feel and act.",
+        "<strong>D — Disputation:</strong> challenge the belief with evidence and alternatives.",
+        "<strong>E — Energisation:</strong> feel the shift, then take the next small action.",
+      ],
+    },
+    {
+      icon: "\uD83C\uDF05",
+      name: "When everything's gone bad",
+      tag: "How to succeed anyway.",
+      summary:
+        "Drawing on the book's closing message — <em>how to succeed when everything's gone bad</em> — the deepest setbacks are survived not by pretending they're small, but by controlling your response, finding meaning, and taking the next honest step forward.",
+      points: [
+        "Accept the reality without letting it define your future.",
+        "Find one thing you can still influence, and do it.",
+        "Look for meaning or learning, even in the loss.",
+        "Keep moving — small steps compound into a comeback.",
       ],
     },
     {
@@ -206,4 +233,36 @@ const BOOK = {
     { q: "How is a reframe different from toxic positivity?", a: "Reframing isn't pretending everything's fine. It's seeing a setback accurately — as temporary and specific rather than permanent and total — so you can act." },
     { q: "How long should bouncing back take?", a: "There's no fixed timer, and big losses take real time. Resilience isn't instant recovery — it's not getting permanently stuck in the spiral." },
   ],
+
+  disc: {
+    kicker: "The Four Colours",
+    heading: "Setbacks and the four colours",
+    sub: "Each DISC colour takes a hit differently. Know your default reaction — and how to steady it.",
+    nav: "Colours",
+    labels: { relate: "How this colour reacts to a setback", reflect: "If this is you — self-reflect", treat: "How to support them" },
+    link: "../DISC-profile-SurroundedByIdiots/index.html",
+    linkLabel: "Explore the DISC colour workshop →",
+    colors: {
+      red: {
+        relate: "Reds react with frustration and force — pushing harder, blaming, refusing to slow down.",
+        reflect: "Ask what you can actually control here, and channel the drive into the next smart step, not a fight.",
+        treat: "Give a Red a concrete next action and a challenge; don't smother them with sympathy.",
+      },
+      yellow: {
+        relate: "Yellows deflate fast, then distract themselves and avoid facing the setback.",
+        reflect: "Resist papering over it with optimism — name it honestly, then use your energy to act.",
+        treat: "Stay warm and encouraging, but help a Yellow make a concrete plan and follow through.",
+      },
+      green: {
+        relate: "Greens absorb setbacks quietly and can get stuck ruminating without asking for help.",
+        reflect: "Reach out sooner — your instinct to cope alone slows your recovery.",
+        treat: "Offer patient, personal reassurance and gentle, steady steps forward.",
+      },
+      blue: {
+        relate: "Blues over-analyse the setback, replaying what went wrong and turning it inward.",
+        reflect: "Watch for permanent-and-personal thinking; dispute the story with evidence (try ABCDE).",
+        treat: "Give a Blue facts, space and a clear plan — avoid rushing or empty pep talk.",
+      },
+    },
+  },
 };

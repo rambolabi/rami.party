@@ -220,6 +220,110 @@ const BOOK = {
     ],
   },
 
+  assessment2: {
+    mode: "classify",
+    kicker: "Second assessment",
+    heading: "Is that employee really lazy?",
+    sub: "Erikson argues most 'lazy' employees aren't lazy — they're unclear, mismatched, demotivated or checked-out. Think of one underperformer and find the real cause.",
+    nav: "Lazy employees",
+    icon: "\uD83D\uDE34",
+    introTitle: "10 observations",
+    introText: "Hold one underperforming person in mind and pick what fits <em>them</em> best.",
+    resultEyebrow: "The real reason behind the 'laziness'",
+    categories: {
+      unclear: {
+        name: "The Unclear", icon: "\u2753", color: "#0891b2",
+        summary: "Not lazy — unclear. They don't actually know what 'good' looks like, so effort scatters or stalls.",
+        signsTitle: "What you'll notice", handleTitle: "How to re-engage them",
+        signs: ["Willing but confused", "Work keeps missing the mark", "Surprised by feedback", "Often new or recently reorganised"],
+        handle: ["Spell out expectations and what 'done' looks like", "Agree priorities and check-in points", "Confirm understanding — don't assume", "Course-correct early and often"],
+      },
+      mismatched: {
+        name: "The Mismatched", icon: "\uD83E\uDDE9", color: "#b45309",
+        summary: "Not lazy — mismatched. They're a square peg in a round role; their strengths lie elsewhere.",
+        signsTitle: "What you'll notice", handleTitle: "How to re-engage them",
+        signs: ["Tries hard at the wrong things", "Persistent struggle despite effort", "Shines in different tasks", "Never quite fits the role"],
+        handle: ["Identify their real strengths", "Redesign the role or move them", "Play to what they do well", "Don't mistake poor fit for poor attitude"],
+      },
+      demotivated: {
+        name: "The Demotivated", icon: "\uD83D\uDD0B", color: "#64748b",
+        summary: "Not lazy — demotivated. They used to care, then felt ignored or taken for granted, and switched off.",
+        signsTitle: "What you'll notice", handleTitle: "How to re-engage them",
+        signs: ["Flat, disheartened energy", "A 'why bother' attitude", "Revives with recognition", "A history of being overlooked"],
+        handle: ["Recognise their contribution sincerely", "Involve them in decisions", "Reconnect their work to meaning", "Rebuild trust with follow-through"],
+      },
+      checkedout: {
+        name: "The Checked-Out", icon: "\uD83D\uDEAA", color: "#b91c1c",
+        summary: "Genuinely disengaged or burned out. They've mentally left — this needs an honest reset, not more pressure.",
+        signsTitle: "What you'll notice", handleTitle: "How to re-engage them",
+        signs: ["Minimal engagement", "Little reaction to feedback", "Long-term unhappy or exhausted", "Going through the motions"],
+        handle: ["Have a frank, kind conversation", "Explore burnout vs. disengagement", "Agree a clear path: re-engage or move on", "Address the cause, don't pile on pressure"],
+      },
+    },
+    questions: [
+      { q: "When you ask why work isn't done, they say…", options: [
+        { text: "'I didn't know that was what you wanted'", cat: "unclear" },
+        { text: "'This isn't really the kind of thing I'm good at'", cat: "mismatched" },
+        { text: "'What's the point, nobody notices anyway'", cat: "demotivated" },
+        { text: "'Honestly, I've stopped caring'", cat: "checkedout" },
+      ]},
+      { q: "Their energy is…", options: [
+        { text: "Willing but confused", cat: "unclear" },
+        { text: "Trying hard at the wrong things", cat: "mismatched" },
+        { text: "Flat and disheartened", cat: "demotivated" },
+        { text: "Absent", cat: "checkedout" },
+      ]},
+      { q: "Given a clear, well-matched task they…", options: [
+        { text: "Suddenly deliver well", cat: "unclear" },
+        { text: "Still struggle", cat: "mismatched" },
+        { text: "Do it if they feel appreciated", cat: "demotivated" },
+        { text: "Still don't engage", cat: "checkedout" },
+      ]},
+      { q: "They perk up when…", options: [
+        { text: "Expectations are spelled out", cat: "unclear" },
+        { text: "They're moved to work that suits them", cat: "mismatched" },
+        { text: "Their effort is recognised", cat: "demotivated" },
+        { text: "Rarely — they've mentally left", cat: "checkedout" },
+      ]},
+      { q: "The root cause looks like…", options: [
+        { text: "Poor communication", cat: "unclear" },
+        { text: "Wrong role fit", cat: "mismatched" },
+        { text: "Being taken for granted", cat: "demotivated" },
+        { text: "Deep disengagement or burnout", cat: "checkedout" },
+      ]},
+      { q: "Their history is…", options: [
+        { text: "New or recently changed role", cat: "unclear" },
+        { text: "Always been a stretch for them", cat: "mismatched" },
+        { text: "Used to care, then got ignored", cat: "demotivated" },
+        { text: "Long-term unhappy or exhausted", cat: "checkedout" },
+      ]},
+      { q: "When you give feedback they…", options: [
+        { text: "Say 'oh, I didn't realise'", cat: "unclear" },
+        { text: "Agree but can't seem to improve", cat: "mismatched" },
+        { text: "Shrug — 'why bother'", cat: "demotivated" },
+        { text: "Barely react", cat: "checkedout" },
+      ]},
+      { q: "They respond best to…", options: [
+        { text: "Clear goals and check-ins", cat: "unclear" },
+        { text: "A role redesign or move", cat: "mismatched" },
+        { text: "Recognition and involvement", cat: "demotivated" },
+        { text: "A frank talk about staying or going", cat: "checkedout" },
+      ]},
+      { q: "Their potential is…", options: [
+        { text: "High, once aligned", cat: "unclear" },
+        { text: "Better used elsewhere", cat: "mismatched" },
+        { text: "Recoverable with appreciation", cat: "demotivated" },
+        { text: "Uncertain — needs a reset", cat: "checkedout" },
+      ]},
+      { q: "What they most need is…", options: [
+        { text: "Clarity", cat: "unclear" },
+        { text: "A better-fitting role", cat: "mismatched" },
+        { text: "To feel valued", cat: "demotivated" },
+        { text: "A real, honest conversation", cat: "checkedout" },
+      ]},
+    ],
+  },
+
   handle: {
     kicker: "Field Guide",
     heading: "How to manage up",
@@ -247,4 +351,36 @@ const BOOK = {
     { q: "Can a boss be more than one type?", a: "Yes. Under different pressures a manager can shift — a micromanager who goes ghost when overwhelmed, for example. Your result shows the strongest match and the balance." },
     { q: "I think I'm one of these types — now what?", a: "Good self-awareness is the whole battle. Notice your stress default, ask your team for honest feedback, delegate outcomes, and flex your style to each person." },
   ],
+
+  disc: {
+    kicker: "The Four Colours",
+    heading: "Bad bosses and the four colours",
+    sub: "Under pressure, each DISC colour drifts toward a different failure mode — as a boss or a report. Spot yours, and learn how to work with each.",
+    nav: "Colours",
+    labels: { relate: "Under pressure this colour drifts toward", reflect: "If this is you — self-check", treat: "How to work with them" },
+    link: "../DISC-profile-SurroundedByIdiots/index.html",
+    linkLabel: "Explore the DISC colour workshop →",
+    colors: {
+      red: {
+        relate: "A stressed Red becomes the Tyrant — pushing harder, blaming, steamrolling the team.",
+        reflect: "Ask whether you're driving results or just driving people. Pause before you bark.",
+        treat: "Be brief and results-focused; stand your ground calmly and bring solutions, not problems.",
+      },
+      yellow: {
+        relate: "A stressed Yellow drifts toward the Ghost — chasing the fun and dodging admin and hard calls.",
+        reflect: "Check what you're avoiding. Follow-through is where your credibility is built.",
+        treat: "Keep it upbeat, but pin down decisions and details in writing.",
+      },
+      green: {
+        relate: "A stressed Green becomes the Pushover — avoiding conflict until problems quietly fester.",
+        reflect: "Notice where 'keeping everyone happy' is really dodging a hard conversation.",
+        treat: "Be patient and reassuring; help them commit to clear, written priorities.",
+      },
+      blue: {
+        relate: "A stressed Blue becomes the Micromanager — controlling every detail, unable to trust.",
+        reflect: "Ask if your high standards have tipped into control. Delegate outcomes, not just tasks.",
+        treat: "Bring detail and data; earn trust through reliable, accurate delivery.",
+      },
+    },
+  },
 };

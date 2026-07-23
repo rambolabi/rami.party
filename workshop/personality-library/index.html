@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The People Library — Understand yourself and everyone around you</title>
+  <meta name="description" content="A library of interactive workshops on personality, behaviour, communication and difficult people — DISC, Big Five, MBTI, Enneagram, attachment, love languages, and Thomas Erikson's 'Surrounded by…' series. If you want to know it, there's a workshop for it." />
+  <meta name="author" content="rami.party" />
+  <meta name="theme-color" content="#7c3aed" />
+  <meta property="og:title" content="The People Library" />
+  <meta property="og:description" content="Interactive workshops to make you genuinely knowledgeable about personality, behaviour and how to treat everyone around you." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --ink:#14181f; --ink-2:#3b4453; --muted:#6b7688; --line:#e6e9f0;
+      --bg:#f6f8fc; --card:#fff; --card-2:#fbfcfe;
+      --radius:18px; --radius-sm:12px;
+      --shadow-sm:0 1px 2px rgba(20,24,31,.05),0 4px 14px rgba(20,24,31,.05);
+      --shadow-md:0 10px 30px rgba(20,24,31,.09);
+      --ease:cubic-bezier(.22,1,.36,1);
+      --display:"Fraunces",Georgia,serif; --body:"Inter",system-ui,sans-serif;
+    }
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{font-family:var(--body);color:var(--ink);background:var(--bg);line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+    a{color:inherit;text-decoration:none}
+    .wrap{width:min(1140px,100% - 2.5rem);margin-inline:auto}
+
+    /* Top bar */
+    .topbar{position:sticky;top:0;z-index:50;background:rgba(246,248,252,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+    .nav{display:flex;align-items:center;justify-content:space-between;height:64px;width:min(1140px,100% - 2.5rem);margin-inline:auto}
+    .brand{display:inline-flex;align-items:center;gap:10px;font-family:var(--display);font-weight:900;font-size:1.12rem}
+    .brand i{width:11px;height:11px;border-radius:50%;display:inline-block}
+    .brand .dots{display:inline-flex;gap:4px}
+    .nav-links{display:flex;gap:6px;flex-wrap:wrap}
+    .nav-links a{font-weight:600;font-size:.9rem;color:var(--ink-2);padding:7px 12px;border-radius:9px}
+    .nav-links a:hover{background:rgba(124,58,237,.1);color:#6d28d9}
+
+    /* Hero */
+    .hero{position:relative;text-align:center;padding:clamp(56px,10vw,110px) 0 clamp(40px,6vw,72px);overflow:hidden;
+      background:radial-gradient(50% 55% at 15% 0%,rgba(230,57,70,.10),transparent 60%),
+                 radial-gradient(50% 55% at 50% 0%,rgba(240,165,0,.10),transparent 60%),
+                 radial-gradient(50% 55% at 85% 0%,rgba(46,111,214,.12),transparent 60%),
+                 radial-gradient(50% 55% at 70% 100%,rgba(124,58,237,.10),transparent 60%)}
+    .eyebrow{text-transform:uppercase;letter-spacing:.24em;font-size:.76rem;font-weight:700;color:#6d28d9;margin-bottom:18px}
+    .hero h1{font-family:var(--display);font-weight:900;font-size:clamp(2.4rem,7vw,4.6rem);line-height:1.02;letter-spacing:-.02em;margin-bottom:20px}
+    .hero p.lead{max-width:660px;margin:0 auto 30px;font-size:clamp(1.05rem,2.2vw,1.24rem);color:var(--ink-2)}
+    .hero .lead em{font-style:italic;color:var(--ink)}
+    .cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;gap:8px;font-family:var(--body);font-weight:600;font-size:.98rem;padding:13px 24px;border-radius:999px;border:1.5px solid transparent;cursor:pointer;transition:transform .2s var(--ease),box-shadow .2s var(--ease),background .2s var(--ease)}
+    .btn-primary{background:#7c3aed;color:#fff;box-shadow:0 8px 22px rgba(124,58,237,.35)}
+    .btn-primary:hover{background:#6d28d9;transform:translateY(-2px)}
+    .btn-ghost{background:var(--card);border-color:var(--line);box-shadow:var(--shadow-sm)}
+    .btn-ghost:hover{transform:translateY(-2px);border-color:#c4b5fd}
+    .stat-row{display:flex;gap:28px;justify-content:center;flex-wrap:wrap;margin-top:44px}
+    .stat b{font-family:var(--display);font-weight:900;font-size:1.9rem;display:block;line-height:1}
+    .stat span{font-size:.82rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+
+    /* Groups */
+    .group{padding:clamp(40px,6vw,68px) 0}
+    .group:nth-child(even){background:var(--card);border-block:1px solid var(--line)}
+    .group-head{max-width:720px;margin:0 auto clamp(24px,4vw,40px);text-align:center}
+    .group-kicker{text-transform:uppercase;letter-spacing:.18em;font-size:.74rem;font-weight:700;color:var(--muted);margin-bottom:8px}
+    .group-head h2{font-family:var(--display);font-weight:900;font-size:clamp(1.7rem,4vw,2.5rem);letter-spacing:-.02em;margin-bottom:12px}
+    .group-head p{color:var(--ink-2);font-size:1.03rem}
+
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+    .lib-card{--c:#7c3aed;display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--c);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow-sm);transition:transform .22s var(--ease),box-shadow .22s var(--ease),border-color .22s var(--ease)}
+    .group:nth-child(even) .lib-card{background:var(--card-2)}
+    .lib-card:hover{transform:translateY(-4px);box-shadow:var(--shadow-md);border-color:var(--c)}
+    .lib-emoji{flex:none;width:52px;height:52px;border-radius:14px;display:grid;place-items:center;font-size:1.7rem;background:color-mix(in srgb,var(--c) 14%,transparent)}
+    .lib-body{flex:1;min-width:0}
+    .lib-body b{display:block;font-family:var(--display);font-weight:800;font-size:1.12rem;color:var(--ink);margin-bottom:3px}
+    .lib-body small{color:var(--ink-2);font-size:.92rem;line-height:1.5;display:block}
+    .lib-tag{display:inline-block;margin-top:8px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c)}
+    .lib-go{flex:none;color:var(--c);font-weight:800;font-size:1.3rem;transition:transform .2s var(--ease)}
+    .lib-card:hover .lib-go{transform:translateX(4px)}
+
+    .start-here{border:1.5px dashed color-mix(in srgb,var(--c) 55%,var(--line))}
+    .start-here .lib-tag::before{content:"★ "}
+
+    /* Footer */
+    .footer{background:var(--ink);color:#c7cfdd;padding:46px 0;text-align:center}
+    .footer .fnote{max-width:640px;margin:0 auto 12px;font-size:.92rem;line-height:1.6}
+    .footer em{font-style:italic;color:#fff}
+    .footer .fmeta{font-size:.85rem;color:#8b95a8}
+    .footer .fmeta a{color:#fff}
+    .footer .fmeta a:hover{text-decoration:underline}
+
+    @media(max-width:640px){.cards{grid-template-columns:1fr}.nav-links{display:none}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <nav class="nav">
+      <a class="brand" href="#top">
+        <span class="dots"><i style="background:#e63946"></i><i style="background:#f0a500"></i><i style="background:#2a9d5c"></i><i style="background:#2e6fd6"></i></span>
+        The People Library
+      </a>
+      <div class="nav-links">
+        <a href="#know">Know yourself</a>
+        <a href="#relate">Relationships</a>
+        <a href="#difficult">Difficult people</a>
+        <a href="#grow">Grow</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="wrap">
+        <p class="eyebrow">A library of interactive workshops</p>
+        <h1>Understand yourself —<br />and everyone around you.</h1>
+        <p class="lead">
+          Fifteen bite-sized, interactive workshops on personality, behaviour and communication.
+          Take a quiz, get an instant read, and learn <em>how to treat</em> every kind of person.
+          If you want to know it, there's a workshop for it.
+        </p>
+        <div class="cta">
+          <a class="btn btn-primary" href="#know">Start with yourself →</a>
+          <a class="btn btn-ghost" href="#difficult">Deal with difficult people</a>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><b>15</b><span>Workshops</span></div>
+          <div class="stat"><b>20+</b><span>Interactive quizzes</span></div>
+          <div class="stat"><b>0</b><span>Sign-ups needed</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GROUP 1: KNOW YOURSELF -->
+    <section class="group" id="know">
+      <div class="wrap">
+        <div class="group-head">
+          <p class="group-kicker">Know yourself</p>
+          <h2>Map your own personality</h2>
+          <p>Start here. These are the great models for understanding how you think, feel and behave — from the ancient to the scientific.</p>
+        </div>
+        <div class="cards">
+          <a class="lib-card start-here" style="--c:#2e6fd6" href="../DISC-profile-SurroundedByIdiots/index.html">
+            <span class="lib-emoji">🎨</span>
+            <div class="lib-body"><b>DISC — The Four Colours</b><small>If you want to know why people communicate so differently — and exactly how to reach each of them.</small><span class="lib-tag">Best starting point</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#2563eb" href="../BigFive-OCEAN/index.html">
+            <span class="lib-emoji">🧬</span>
+            <div class="lib-body"><b>The Big Five (OCEAN)</b><small>If you want your personality measured the way science actually does it.</small><span class="lib-tag">Profile · 5 traits</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#7c3aed" href="../MBTI-16Types/index.html">
+            <span class="lib-emoji">🔠</span>
+            <div class="lib-body"><b>The 16 Types (MBTI-style)</b><small>If you want your four-letter type — with an honest look at what it's really worth.</small><span class="lib-tag">Quiz · 16 types</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#db2777" href="../Enneagram-NineTypes/index.html">
+            <span class="lib-emoji">🔯</span>
+            <div class="lib-body"><b>The Enneagram</b><small>If you want to know the nine core motivations that secretly drive people.</small><span class="lib-tag">Quiz · 9 types</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#9333ea" href="../Temperaments-FourHumours/index.html">
+            <span class="lib-emoji">🌡️</span>
+            <div class="lib-body"><b>The Four Temperaments</b><small>If you want the 2,000-year-old map that started it all — and became DISC.</small><span class="lib-tag">Quiz · 4 types</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#059669" href="../EmotionalIntelligence-EQ/index.html">
+            <span class="lib-emoji">🫀</span>
+            <div class="lib-body"><b>Emotional Intelligence (EQ)</b><small>If you want to know how well you read and handle emotions — and how to grow it.</small><span class="lib-tag">Score · skill</span></div>
+            <span class="lib-go">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- GROUP 2: RELATIONSHIPS -->
+    <section class="group" id="relate">
+      <div class="wrap">
+        <div class="group-head">
+          <p class="group-kicker">Relationships &amp; connection</p>
+          <h2>Understand how you bond</h2>
+          <p>How you love, connect and clash with the people closest to you.</p>
+        </div>
+        <div class="cards">
+          <a class="lib-card" style="--c:#e11d48" href="../LoveLanguages-FiveLanguages/index.html">
+            <span class="lib-emoji">💗</span>
+            <div class="lib-body"><b>The Five Love Languages</b><small>If you want to know how you — and the people you love — actually feel loved.</small><span class="lib-tag">Quiz · 5 languages</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#0d9488" href="../AttachmentStyles-FourStyles/index.html">
+            <span class="lib-emoji">🔗</span>
+            <div class="lib-body"><b>Attachment Styles</b><small>If you want to know why closeness feels the way it does for you.</small><span class="lib-tag">Quiz · 4 styles</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#ea580c" href="../ConflictStyles-ThomasKilmann/index.html">
+            <span class="lib-emoji">⚔️</span>
+            <div class="lib-body"><b>Conflict Styles</b><small>If you want to know your instinct when things get tense — and when to switch it.</small><span class="lib-tag">Quiz · 5 styles</span></div>
+            <span class="lib-go">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- GROUP 3: DIFFICULT PEOPLE -->
+    <section class="group" id="difficult">
+      <div class="wrap">
+        <div class="group-head">
+          <p class="group-kicker">Difficult people</p>
+          <h2>Read them — and protect yourself</h2>
+          <p>Thomas Erikson's <em>Surrounded by…</em> series, reimagined as interactive workshops. Spot the behaviour, then learn exactly how to handle it.</p>
+        </div>
+        <div class="cards">
+          <a class="lib-card" style="--c:#b3123a" href="../Manipulation-SurroundedByPsychopaths/index.html">
+            <span class="lib-emoji">🎭</span>
+            <div class="lib-body"><b>Surrounded by Psychopaths</b><small>If you want to know how manipulators operate — and how to protect yourself.</small><span class="lib-tag">Erikson · red-flag score</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#7c3aed" href="../Narcissism-SurroundedByNarcissists/index.html">
+            <span class="lib-emoji">🪞</span>
+            <div class="lib-body"><b>Surrounded by Narcissists</b><small>If you want to know the four faces of narcissism and how to hold your ground.</small><span class="lib-tag">Erikson · 4 types</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#9d174d" href="../EnergyDrain-SurroundedByVampires/index.html">
+            <span class="lib-emoji">🧛</span>
+            <div class="lib-body"><b>Surrounded by Vampires</b><small>If you want to know who's draining your energy — and how to stop it.</small><span class="lib-tag">Erikson · 4 types</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#0f766e" href="../Deception-SurroundedByLiars/index.html">
+            <span class="lib-emoji">🕵️</span>
+            <div class="lib-body"><b>Surrounded by Liars</b><small>If you want to know how deception really works — most of what you 'know' is wrong.</small><span class="lib-tag">Erikson · myth/fact</span></div>
+            <span class="lib-go">→</span>
+          </a>
+          <a class="lib-card" style="--c:#b45309" href="../Leadership-SurroundedByBadBosses/index.html">
+            <span class="lib-emoji">💼</span>
+            <div class="lib-body"><b>Surrounded by Bad Bosses</b><small>If you want to know what kind of boss you've got — and how to manage up.</small><span class="lib-tag">Erikson · 2 quizzes</span></div>
+            <span class="lib-go">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- GROUP 4: GROW -->
+    <section class="group" id="grow">
+      <div class="wrap">
+        <div class="group-head">
+          <p class="group-kicker">Grow &amp; bounce back</p>
+          <h2>Build your resilience</h2>
+          <p>Because knowing people includes knowing how to handle life when it knocks you down.</p>
+        </div>
+        <div class="cards">
+          <a class="lib-card" style="--c:#1d4ed8" href="../Resilience-SurroundedBySetbacks/index.html">
+            <span class="lib-emoji">🧗</span>
+            <div class="lib-body"><b>Surrounded by Setbacks</b><small>If you want to know how to bounce back when everything's gone wrong.</small><span class="lib-tag">Erikson · resilience score</span></div>
+            <span class="lib-go">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p class="fnote">
+        The Erikson workshops are inspired by <em>Surrounded by Idiots, Psychopaths, Narcissists, Bad Bosses,
+        Liars, Vampires</em> and <em>Setbacks</em> by Thomas Erikson — if they resonate, read the books and support the author.
+        The other workshops draw on established models (DISC, the Big Five, MBTI, the Enneagram, attachment theory,
+        the love languages, Thomas–Kilmann and emotional intelligence). All are educational tools for reflection, not clinical diagnosis.
+      </p>
+      <p class="fmeta"><a href="../../index.html">rami.party</a> · The People Library · <span id="year"></span></p>
+    </div>
+  </footer>
+
+  <script>document.getElementById("year").textContent = new Date().getFullYear();</script>
+</body>
+</html>
