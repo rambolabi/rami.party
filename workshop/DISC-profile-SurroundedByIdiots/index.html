@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Four Colours — A DISC Personality Workshop</title>
+  <meta name="description" content="An interactive DISC personality workshop inspired by 'Surrounded by Idiots' by Thomas Erikson. Learn the four colour profiles — Red, Yellow, Green and Blue — and take live self and observer assessments." />
+  <meta name="author" content="rami.party" />
+  <meta name="theme-color" content="#2e6fd6" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="The Four Colours — A DISC Personality Workshop" />
+  <meta property="og:description" content="Learn the four DISC colour profiles and take live self and observer assessments with real-time results." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- ===================== NAVIGATION ===================== -->
+  <header class="topbar" id="top">
+    <nav class="nav" aria-label="Primary">
+      <a href="#top" class="brand" data-view="home">
+        <span class="brand-dots" aria-hidden="true">
+          <i style="--c:#e63946"></i><i style="--c:#f0a500"></i><i style="--c:#2a9d5c"></i><i style="--c:#2e6fd6"></i>
+        </span>
+        <span class="brand-text">Four&nbsp;Colours</span>
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#learn" data-nav>Learn</a></li>
+        <li><a href="#self" data-nav>Test Yourself</a></li>
+        <li><a href="#observe" data-nav>Read Someone</a></li>
+        <li><a href="#quick" data-nav>Quick&nbsp;ID</a></li>
+        <li><a href="#tips" data-nav>Tips</a></li>
+        <li><a href="#faq" data-nav>FAQ</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- ===================== HERO ===================== -->
+    <section class="hero" id="home">
+      <div class="wrap hero-inner">
+        <p class="eyebrow">A DISC Personality Workshop</p>
+        <h1 class="hero-title">Are you really<br />surrounded by idiots?</h1>
+        <p class="hero-lead">
+          Or do the people around you simply speak a different colour? Discover the four
+          behavioural styles from Thomas Erikson's <em>Surrounded by Idiots</em>, find your own,
+          and learn to read everyone else.
+        </p>
+        <div class="hero-cta">
+          <a class="btn btn-primary" href="#self" data-nav>Test yourself</a>
+          <a class="btn btn-ghost" href="#learn" data-nav>Meet the colours</a>
+        </div>
+
+        <div class="hero-cards" aria-hidden="true">
+          <div class="hero-card" style="--c:#e63946"><span>🔴</span><b>Red</b><small>Dominance</small></div>
+          <div class="hero-card" style="--c:#f0a500"><span>🟡</span><b>Yellow</b><small>Influence</small></div>
+          <div class="hero-card" style="--c:#2a9d5c"><span>🟢</span><b>Green</b><small>Steadiness</small></div>
+          <div class="hero-card" style="--c:#2e6fd6"><span>🔵</span><b>Blue</b><small>Conscientiousness</small></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== LEARN ===================== -->
+    <section class="section" id="learn">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker">The Model</p>
+          <h2>Meet the four colours</h2>
+          <p class="section-sub">
+            Every person is a blend, but most of us lead with one or two colours. Click a card to
+            explore how that style communicates, decides, works and connects.
+          </p>
+        </header>
+
+        <div class="color-grid" id="colorGrid"><!-- cards injected --></div>
+
+        <!-- Detail drawer -->
+        <div class="detail" id="colorDetail" hidden></div>
+
+        <!-- Interaction matrix -->
+        <div class="matrix-block">
+          <h3 class="matrix-title">How the colours get along</h3>
+          <p class="section-sub">Pick two colours to see how they clash and click.</p>
+          <div class="matrix-controls">
+            <div class="matrix-row">
+              <span class="matrix-lbl">You are</span>
+              <div class="chip-row" id="matrixA"></div>
+            </div>
+            <div class="matrix-row">
+              <span class="matrix-lbl">They are</span>
+              <div class="chip-row" id="matrixB"></div>
+            </div>
+          </div>
+          <div class="matrix-result" id="matrixResult">Choose a colour in each row above.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== SELF ASSESSMENT ===================== -->
+    <section class="section alt" id="self">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker">Assessment 1</p>
+          <h2>Test yourself</h2>
+          <p class="section-sub">
+            Rate how well each statement describes you. There are no right answers and questions
+            appear one at a time — your full profile is revealed only at the end.
+          </p>
+        </header>
+
+        <div class="quiz-shell" id="selfQuiz">
+          <!-- Intro -->
+          <div class="quiz-stage" data-stage="intro">
+            <div class="quiz-intro">
+              <span class="quiz-intro-icon">🧭</span>
+              <h3>20 quick statements</h3>
+              <p>Answer honestly and instinctively — go with your first reaction. Takes about three minutes.</p>
+              <button class="btn btn-primary" data-action="start-self">Begin assessment</button>
+            </div>
+          </div>
+
+          <!-- Questions -->
+          <div class="quiz-stage" data-stage="run" hidden>
+            <div class="quiz-progress">
+              <div class="quiz-progress-bar"><span id="selfBar"></span></div>
+              <span class="quiz-progress-text" id="selfCount"></span>
+            </div>
+            <p class="quiz-question" id="selfQ"></p>
+            <div class="likert" id="selfLikert">
+              <button data-score="1">Strongly<br>disagree</button>
+              <button data-score="2">Disagree</button>
+              <button data-score="3">Neutral</button>
+              <button data-score="4">Agree</button>
+              <button data-score="5">Strongly<br>agree</button>
+            </div>
+            <button class="quiz-back" data-action="back-self" hidden>← Previous</button>
+          </div>
+
+          <!-- Result -->
+          <div class="quiz-stage" data-stage="result" hidden>
+            <div class="result-head">
+              <p class="result-eyebrow">Your dominant style</p>
+              <h3 class="result-title" id="selfResultTitle"></h3>
+              <p class="result-blurb" id="selfResultBlurb"></p>
+            </div>
+            <div class="result-body">
+              <div class="result-chart">
+                <canvas id="selfChart" width="320" height="320" role="img" aria-label="Your DISC colour balance"></canvas>
+              </div>
+              <div class="result-bars" id="selfBars"></div>
+            </div>
+            <div class="result-detail" id="selfResultDetail"></div>
+            <div class="result-actions">
+              <button class="btn btn-ghost" data-action="restart-self">Retake</button>
+              <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
+              <a class="btn btn-primary" href="#observe" data-nav>Now read someone else →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== OBSERVE OTHERS ===================== -->
+    <section class="section" id="observe">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker">Assessment 2</p>
+          <h2>Read someone else</h2>
+          <p class="section-sub">
+            Think of one specific person — a colleague, partner or friend. Answer what you observe
+            about <em>them</em>. Watch the graph shift live after every answer.
+          </p>
+        </header>
+
+        <div class="quiz-shell" id="obsQuiz">
+          <!-- Intro -->
+          <div class="quiz-stage" data-stage="intro">
+            <div class="quiz-intro">
+              <span class="quiz-intro-icon">👀</span>
+              <h3>Who are you reading?</h3>
+              <p>Give them a name or label so you can run this for several people.</p>
+              <input class="name-input" id="obsName" type="text" maxlength="40" placeholder="e.g. My manager, Alex, Mum…" aria-label="Person's name" />
+              <button class="btn btn-primary" data-action="start-obs">Start reading</button>
+            </div>
+          </div>
+
+          <!-- Live run: question + live chart side by side -->
+          <div class="quiz-stage observe-run" data-stage="run" hidden>
+            <div class="observe-question-col">
+              <div class="quiz-progress">
+                <div class="quiz-progress-bar"><span id="obsBar"></span></div>
+                <span class="quiz-progress-text" id="obsCount"></span>
+              </div>
+              <p class="reading-who" id="obsWho"></p>
+              <p class="quiz-question" id="obsQ"></p>
+              <div class="options" id="obsOptions"></div>
+              <button class="quiz-back" data-action="back-obs" hidden>← Previous</button>
+            </div>
+            <aside class="observe-live-col">
+              <div class="live-panel">
+                <p class="live-title">Live reading</p>
+                <div class="live-lead" id="obsLead">Answer to begin…</div>
+                <canvas id="obsChart" width="300" height="300" role="img" aria-label="Live colour probability"></canvas>
+                <div class="live-bars" id="obsLiveBars"></div>
+              </div>
+            </aside>
+          </div>
+
+          <!-- Result -->
+          <div class="quiz-stage" data-stage="result" hidden>
+            <div class="result-head">
+              <p class="result-eyebrow" id="obsResultEyebrow">Their dominant style</p>
+              <h3 class="result-title" id="obsResultTitle"></h3>
+              <p class="result-blurb" id="obsResultBlurb"></p>
+              <p class="confidence" id="obsConfidence"></p>
+            </div>
+            <div class="result-body">
+              <div class="result-chart">
+                <canvas id="obsResultChart" width="320" height="320" role="img" aria-label="Their DISC colour balance"></canvas>
+              </div>
+              <div class="result-bars" id="obsResultBars"></div>
+            </div>
+            <div class="result-detail" id="obsResultDetail"></div>
+            <div class="result-actions">
+              <button class="btn btn-ghost" data-action="restart-obs">Read another person</button>
+              <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
+              <a class="btn btn-primary" href="#tips" data-nav>How to work with them →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== QUICK ID ===================== -->
+    <section class="section alt" id="quick">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker">60 Seconds</p>
+          <h2>Quick identifier</h2>
+          <p class="section-sub">In a hurry? Four rapid picks give you a rough read on anyone — including yourself.</p>
+        </header>
+        <div class="quiz-shell quick-shell" id="quickQuiz">
+          <div class="quiz-stage" data-stage="run">
+            <p class="quiz-question" id="quickQ"></p>
+            <div class="options options-quick" id="quickOptions"></div>
+            <div class="quick-dots" id="quickDots"></div>
+          </div>
+          <div class="quiz-stage" data-stage="result" hidden>
+            <div class="quick-result" id="quickResult"></div>
+            <button class="btn btn-ghost" data-action="restart-quick">Try again</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== TIPS ===================== -->
+    <section class="section" id="tips">
+      <div class="wrap">
+        <header class="section-head">
+          <p class="kicker">Field Guide</p>
+          <h2>Working with each colour</h2>
+          <p class="section-sub">Practical do's and don'ts for communicating with every style.</p>
+        </header>
+        <div class="tips-grid" id="tipsGrid"></div>
+      </div>
+    </section>
+
+    <!-- ===================== FAQ ===================== -->
+    <section class="section alt" id="faq">
+      <div class="wrap wrap-narrow">
+        <header class="section-head">
+          <p class="kicker">Questions</p>
+          <h2>Frequently asked</h2>
+        </header>
+        <div class="faq" id="faqList"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== FOOTER ===================== -->
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <p class="footer-note">
+        An educational workshop inspired by <em>Surrounded by Idiots</em> by Thomas Erikson and the
+        DISC behavioural model of William Moulton Marston. Built for reflection and better
+        conversations — not clinical diagnosis.
+      </p>
+      <p class="footer-meta">
+        <a href="../../index.html">rami.party</a> · Workshop edition · <span id="year"></span>
+      </p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
