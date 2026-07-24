@@ -11,7 +11,17 @@
     const mod = (score) => Math.floor((score - 10) / 2);
     const signed = (n) => (n >= 0 ? '+' : '') + n;
     const cap = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
-    const rint = (n) => Math.floor(Math.random() * n);
+    // Swappable RNG: defaults to Math.random; seeded (mulberry32) during Fate-Seed rolls.
+    const RNG = { next: Math.random };
+    function mulberry32(a) {
+        return function () {
+            a |= 0; a = a + 0x6D2B79F5 | 0;
+            let t = Math.imul(a ^ a >>> 15, 1 | a);
+            t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+            return ((t ^ t >>> 14) >>> 0) / 4294967296;
+        };
+    }
+    const rint = (n) => Math.floor(RNG.next() * n);
     const pick = (arr) => arr[rint(arr.length)];
     const esc = (s) => String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
 
@@ -35,7 +45,14 @@
             boosts: {},                       // slotIndex -> ability (racial/2024 ability boosts)
             classSkills: [], raceSkills: [], expertise: [],
             weapons: [], armor: [], spells: [], feats: [],
-            hpMode: 'average', hpRolls: []
+            hpMode: 'average', hpRolls: [],
+            seed: null,
+            charter: {
+                active: false, edition: '', levelMode: 'any', level: 20,
+                methods: ['array', 'pointbuy', 'roll', 'manual'],
+                maxAbilityTotal: 0, maxAbilityScore: 0, maxWeapons: 0, maxSpells: 0,
+                bannedRaces: [], bannedClasses: [], note: ''
+            }
         };
     }
     let state = freshState();
@@ -56,6 +73,33 @@
     const getBackground = () => D.backgrounds.find(b => b.id === state.backgroundId) || null;
     const edition = () => D.editions.find(e => e.id === state.edition);
     const usesRaceAsi = () => EDITIONS_WITH_RACE_ASI.indexOf(state.edition) >= 0;
+
+    /* ---------- DM Charter constraints ---------- */
+    const CH = () => state.charter || {};
+    const charterOn = () => !!(state.charter && state.charter.active);
+    const raceAllowed = (id) => !charterOn() || (CH().bannedRaces || []).indexOf(id) < 0;
+    const classAllowed = (id) => !charterOn() || (CH().bannedClasses || []).indexOf(id) < 0;
+    const methodAllowed = (m) => !charterOn() || !CH().methods || !CH().methods.length || CH().methods.indexOf(m) >= 0;
+    const levelFixed = () => charterOn() && CH().levelMode === 'fixed';
+    const effLevelMax = () => (charterOn() && CH().levelMode !== 'any') ? CH().level : 20;
+    const pointBudget = () => (charterOn() && CH().maxAbilityTotal) ? CH().maxAbilityTotal : 27;
+    const abilityScoreCap = (dflt) => (charterOn() && CH().maxAbilityScore) ? Math.min(dflt, CH().maxAbilityScore) : dflt;
+    const maxWeaponsAllowed = () => (charterOn() && CH().maxWeapons) ? CH().maxWeapons : Infinity;
+    const maxSpellsAllowed = () => (charterOn() && CH().maxSpells) ? CH().maxSpells : Infinity;
+
+    function normalizeToCharter() {
+        if (!charterOn()) return;
+        const ch = state.charter;
+        if (ch.edition) state.edition = ch.edition;
+        if (ch.levelMode === 'fixed') state.level = ch.level;
+        else if (ch.levelMode === 'max') state.level = Math.min(state.level, ch.level);
+        if (ch.methods && ch.methods.length && ch.methods.indexOf(state.abilityMethod) < 0) setMethod(ch.methods[0]);
+        if (ch.maxWeapons && state.weapons.length > ch.maxWeapons) state.weapons = state.weapons.slice(0, ch.maxWeapons);
+        if (ch.maxSpells && state.spells.length > ch.maxSpells) state.spells = state.spells.slice(0, ch.maxSpells);
+        if (ch.maxAbilityScore) D.abilities.forEach(a => { if (state.baseScores[a] > ch.maxAbilityScore) state.baseScores[a] = ch.maxAbilityScore; });
+        if ((ch.bannedRaces || []).indexOf(state.raceId) >= 0) { state.raceId = null; state.subraceId = null; }
+        if ((ch.bannedClasses || []).indexOf(state.classId) >= 0) { state.classId = null; }
+    }
 
     /* ---------- ability boost plan (racial ASI / 2024 boosts) ---------- */
     function fixedAsi() {
@@ -192,17 +236,43 @@
     /* =====================================================================
      * RENDERING
      * ===================================================================== */
-    function renderAll() { renderEditionBar(); renderTabs(); renderTab(); renderSheet(); persist(); }
+    function renderAll() { normalizeToCharter(); renderEditionBar(); renderBanner(); renderTabs(); renderTab(); renderSheet(); persist(); }
+
+    function renderBanner() {
+        const b = $('#charterBanner');
+        if (!charterOn()) { b.hidden = true; return; }
+        const ch = state.charter;
+        const chips = [];
+        if (ch.edition) { const e = D.editions.find(x => x.id === ch.edition); chips.push('Edition: ' + (e ? e.name + ' ' + e.year : ch.edition)); }
+        if (ch.levelMode === 'fixed') chips.push('Fixed level ' + ch.level);
+        else if (ch.levelMode === 'max') chips.push('Max level ' + ch.level);
+        if (ch.methods && ch.methods.length < 4) chips.push('Ability: ' + ch.methods.join('/'));
+        if (ch.maxAbilityTotal) chips.push('Point budget ' + ch.maxAbilityTotal);
+        if (ch.maxAbilityScore) chips.push('Max score ' + ch.maxAbilityScore);
+        if (ch.maxWeapons) chips.push('Max weapons ' + ch.maxWeapons);
+        if (ch.maxSpells) chips.push('Max spells ' + ch.maxSpells);
+        if ((ch.bannedRaces || []).length) chips.push(ch.bannedRaces.length + ' race(s) barred');
+        if ((ch.bannedClasses || []).length) chips.push(ch.bannedClasses.length + ' class(es) barred');
+        b.hidden = false;
+        b.innerHTML = `<span class="cb-title">🛡️ Bound by the DM’s Charter</span>
+            <span class="cb-chips">${chips.map(c => `<span class="cb-chip">${esc(c)}</span>`).join('')}</span>
+            ${ch.note ? `<span class="cb-chip" style="font-style:italic">“${esc(ch.note)}”</span>` : ''}
+            <button class="cb-view" id="cbView">View / edit</button>`;
+        $('#cbView').addEventListener('click', openCharterModal);
+    }
 
     function renderEditionBar() {
         const bar = $('#editionBar');
         bar.innerHTML = '';
         D.editions.forEach(e => {
             const b = document.createElement('button');
+            const locked = charterOn() && CH().edition && CH().edition !== e.id;
             b.className = 'edition-btn' + (e.id === state.edition ? ' active' : '');
             b.innerHTML = `${esc(e.name)}<small>${esc(e.year)} · ${esc(e.tag)}</small>`;
-            b.title = e.book;
+            b.title = locked ? 'Locked by the DM’s Charter' : e.book;
+            if (locked) { b.disabled = true; b.style.opacity = '.4'; b.style.cursor = 'not-allowed'; }
             b.addEventListener('click', () => {
+                if (locked) { toast('The DM’s Charter locks the edition.', true); return; }
                 if (e.id === state.edition) return;
                 state.edition = e.id; state.boosts = {};
                 toast('Switched to ' + e.name + ' (' + e.year + ')');
@@ -337,7 +407,7 @@
     function generateName() {
         const n = D.names;
         let first = pick(n.a) + pick(n.b);
-        if (Math.random() < 0.35) first += pick(n.b);
+        if (RNG.next() < 0.35) first += pick(n.b);
         return first + ' ' + pick(n.sur);
     }
     function weaveBackstory() {
@@ -366,10 +436,14 @@
         const grid = document.createElement('div'); grid.className = 'option-grid';
         D.races.forEach(r => {
             const card = document.createElement('div');
-            card.className = 'opt-card' + (r.id === state.raceId ? ' selected' : '');
+            const allowed = raceAllowed(r.id);
+            card.className = 'opt-card' + (r.id === state.raceId ? ' selected' : '') + (allowed ? '' : ' locked-out');
             const asiTxt = usesRaceAsi() && r.asi ? Object.keys(r.asi).map(k => `${cap(k)} +${r.asi[k]}`).join(', ') : `${r.size}`;
-            card.innerHTML = `<span class="oc-icon">${RACE_ICONS[r.id] || '⚔️'}</span><div class="oc-title">${esc(r.name)}</div><div class="oc-sub">${esc(asiTxt)}</div>`;
-            card.addEventListener('click', () => { state.raceId = r.id; state.subraceId = null; state.raceSkills = []; state.boosts = {}; renderAll(); });
+            card.innerHTML = `<span class="oc-icon">${RACE_ICONS[r.id] || '⚔️'}</span><div class="oc-title">${esc(r.name)}</div><div class="oc-sub">${allowed ? esc(asiTxt) : 'Barred by DM'}</div>`;
+            card.addEventListener('click', () => {
+                if (!allowed) { toast(r.name + ' is barred by the DM’s Charter.', true); return; }
+                state.raceId = r.id; state.subraceId = null; state.raceSkills = []; state.boosts = {}; renderAll();
+            });
             grid.appendChild(card);
         });
         p.appendChild(grid);
@@ -413,23 +487,33 @@
         const grid = document.createElement('div'); grid.className = 'option-grid';
         D.classes.forEach(c => {
             const card = document.createElement('div');
-            card.className = 'opt-card' + (c.id === state.classId ? ' selected' : '');
-            card.innerHTML = `<span class="oc-icon">${CLASS_ICONS[c.id]}</span><div class="oc-title">${esc(c.name)}</div><div class="oc-sub">d${c.hd} · ${c.primary.map(cap).join('/')}</div>`;
-            card.addEventListener('click', () => { state.classId = c.id; state.subclass = ''; state.classSkills = []; state.expertise = []; renderAll(); });
+            const allowed = classAllowed(c.id);
+            card.className = 'opt-card' + (c.id === state.classId ? ' selected' : '') + (allowed ? '' : ' locked-out');
+            card.innerHTML = `<span class="oc-icon">${CLASS_ICONS[c.id]}</span><div class="oc-title">${esc(c.name)}</div><div class="oc-sub">${allowed ? 'd' + c.hd + ' · ' + c.primary.map(cap).join('/') : 'Barred by DM'}</div>`;
+            card.addEventListener('click', () => {
+                if (!allowed) { toast(c.name + ' is barred by the DM’s Charter.', true); return; }
+                state.classId = c.id; state.subclass = ''; state.classSkills = []; state.expertise = []; renderAll();
+            });
             grid.appendChild(card);
         });
         p.appendChild(grid);
 
         const cls = getClass();
         if (cls) {
+            const lvlMax = effLevelMax();
+            const fixed = levelFixed();
+            const commonLevels = [1, 2, 3, 4, 5, 8, 10, 12, 15, 20].filter(l => l <= lvlMax);
             const wrap = document.createElement('div');
             wrap.innerHTML = `<div class="divider"></div>
-                <div class="row2">
-                    <div><label class="fld">Level (1–20)</label><input type="number" min="1" max="20" value="${state.level}" id="lvlInput"></div>
-                    <div><label class="fld">Subclass</label><select id="subclassSel"><option value="">— choose —</option>${cls.subclasses.map(s => `<option ${s === state.subclass ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
+                <label class="fld">Level ${fixed ? '(fixed by DM at ' + lvlMax + ')' : '(1–' + lvlMax + ')'}</label>
+                <div class="quick-levels">${commonLevels.map(l => `<button type="button" class="quick-lvl${state.level === l ? ' active' : ''}" data-lvl="${l}" ${fixed ? 'disabled' : ''}>${l}</button>`).join('')}</div>
+                <div class="row2" style="margin-top:6px">
+                    <div><input type="number" min="1" max="${lvlMax}" value="${state.level}" id="lvlInput" ${fixed ? 'disabled' : ''}></div>
+                    <div><label class="fld" style="margin-top:0">Subclass</label><select id="subclassSel"><option value="">— choose —</option>${cls.subclasses.map(s => `<option ${s === state.subclass ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></div>
                 </div>`;
             p.appendChild(wrap);
-            $('#lvlInput', wrap).addEventListener('input', e => { state.level = Math.max(1, Math.min(20, parseInt(e.target.value) || 1)); renderSheet(); persist(); });
+            wrap.querySelectorAll('.quick-lvl').forEach(q => q.addEventListener('click', () => { if (fixed) return; state.level = parseInt(q.dataset.lvl); renderAll(); }));
+            $('#lvlInput', wrap).addEventListener('input', e => { state.level = Math.max(1, Math.min(lvlMax, parseInt(e.target.value) || 1)); renderSheet(); persist(); });
             $('#lvlInput', wrap).addEventListener('change', () => renderAll());
             $('#subclassSel', wrap).addEventListener('change', e => { state.subclass = e.target.value; renderAll(); });
 
@@ -468,15 +552,24 @@
         const mr = document.createElement('div'); mr.className = 'method-row';
         methods.forEach(([id, label]) => {
             const chip = document.createElement('span');
+            const ok = methodAllowed(id);
             chip.className = 'chip' + (state.abilityMethod === id ? ' active' : '');
             chip.textContent = label;
-            chip.addEventListener('click', () => { setMethod(id); renderAll(); });
+            if (!ok) { chip.style.opacity = '.35'; chip.style.cursor = 'not-allowed'; chip.title = 'Not allowed by the DM’s Charter'; }
+            chip.addEventListener('click', () => { if (!ok) { toast('The DM’s Charter restricts ability methods.', true); return; } setMethod(id); renderAll(); });
             mr.appendChild(chip);
         });
         if (state.abilityMethod === 'pointbuy') {
+            const budget = pointBudget();
             const used = D.abilities.reduce((s, a) => s + (D.pointBuyCost[state.baseScores[a]] || 0), 0);
             const left = document.createElement('span'); left.className = 'points-left';
-            left.innerHTML = `Points left: <b>${27 - used}</b> / 27`;
+            left.innerHTML = `Points left: <b>${budget - used}</b> / ${budget}`;
+            mr.appendChild(left);
+        }
+        if (state.abilityMethod === 'manual' && charterOn() && CH().maxAbilityTotal) {
+            const tot = D.abilities.reduce((s, a) => s + (state.baseScores[a] || 0), 0);
+            const left = document.createElement('span'); left.className = 'points-left';
+            left.innerHTML = `Ability total: <b>${tot}</b> / ${CH().maxAbilityTotal}`;
             mr.appendChild(left);
         }
         if (state.abilityMethod === 'roll') {
@@ -551,20 +644,30 @@
         card.innerHTML = `<div class="ab-name">${D.abilityNames[ab]}</div>`;
         if (method === 'pointbuy') {
             const v = state.baseScores[ab];
+            const scoreCap = abilityScoreCap(15);
             card.innerHTML += `<div class="ab-score">${total}</div><div class="ab-mod">${signed(mod(total))}</div>
                 <div class="ab-total">base ${v}${bonus ? ' +' + bonus : ''}</div>
-                <div class="ab-controls"><button data-dec ${v <= 8 ? 'disabled' : ''}>−</button><span style="align-self:center;min-width:20px">${v}</span><button data-inc ${v >= 15 ? 'disabled' : ''}>+</button></div>`;
+                <div class="ab-controls"><button data-dec ${v <= 8 ? 'disabled' : ''}>−</button><span style="align-self:center;min-width:20px">${v}</span><button data-inc ${v >= scoreCap ? 'disabled' : ''}>+</button></div>`;
             card.querySelector('[data-dec]').addEventListener('click', () => { if (state.baseScores[ab] > 8) { state.baseScores[ab]--; renderAll(); } });
             card.querySelector('[data-inc]').addEventListener('click', () => {
+                const budget = pointBudget();
                 const used = D.abilities.reduce((s, a) => s + (D.pointBuyCost[state.baseScores[a]] || 0), 0);
                 const next = state.baseScores[ab] + 1;
                 const cost = (D.pointBuyCost[next] || 99) - (D.pointBuyCost[state.baseScores[ab]] || 0);
-                if (next <= 15 && used + cost <= 27) { state.baseScores[ab] = next; renderAll(); } else toast('Not enough points.', true);
+                if (next <= scoreCap && used + cost <= budget) { state.baseScores[ab] = next; renderAll(); } else toast('Not enough points.', true);
             });
         } else if (method === 'manual') {
+            const scoreCap = abilityScoreCap(30);
             card.innerHTML += `<div class="ab-score">${total}</div><div class="ab-mod">${signed(mod(total))}</div><div class="ab-total">${bonus ? 'base +' + bonus : ''}</div>
-                <div class="ab-controls"><input type="number" class="ab-input" min="1" max="30" value="${state.baseScores[ab]}"></div>`;
-            card.querySelector('input').addEventListener('input', e => { state.baseScores[ab] = Math.max(1, Math.min(30, parseInt(e.target.value) || 1)); renderSheet(); persist(); });
+                <div class="ab-controls"><input type="number" class="ab-input" min="1" max="${scoreCap}" value="${state.baseScores[ab]}"></div>`;
+            card.querySelector('input').addEventListener('input', e => {
+                let val = Math.max(1, Math.min(scoreCap, parseInt(e.target.value) || 1));
+                if (charterOn() && CH().maxAbilityTotal) {
+                    const others = D.abilities.reduce((s, a) => s + (a === ab ? 0 : state.baseScores[a]), 0);
+                    if (others + val > CH().maxAbilityTotal) { val = Math.max(1, CH().maxAbilityTotal - others); e.target.value = val; toast('Ability total is capped at ' + CH().maxAbilityTotal + '.', true); }
+                }
+                state.baseScores[ab] = val; renderSheet(); persist();
+            });
             card.querySelector('input').addEventListener('change', () => renderAll());
         } else { // array / roll: assign from pool
             const usedIdx = Object.keys(state.assign).filter(a => a !== ab).map(a => state.assign[a]);
@@ -726,10 +829,14 @@
         function drawWeapons() {
             const q = $('#wq', wFilter).value.toLowerCase(), cat = $('#wcat', wFilter).value;
             const rows = D.weapons.filter(w => (!cat || w.cat === cat) && (!q || w.name.toLowerCase().includes(q)));
+            const atCap = state.weapons.length >= maxWeaponsAllowed();
             wTableWrap.innerHTML = `<table class="data"><thead><tr><th>Weapon</th><th>Cat</th><th>Damage</th><th>Properties</th><th></th></tr></thead>
-                <tbody>${rows.map(w => `<tr><td>${esc(w.name)}</td><td>${w.cat}</td><td>${w.damage} ${w.dtype}</td><td>${(w.props || []).join(', ') || '—'}</td>
-                <td><button class="btn add-btn" data-add="${esc(w.name)}" ${state.weapons.indexOf(w.name) >= 0 ? 'disabled' : ''}>${state.weapons.indexOf(w.name) >= 0 ? '✓' : '+ Add'}</button></td></tr>`).join('')}</tbody></table>`;
-            wTableWrap.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => { state.weapons.push(b.dataset.add); renderAll(); }));
+                <tbody>${rows.map(w => { const has = state.weapons.indexOf(w.name) >= 0; return `<tr><td>${esc(w.name)}</td><td>${w.cat}</td><td>${w.damage} ${w.dtype}</td><td>${(w.props || []).join(', ') || '—'}</td>
+                <td><button class="btn add-btn" data-add="${esc(w.name)}" ${has || (atCap && !has) ? 'disabled' : ''}>${has ? '✓' : (atCap ? '🔒' : '+ Add')}</button></td></tr>`; }).join('')}</tbody></table>`;
+            wTableWrap.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
+                if (state.weapons.length >= maxWeaponsAllowed()) { toast('The DM’s Charter allows at most ' + CH().maxWeapons + ' weapon(s).', true); return; }
+                state.weapons.push(b.dataset.add); renderAll();
+            }));
         }
         $('#wq', wFilter).addEventListener('input', drawWeapons);
         $('#wcat', wFilter).addEventListener('change', drawWeapons);
@@ -819,9 +926,12 @@
                 (!q || s.name.toLowerCase().includes(q) || s.school.toLowerCase().includes(q))
             ).sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
             wrap.innerHTML = `<table class="data"><thead><tr><th>Lv</th><th>Name</th><th>School</th><th>Time</th><th>Range</th><th></th></tr></thead>
-                <tbody>${rows.map(s => `<tr title="${esc(s.desc)}"><td class="spell-level-badge">${s.level === 0 ? 'C' : s.level}</td><td>${esc(s.name)}${s.concentration ? ' <span class="tag">C</span>' : ''}${s.ritual ? ' <span class="tag">R</span>' : ''}</td><td>${s.school}</td><td>${s.time}</td><td>${s.range}</td>
-                <td><button class="btn add-btn" data-add="${esc(s.name)}" ${state.spells.indexOf(s.name) >= 0 ? 'disabled' : ''}>${state.spells.indexOf(s.name) >= 0 ? '✓' : '+ Add'}</button></td></tr>`).join('') || '<tr><td colspan="6" class="empty">No spells match.</td></tr>'}</tbody></table>`;
-            wrap.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => { state.spells.push(b.dataset.add); renderAll(); }));
+                <tbody>${rows.map(s => { const has = state.spells.indexOf(s.name) >= 0; const atCap = state.spells.length >= maxSpellsAllowed(); return `<tr title="${esc(s.desc)}"><td class="spell-level-badge">${s.level === 0 ? 'C' : s.level}</td><td>${esc(s.name)}${s.concentration ? ' <span class="tag">C</span>' : ''}${s.ritual ? ' <span class="tag">R</span>' : ''}</td><td>${s.school}</td><td>${s.time}</td><td>${s.range}</td>
+                <td><button class="btn add-btn" data-add="${esc(s.name)}" ${has || (atCap && !has) ? 'disabled' : ''}>${has ? '✓' : (atCap ? '🔒' : '+ Add')}</button></td></tr>`; }).join('') || '<tr><td colspan="6" class="empty">No spells match.</td></tr>'}</tbody></table>`;
+            wrap.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => {
+                if (state.spells.length >= maxSpellsAllowed()) { toast('The DM’s Charter allows at most ' + CH().maxSpells + ' spell(s).', true); return; }
+                state.spells.push(b.dataset.add); renderAll();
+            }));
         }
         $('#sq', filter).addEventListener('input', draw);
         $('#slvl', filter).addEventListener('change', draw);
@@ -949,50 +1059,69 @@
      * ===================================================================== */
     const FIRST_NAMES = ['Thalia', 'Kael', 'Mirabel', 'Dorn', 'Sylas', 'Vesper', 'Bram', 'Isolde', 'Garrick', 'Nyx', 'Rowan', 'Elara', 'Fenwick', 'Seraphine', 'Ozric', 'Lyra', 'Torvald', 'Wren', 'Aldric', 'Maeve'];
     const SURNAMES = ['Brightwood', 'Stormcrow', 'Ashford', 'Nightbreeze', 'Ironheart', 'Fairwind', 'Blackthorn', 'Silvervein', 'Ravensong', 'Emberfell', 'Duskwalker', 'Thornfield'];
-    function randomCharacter() {
+    function randomCharacter(seed) {
+        // Preserve any active DM Charter across the reroll.
+        const keepCharter = (state.charter && state.charter.active) ? JSON.parse(JSON.stringify(state.charter)) : null;
+        if (seed == null || isNaN(seed)) seed = Math.floor(Math.random() * 1e9);
+        seed = seed >>> 0;
+        RNG.next = mulberry32(seed);   // deterministic from here
+
         state = freshState();
-        state.edition = '5e24';
+        if (keepCharter) state.charter = keepCharter;
+        state.edition = (keepCharter && keepCharter.edition) ? keepCharter.edition : '5e24';
         state.identity.name = generateName();
         state.identity.portrait = pick(D.portraits);
         state.identity.alignment = pick(D.alignments);
         Object.keys(D.story).forEach(rollStoryPart);
-        const race = pick(D.races); state.raceId = race.id;
+
+        const races = D.races.filter(r => raceAllowed(r.id));
+        const race = pick(races.length ? races : D.races); state.raceId = race.id;
         if (race.subraces) state.subraceId = pick(race.subraces).id;
-        const cls = pick(D.classes); state.classId = cls.id; state.subclass = pick(cls.subclasses);
-        state.level = 1 + rint(8);
+        const classes = D.classes.filter(c => classAllowed(c.id));
+        const cls = pick(classes.length ? classes : D.classes); state.classId = cls.id; state.subclass = pick(cls.subclasses);
+        if (levelFixed()) state.level = keepCharter.level;
+        else { const maxL = effLevelMax(); state.level = Math.min(maxL, 1 + rint(Math.min(8, maxL))); }
         state.backgroundId = pick(D.backgrounds).id;
-        // abilities: roll and assign best to primary
-        state.abilityMethod = 'roll'; rollPool();
+
+        // abilities: use an allowed method; roll numbers and assign best to primary
+        const allowed = (keepCharter && keepCharter.active && keepCharter.methods.length) ? keepCharter.methods : ['array', 'pointbuy', 'roll', 'manual'];
+        const useRoll = allowed.indexOf('roll') >= 0;
+        state.abilityMethod = useRoll ? 'roll' : (allowed.indexOf('array') >= 0 ? 'array' : allowed[0]);
+        if (useRoll) rollPool(); else { state.pool = D.standardArray.slice(); state.assign = {}; }
         const order = [...cls.primary, ...D.abilities.filter(a => cls.primary.indexOf(a) < 0)];
         const sortedIdx = state.pool.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]).map(x => x[1]);
-        order.forEach((ab, i) => { state.assign[ab] = sortedIdx[i]; });
-        syncAssign();
+        order.forEach((ab, i) => { state.assign[ab] = sortedIdx[i]; state.baseScores[ab] = state.pool[sortedIdx[i]]; });
         // boosts
         if (!usesRaceAsi()) { state.boosts = { 0: cls.primary[0], 1: cls.primary[1] || pick(D.abilities.filter(a => a !== cls.primary[0])) }; }
         // skills
         const pool = cls.skillList.slice();
         for (let i = 0; i < cls.skillChoose && pool.length; i++) { const s = pool.splice(rint(pool.length), 1)[0]; state.classSkills.push(s); }
         if (cls.id === 'rogue' || cls.id === 'bard') state.expertise = state.classSkills.slice(0, 2);
-        // equipment
+        // equipment (respect weapon cap)
         const weap = D.weapons.filter(w => cls.weapons.indexOf('Martial') >= 0 ? w.cat === 'Martial' : w.cat === 'Simple');
         state.weapons = [pick(weap.length ? weap : D.weapons).name];
+        if (state.weapons.length > maxWeaponsAllowed()) state.weapons = state.weapons.slice(0, maxWeaponsAllowed());
         const wearable = D.armor.filter(a => a.cat !== 'Shield' && cls.armor.indexOf(a.cat) >= 0);
         if (wearable.length) state.armor = [pick(wearable).name];
-        if (cls.armor.indexOf('Shields') >= 0 && Math.random() < 0.5) state.armor.push('Shield');
-        // spells
+        if (cls.armor.indexOf('Shields') >= 0 && RNG.next() < 0.5) state.armor.push('Shield');
+        // spells (respect spell cap)
         const sc = cls.spellcasting;
         if (sc) {
             const list = D.spells.filter(s => (s.classes || []).indexOf(cls.id) >= 0);
             const cantrips = list.filter(s => s.level === 0), lvl1 = list.filter(s => s.level === 1 || s.level === 2);
             for (let i = 0; i < 2 && cantrips.length; i++) { const s = cantrips.splice(rint(cantrips.length), 1)[0]; state.spells.push(s.name); }
             for (let i = 0; i < 3 && lvl1.length; i++) { const s = lvl1.splice(rint(lvl1.length), 1)[0]; state.spells.push(s.name); }
+            if (state.spells.length > maxSpellsAllowed()) state.spells = state.spells.slice(0, maxSpellsAllowed());
         }
         // a feat if eligible, and a woven backstory
-        if (state.level >= 4 && Math.random() < 0.8) state.feats = [pick(D.feats).name];
+        if (state.level >= 4 && RNG.next() < 0.8) state.feats = [pick(D.feats).name];
         state.identity.backstory = weaveBackstory();
+
+        RNG.next = Math.random;        // restore live randomness for the dice roller
+        state.seed = seed;
         state.tab = TABS.length - 1;
         renderAll();
-        toast('🎲 Rolled up ' + state.identity.name + '!');
+        toast('🔮 Fate Seed ' + seed + ' → ' + state.identity.name);
     }
 
     /* =====================================================================
@@ -1069,12 +1198,144 @@
         } catch (e) { toast('Could not create share link.', true); }
     }
     function loadFromHash() {
-        if (location.hash.indexOf('#c=') !== 0) return false;
-        try {
-            const json = decodeURIComponent(escape(atob(location.hash.slice(3))));
-            state = Object.assign(freshState(), JSON.parse(json));
-            return true;
-        } catch (e) { return false; }
+        const h = location.hash;
+        if (h.indexOf('#c=') === 0) {
+            try { state = Object.assign(freshState(), JSON.parse(decodeURIComponent(escape(atob(h.slice(3)))))); return 'char'; }
+            catch (e) { return false; }
+        }
+        if (h.indexOf('#charter=') === 0) {
+            try {
+                const payload = JSON.parse(decodeURIComponent(escape(atob(h.slice(9)))));
+                state = freshState();
+                state.charter = Object.assign(state.charter, payload.charter || payload);
+                state.charter.active = true;
+                if (payload.seed != null) { normalizeToCharter(); randomCharacter(payload.seed); return 'charter+seed'; }
+                return 'charter';
+            } catch (e) { return false; }
+        }
+        if (h.indexOf('#seed=') === 0) {
+            const n = parseInt(h.slice(6));
+            if (!isNaN(n)) { randomCharacter(n); return 'seed'; }
+        }
+        return false;
+    }
+
+    /* =====================================================================
+     * MODAL + FATE SEED + DM CHARTER
+     * ===================================================================== */
+    function openModal(title, bodyHTML) {
+        const overlay = $('#modalOverlay'), m = $('#modal');
+        m.innerHTML = `<div class="modal-head"><h2>${title}</h2><button class="modal-close" aria-label="Close">✕</button></div><div class="modal-body">${bodyHTML}</div>`;
+        overlay.hidden = false;
+        m.querySelector('.modal-close').addEventListener('click', closeModal);
+        return m;
+    }
+    function closeModal() { $('#modalOverlay').hidden = true; $('#modal').innerHTML = ''; }
+    $('#modalOverlay') && document.addEventListener('click', e => { if (e.target === $('#modalOverlay')) closeModal(); });
+
+    function openSeedModal() {
+        const seed = state.seed != null ? state.seed : '—';
+        const m = openModal('🔮 Fate Seed', `
+            <p class="lead">Every random hero is spun from a single <b>Fate Seed</b>. Share the seed and anyone can conjure the exact same character — the dice of fate fall the same way twice.</p>
+            <div class="modal-section-title">This character’s seed</div>
+            <div class="seed-display" id="seedDisplay">${seed}</div>
+            <div class="btn-row" style="margin-top:0">
+                <button class="btn btn-primary" id="rerollSeed">🎲 Roll a new fate</button>
+                <button class="btn btn-gold" id="copySeedLink">🔗 Copy Fate Seed link</button>
+            </div>
+            <div class="modal-section-title">Summon a specific fate</div>
+            <label class="fld">Enter a Fate Seed number</label>
+            <div class="share-out">
+                <input type="number" id="seedInput" placeholder="e.g. 424242" value="${state.seed != null ? state.seed : ''}">
+                <button class="btn" id="castSeed">Cast</button>
+            </div>
+            <p class="lead" style="margin-top:10px">${charterOn() ? '🛡️ Rolls will honour the active DM’s Charter.' : ''}</p>
+        `);
+        m.querySelector('#rerollSeed').addEventListener('click', () => { randomCharacter(); m.querySelector('#seedDisplay').textContent = state.seed; m.querySelector('#seedInput').value = state.seed; });
+        m.querySelector('#castSeed').addEventListener('click', () => { const n = parseInt(m.querySelector('#seedInput').value); if (isNaN(n)) { toast('Enter a seed number.', true); return; } randomCharacter(n); m.querySelector('#seedDisplay').textContent = state.seed; });
+        m.querySelector('#copySeedLink').addEventListener('click', () => {
+            if (state.seed == null) { toast('Roll a character first.', true); return; }
+            const url = location.origin + location.pathname + '#seed=' + state.seed;
+            navigator.clipboard.writeText(url).then(() => toast('🔗 Fate Seed link copied'), () => { location.hash = 'seed=' + state.seed; toast('🔗 Link is in the address bar'); });
+        });
+    }
+
+    function openCharterModal() {
+        const ch = state.charter;
+        const raceChecks = D.races.map(r => `<label class="ban-item"><input type="checkbox" data-ban-race="${r.id}" ${(ch.bannedRaces || []).indexOf(r.id) >= 0 ? 'checked' : ''}>${esc(r.name)}</label>`).join('');
+        const classChecks = D.classes.map(c => `<label class="ban-item"><input type="checkbox" data-ban-class="${c.id}" ${(ch.bannedClasses || []).indexOf(c.id) >= 0 ? 'checked' : ''}>${esc(c.name)}</label>`).join('');
+        const methodChecks = [['array', 'Standard Array'], ['pointbuy', 'Point Buy'], ['roll', 'Roll 4d6'], ['manual', 'Manual']]
+            .map(([id, l]) => `<label class="ban-item"><input type="checkbox" data-method="${id}" ${(ch.methods || []).indexOf(id) >= 0 ? 'checked' : ''}>${l}</label>`).join('');
+        const m = openModal('🛡️ The DM’s Charter', `
+            <p class="lead">Set the rules of your table, then send players a <b>Charter link</b>. Their builder will be bound to your decree — locked edition, level caps, ability limits, weapon counts and barred races or classes.</p>
+
+            <div class="modal-section-title">Edition & Level</div>
+            <div class="row2">
+                <div><label class="fld">Lock edition</label><select id="chEdition"><option value="">Any edition</option>${D.editions.map(e => `<option value="${e.id}" ${ch.edition === e.id ? 'selected' : ''}>${esc(e.name)} ${e.year}</option>`).join('')}</select></div>
+                <div><label class="fld">Level rule</label><select id="chLevelMode"><option value="any" ${ch.levelMode === 'any' ? 'selected' : ''}>No limit</option><option value="max" ${ch.levelMode === 'max' ? 'selected' : ''}>Maximum level</option><option value="fixed" ${ch.levelMode === 'fixed' ? 'selected' : ''}>Fixed level</option></select></div>
+            </div>
+            <label class="fld">Level value (1–20)</label><input type="number" id="chLevel" min="1" max="20" value="${ch.level}">
+
+            <div class="modal-section-title">Ability Scores</div>
+            <label class="fld">Allowed generation methods</label>
+            <div class="ban-grid">${methodChecks}</div>
+            <div class="row2">
+                <div><label class="fld">Point-buy budget (0 = default 27)</label><input type="number" id="chMaxTotal" min="0" value="${ch.maxAbilityTotal || 0}"></div>
+                <div><label class="fld">Max single score (0 = none)</label><input type="number" id="chMaxScore" min="0" max="20" value="${ch.maxAbilityScore || 0}"></div>
+            </div>
+
+            <div class="modal-section-title">Limits</div>
+            <div class="row2">
+                <div><label class="fld">Max weapons (0 = none)</label><input type="number" id="chMaxWeapons" min="0" value="${ch.maxWeapons || 0}"></div>
+                <div><label class="fld">Max spells (0 = none)</label><input type="number" id="chMaxSpells" min="0" value="${ch.maxSpells || 0}"></div>
+            </div>
+
+            <div class="modal-section-title">Barred Races</div>
+            <div class="ban-grid">${raceChecks}</div>
+            <div class="modal-section-title">Barred Classes</div>
+            <div class="ban-grid">${classChecks}</div>
+
+            <div class="modal-section-title">Decree note (optional)</div>
+            <input type="text" id="chNote" maxlength="80" placeholder="e.g. Level-1 one-shot, no full casters" value="${esc(ch.note || '')}">
+
+            <div class="btn-row">
+                <button class="btn ${ch.active ? 'btn-gold' : 'btn-primary'}" id="chToggle">${ch.active ? '✔ Charter active (click to lift)' : '🛡️ Apply to my builder'}</button>
+                <button class="btn btn-primary" id="chCopyLink">📜 Copy Charter link</button>
+                <button class="btn" id="chCopySeedLink">🔮 Charter + Fate Seed link</button>
+            </div>
+            <p class="lead" style="margin-top:10px">Players who open a Charter link build within these limits. Add a Fate Seed to also hand them a ready-rolled (but still legal) character.</p>
+        `);
+
+        const collect = () => {
+            ch.edition = $('#chEdition', m).value;
+            ch.levelMode = $('#chLevelMode', m).value;
+            ch.level = Math.max(1, Math.min(20, parseInt($('#chLevel', m).value) || 1));
+            ch.methods = $$('[data-method]', m).filter(c => c.checked).map(c => c.dataset.method);
+            if (!ch.methods.length) ch.methods = ['array', 'pointbuy', 'roll', 'manual'];
+            ch.maxAbilityTotal = Math.max(0, parseInt($('#chMaxTotal', m).value) || 0);
+            ch.maxAbilityScore = Math.max(0, parseInt($('#chMaxScore', m).value) || 0);
+            ch.maxWeapons = Math.max(0, parseInt($('#chMaxWeapons', m).value) || 0);
+            ch.maxSpells = Math.max(0, parseInt($('#chMaxSpells', m).value) || 0);
+            ch.bannedRaces = $$('[data-ban-race]', m).filter(c => c.checked).map(c => c.dataset.banRace);
+            ch.bannedClasses = $$('[data-ban-class]', m).filter(c => c.checked).map(c => c.dataset.banClass);
+            ch.note = $('#chNote', m).value.trim();
+        };
+        const charterPayload = () => { collect(); const c = JSON.parse(JSON.stringify(ch)); c.active = true; return c; };
+        m.querySelector('#chToggle').addEventListener('click', () => {
+            collect(); ch.active = !ch.active; closeModal(); renderAll();
+            toast(ch.active ? '🛡️ Charter applied to your builder' : 'Charter lifted');
+        });
+        m.querySelector('#chCopyLink').addEventListener('click', () => {
+            const enc = btoa(unescape(encodeURIComponent(JSON.stringify({ charter: charterPayload() }))));
+            const url = location.origin + location.pathname + '#charter=' + enc;
+            navigator.clipboard.writeText(url).then(() => toast('📜 Charter link copied — send it to your players'), () => { location.hash = 'charter=' + enc; toast('📜 Link is in the address bar'); });
+        });
+        m.querySelector('#chCopySeedLink').addEventListener('click', () => {
+            const seed = state.seed != null ? state.seed : Math.floor(Math.random() * 1e9);
+            const enc = btoa(unescape(encodeURIComponent(JSON.stringify({ charter: charterPayload(), seed }))));
+            const url = location.origin + location.pathname + '#charter=' + enc;
+            navigator.clipboard.writeText(url).then(() => toast('🔮 Charter + Fate Seed link copied'), () => { location.hash = 'charter=' + enc; toast('🔮 Link is in the address bar'); });
+        });
     }
 
     /* =====================================================================
@@ -1095,14 +1356,21 @@
      * ===================================================================== */
     function init() {
         loadAutosave();
-        if (loadFromHash()) { history.replaceState(null, '', location.pathname); toast('🔗 Loaded shared character'); }
+        const loaded = loadFromHash();
+        if (loaded) {
+            history.replaceState(null, '', location.pathname);
+            if (loaded === 'charter' || loaded === 'charter+seed') toast('🛡️ You are bound by a DM’s Charter');
+            else toast('🔗 Loaded shared character');
+        }
         let theme = 'parchment';
         try { theme = localStorage.getItem(THEME) || 'parchment'; } catch (e) {}
         applyTheme(theme);
         if (!state.pool.length && state.abilityMethod === 'array') { state.pool = D.standardArray.slice(); }
 
         $('#themeBtn').addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'parchment' : 'dark'));
-        $('#randomBtn').addEventListener('click', randomCharacter);
+        $('#randomBtn').addEventListener('click', () => randomCharacter());
+        $('#seedBtn').addEventListener('click', openSeedModal);
+        $('#charterBtn').addEventListener('click', openCharterModal);
         $('#prevBtn').addEventListener('click', () => { if (state.tab > 0) { state.tab--; renderAll(); } });
         $('#nextBtn').addEventListener('click', () => { if (state.tab < TABS.length - 1) { state.tab++; renderAll(); } });
         $('#saveBtn').addEventListener('click', saveCharacter);
@@ -1113,6 +1381,7 @@
         $('#printBtn').addEventListener('click', () => window.print());
         const cb = $('#copyBtn'); if (cb) cb.addEventListener('click', copyCharacter);
         const sb = $('#shareBtn'); if (sb) sb.addEventListener('click', shareLink);
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
         setupDice();
         renderAll();

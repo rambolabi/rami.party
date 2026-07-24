@@ -19,10 +19,13 @@
             <nav class="edition-bar" id="editionBar" aria-label="Choose edition"></nav>
             <div class="topbar-actions">
                 <button class="icon-btn" id="themeBtn" title="Toggle theme">🌙 Theme</button>
+                <button class="icon-btn" id="seedBtn" title="Fate Seed — reproduce any roll">🔮 Fate Seed</button>
+                <button class="icon-btn" id="charterBtn" title="DM Charter — set player limits">🛡️ DM Charter</button>
                 <button class="icon-btn" id="randomBtn" title="Generate a random character">🎲 Surprise me</button>
             </div>
         </div>
         <div class="edition-note" id="editionNote"></div>
+        <div class="charter-banner" id="charterBanner" hidden></div>
     </header>
 
     <main class="app">
@@ -79,6 +82,10 @@
     </div>
 
     <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+    <div class="modal-overlay" id="modalOverlay" hidden>
+        <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
+    </div>
 
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>

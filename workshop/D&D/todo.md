@@ -37,6 +37,14 @@ Random gen produced a valid *Lv5 Stout Halfling Warlock* (CHA correctly boosted 
 - Random generator now also rolls personality, portrait, a name, an eligible feat, and a woven backstory.
 - Verified: name-gen, portrait, weaver (8/8 lines), weave→733-char backstory, HP roll toggle, feat→sheet, share-link round-trip — all pass, no console errors.
 
+### v1.2 — Fate Seed + DM's Charter (table controls)
+- **🔮 Fate Seed**: every random hero is spun from a seedable PRNG (mulberry32). The Fate Seed modal shows the current seed, lets you *cast* any seed number, and copies a `#seed=` link so anyone reproduces the **exact** same character (verified: seed 123456 → identical hero twice; different seeds diverge). The dice roller stays truly random.
+- **🛡️ The DM's Charter**: a DM modal to set table rules and mint a `#charter=` link for players. Constraints enforced live in the builder:
+  - Lock **edition**; **fixed** or **maximum level**; allowed **ability-score methods**; point-buy **budget** & **max single score**; **max weapons** & **max spells**; **barred races** and **barred classes**; a decree note.
+  - Players opening a Charter link see a **"Bound by the DM's Charter"** banner and the builder disables/greys out anything off-limits (🔒). Optionally bundle a Fate Seed (`Charter + Fate Seed` link) to hand players a ready-rolled *legal* character.
+  - Quick-level chips (1–20) make picking a level-1 character one tap; respects the charter's cap/fixed level.
+- Verified on a fresh load: banner + edition lock (5 others disabled), fixed level 1, pointbuy-only, Tiefling & Wizard barred, weapon cap — all enforced; seeded rolls honour the charter; no console errors.
+
 ### Known approximations / next up (see phases below)
 - Older editions (1E/2E/3.5/4E) use adapted 5E SRD data — not native rulesets (THAC0, 3.x skill points, 4E powers not modeled yet).
 - Spell list is a curated ~50-spell SRD subset (not the full list); no full per-level class-feature trees; multiclassing, feats catalog, and shareable-link export are still TODO.
@@ -99,7 +107,7 @@ Random gen produced a valid *Lv5 Stout Halfling Warlock* (CHA correctly boosted 
 - [ ] **Class** selection with subclass/archetype, hit dice, proficiencies, class features by level.
 - [ ] **Multiclassing** support (with prerequisite validation).
 - [ ] **Background** selection (traits, ideals, bonds, flaws, background feature, proficiencies).
-- [ ] **Level** selection (1–20) auto-computing features, proficiency bonus, ASIs.
+- [x] **Level** selection (1–20) auto-computing features, proficiency bonus, ASIs.
 - [x] **Feats** / Ability Score Improvements at appropriate levels (edition-aware).
 - [x] Derived stats: HP, AC, initiative, proficiency bonus, passive Perception, carrying capacity, speed.
 - [ ] Saving throws + proficiencies.
