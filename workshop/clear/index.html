@@ -1,26 +1,129 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <meta name="description" content="Privacy Cleaner — wipe this site's browser data (cookies, storage, cache, service workers) and quickly sign out of the top 100 websites.">
     <title>Privacy Cleaner</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <h1>Privacy Cleaner</h1>
-        <p>This page helps you take control of your privacy by performing cleaning actions within your browser.</p>
-        
-        <div class="actions">
-            <button id="clearPrivacyBtn">Clear Privacy</button>
-            <button id="logoutBtn">Logout of Social Media</button>
-        </div>
+        <header class="app-header">
+            <div>
+                <h1>🧹 Privacy Cleaner</h1>
+                <p>Wipe the browser data this site can reach and jump straight to the sign-out pages of the
+                   web's most-used services. Everything runs locally in your browser — nothing is uploaded.</p>
+            </div>
+            <button id="themeToggle" class="theme-toggle" aria-label="Toggle theme">🌙 Dark</button>
+        </header>
 
-        <div class="log-container">
-            <h2>Log</h2>
-            <pre id="log"></pre>
-        </div>
+        <!-- ===== Data cleaning ===== -->
+        <section class="panel">
+            <h2>🗑️ Clear this site's data</h2>
+            <p class="subtitle">
+                Browsers only let a page clear data for its own origin. These actions genuinely wipe what's listed
+                for <strong id="originLabel">this site</strong>. To clear data for other sites, use the sign-out list below.
+            </p>
+
+            <div class="storage-meter">
+                <div class="storage-bar"><div class="storage-bar-fill" id="storageFill"></div></div>
+                <div class="storage-text" id="storageText">Estimating storage usage…</div>
+            </div>
+
+            <div class="stat-row">
+                <div class="stat"><div class="num" id="statCookies">–</div><div class="label">Cookies</div></div>
+                <div class="stat"><div class="num" id="statLocal">–</div><div class="label">Local storage</div></div>
+                <div class="stat"><div class="num" id="statSession">–</div><div class="label">Session storage</div></div>
+                <div class="stat"><div class="num" id="statCaches">–</div><div class="label">Cache stores</div></div>
+            </div>
+
+            <div class="options-grid" id="optionsGrid">
+                <label class="option">
+                    <input type="checkbox" class="opt" data-key="clipboard">
+                    <span class="opt-body"><strong>Clipboard</strong><span>Overwrite the copied text</span></span>
+                </label>
+                <label class="option">
+                    <input type="checkbox" class="opt" data-key="local" checked>
+                    <span class="opt-body"><strong>Local storage</strong><span>Persistent key/value data</span></span>
+                </label>
+                <label class="option">
+                    <input type="checkbox" class="opt" data-key="session" checked>
+                    <span class="opt-body"><strong>Session storage</strong><span>Per-tab key/value data</span></span>
+                </label>
+                <label class="option">
+                    <input type="checkbox" class="opt" data-key="cookies" checked>
+                    <span class="opt-body"><strong>Cookies</strong><span>JavaScript-readable cookies</span></span>
+                </label>
+                <label class="option">
+                    <input type="checkbox" class="opt" data-key="indexeddb" checked>
+                    <span class="opt-body"><strong>IndexedDB</strong><span>Structured databases</span></span>
+                </label>
+                <label class="option">
+                    <input type="checkbox" class="opt" data-key="cache" checked>
+                    <span class="opt-body"><strong>Cache storage</strong><span>Cache API / offline files</span></span>
+                </label>
+                <label class="option">
+                    <input type="checkbox" class="opt" data-key="serviceworkers" checked>
+                    <span class="opt-body"><strong>Service workers</strong><span>Background workers</span></span>
+                </label>
+            </div>
+
+            <div class="btn-row">
+                <button id="cleanSelectedBtn" class="btn btn-primary">🧽 Clean selected</button>
+                <button id="cleanAllBtn" class="btn btn-danger">💥 Clean everything</button>
+                <button id="refreshStatsBtn" class="btn btn-ghost">🔄 Refresh stats</button>
+            </div>
+        </section>
+
+        <!-- ===== Sign out of sites ===== -->
+        <section class="panel">
+            <h2>🚪 Sign out of accounts <span style="font-weight:400;color:var(--text-dim);font-size:.7em">(Top 100 sites)</span></h2>
+            <p class="subtitle">
+                Select the services you want to sign out of, then open their logout pages. Pages open in a new tab so
+                the logout runs in that site's own session (the only way that reliably works).
+            </p>
+
+            <div class="sites-toolbar">
+                <div class="search-box">
+                    <input type="search" id="siteSearch" placeholder="Search sites…" aria-label="Search sites">
+                </div>
+                <select id="categoryFilter" class="filter" aria-label="Filter by category">
+                    <option value="">All categories</option>
+                </select>
+                <button id="selectAllBtn" class="btn btn-sm btn-ghost">Select all</button>
+                <button id="selectNoneBtn" class="btn btn-sm btn-ghost">Clear</button>
+                <span class="site-count" id="siteCount"></span>
+            </div>
+
+            <div class="sites-list" id="sitesList"></div>
+
+            <div class="btn-row">
+                <button id="openSelectedBtn" class="btn btn-primary" disabled>🚀 Open selected logout pages</button>
+                <span class="site-count" id="selectedCount" style="margin-left:0;align-self:center"></span>
+            </div>
+
+            <div class="note">
+                ℹ️ Your browser may block multiple pop-ups the first time — allow pop-ups for this page, or click a
+                site's <strong>Open</strong> button to sign out one at a time. Some services need you to confirm on
+                their page. Logout links are best-effort and may change over time.
+            </div>
+        </section>
+
+        <!-- ===== Log ===== -->
+        <section class="panel">
+            <div class="log-header">
+                <h2>📋 Activity log</h2>
+                <div class="btn-row">
+                    <button id="copyLogBtn" class="btn btn-sm btn-ghost">Copy</button>
+                    <button id="clearLogBtn" class="btn btn-sm btn-ghost">Clear</button>
+                </div>
+            </div>
+            <pre id="log" aria-live="polite"></pre>
+        </section>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
