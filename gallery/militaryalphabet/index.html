@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Military Phonetic Alphabet // NATO Spelling Code</title>
-    <meta name="description" content="Interactive NATO/ICAO military phonetic alphabet reference with a live text-to-phonetic translator. Tap any letter to hear it. Keeps your screen awake while open.">
-    <meta name="theme-color" content="#04140a">
-    <meta name="color-scheme" content="dark">
+    <title>Phonetic Alphabet Studio // Military, World & Fantasy Spelling Codes</title>
+    <meta name="description" content="Interactive phonetic alphabet reference with a live text-to-phonetic translator. Military NATO code, world language spelling alphabets and fantasy tongues (Elvish, Dwarvish, Draconic, Valyrian). Switchable themes. Tap any letter to hear it.">
+    <meta name="theme-color" content="#0d1117">
+    <meta name="color-scheme" content="dark light">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23041209'/%3E%3Ctext x='8' y='12' font-size='11' text-anchor='middle' fill='%2339ff9e' font-family='monospace' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -18,18 +18,35 @@
         <header class="term-header">
             <div class="brand">
                 <span class="brand-dot" aria-hidden="true"></span>
-                <h1 class="term-title">MILITARY PHONETIC ALPHABET</h1>
+                <h1 class="term-title">PHONETIC ALPHABET STUDIO</h1>
             </div>
-            <button type="button" id="wakeToggle" class="status-pill" aria-pressed="false" title="Toggle screen wake lock">
-                <span class="pip" id="wakePip" aria-hidden="true"></span>
-                <span id="wakeText">WAKE LOCK: INIT…</span>
-            </button>
+            <div class="header-actions">
+                <button type="button" id="muteToggle" class="status-pill" aria-pressed="true" title="Toggle sound">
+                    <span class="pip" id="mutePip" aria-hidden="true">🔇</span>
+                    <span id="muteText">SOUND: OFF</span>
+                </button>
+                <button type="button" id="wakeToggle" class="status-pill" aria-pressed="false" title="Toggle screen wake lock">
+                    <span class="pip" id="wakePip" aria-hidden="true"></span>
+                    <span id="wakeText">WAKE LOCK: INIT…</span>
+                </button>
+            </div>
         </header>
 
         <p class="intro">
-            The <strong>NATO / ICAO</strong> spelling alphabet — spell anything clearly over radio or phone.
-            <span class="intro-sub">This screen stays awake while the page is open · tap a tile to hear it.</span>
+            <span id="alphaNote"><strong>NATO / ICAO</strong> spelling alphabet — spell anything clearly over radio or phone.</span>
+            <span class="intro-sub">This screen stays awake while the page is open · tap a tile to hear it · sound is muted by default.</span>
         </p>
+
+        <section class="controls" aria-label="Alphabet and theme controls">
+            <label class="control">
+                <span class="control-label">ALPHABET</span>
+                <select id="alphabetSelect" class="select" aria-label="Choose alphabet"></select>
+            </label>
+            <label class="control">
+                <span class="control-label">THEME</span>
+                <select id="themeSelect" class="select" aria-label="Choose theme"></select>
+            </label>
+        </section>
 
         <section class="translator" aria-label="Text to phonetic translator">
             <div class="field-label"><span class="prompt">&gt;</span> TRANSLATE TEXT → PHONETIC</div>
