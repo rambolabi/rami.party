@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="parchment">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <meta name="description" content="D&D Forge — a beautiful, edition-aware Dungeons & Dragons character creator. Design characters, skills, weapons and spells across editions, all in your browser.">
+    <title>D&D Forge — Character Creator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- ===== Top bar: edition selector ===== -->
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand"><span class="dragon">🐉</span> D&amp;D Forge</div>
+            <nav class="edition-bar" id="editionBar" aria-label="Choose edition"></nav>
+            <div class="topbar-actions">
+                <button class="icon-btn" id="themeBtn" title="Toggle theme">🌙 Theme</button>
+                <button class="icon-btn" id="randomBtn" title="Generate a random character">🎲 Surprise me</button>
+            </div>
+        </div>
+        <div class="edition-note" id="editionNote"></div>
+    </header>
+
+    <main class="app">
+        <!-- ===== Builder ===== -->
+        <div class="main-col">
+            <div class="tabs" id="tabs"></div>
+            <div id="tabContent"></div>
+
+            <div class="btn-row">
+                <button class="btn" id="prevBtn">◀ Back</button>
+                <button class="btn btn-primary" id="nextBtn">Next ▶</button>
+                <span style="flex:1"></span>
+                <button class="btn btn-gold" id="saveBtn">💾 Save</button>
+                <button class="btn" id="loadBtn">📂 Load</button>
+                <button class="btn" id="copyBtn">📋 Copy</button>
+                <button class="btn" id="shareBtn">🔗 Share</button>
+                <button class="btn" id="exportBtn">⬇️ Export</button>
+                <button class="btn" id="importBtn">⬆️ Import</button>
+                <button class="btn" id="printBtn">🖨️ Print</button>
+            </div>
+            <input type="file" id="importFile" accept="application/json" hidden>
+        </div>
+
+        <!-- ===== Live character sheet ===== -->
+        <aside class="sheet-col">
+            <div class="sheet" id="sheet"></div>
+        </aside>
+    </main>
+
+    <!-- ===== Dice roller ===== -->
+    <button class="dice-fab" id="diceFab" title="Dice roller" aria-label="Open dice roller">🎲</button>
+    <div class="dice-panel" id="dicePanel">
+        <h3>⚄ Dice Roller</h3>
+        <div class="dice-btns">
+            <button data-die="4">d4</button>
+            <button data-die="6">d6</button>
+            <button data-die="8">d8</button>
+            <button data-die="10">d10</button>
+            <button data-die="12">d12</button>
+            <button data-die="20">d20</button>
+            <button data-die="100">d100</button>
+            <button data-die="0" id="customDie">✎</button>
+        </div>
+        <div class="dice-adv">
+            <span class="chip active" data-mode="normal">Normal</span>
+            <span class="chip" data-mode="adv">Advantage</span>
+            <span class="chip" data-mode="dis">Disadvant.</span>
+        </div>
+        <div class="dice-result" id="diceResult">
+            <div class="dr-total">—</div>
+            <div class="dr-detail">Pick a die to roll</div>
+        </div>
+        <div class="dice-log" id="diceLog"></div>
+    </div>
+
+    <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
