@@ -1,0 +1,93 @@
+/* =====================================================================
+ * D&D Forge — Adventuring gear, starting gold, languages
+ * Exposes window.DND_GEAR, window.DND_STARTING_GOLD, window.DND_LANGUAGES.
+ * ===================================================================== */
+window.DND_GEAR = [
+    { name: 'Backpack', cost: '2 gp', weight: 5 },
+    { name: 'Bedroll', cost: '1 gp', weight: 7 },
+    { name: 'Rations (1 day)', cost: '5 sp', weight: 2 },
+    { name: 'Waterskin', cost: '2 sp', weight: 5 },
+    { name: 'Rope, hempen (50 ft)', cost: '1 gp', weight: 10 },
+    { name: 'Torch', cost: '1 cp', weight: 1 },
+    { name: 'Tinderbox', cost: '5 sp', weight: 1 },
+    { name: 'Lantern, hooded', cost: '5 gp', weight: 2 },
+    { name: 'Oil (flask)', cost: '1 sp', weight: 1 },
+    { name: 'Healer’s kit', cost: '5 gp', weight: 3 },
+    { name: 'Potion of Healing', cost: '50 gp', weight: 0.5 },
+    { name: 'Thieves’ tools', cost: '25 gp', weight: 1 },
+    { name: 'Holy symbol', cost: '5 gp', weight: 1 },
+    { name: 'Spellbook', cost: '50 gp', weight: 3 },
+    { name: 'Component pouch', cost: '25 gp', weight: 2 },
+    { name: 'Arcane focus', cost: '10 gp', weight: 1 },
+    { name: 'Grappling hook', cost: '2 gp', weight: 4 },
+    { name: 'Crowbar', cost: '2 gp', weight: 5 },
+    { name: 'Climber’s kit', cost: '25 gp', weight: 12 },
+    { name: 'Manacles', cost: '2 gp', weight: 6 },
+    { name: 'Mess kit', cost: '2 sp', weight: 1 },
+    { name: 'Ball bearings (bag of 1000)', cost: '1 gp', weight: 2 },
+    { name: 'Caltrops (bag of 20)', cost: '1 gp', weight: 2 },
+    { name: 'Shovel', cost: '2 gp', weight: 5 },
+    { name: 'Signal whistle', cost: '5 cp', weight: 0 },
+    { name: 'Playing card set', cost: '5 sp', weight: 0 },
+    { name: 'Herbalism kit', cost: '5 gp', weight: 3 },
+    { name: 'Disguise kit', cost: '25 gp', weight: 3 },
+    // Ammunition
+    { name: 'Arrows (20)', cost: '1 gp', weight: 1 },
+    { name: 'Crossbow bolts (20)', cost: '1 gp', weight: 1.5 },
+    { name: 'Sling bullets (20)', cost: '4 cp', weight: 1.5 },
+    { name: 'Blowgun needles (50)', cost: '1 gp', weight: 1 },
+    // Equipment packs
+    { name: 'Explorer’s Pack', cost: '10 gp', weight: 59 },
+    { name: 'Dungeoneer’s Pack', cost: '12 gp', weight: 61.5 },
+    { name: 'Burglar’s Pack', cost: '16 gp', weight: 44.5 },
+    { name: 'Priest’s Pack', cost: '19 gp', weight: 24 },
+    { name: 'Scholar’s Pack', cost: '40 gp', weight: 10 },
+    { name: 'Entertainer’s Pack', cost: '40 gp', weight: 38 },
+    { name: 'Diplomat’s Pack', cost: '39 gp', weight: 43 },
+    // Alchemical & consumables
+    { name: 'Acid (vial)', cost: '25 gp', weight: 1 },
+    { name: 'Alchemist’s fire (flask)', cost: '50 gp', weight: 1 },
+    { name: 'Antitoxin (vial)', cost: '50 gp', weight: 0 },
+    { name: 'Holy water (flask)', cost: '25 gp', weight: 1 },
+    { name: 'Basic poison (vial)', cost: '100 gp', weight: 0 },
+    { name: 'Ration boost — dry rations (5)', cost: '2 gp 5 sp', weight: 10 },
+    // Tools
+    { name: 'Smith’s tools', cost: '20 gp', weight: 8 },
+    { name: 'Carpenter’s tools', cost: '8 gp', weight: 6 },
+    { name: 'Cook’s utensils', cost: '1 gp', weight: 8 },
+    { name: 'Cartographer’s tools', cost: '15 gp', weight: 6 },
+    { name: 'Navigator’s tools', cost: '25 gp', weight: 2 },
+    { name: 'Alchemist’s supplies', cost: '50 gp', weight: 8 },
+    { name: 'Poisoner’s kit', cost: '50 gp', weight: 2 },
+    { name: 'Tinker’s tools', cost: '50 gp', weight: 10 },
+    { name: 'Forgery kit', cost: '15 gp', weight: 5 },
+    { name: 'Gaming set (dice)', cost: '1 sp', weight: 0 },
+    { name: 'Musical instrument (lute)', cost: '35 gp', weight: 2 },
+    // General adventuring
+    { name: 'Chain (10 ft)', cost: '5 gp', weight: 10 },
+    { name: 'Lock', cost: '10 gp', weight: 1 },
+    { name: 'Hunting trap', cost: '5 gp', weight: 25 },
+    { name: 'Pole (10-foot)', cost: '5 cp', weight: 7 },
+    { name: 'Piton', cost: '5 cp', weight: 0.25 },
+    { name: 'Bell', cost: '1 gp', weight: 0 },
+    { name: 'Candle', cost: '1 cp', weight: 0 },
+    { name: 'Chalk (1 piece)', cost: '1 cp', weight: 0 },
+    { name: 'Hammer', cost: '1 gp', weight: 3 },
+    { name: 'Ink (1 oz bottle)', cost: '10 gp', weight: 0 },
+    { name: 'Paper (one sheet)', cost: '2 sp', weight: 0 },
+    { name: 'Blanket', cost: '5 sp', weight: 3 },
+    { name: 'Sack', cost: '1 cp', weight: 0.5 },
+    { name: 'Tent, two-person', cost: '2 gp', weight: 20 },
+    { name: 'Whetstone', cost: '1 cp', weight: 1 },
+    { name: 'Bullseye lantern', cost: '10 gp', weight: 2 },
+    { name: 'Magnifying glass', cost: '100 gp', weight: 0 },
+    { name: 'Spyglass', cost: '1000 gp', weight: 1 },
+    { name: 'Perfume (vial)', cost: '5 gp', weight: 0 },
+    { name: 'Fishing tackle', cost: '1 gp', weight: 4 },
+    { name: 'Hourglass', cost: '25 gp', weight: 1 }
+];
+
+// Average starting gold by class (gp)
+window.DND_STARTING_GOLD = { barbarian: 50, bard: 100, cleric: 125, druid: 50, fighter: 125, monk: 15, paladin: 125, ranger: 125, rogue: 100, sorcerer: 75, warlock: 100, wizard: 100, artificer: 125 };
+
+window.DND_LANGUAGES = ['Common', 'Dwarvish', 'Elvish', 'Giant', 'Gnomish', 'Goblin', 'Halfling', 'Orc', 'Abyssal', 'Celestial', 'Draconic', 'Deep Speech', 'Infernal', 'Primordial', 'Sylvan', 'Undercommon'];

@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
     <meta name="description" content="D&D Forge — a beautiful, edition-aware Dungeons & Dragons character creator. Design characters, skills, weapons and spells across editions, all in your browser.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#1a1109">
+    <meta property="og:title" content="D&D Forge — Character Creator">
+    <meta property="og:description" content="Forge a full D&D hero across editions — abilities, skills, weapons, spells, backstory, feats — with a DM's Charter, Fate Seeds and a live sheet.">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%90%89%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.webmanifest">
     <title>D&D Forge — Character Creator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +20,16 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+    <!-- ===== DM Charter background lock (shown when bound) ===== -->
+    <div class="charter-lock" id="charterLock" hidden aria-hidden="true">
+        <div class="cl-seal">
+            <div class="cl-lock">🔒</div>
+            <div class="cl-title">BOUND BY THE DM&rsquo;S CHARTER</div>
+            <div class="cl-curse" id="clCurse">CURSE #0000</div>
+            <div class="cl-sub">Forbidden · Barred · Sealed</div>
+        </div>
+    </div>
+
     <!-- ===== Top bar: edition selector ===== -->
     <header class="topbar">
         <div class="topbar-inner">
@@ -45,6 +63,7 @@
                 <button class="btn" id="exportBtn">⬇️ Export</button>
                 <button class="btn" id="importBtn">⬆️ Import</button>
                 <button class="btn" id="printBtn">🖨️ Print</button>
+                <button class="btn btn-lock" id="lockBtn">✅ Done — Lock character</button>
             </div>
             <input type="file" id="importFile" accept="application/json" hidden>
         </div>
@@ -54,6 +73,11 @@
             <div class="sheet" id="sheet"></div>
         </aside>
     </main>
+
+    <footer class="app-footer">
+        <span>⚔️ <b>D&amp;D Forge</b> — forge your legend, entirely in your browser.</span>
+        <button class="link-btn" id="legalBtn">Rules &amp; Licensing</button>
+    </footer>
 
     <!-- ===== Dice roller ===== -->
     <button class="dice-fab" id="diceFab" title="Dice roller" aria-label="Open dice roller">🎲</button>
@@ -70,9 +94,9 @@
             <button data-die="0" id="customDie">✎</button>
         </div>
         <div class="dice-adv">
-            <span class="chip active" data-mode="normal">Normal</span>
-            <span class="chip" data-mode="adv">Advantage</span>
-            <span class="chip" data-mode="dis">Disadvant.</span>
+            <span class="chip active" data-mode="normal" title="Normal roll">Normal</span>
+            <span class="chip" data-mode="adv" title="Roll with advantage">Adv.</span>
+            <span class="chip" data-mode="dis" title="Roll with disadvantage">Disadv.</span>
         </div>
         <div class="dice-result" id="diceResult">
             <div class="dr-total">—</div>
@@ -83,10 +107,24 @@
 
     <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
 
+    <!-- ===== Locked play-mode character file (full screen) ===== -->
+    <div class="playmode" id="playmode" hidden></div>
+
     <div class="modal-overlay" id="modalOverlay" hidden>
         <div class="modal" id="modal" role="dialog" aria-modal="true"></div>
     </div>
 
+    <script src="js/data/core.js"></script>
+    <script src="js/data/editions.js"></script>
+    <script src="js/data/races.js"></script>
+    <script src="js/data/classes.js"></script>
+    <script src="js/data/backgrounds.js"></script>
+    <script src="js/data/weapons.js"></script>
+    <script src="js/data/armor.js"></script>
+    <script src="js/data/spells.js"></script>
+    <script src="js/data/feats.js"></script>
+    <script src="js/data/story.js"></script>
+    <script src="js/data/gear.js"></script>
     <script src="js/data.js"></script>
     <script src="js/app.js"></script>
 </body>

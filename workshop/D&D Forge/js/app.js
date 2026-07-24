@@ -45,7 +45,10 @@
             boosts: {},                       // slotIndex -> ability (racial/2024 ability boosts)
             classSkills: [], raceSkills: [], expertise: [],
             weapons: [], armor: [], spells: [], feats: [],
+            gear: [], currency: { gp: 0 },
+            play: { inspiration: false, deathSuccess: 0, deathFail: 0, currentHP: null, tempHP: 0, conditions: [], usedItems: {}, notes: '', xp: 0 },
             hpMode: 'average', hpRolls: [],
+            locked: false, charterCurse: null,
             seed: null,
             charter: {
                 active: false, edition: '', levelMode: 'any', level: 20,
@@ -100,6 +103,17 @@
         if ((ch.bannedRaces || []).indexOf(state.raceId) >= 0) { state.raceId = null; state.subraceId = null; }
         if ((ch.bannedClasses || []).indexOf(state.classId) >= 0) { state.classId = null; }
     }
+    // Deterministic "curse number" fingerprint of a charter's constraints.
+    function hashStr(s) { let h = 5381; for (let i = 0; i < s.length; i++) { h = ((h << 5) + h) + s.charCodeAt(i); h |= 0; } return h >>> 0; }
+    function charterCurse(ch) {
+        if (!ch) return 0;
+        const canon = JSON.stringify({ e: ch.edition || '', lm: ch.levelMode || 'any', lv: ch.level || 20,
+            m: (ch.methods || []).slice().sort(), mt: ch.maxAbilityTotal || 0, ms: ch.maxAbilityScore || 0,
+            mw: ch.maxWeapons || 0, msp: ch.maxSpells || 0,
+            br: (ch.bannedRaces || []).slice().sort(), bc: (ch.bannedClasses || []).slice().sort(), n: ch.note || '' });
+        return hashStr(canon) % 100000;
+    }
+    const curseStr = (n) => 'CURSE #' + String(n).padStart(5, '0');
 
     /* ---------- ability boost plan (racial ASI / 2024 boosts) ---------- */
     function fixedAsi() {
@@ -232,11 +246,49 @@
         const per = D.skills.find(s => s.name === 'Perception');
         return 10 + skillMod(per);
     }
+    function passiveOf(name) { const s = D.skills.find(x => x.name === name); return 10 + skillMod(s); }
+    function computeLanguages() {
+        const set = []; let choices = 0;
+        const add = (arr) => (arr || []).forEach(l => { if (/\+\s*\d/.test(l)) choices += parseInt(l.match(/\d/)[0]); else if (set.indexOf(l) < 0) set.push(l); });
+        const race = getRace(), sr = getSubrace(), bg = getBackground();
+        if (race) add(race.languages);
+        if (sr) add(sr.languages);
+        if (bg && bg.languages) choices += bg.languages;
+        return { known: set, choices };
+    }
+    function computeTools() {
+        const bg = getBackground();
+        return bg && bg.tools ? bg.tools.slice() : [];
+    }
+    function carryingCapacity() { return finalScore('str') * 15; }
+    function currentWeight() {
+        let w = 0;
+        state.weapons.forEach(n => { const x = D.weapons.find(v => v.name === n); if (x) w += x.weight || 0; });
+        state.armor.forEach(n => { const x = D.armor.find(v => v.name === n); if (x) w += x.weight || 0; });
+        (state.gear || []).forEach(g => { const x = D.gear.find(v => v.name === g); if (x) w += x.weight || 0; });
+        return Math.round(w * 10) / 10;
+    }
+    function saveMod(ab) { const cls = getClass(); return mod(finalScore(ab)) + (cls && cls.saves.indexOf(ab) >= 0 ? profBonus() : 0); }
 
     /* =====================================================================
      * RENDERING
      * ===================================================================== */
-    function renderAll() { normalizeToCharter(); renderEditionBar(); renderBanner(); renderTabs(); renderTab(); renderSheet(); persist(); }
+    function renderAll() {
+        normalizeToCharter();
+        renderCharterLock();
+        if (state.locked) { $('#playmode').hidden = false; renderPlayMode(); persist(); return; }
+        $('#playmode').hidden = true;
+        renderEditionBar(); renderBanner(); renderTabs(); renderTab(); renderSheet(); persist();
+    }
+
+    function renderCharterLock() {
+        const el = $('#charterLock');
+        if (charterOn()) {
+            state.charter.curse = charterCurse(state.charter);
+            el.hidden = false;
+            const c = $('#clCurse'); if (c) c.textContent = curseStr(state.charter.curse);
+        } else { el.hidden = true; }
+    }
 
     function renderBanner() {
         const b = $('#charterBanner');
@@ -423,6 +475,11 @@
         if (P.bond) parts.push(`One bond anchors them — ${lc(P.bond)}`);
         if (P.flaw) parts.push(`Yet they are far from perfect: ${lc(P.flaw)}`);
         if (P.trait) parts.push(`Those who travel with them soon learn: ${lc(P.trait)}`);
+        if (P.style) parts.push(`In a fight they are ${P.style}.`);
+        if (P.companion) parts.push(`They are rarely seen without ${P.companion}.`);
+        if (P.prized) parts.push(`They guard one small treasure above gold — ${P.prized}.`);
+        if (P.quirk) parts.push(`One habit gives them away: they ${P.quirk}.`);
+        if (P.reputation) parts.push(`In taverns they are ${P.reputation}.`);
         if (P.secret) parts.push(`And there is a secret they guard closely — ${P.secret}.`);
         return parts.join(' ');
     }
@@ -755,13 +812,15 @@
             item.innerHTML = `<span class="prof-dot"></span>
                 <input type="checkbox" ${chosen || locked ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
                 <span>${esc(skill.name)} <span class="sk-ab">${skill.ability}</span></span>
-                <span class="sk-mod">${signed(skillMod(skill))}</span>`;
+                <span class="sk-mod">${signed(skillMod(skill))}</span>
+                <button type="button" class="roll-mini" title="Roll ${esc(skill.name)}">🎲</button>`;
             const cb = item.querySelector('input');
             if (!disabled) cb.addEventListener('change', () => {
                 if (cb.checked) { if (state.classSkills.length < cls.skillChoose) state.classSkills.push(skill.name); }
                 else state.classSkills = state.classSkills.filter(s => s !== skill.name);
                 renderAll();
             });
+            item.querySelector('.roll-mini').addEventListener('click', ev => { ev.preventDefault(); ev.stopPropagation(); rollCheck(skill.name, skillMod(skill)); });
             item.title = locked ? 'Granted by background/race' : (!inClassList ? 'Not available to this class' : '');
             list.appendChild(item);
         });
@@ -851,6 +910,52 @@
             <td><button class="btn add-btn" data-add="${esc(a.name)}" ${state.armor.indexOf(a.name) >= 0 ? 'disabled' : ''}>${state.armor.indexOf(a.name) >= 0 ? '✓' : '+ Add'}</button></td></tr>`).join('')}</tbody></table>`;
         aWrap.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => { state.armor.push(b.dataset.add); renderAll(); }));
         p.appendChild(aWrap);
+
+        // ---- Gold, gear & carrying capacity ----
+        const cls2 = getClass();
+        const gold = document.createElement('div');
+        const suggested = cls2 ? D.startingGold[cls2.id] : null;
+        const cap = carryingCapacity(), wt = currentWeight();
+        const over = wt > cap;
+        gold.innerHTML = `<div class="divider"></div>
+            <h4 style="color:var(--red);margin:0 0 8px">💰 Gold &amp; Carrying</h4>
+            <div class="row3">
+                <div><label class="fld" style="margin-top:0">Gold (gp)${suggested ? ` <span style="color:var(--ink-dim);font-weight:400">· suggested ${suggested}</span>` : ''}</label>
+                    <input type="number" id="goldInput" min="0" value="${state.currency.gp || 0}"></div>
+                <div><label class="fld" style="margin-top:0">Carry capacity</label><div class="cap-box">${cap} lb</div></div>
+                <div><label class="fld" style="margin-top:0">Current load</label><div class="cap-box ${over ? 'over' : ''}">${wt} lb${over ? ' ⚠️' : ''}</div></div>
+            </div>
+            ${suggested ? `<button class="btn btn-sm" id="useGold" style="margin-top:8px">Use suggested ${suggested} gp</button>` : ''}`;
+        p.appendChild(gold);
+        $('#goldInput', gold).addEventListener('input', e => { state.currency.gp = Math.max(0, parseInt(e.target.value) || 0); renderSheet(); persist(); });
+        const ug = $('#useGold', gold); if (ug) ug.addEventListener('click', () => { state.currency.gp = suggested; renderAll(); });
+
+        // chosen gear list
+        const gearChosen = document.createElement('div'); gearChosen.className = 'chosen-list'; gearChosen.style.marginTop = '10px';
+        if (!(state.gear || []).length) gearChosen.innerHTML = `<div class="empty">No gear yet — add from the pack below.</div>`;
+        (state.gear || []).forEach(n => {
+            const g = D.gear.find(x => x.name === n); if (!g) return;
+            const row = document.createElement('div'); row.className = 'chosen';
+            row.innerHTML = `<span class="cx-name">🎒 ${esc(g.name)}</span><span class="cx-meta">${g.cost} · ${g.weight} lb</span><button class="cx-remove">✕</button>`;
+            row.querySelector('.cx-remove').addEventListener('click', () => { state.gear = state.gear.filter(x => x !== n); renderAll(); });
+            gearChosen.appendChild(row);
+        });
+        p.appendChild(gearChosen);
+
+        const gFilter = document.createElement('div'); gFilter.className = 'filter-row'; gFilter.style.marginTop = '10px';
+        gFilter.innerHTML = `<input type="search" class="search-grow" id="gq" placeholder="Search adventuring gear…">`;
+        p.appendChild(gFilter);
+        const gWrap = document.createElement('div'); gWrap.className = 'table-wrap'; p.appendChild(gWrap);
+        function drawGear() {
+            const q = $('#gq', gFilter).value.toLowerCase();
+            const rows = D.gear.filter(g => !q || g.name.toLowerCase().includes(q));
+            gWrap.innerHTML = `<table class="data"><thead><tr><th>Item</th><th>Cost</th><th>Weight</th><th></th></tr></thead>
+                <tbody>${rows.map(g => { const has = (state.gear || []).indexOf(g.name) >= 0; return `<tr><td>${esc(g.name)}</td><td>${g.cost}</td><td>${g.weight} lb</td>
+                <td><button class="btn add-btn" data-add="${esc(g.name)}">+ Add</button></td></tr>`; }).join('')}</tbody></table>`;
+            gWrap.querySelectorAll('[data-add]').forEach(b => b.addEventListener('click', () => { state.gear = state.gear || []; state.gear.push(b.dataset.add); renderAll(); }));
+        }
+        $('#gq', gFilter).addEventListener('input', drawGear);
+        drawGear();
         return p;
     }
     function weaponAbility(w) {
@@ -1004,19 +1109,43 @@
                     <div class="mini-stat"><div class="ms-num">${passivePerception()}</div><div class="ms-label">Pass. Per</div></div>
                     <div class="mini-stat"><div class="ms-num">${((sr && sr.speed) || (race && race.speed) || 30)}</div><div class="ms-label">Speed</div></div>
                 </div>
+                <div class="play-aids">
+                    <button class="insp-toggle ${state.play.inspiration ? 'on' : ''}" id="inspBtn" title="Inspiration">${state.play.inspiration ? '🌟' : '☆'} Inspiration</button>
+                    <div class="death-saves">
+                        <div class="ds-title">💀 Death Saves</div>
+                        <div class="ds-row" data-ds="deathSuccess"><span class="ds-name succ">✚ Successes</span>${[0, 1, 2].map(i => `<span class="ds-pip succ ${state.play.deathSuccess > i ? 'on' : ''}" data-i="${i}"></span>`).join('')}</div>
+                        <div class="ds-row" data-ds="deathFail"><span class="ds-name fail">✖ Failures</span>${[0, 1, 2].map(i => `<span class="ds-pip fail ${state.play.deathFail > i ? 'on' : ''}" data-i="${i}"></span>`).join('')}</div>
+                    </div>
+                </div>
                 ${sc ? `<div><div class="sheet-section-title">Spellcasting</div>
                     <div class="sheet-line"><span>Save DC</span><span class="sl-val">${sc.saveDC}</span></div>
                     <div class="sheet-line"><span>Attack</span><span class="sl-val">${signed(sc.attack)}</span></div>
                     <div class="sheet-line"><span>Spells</span><span class="sl-val">${state.spells.length}</span></div></div>` : ''}
-                <div><div class="sheet-section-title">Saving Throws</div>
-                    <div class="chips-inline">${cls ? D.abilities.map(a => `<span class="ci">${cap(a)} ${signed(mod(scores[a]) + (cls.saves.indexOf(a) >= 0 ? profBonus() : 0))}${cls.saves.indexOf(a) >= 0 ? '●' : ''}</span>`).join('') : '<span class="empty">—</span>'}</div></div>
+                <div><div class="sheet-section-title">Saving Throws <span class="tap-hint">tap to roll</span></div>
+                    <div class="chips-inline">${cls ? D.abilities.map(a => `<span class="ci ci-roll" data-save="${a}">${cap(a)} ${signed(saveMod(a))}${cls.saves.indexOf(a) >= 0 ? '●' : ''}</span>`).join('') : '<span class="empty">—</span>'}</div></div>
+                <div><div class="sheet-section-title">Senses &amp; Passives</div>
+                    <div class="chips-inline">
+                        <span class="ci">Pass. Perception ${passiveOf('Perception')}</span>
+                        <span class="ci">Pass. Investigation ${passiveOf('Investigation')}</span>
+                        <span class="ci">Pass. Insight ${passiveOf('Insight')}</span>
+                        ${(sr && sr.darkvision) || (race && race.darkvision) ? `<span class="ci">Darkvision ${(sr && sr.darkvision) || race.darkvision} ft</span>` : ''}
+                    </div></div>
                 <div><div class="sheet-section-title">Skill Proficiencies</div>
                     <div class="chips-inline">${(() => { const ps = skillProfSet(); const ks = Object.keys(ps); return ks.length ? ks.map(s => `<span class="ci">${esc(s)}${ps[s] === 'expertise' ? ' ◆◆' : ''}</span>`).join('') : '<span class="empty">None yet</span>'; })()}</div></div>
+                ${(() => { const L = computeLanguages(); const T = computeTools(); return (L.known.length || L.choices || T.length) ? `<div><div class="sheet-section-title">Languages &amp; Tools</div><div class="chips-inline">${L.known.map(l => `<span class="ci">${esc(l)}</span>`).join('')}${L.choices ? `<span class="ci">+${L.choices} language${L.choices > 1 ? 's' : ''}</span>` : ''}${T.map(t => `<span class="ci">🔧 ${esc(t)}</span>`).join('')}</div></div>` : ''; })()}
                 <div><div class="sheet-section-title">Equipment</div>
-                    <div class="chips-inline">${[...state.weapons, ...state.armor].length ? [...state.weapons, ...state.armor].map(n => `<span class="ci">${esc(n)}</span>`).join('') : '<span class="empty">None</span>'}</div></div>
+                    <div class="chips-inline">${[...state.weapons, ...state.armor, ...(state.gear || [])].length ? [...state.weapons, ...state.armor, ...(state.gear || [])].map(n => `<span class="ci">${esc(n)}</span>`).join('') : '<span class="empty">None</span>'}${state.currency && state.currency.gp ? `<span class="ci">💰 ${state.currency.gp} gp</span>` : ''}</div></div>
                 ${state.feats.length ? `<div><div class="sheet-section-title">Feats</div><div class="chips-inline">${state.feats.map(f => `<span class="ci">${esc(f)}</span>`).join('')}</div></div>` : ''}
                 ${(() => { const P = state.personality; const rows = [['Trait', P.trait], ['Ideal', P.ideal], ['Bond', P.bond], ['Flaw', P.flaw]].filter(r => r[1]); return rows.length ? `<div><div class="sheet-section-title">Personality</div>${rows.map(r => `<div class="sheet-personality"><b>${r[0]}:</b> ${esc(r[1])}</div>`).join('')}</div>` : ''; })()}
             </div>`;
+        // interactive: roll saves, toggle inspiration & death saves
+        sheet.querySelectorAll('[data-save]').forEach(c => c.addEventListener('click', () => rollCheck(cap(c.dataset.save) + ' save', saveMod(c.dataset.save))));
+        const insp = $('#inspBtn'); if (insp) insp.addEventListener('click', () => { state.play.inspiration = !state.play.inspiration; renderSheet(); persist(); });
+        sheet.querySelectorAll('.ds-pip').forEach(pip => pip.addEventListener('click', () => {
+            const key = pip.closest('.ds-row').dataset.ds, i = parseInt(pip.dataset.i);
+            state.play[key] = (state.play[key] === i + 1) ? i : i + 1;
+            renderSheet(); persist();
+        }));
     }
 
     /* =====================================================================
@@ -1051,6 +1180,25 @@
         result.innerHTML = `<div class="dr-total ${crit ? 'crit' : ''}${fumble ? 'fumble' : ''}">${total}${crit ? ' ⭐' : ''}${fumble ? ' 💀' : ''}</div><div class="dr-detail">${detail}</div>`;
         const line = document.createElement('div'); line.textContent = `d${sides} → ${total}${crit ? ' (crit!)' : ''}${fumble ? ' (fumble)' : ''}`;
         logEl.prepend(line);
+        while (logEl.children.length > 12) logEl.removeChild(logEl.lastChild);
+    }
+    // Roll a d20 check/save with a modifier (respects the current adv/dis mode).
+    function rollCheck(label, modifier) {
+        const panelEl = $('#dicePanel'), result = $('#diceResult'), logEl = $('#diceLog');
+        panelEl.classList.add('open');
+        let r1 = d(20), detail, roll = r1;
+        if (diceMode !== 'normal') {
+            const r2 = d(20);
+            roll = diceMode === 'adv' ? Math.max(r1, r2) : Math.min(r1, r2);
+            detail = `${label}: d20 ${diceMode === 'adv' ? '(adv)' : '(dis)'} [${r1}, ${r2}]→${roll} ${signed(modifier)}`;
+        } else {
+            detail = `${label}: d20 ${roll} ${signed(modifier)}`;
+        }
+        const total = roll + modifier;
+        const crit = roll === 20, fumble = roll === 1;
+        result.innerHTML = `<div class="dr-total ${crit ? 'crit' : ''}${fumble ? 'fumble' : ''}">${total}</div><div class="dr-detail">${esc(detail)}</div>`;
+        const li = document.createElement('div'); li.textContent = `${label}: ${total}${crit ? ' ⭐' : ''}${fumble ? ' 💀' : ''}`;
+        logEl.prepend(li);
         while (logEl.children.length > 12) logEl.removeChild(logEl.lastChild);
     }
 
@@ -1116,6 +1264,11 @@
         // a feat if eligible, and a woven backstory
         if (state.level >= 4 && RNG.next() < 0.8) state.feats = [pick(D.feats).name];
         state.identity.backstory = weaveBackstory();
+        // gold + a starter pack of gear
+        state.currency = { gp: (D.startingGold[cls.id] || 50) + rint(30) };
+        state.gear = [];
+        const packPool = D.gear.slice();
+        for (let i = 0; i < 4 && packPool.length; i++) state.gear.push(packPool.splice(rint(packPool.length), 1)[0].name);
 
         RNG.next = Math.random;        // restore live randomness for the dice roller
         state.seed = seed;
@@ -1338,6 +1491,238 @@
         });
     }
 
+    function openPartyModal() {
+        const saves = getSaves();
+        const names = Object.keys(saves);
+        const rows = names.length ? names.map(n => {
+            const s = saves[n]; const cls = D.classes.find(c => c.id === s.classId); const race = D.races.find(r => r.id === s.raceId);
+            const sub = [race && race.name, cls && ('Lv ' + (s.level || 1) + ' ' + cls.name)].filter(Boolean).join(' · ') || 'Unfinished hero';
+            return `<div class="party-row"><span class="party-portrait">${esc((s.identity && s.identity.portrait) || '🧝')}</span>
+                <div class="party-info"><b>${esc(n)}</b><span>${esc(sub)}</span></div>
+                <button class="btn btn-sm btn-primary" data-load="${esc(n)}">Load</button>
+                <button class="btn btn-sm" data-exp="${esc(n)}">⬇️</button>
+                <button class="btn btn-sm btn-del" data-del="${esc(n)}">🗑️</button></div>`;
+        }).join('') : '<div class="empty">No saved heroes yet. Build one and press 💾 Save.</div>';
+        const m = openModal('🛡️ Party Manager', `<p class="lead">Your saved heroes live in this browser. Load, export, or retire them.</p><div class="party-list">${rows}</div>`);
+        m.querySelectorAll('[data-load]').forEach(b => b.addEventListener('click', () => { state = Object.assign(freshState(), saves[b.dataset.load]); closeModal(); renderAll(); toast('📂 Loaded “' + b.dataset.load + '”'); }));
+        m.querySelectorAll('[data-exp]').forEach(b => b.addEventListener('click', () => { const s = saves[b.dataset.exp]; const blob = new Blob([JSON.stringify(s, null, 2)], { type: 'application/json' }); const u = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = u; a.download = b.dataset.exp.replace(/[^a-z0-9]+/gi, '_') + '_dndforge.json'; a.click(); setTimeout(() => URL.revokeObjectURL(u), 800); }));
+        m.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => {
+            if (!confirm('Retire “' + b.dataset.del + '” forever?')) return;
+            const sv = getSaves(); delete sv[b.dataset.del];
+            try { localStorage.setItem(SAVES, JSON.stringify(sv)); } catch (e) {}
+            openPartyModal();
+        }));
+    }
+
+    function openLegalModal() {
+        openModal('📜 Rules &amp; Licensing', `
+            <p class="lead">D&amp;D Forge is a fan-made, non-commercial tool.</p>
+            <div class="modal-section-title">Game content</div>
+            <p style="font-size:.9em;line-height:1.6">Rules content (races, classes, spells, weapons, feats and tables) is drawn from the
+            <b>System Reference Document (SRD)</b> published under the <b>Open Game License v1.0a</b> and the
+            <b>Creative Commons Attribution 4.0 (CC-BY-4.0)</b> SRD 5.1 release. <em>Dungeons &amp; Dragons</em> and its
+            editions are trademarks of Wizards of the Coast; this project is not affiliated with or endorsed by them.</p>
+            <div class="modal-section-title">Edition support</div>
+            <p style="font-size:.9em;line-height:1.6">The full rules engine models <b>D&amp;D 5E (2014 &amp; 2024)</b>. Older editions
+            (AD&amp;D 1E/2E, 3.5, 4E) reuse SRD 5e data adapted for the builder and are clearly flagged as approximations —
+            THAC0, 3.x skill points and 4E powers are not yet modelled.</p>
+            <div class="modal-section-title">Privacy</div>
+            <p style="font-size:.9em;line-height:1.6">Everything runs locally in your browser. Characters are stored only in this
+            browser’s <code>localStorage</code>; nothing is uploaded. Share links encode the character/charter in the URL itself.</p>
+        `);
+    }
+
+    /* =====================================================================
+     * LOCK & PLAY MODE (the "character file")
+     * ===================================================================== */
+    const CONDITIONS = ['Blinded', 'Charmed', 'Deafened', 'Frightened', 'Grappled', 'Incapacitated', 'Invisible', 'Paralyzed', 'Petrified', 'Poisoned', 'Prone', 'Restrained', 'Stunned', 'Unconscious'];
+
+    function musterCode() { return btoa(unescape(encodeURIComponent(JSON.stringify(state)))); }
+
+    // Compact computed snapshot stored on the character so the DM's Muster page
+    // (which has no rules engine) can display everyone without recomputing.
+    function buildSummary() {
+        const cls = getClass(), race = getRace(), sr = getSubrace(), bg = getBackground(), sc = spellcasting(), scores = finalScores();
+        state.summary = {
+            name: state.identity.name || 'Unnamed Hero',
+            portrait: state.identity.portrait || '🧝',
+            alignment: state.identity.alignment,
+            edition: edition().name + ' ' + edition().year,
+            race: ((sr ? sr.name + ' ' : '') + (race ? race.name : '')).trim(),
+            cls: cls ? cls.name : '', subclass: state.subclass || '', level: state.level,
+            background: bg ? bg.name : '',
+            ac: acTotal(), hp: hpTotal(), cur: state.play.currentHP != null ? state.play.currentHP : hpTotal(),
+            prof: profBonus(), init: mod(scores.dex),
+            speed: (sr && sr.speed) || (race && race.speed) || 30,
+            scores: scores, saveDC: sc ? sc.saveDC : null,
+            spells: state.spells.length, weapons: state.weapons.length,
+            curse: state.charterCurse
+        };
+    }
+
+    function lockCharacter() {
+        if (!getRace() || !getClass()) { toast('Choose at least a race and a class first.', true); return; }
+        if (!state.identity.name && !confirm('Seal this hero without a name?')) return;
+        if (!confirm('Lock your choices? You can still play, level up and take notes — and you can unlock later to edit the base.')) return;
+        state.locked = true;
+        state.charterCurse = charterOn() ? charterCurse(state.charter) : null;
+        const maxhp = hpTotal();
+        if (state.play.currentHP == null) state.play.currentHP = maxhp;
+        buildSummary();
+        renderAll();
+        showMusterModal();
+    }
+    function unlockCharacter() {
+        if (!confirm('Unlock and return to the builder? Your play progress (HP, notes, items) is kept.')) return;
+        state.locked = false; renderAll(); toast('🔓 Unlocked — base editing enabled');
+    }
+    function showMusterModal() {
+        const code = musterCode();
+        const link = location.origin + location.pathname + '#c=' + code;
+        const m = openModal('📜 Character Sealed', `
+            <p class="lead">Your hero is sealed into a <b>Character File</b>. ${state.charterCurse != null ? `Bound to <b>${curseStr(state.charterCurse)}</b>.` : ''} Send the code (or link) below to your Dungeon Master — they can muster the whole party from these.</p>
+            <div class="modal-section-title">Muster code (paste into the DM’s Muster page)</div>
+            <textarea id="musterCodeBox" readonly style="width:100%;min-height:96px;font-family:var(--mono);font-size:.72em">${esc(code)}</textarea>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="copyMusterCode">📋 Copy code</button>
+                <button class="btn btn-gold" id="copyMusterLink">🔗 Copy link</button>
+                <button class="btn" id="openMuster">🛡️ Open DM Muster page</button>
+            </div>
+        `);
+        m.querySelector('#copyMusterCode').addEventListener('click', () => { navigator.clipboard.writeText(code).then(() => toast('📋 Muster code copied'), () => { m.querySelector('#musterCodeBox').select(); document.execCommand('copy'); toast('📋 Copied'); }); });
+        m.querySelector('#copyMusterLink').addEventListener('click', () => { navigator.clipboard.writeText(link).then(() => toast('🔗 Link copied'), () => toast('Copy failed', true)); });
+        m.querySelector('#openMuster').addEventListener('click', () => window.open('muster.html', '_blank'));
+    }
+
+    function renderPlayMode() {
+        const pm = $('#playmode');
+        buildSummary();
+        const cls = getClass(), race = getRace(), sr = getSubrace(), bg = getBackground(), sc = spellcasting();
+        const scores = finalScores(), maxhp = hpTotal();
+        const p = state.play;
+        const sub = [sr && sr.name, race && race.name, cls && ('Level ' + state.level + ' ' + cls.name), state.subclass].filter(Boolean).join(' · ');
+        pm.innerHTML = `<div class="pm-wrap">
+            <div class="pm-head">
+                <div class="pm-portrait">${esc(state.identity.portrait || '🧝')}</div>
+                <div class="pm-id">
+                    <div class="pm-name">${esc(state.identity.name || 'Unnamed Hero')}</div>
+                    <div class="pm-sub">${esc(sub)}</div>
+                    <div class="pm-sub">${esc(state.identity.alignment)}${bg ? ' · ' + esc(bg.name) : ''} · ${esc(edition().name + ' ' + edition().year)}</div>
+                </div>
+                <span class="pm-locked-badge">🔒 Sealed${state.charterCurse != null ? ' · ' + curseStr(state.charterCurse) : ''}</span>
+            </div>
+            <div class="pm-grid">
+                <div class="pm-card">
+                    <h3>❤️ Hit Points</h3>
+                    <div class="hp-track">
+                        <div class="hp-big"><span class="hp-cur">${p.currentHP}</span><span class="hp-sep"> / ${maxhp}</span></div>
+                        ${p.tempHP ? `<span class="cond-chip on">+${p.tempHP} temp</span>` : ''}
+                    </div>
+                    <div class="hp-btns" style="margin-top:10px">
+                        <input type="number" id="hpAmt" value="1" min="1"> 
+                        <button class="btn btn-sm btn-clear" id="dmgBtn">− Damage</button>
+                        <button class="btn btn-sm btn-gold" id="healBtn">+ Heal</button>
+                        <button class="btn btn-sm" id="tempBtn">Temp HP</button>
+                    </div>
+                    <div class="pm-mini">
+                        <div class="m"><div class="n">${acTotal()}</div><div class="l">AC</div></div>
+                        <div class="m"><div class="n">${signed(mod(scores.dex))}</div><div class="l">Init</div></div>
+                        <div class="m"><div class="n">${signed(profBonus())}</div><div class="l">Prof</div></div>
+                        <div class="m"><div class="n">${((sr && sr.speed) || (race && race.speed) || 30)}</div><div class="l">Speed</div></div>
+                        ${sc ? `<div class="m"><div class="n">${sc.saveDC}</div><div class="l">Spell DC</div></div>` : ''}
+                    </div>
+                    <div class="btn-row" style="margin-top:12px">
+                        <button class="btn btn-sm btn-gold" id="restBtn">🛌 Long rest</button>
+                        <button class="btn btn-sm" id="levelUpBtn">⬆️ Level up (+1)</button>
+                    </div>
+                </div>
+
+                <div class="pm-card">
+                    <h3>💀 Death Saves</h3>
+                    <div class="death-saves">
+                        <div class="ds-row" data-ds="deathSuccess"><span class="ds-name succ">✚ Successes</span>${[0, 1, 2].map(i => `<span class="ds-pip succ ${p.deathSuccess > i ? 'on' : ''}" data-i="${i}"></span>`).join('')}</div>
+                        <div class="ds-row" data-ds="deathFail"><span class="ds-name fail">✖ Failures</span>${[0, 1, 2].map(i => `<span class="ds-pip fail ${p.deathFail > i ? 'on' : ''}" data-i="${i}"></span>`).join('')}</div>
+                    </div>
+                    <button class="insp-toggle ${p.inspiration ? 'on' : ''}" id="pmInsp" style="margin-top:10px">${p.inspiration ? '🌟' : '☆'} Inspiration</button>
+                    <h3 style="margin-top:14px">🩸 Conditions</h3>
+                    <div class="cond-chips">${CONDITIONS.map(c => `<span class="cond-chip ${p.conditions.indexOf(c) >= 0 ? 'on' : ''}" data-cond="${c}">${c}</span>`).join('')}</div>
+                </div>
+
+                <div class="pm-card">
+                    <h3>🎯 Abilities &amp; Saves <span class="tap-hint">tap to roll</span></h3>
+                    <div class="sheet-abilities">${D.abilities.map(a => `<div class="sa ci-roll" data-check="${a}"><div class="sa-name">${a}</div><div class="sa-mod">${signed(mod(scores[a]))}</div><div class="sa-score">${scores[a]}</div></div>`).join('')}</div>
+                    <div class="chips-inline" style="margin-top:10px">${D.abilities.map(a => `<span class="ci ci-roll" data-save="${a}">${cap(a)} save ${signed(saveMod(a))}${cls.saves.indexOf(a) >= 0 ? '●' : ''}</span>`).join('')}</div>
+                    <h3 style="margin-top:14px">📚 Skills <span class="tap-hint">tap to roll</span></h3>
+                    <div class="chips-inline">${D.skills.map(s => `<span class="ci ci-roll" data-skill="${esc(s.name)}">${esc(s.name)} ${signed(skillMod(s))}</span>`).join('')}</div>
+                </div>
+
+                <div class="pm-card">
+                    <h3>🎒 Inventory &amp; Usage</h3>
+                    <div>${[...state.weapons.map(n => ['⚔️', n]), ...state.armor.map(n => ['🛡️', n]), ...(state.gear || []).map(n => ['🎒', n])].map(([ic, n]) => {
+                        const used = !!p.usedItems[n];
+                        return `<label class="use-item ${used ? 'used' : ''}"><input type="checkbox" data-used="${esc(n)}" ${used ? 'checked' : ''}> ${ic} ${esc(n)}</label>`;
+                    }).join('') || '<div class="empty">No items.</div>'}</div>
+                    <div class="sheet-line" style="margin-top:10px"><span>💰 Gold</span><span class="sl-val">${state.currency.gp || 0} gp</span></div>
+                    ${sc ? `<div class="sheet-line"><span>✨ Spells known</span><span class="sl-val">${state.spells.length}</span></div>` : ''}
+                    <label class="fld">⭐ Experience (XP)</label><input type="number" id="xpInput" min="0" value="${p.xp || 0}">
+                </div>
+
+                <div class="pm-card" style="grid-column:1/-1">
+                    <h3>📝 Session Notes</h3>
+                    <textarea class="pm-notes" id="pmNotes" placeholder="Track quests, allies, loot, plot threads…">${esc(p.notes || '')}</textarea>
+                </div>
+            </div>
+
+            <div class="pm-actions">
+                <button class="btn btn-primary" id="pmMuster">📜 Copy code for DM</button>
+                <button class="btn" id="pmPrint">🖨️ Print sheet</button>
+                <button class="btn" id="pmExport">⬇️ Export JSON</button>
+                <span style="flex:1"></span>
+                <button class="btn btn-clear" id="pmUnlock">🔓 Unlock (edit base)</button>
+            </div>
+        </div>`;
+
+        // ---- handlers ----
+        const setHP = (v) => { state.play.currentHP = Math.max(0, Math.min(maxhp, v)); renderPlayMode(); persist(); };
+        const amt = () => Math.max(1, parseInt($('#hpAmt', pm).value) || 1);
+        $('#dmgBtn', pm).addEventListener('click', () => {
+            let a = amt();
+            if (state.play.tempHP > 0) { const absorbed = Math.min(state.play.tempHP, a); state.play.tempHP -= absorbed; a -= absorbed; }
+            setHP(state.play.currentHP - a);
+        });
+        $('#healBtn', pm).addEventListener('click', () => setHP(state.play.currentHP + amt()));
+        $('#tempBtn', pm).addEventListener('click', () => { state.play.tempHP = Math.max(state.play.tempHP, amt()); renderPlayMode(); persist(); toast('Temporary HP set'); });
+        $('#restBtn', pm).addEventListener('click', () => { state.play.currentHP = maxhp; state.play.deathSuccess = 0; state.play.deathFail = 0; state.play.conditions = []; renderPlayMode(); persist(); toast('🛌 Long rest — HP restored'); });
+        $('#levelUpBtn', pm).addEventListener('click', () => {
+            if (state.level >= 20) { toast('Already level 20.', true); return; }
+            if (charterOn() && CH().levelMode !== 'any' && state.level >= effLevelMax()) { toast('The DM’s Charter caps your level.', true); return; }
+            state.level++;
+            const gain = Math.floor((cls.hd / 2) + 1) + mod(finalScore('con'));
+            state.play.currentHP = Math.min(hpTotal(), state.play.currentHP + Math.max(1, gain));
+            renderPlayMode(); persist(); toast('⬆️ Level ' + state.level + '! +' + Math.max(1, gain) + ' HP');
+        });
+        pm.querySelectorAll('.ds-pip').forEach(pip => pip.addEventListener('click', () => {
+            const key = pip.closest('.ds-row').dataset.ds, i = parseInt(pip.dataset.i);
+            state.play[key] = (state.play[key] === i + 1) ? i : i + 1; renderPlayMode(); persist();
+        }));
+        $('#pmInsp', pm).addEventListener('click', () => { state.play.inspiration = !state.play.inspiration; renderPlayMode(); persist(); });
+        pm.querySelectorAll('[data-cond]').forEach(c => c.addEventListener('click', () => {
+            const name = c.dataset.cond, i = state.play.conditions.indexOf(name);
+            if (i >= 0) state.play.conditions.splice(i, 1); else state.play.conditions.push(name);
+            renderPlayMode(); persist();
+        }));
+        pm.querySelectorAll('[data-check]').forEach(c => c.addEventListener('click', () => rollCheck(cap(c.dataset.check) + ' check', mod(finalScore(c.dataset.check)))));
+        pm.querySelectorAll('[data-save]').forEach(c => c.addEventListener('click', () => rollCheck(cap(c.dataset.save) + ' save', saveMod(c.dataset.save))));
+        pm.querySelectorAll('[data-skill]').forEach(c => c.addEventListener('click', () => { const s = D.skills.find(x => x.name === c.dataset.skill); rollCheck(s.name, skillMod(s)); }));
+        pm.querySelectorAll('[data-used]').forEach(cb => cb.addEventListener('change', () => { state.play.usedItems[cb.dataset.used] = cb.checked; renderPlayMode(); persist(); }));
+        $('#xpInput', pm).addEventListener('input', e => { state.play.xp = Math.max(0, parseInt(e.target.value) || 0); persist(); });
+        $('#pmNotes', pm).addEventListener('input', e => { state.play.notes = e.target.value; persist(); });
+        $('#pmMuster', pm).addEventListener('click', showMusterModal);
+        $('#pmPrint', pm).addEventListener('click', () => window.print());
+        $('#pmExport', pm).addEventListener('click', exportCharacter);
+        $('#pmUnlock', pm).addEventListener('click', unlockCharacter);
+    }
+
     /* =====================================================================
      * THEME + TOAST
      * ===================================================================== */
@@ -1374,13 +1759,15 @@
         $('#prevBtn').addEventListener('click', () => { if (state.tab > 0) { state.tab--; renderAll(); } });
         $('#nextBtn').addEventListener('click', () => { if (state.tab < TABS.length - 1) { state.tab++; renderAll(); } });
         $('#saveBtn').addEventListener('click', saveCharacter);
-        $('#loadBtn').addEventListener('click', loadCharacter);
+        $('#loadBtn').addEventListener('click', openPartyModal);
         $('#exportBtn').addEventListener('click', exportCharacter);
         $('#importBtn').addEventListener('click', () => $('#importFile').click());
         $('#importFile').addEventListener('change', e => { if (e.target.files[0]) importCharacter(e.target.files[0]); });
         $('#printBtn').addEventListener('click', () => window.print());
         const cb = $('#copyBtn'); if (cb) cb.addEventListener('click', copyCharacter);
         const sb = $('#shareBtn'); if (sb) sb.addEventListener('click', shareLink);
+        const lb = $('#legalBtn'); if (lb) lb.addEventListener('click', openLegalModal);
+        const lk = $('#lockBtn'); if (lk) lk.addEventListener('click', lockCharacter);
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
         setupDice();
