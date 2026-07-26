@@ -1,86 +1,261 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl" data-theme="aurora">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subnet Calculator - lebon.info</title>
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" id="meta-theme" content="#0d0726">
+
+    <!-- Primary SEO -->
+    <title>Subnet Calculator — IPv4 CIDR, netmask & host bereik | rami.party</title>
+    <meta name="description" content="Gratis, snelle en privacyvriendelijke IPv4 subnet calculator. Bereken netwerkadres, broadcast, subnetmasker, wildcard, CIDR-prefix, bruikbare hosts en IP-klasse. Werkt volledig lokaal in je browser — geen tracking.">
+    <meta name="keywords" content="subnet calculator, subnetting, IPv4, CIDR, netmask, subnetmasker, wildcard mask, netwerkadres, broadcast, prefix, IP klasse, host bereik, netwerk calculator">
+    <meta name="author" content="rami.party">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://rami.party/workshop/subnets/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Subnet Calculator — IPv4 CIDR, netmask & host bereik">
+    <meta property="og:description" content="Bereken netwerkadres, broadcast, subnetmasker, wildcard, bruikbare hosts en IP-klasse. Snel, mooi en volledig lokaal in je browser.">
+    <meta property="og:url" content="https://rami.party/workshop/subnets/">
+    <meta property="og:site_name" content="rami.party">
+    <meta property="og:locale" content="nl_BE">
+    <meta property="og:image" content="https://rami.party/workshop/subnets/og-image.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Subnet Calculator — IPv4 CIDR, netmask & host bereik">
+    <meta name="twitter:description" content="Bereken netwerkadres, broadcast, subnetmasker, wildcard, bruikbare hosts en IP-klasse. Snel, mooi en volledig lokaal.">
+    <meta name="twitter:image" content="https://rami.party/workshop/subnets/og-image.svg">
+
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d0726'/%3E%3Cg fill='none' stroke='%23a855f7' stroke-width='7' stroke-linecap='round'%3E%3Ccircle cx='50' cy='24' r='10'/%3E%3Ccircle cx='24' cy='74' r='10'/%3E%3Ccircle cx='76' cy='74' r='10'/%3E%3Cpath d='M50 34 V52 M50 52 L28 66 M50 52 L72 66'/%3E%3C/g%3E%3C/svg%3E">
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Subnet Calculator",
+      "url": "https://rami.party/workshop/subnets/",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "description": "IPv4 subnet calculator die netwerkadres, broadcast, subnetmasker, wildcard, CIDR-prefix, bruikbare hosts en IP-klasse berekent. Werkt volledig lokaal.",
+      "featureList": [
+        "Netwerk- en broadcastadres",
+        "Subnetmasker en wildcard mask",
+        "CIDR prefix en klassenotatie",
+        "Eerste en laatste bruikbare host",
+        "Aantal bruikbare hosts",
+        "IP-klasse en privaat/publiek detectie",
+        "Binaire weergave"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Wat is een subnetmasker?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Een subnetmasker bepaalt welk deel van een IP-adres het netwerk aanduidt en welk deel de host. Bijvoorbeeld 255.255.255.0 (/24) reserveert de eerste 24 bits voor het netwerk en de laatste 8 bits voor hosts." }
+        },
+        {
+          "@type": "Question",
+          "name": "Wat is CIDR-notatie?",
+          "acceptedAnswer": { "@type": "Answer", "text": "CIDR (Classless Inter-Domain Routing) noteert een netwerk als IP-adres gevolgd door een prefix, zoals 192.168.1.0/24. De prefix geeft het aantal netwerkbits aan." }
+        },
+        {
+          "@type": "Question",
+          "name": "Welke IP-adressen zijn privé?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Privé-bereiken zijn 10.0.0.0/8, 172.16.0.0/12 en 192.168.0.0/16. Deze adressen worden gebruikt binnen lokale netwerken en zijn niet direct routeerbaar op het internet." }
+        }
+      ]
+    }
+    </script>
 </head>
 <body>
+    <div class="app-bg" aria-hidden="true">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="blob b3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">🖧</span>
+            <div class="brand-text">
+                <strong>Subnet&nbsp;Studio</strong>
+                <small data-i18n="brand_tag">IPv4 · lokaal · privé</small>
+            </div>
+        </div>
+        <div class="actions">
+            <div class="menu">
+                <button type="button" id="lang-btn" aria-haspopup="true" aria-expanded="false">🌐 <span id="lang-name">Nederlands</span></button>
+                <div class="menu-list" id="lang-menu" role="menu" hidden></div>
+            </div>
+            <div class="menu">
+                <button type="button" id="theme-btn" aria-haspopup="true" aria-expanded="false">🎨 <span id="theme-name">Aurora</span></button>
+                <div class="menu-list" id="theme-menu" role="menu" hidden></div>
+            </div>
+        </div>
+    </header>
+
     <main>
-        <h1>Subnet Mask Information</h1>
-        <section>
-            <h2>Subnet Calculator</h2>
-            <form id="subnet-form" autocomplete="off">
-                <input type="text" id="ip" placeholder="IP-adres (bv. 192.168.1.0)" required>
-                <input type="number" id="prefix" min="1" max="32" placeholder="Prefix (bv. 24)" required>
-                <button type="submit">Bereken</button>
+        <div class="hero">
+            <h1>Subnet Calculator</h1>
+            <p data-i18n="hero_desc">Bereken in één klik netwerkadres, broadcast, subnetmasker, wildcard, bruikbare hosts en de IP-klasse. Alles gebeurt lokaal in je browser — er wordt niets verstuurd.</p>
+        </div>
+
+        <section class="card" aria-labelledby="calc-title">
+            <h2 id="calc-title"><span class="ic">🧮</span> <span data-i18n="calc_title">Bereken een subnet</span></h2>
+
+            <div class="mode-toggle" role="tablist" aria-label="IP versie">
+                <button type="button" class="mode-btn active" data-mode="ipv4" role="tab" aria-selected="true">IPv4</button>
+                <button type="button" class="mode-btn" data-mode="ipv6" role="tab" aria-selected="false">IPv6</button>
+            </div>
+
+            <form id="subnet-form" class="calc-form" autocomplete="off">
+                <div class="field">
+                    <label for="ip" data-i18n="ip_label">IP-adres</label>
+                    <input type="text" id="ip" spellcheck="false" autocapitalize="off" autocomplete="off"
+                        placeholder="192.168.1.0" required aria-describedby="form-error">
+                </div>
+                <div class="field">
+                    <label for="prefix"><span data-i18n="prefix_label">Prefix (/CIDR)</span> <span class="info" tabindex="0" role="button" aria-label="?"><span class="ii">i</span><span class="tip" data-i18n="tip_prefix">Het aantal netwerkbits.</span></span></label>
+                    <input type="number" id="prefix" min="0" max="32" placeholder="24" required>
+                </div>
+                <button type="submit" class="btn" data-i18n="calc_button">Bereken</button>
             </form>
-            <div id="result"></div>
+            <div class="examples" id="examples-ipv4">
+                <span class="lbl" data-i18n="examples_label">Voorbeelden:</span>
+                <button type="button" class="chip" data-ex="192.168.1.0/24">192.168.1.0/24</button>
+                <button type="button" class="chip" data-ex="10.0.0.0/8">10.0.0.0/8</button>
+                <button type="button" class="chip" data-ex="172.16.5.0/20">172.16.5.0/20</button>
+                <button type="button" class="chip" data-ex="192.168.10.130/26">192.168.10.130/26</button>
+            </div>
+            <div class="examples" id="examples-ipv6" hidden>
+                <span class="lbl" data-i18n="examples_label">Voorbeelden:</span>
+                <button type="button" class="chip" data-ex="2001:db8::/32">2001:db8::/32</button>
+                <button type="button" class="chip" data-ex="2001:db8:abcd:12::/64">2001:db8:abcd:12::/64</button>
+                <button type="button" class="chip" data-ex="fe80::/10">fe80::/10</button>
+                <button type="button" class="chip" data-ex="fd00::/8">fd00::/8</button>
+            </div>
+            <p class="form-error" id="form-error" role="alert"></p>
+
+            <div class="result" id="result" hidden>
+                <div class="result-tags" id="result-tags"></div>
+                <div class="result-grid" id="result-grid"></div>
+                <div class="result-bin" id="bin-section">
+                    <div class="k" data-i18n="bin_label">Netwerk in binair (netwerkbits gemarkeerd)</div>
+                    <div class="bin" id="result-bin"></div>
+                </div>
+            </div>
         </section>
-        <section>
-            <h2>Korte uitleg IP-klassen</h2>
-            <p style="font-size:0.97em;line-height:1.6em;max-width:540px;margin:0 auto 1em auto;">
-                <strong>Klasse A</strong>: IP-adressen van <code>0.0.0.0</code> t/m <code>127.255.255.255</code> (<code>/8</code>), grote netwerken.<br>
-                <strong>Klasse B</strong>: IP-adressen van <code>128.0.0.0</code> t/m <code>191.255.255.255</code> (<code>/16</code>), middelgrote netwerken.<br>
-                <strong>Klasse C</strong>: IP-adressen van <code>192.0.0.0</code> t/m <code>223.255.255.255</code> (<code>/24</code>), kleine netwerken.
-            </p>
-            <h2>Korte uitleg private IP-adressen</h2>
-            <p style="font-size:0.97em;line-height:1.6em;max-width:540px;margin:0 auto 1.5em auto;">
-                <strong>Private IP-adressen</strong> zijn gereserveerd voor intern gebruik binnen een netwerk en zijn niet direct bereikbaar vanaf het internet.<br>
-                <strong>Klasse A:</strong> <code>10.0.0.0</code> t/m <code>10.255.255.255</code><br>
-                <strong>Klasse B:</strong> <code>172.16.0.0</code> t/m <code>172.31.255.255</code><br>
-                <strong>Klasse C:</strong> <code>192.168.0.0</code> t/m <code>192.168.255.255</code>
-            </p>
+
+        <section class="card ipv4-only">
+            <h2><span class="ic">📚</span> <span data-i18n="info_title">IP-klassen &amp; privé-adressen</span></h2>
+            <div class="info-grid">
+                <div class="info-block">
+                    <h3 data-i18n="classes_title">IP-klassen</h3>
+                    <p data-i18n-html="classes_body">
+                        <strong>Klasse A</strong> — <code>0.0.0.0</code> t/m <code>127.255.255.255</code> (<code>/8</code>), grote netwerken.<br>
+                        <strong>Klasse B</strong> — <code>128.0.0.0</code> t/m <code>191.255.255.255</code> (<code>/16</code>), middelgrote netwerken.<br>
+                        <strong>Klasse C</strong> — <code>192.0.0.0</code> t/m <code>223.255.255.255</code> (<code>/24</code>), kleine netwerken.
+                    </p>
+                </div>
+                <div class="info-block">
+                    <h3 data-i18n="private_title">Privé-bereiken</h3>
+                    <p data-i18n-html="private_body">
+                        Gereserveerd voor intern gebruik en niet direct bereikbaar vanaf internet.<br>
+                        <strong>Klasse A</strong> — <code>10.0.0.0</code> t/m <code>10.255.255.255</code><br>
+                        <strong>Klasse B</strong> — <code>172.16.0.0</code> t/m <code>172.31.255.255</code><br>
+                        <strong>Klasse C</strong> — <code>192.168.0.0</code> t/m <code>192.168.255.255</code>
+                    </p>
+                </div>
+            </div>
         </section>
-        <section>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Number of Addresses</th>
-                        <th>Number of Bits</th>
-                        <th>Prefix</th>
-                        <th>Classful Notation</th>
-                        <th>Mask</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr><td>1</td><td>0</td><td>/32</td><td></td><td>255.255.255.255</td></tr>
-                    <tr><td>2</td><td>1</td><td>/31</td><td></td><td>255.255.255.254</td></tr>
-                    <tr><td>4</td><td>2</td><td>/30</td><td></td><td>255.255.255.252</td></tr>
-                    <tr><td>8</td><td>3</td><td>/29</td><td></td><td>255.255.255.248</td></tr>
-                    <tr><td>16</td><td>4</td><td>/28</td><td></td><td>255.255.255.240</td></tr>
-                    <tr><td>32</td><td>5</td><td>/27</td><td></td><td>255.255.255.224</td></tr>
-                    <tr><td>64</td><td>6</td><td>/26</td><td></td><td>255.255.255.192</td></tr>
-                    <tr><td>128</td><td>7</td><td>/25</td><td></td><td>255.255.255.128</td></tr>
-                    <tr><td>256</td><td>8</td><td>/24</td><td>1 C</td><td>255.255.255.0</td></tr>
-                    <tr><td>512</td><td>9</td><td>/23</td><td>2 C</td><td>255.255.254.0</td></tr>
-                    <tr><td>1 K</td><td>10</td><td>/22</td><td>4 C</td><td>255.255.252.0</td></tr>
-                    <tr><td>2 K</td><td>11</td><td>/21</td><td>8 C</td><td>255.255.248.0</td></tr>
-                    <tr><td>4 K</td><td>12</td><td>/20</td><td>16 C</td><td>255.255.240.0</td></tr>
-                    <tr><td>8 K</td><td>13</td><td>/19</td><td>32 C</td><td>255.255.224.0</td></tr>
-                    <tr><td>16 K</td><td>14</td><td>/18</td><td>64 C</td><td>255.255.192.0</td></tr>
-                    <tr><td>32 K</td><td>15</td><td>/17</td><td>128 C</td><td>255.255.128.0</td></tr>
-                    <tr><td>64 K</td><td>16</td><td>/16</td><td>1 B</td><td>255.255.0.0</td></tr>
-                    <tr><td>128 K</td><td>17</td><td>/15</td><td>2 B</td><td>255.254.0.0</td></tr>
-                    <tr><td>256 K</td><td>18</td><td>/14</td><td>4 B</td><td>255.252.0.0</td></tr>
-                    <tr><td>512 K</td><td>19</td><td>/13</td><td>8 B</td><td>255.248.0.0</td></tr>
-                    <tr><td>1 M</td><td>20</td><td>/12</td><td>16 B</td><td>255.240.0.0</td></tr>
-                    <tr><td>2 M</td><td>21</td><td>/11</td><td>32 B</td><td>255.224.0.0</td></tr>
-                    <tr><td>4 M</td><td>22</td><td>/10</td><td>64 B</td><td>255.192.0.0</td></tr>
-                    <tr><td>8 M</td><td>23</td><td>/9</td><td>128 B</td><td>255.128.0.0</td></tr>
-                    <tr><td>16 M</td><td>24</td><td>/8</td><td>1 A</td><td>255.0.0.0</td></tr>
-                    <tr><td>32 M</td><td>25</td><td>/7</td><td>2 A</td><td>254.0.0.0</td></tr>
-                    <tr><td>64 M</td><td>26</td><td>/6</td><td>4 A</td><td>252.0.0.0</td></tr>
-                    <tr><td>128 M</td><td>27</td><td>/5</td><td>8 A</td><td>248.0.0.0</td></tr>
-                    <tr><td>256 M</td><td>28</td><td>/4</td><td>16 A</td><td>240.0.0.0</td></tr>
-                    <tr><td>512 M</td><td>29</td><td>/3</td><td>32 A</td><td>224.0.0.0</td></tr>
-                    <tr><td>1024 M</td><td>30</td><td>/2</td><td>64 A</td><td>192.0.0.0</td></tr>
-                </tbody>
-            </table>
+
+        <section class="card ipv4-only">
+            <h2><span class="ic">📐</span> <span data-i18n="table_title">Prefix-referentietabel</span></h2>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-i18n="th_addresses">Adressen</th>
+                            <th data-i18n="th_bits">Bits</th>
+                            <th data-i18n="th_prefix">Prefix</th>
+                            <th data-i18n="th_classful">Klassevorm</th>
+                            <th data-i18n="th_mask">Masker</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>0</td><td>/32</td><td></td><td>255.255.255.255</td></tr>
+                        <tr><td>2</td><td>1</td><td>/31</td><td></td><td>255.255.255.254</td></tr>
+                        <tr><td>4</td><td>2</td><td>/30</td><td></td><td>255.255.255.252</td></tr>
+                        <tr><td>8</td><td>3</td><td>/29</td><td></td><td>255.255.255.248</td></tr>
+                        <tr><td>16</td><td>4</td><td>/28</td><td></td><td>255.255.255.240</td></tr>
+                        <tr><td>32</td><td>5</td><td>/27</td><td></td><td>255.255.255.224</td></tr>
+                        <tr><td>64</td><td>6</td><td>/26</td><td></td><td>255.255.255.192</td></tr>
+                        <tr><td>128</td><td>7</td><td>/25</td><td></td><td>255.255.255.128</td></tr>
+                        <tr><td>256</td><td>8</td><td>/24</td><td>1 C</td><td>255.255.255.0</td></tr>
+                        <tr><td>512</td><td>9</td><td>/23</td><td>2 C</td><td>255.255.254.0</td></tr>
+                        <tr><td>1 K</td><td>10</td><td>/22</td><td>4 C</td><td>255.255.252.0</td></tr>
+                        <tr><td>2 K</td><td>11</td><td>/21</td><td>8 C</td><td>255.255.248.0</td></tr>
+                        <tr><td>4 K</td><td>12</td><td>/20</td><td>16 C</td><td>255.255.240.0</td></tr>
+                        <tr><td>8 K</td><td>13</td><td>/19</td><td>32 C</td><td>255.255.224.0</td></tr>
+                        <tr><td>16 K</td><td>14</td><td>/18</td><td>64 C</td><td>255.255.192.0</td></tr>
+                        <tr><td>32 K</td><td>15</td><td>/17</td><td>128 C</td><td>255.255.128.0</td></tr>
+                        <tr><td>64 K</td><td>16</td><td>/16</td><td>1 B</td><td>255.255.0.0</td></tr>
+                        <tr><td>128 K</td><td>17</td><td>/15</td><td>2 B</td><td>255.254.0.0</td></tr>
+                        <tr><td>256 K</td><td>18</td><td>/14</td><td>4 B</td><td>255.252.0.0</td></tr>
+                        <tr><td>512 K</td><td>19</td><td>/13</td><td>8 B</td><td>255.248.0.0</td></tr>
+                        <tr><td>1 M</td><td>20</td><td>/12</td><td>16 B</td><td>255.240.0.0</td></tr>
+                        <tr><td>2 M</td><td>21</td><td>/11</td><td>32 B</td><td>255.224.0.0</td></tr>
+                        <tr><td>4 M</td><td>22</td><td>/10</td><td>64 B</td><td>255.192.0.0</td></tr>
+                        <tr><td>8 M</td><td>23</td><td>/9</td><td>128 B</td><td>255.128.0.0</td></tr>
+                        <tr><td>16 M</td><td>24</td><td>/8</td><td>1 A</td><td>255.0.0.0</td></tr>
+                        <tr><td>32 M</td><td>25</td><td>/7</td><td>2 A</td><td>254.0.0.0</td></tr>
+                        <tr><td>64 M</td><td>26</td><td>/6</td><td>4 A</td><td>252.0.0.0</td></tr>
+                        <tr><td>128 M</td><td>27</td><td>/5</td><td>8 A</td><td>248.0.0.0</td></tr>
+                        <tr><td>256 M</td><td>28</td><td>/4</td><td>16 A</td><td>240.0.0.0</td></tr>
+                        <tr><td>512 M</td><td>29</td><td>/3</td><td>32 A</td><td>224.0.0.0</td></tr>
+                        <tr><td>1024 M</td><td>30</td><td>/2</td><td>64 A</td><td>192.0.0.0</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </section>
- 
+
+        <section class="card ipv6-only" hidden>
+            <h2><span class="ic">🌐</span> <span data-i18n="v6_info_title">IPv6-adrestypes &amp; veelgebruikte prefixes</span></h2>
+            <div class="info-grid">
+                <div class="info-block">
+                    <h3 data-i18n="v6_types_title">Adrestypes</h3>
+                    <p data-i18n-html="v6_types_body">Adrestypes worden hier getoond.</p>
+                </div>
+                <div class="info-block">
+                    <h3 data-i18n="v6_prefixes_title">Veelgebruikte prefixes</h3>
+                    <p data-i18n-html="v6_prefixes_body">Prefixes worden hier getoond.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2><span class="ic">🎓</span> <span data-i18n="glossary_title">Beginnersgids: begrippen uitgelegd</span></h2>
+            <div class="glossary" id="glossary"></div>
+        </section>
+
+        <footer>
+            <p data-i18n-html="footer">Gemaakt met ♥ op <a href="https://rami.party/">rami.party</a> · alles draait lokaal, geen tracking.</p>
+        </footer>
     </main>
+
     <script src="script.js"></script>
 </body>
 </html>

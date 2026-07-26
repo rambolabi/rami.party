@@ -8,7 +8,8 @@
     <meta name="theme-color" content="#3b82f6">
     <title>Email Header Analyzer</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📧</text></svg>">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
     <div class="container">
@@ -136,6 +137,16 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <script src="script.js"></script>
+    <!-- Data lists (bundled ICANN TLD snapshot, TLD groups, brands, example) -->
+    <script src="js/data-iana-tlds.js"></script>
+    <script src="js/data-tlds-twopart.js"></script>
+    <script src="js/data-tlds-risky.js"></script>
+    <script src="js/data-tlds-nonpublic.js"></script>
+    <script src="js/data-brands.js"></script>
+    <script src="js/data-example.js"></script>
+    <!-- External lookup intelligence (opt-in) -->
+    <script src="js/lookups.js"></script>
+    <!-- Core analyzer (must load last) -->
+    <script src="js/analyzer.js"></script>
 </body>
 </html>

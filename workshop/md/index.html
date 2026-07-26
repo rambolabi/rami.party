@@ -1,23 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="aurora">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Markdown Editor</title>
+    <meta name="color-scheme" content="dark light">
+    <meta name="description" content="A fast, private, fully-offline Markdown editor with live preview and ten themes. No CDNs, no tracking.">
+    <meta name="theme-color" id="meta-theme" content="#0d0726">
+    <title>Markdown Studio · Live Editor</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icon.svg">
+    <link rel="apple-touch-icon" href="icon.svg">
 </head>
 <body>
-    <button class="dark-mode-toggle" onclick="toggleDarkMode()">☀️</button>
-    <div class="container">
-        <div class="editor-container">
-            <textarea id="markdown-input" placeholder="Enter your markdown here..."></textarea>
-        </div>
-        <div class="preview-container">
-            <div id="preview-output"></div>
-        </div>
+    <div class="app-bg" aria-hidden="true">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="blob b3"></div>
+        <div class="grid-overlay"></div>
     </div>
-    <button id="toggle-preview">Toggle Preview</button>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/1.9.1/showdown.min.js"></script>
+
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">✍︎</span>
+            <div class="brand-text">
+                <strong>Markdown&nbsp;Studio</strong>
+                <small>local · private · offline</small>
+            </div>
+        </div>
+
+        <div class="toolbar" role="toolbar" aria-label="Formatting">
+            <button type="button" data-action="bold" title="Bold (Ctrl+B)" aria-label="Bold"><b>B</b></button>
+            <button type="button" data-action="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i>I</i></button>
+            <button type="button" data-action="strike" title="Strikethrough" aria-label="Strikethrough"><s>S</s></button>
+            <span class="sep" aria-hidden="true"></span>
+            <button type="button" data-action="h1" title="Heading 1" aria-label="Heading 1">H1</button>
+            <button type="button" data-action="h2" title="Heading 2" aria-label="Heading 2">H2</button>
+            <button type="button" data-action="quote" title="Quote" aria-label="Quote">❝</button>
+            <button type="button" data-action="ul" title="Bullet list" aria-label="Bullet list">•</button>
+            <button type="button" data-action="ol" title="Numbered list" aria-label="Numbered list">1.</button>
+            <button type="button" data-action="task" title="Task list" aria-label="Task list">☑</button>
+            <span class="sep" aria-hidden="true"></span>
+            <button type="button" data-action="code" title="Inline code (Ctrl+`)" aria-label="Inline code">&lt;/&gt;</button>
+            <button type="button" data-action="codeblock" title="Code block" aria-label="Code block">▤</button>
+            <button type="button" data-action="link" title="Link (Ctrl+K)" aria-label="Link">🔗</button>
+            <button type="button" data-action="image" title="Image" aria-label="Image">🖼</button>
+            <button type="button" data-action="table" title="Table" aria-label="Table">▦</button>
+            <button type="button" data-action="hr" title="Divider" aria-label="Divider">―</button>
+        </div>
+
+        <div class="actions">
+            <button type="button" id="toc-btn" title="Table of contents" aria-label="Table of contents">📑</button>
+            <button type="button" id="lint-btn" title="Document hints" aria-label="Document hints">✔</button>
+            <label class="file-open" title="Open a .md file">
+                <input type="file" id="file-input" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
+                <span>📂 Open</span>
+            </label>
+            <div class="menu">
+                <button type="button" id="export-btn" title="Export" aria-haspopup="true" aria-expanded="false">⬇ Export</button>
+                <div class="menu-list" id="export-menu" role="menu" hidden>
+                    <button type="button" role="menuitem" data-export="md">Download .md</button>
+                    <button type="button" role="menuitem" data-export="html">Download .html</button>
+                    <button type="button" role="menuitem" data-export="copy-html">Copy HTML</button>
+                    <button type="button" role="menuitem" data-export="copy-md">Copy Markdown</button>
+                    <button type="button" role="menuitem" data-export="print">Print / PDF</button>
+                </div>
+            </div>
+            <div class="menu">
+                <button type="button" id="theme-btn" title="Theme" aria-haspopup="true" aria-expanded="false">🎨 <span id="theme-name">Aurora</span></button>
+                <div class="menu-list" id="theme-menu" role="menu" hidden></div>
+            </div>
+            <div class="menu">
+                <button type="button" id="view-btn" title="Settings" aria-haspopup="true" aria-expanded="false">⚙</button>
+                <div class="menu-list" id="view-menu" role="menu" hidden>
+                    <button type="button" role="menuitemcheckbox" id="vim-toggle"><span class="check">✓</span> Vim mode</button>
+                    <button type="button" role="menuitemcheckbox" id="hl-toggle"><span class="check">✓</span> Disable syntax highlight</button>
+                </div>
+            </div>
+            <button type="button" id="clear-btn" class="danger" title="Clear document">🗑</button>
+        </div>
+    </header>
+
+    <div class="tabbar" id="tabbar" role="tablist" aria-label="Open documents">
+        <button type="button" id="new-tab" title="New document" aria-label="New document">＋</button>
+    </div>
+
+    <div class="find-bar" id="find-bar" role="search" hidden>
+        <span class="find-ico" aria-hidden="true">🔍</span>
+        <input type="text" id="find-input" placeholder="Find" aria-label="Find" autocomplete="off">
+        <span class="find-count" id="find-count"></span>
+        <button type="button" id="find-prev" title="Previous">▲</button>
+        <button type="button" id="find-next" title="Next">▼</button>
+        <span class="sep" aria-hidden="true"></span>
+        <input type="text" id="replace-input" placeholder="Replace" aria-label="Replace" autocomplete="off">
+        <button type="button" id="find-replace-one" title="Replace">Replace</button>
+        <button type="button" id="find-replace-all" title="Replace all">All</button>
+        <button type="button" id="find-close" class="find-close" title="Close">✕</button>
+    </div>
+
+    <main class="workspace" id="workspace">
+        <section class="pane editor-pane" aria-label="Markdown editor">
+            <textarea id="markdown-input" spellcheck="true" autocomplete="off"
+                autocapitalize="off" placeholder="# Start writing…&#10;&#10;Type Markdown on the left, watch it come alive on the right. Press / for commands."></textarea>
+        </section>
+        <div class="divider" id="divider" role="separator" aria-orientation="vertical" aria-label="Resize panes"></div>
+        <section class="pane preview-pane" aria-label="Preview">
+            <article id="preview-output" class="markdown-body"></article>
+        </section>
+
+        <aside class="drawer" id="toc-drawer" aria-label="Table of contents" hidden>
+            <header class="drawer-head"><strong>📑 Contents</strong><button type="button" class="drawer-close" aria-label="Close">✕</button></header>
+            <nav class="drawer-body" id="toc-list"></nav>
+        </aside>
+        <aside class="drawer" id="lint-drawer" aria-label="Document hints" hidden>
+            <header class="drawer-head"><strong>✔ Hints</strong><button type="button" class="drawer-close" aria-label="Close">✕</button></header>
+            <div class="drawer-body" id="lint-list"></div>
+        </aside>
+    </main>
+
+    <div class="slash-menu" id="slash-menu" role="menu" hidden></div>
+
+    <footer class="statusbar">
+        <div class="stats">
+            <span id="stat-words">0 words</span>
+            <span id="stat-chars">0 characters</span>
+            <span id="stat-lines">0 lines</span>
+            <span id="stat-read">0 min read</span>
+            <button type="button" id="lint-count" class="lint-count" title="Show hints">No issues</button>
+        </div>
+        <div class="status-right">
+            <span id="vim-badge" class="vim-badge normal" hidden>-- NORMAL --</span>
+            <span id="save-state" class="save-state">Saved</span>
+            <button type="button" id="toggle-preview" title="Toggle preview">👁 Preview</button>
+        </div>
+    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
