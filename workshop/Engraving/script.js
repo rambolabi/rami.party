@@ -1,90 +1,31 @@
-// Image data - automatically generated from img folder
-const allImages = [
-    { name: 'alone-time-safety-woman-curlers-coffee', hasSVG: true, separator: '_' },
-    { name: 'baked-fucupcakes-shut-pinup-cupcakes-humor', hasSVG: true, separator: '_' },
-    { name: 'baking-murder-wrong-woman-apron-mixing', hasSVG: true, separator: '_' },
-    { name: 'bear-learning-cook-angry-spatula-apron', hasSVG: false, separator: '-' },
-    { name: 'best-mom-galaxy-stars-planets-space', hasSVG: true, separator: '_' },
-    { name: 'better-late-ugly-woman-makeup-winking', hasSVG: true, separator: '_' },
-    { name: 'bison-prairie-mountains-lake-sunrays-circle', hasSVG: true, separator: '_' },
-    { name: 'bruce-lee-martial-artist-kung-fu-muscular-intense', hasSVG: false, separator: '-' },
-    { name: 'coffee-bitch-woman-retro-cup-sarcastic', hasSVG: true, separator: '_' },
-    { name: 'coffee-help-nope-bitch-woman-pinup', hasSVG: true, separator: '_' },
-    { name: 'completely-unhinged-woman-knife-retro-housewife', hasSVG: true, separator: '_' },
-    { name: 'cookies-milk-dunk-woman-pinup-bubbles', hasSVG: true, separator: '_' },
-    { name: 'corgi-dog-happy-smiling-tongue-sketch', hasSVG: false, separator: '-' },
-    { name: 'cougar-mountains-cliffs-forest-wildlife-wilderness', hasSVG: true, separator: '_' },
-    { name: 'country-roads-take-home-vintage-truck', hasSVG: true, separator: '_' },
-    { name: 'dead-stupid-painful-wooden-planks-quote', hasSVG: false, separator: '-' },
-    { name: 'deer-stag-antlers-forest-trees-moon', hasSVG: true, separator: '_' },
-    { name: 'disappoints-me-woman-baking-muffins-retro', hasSVG: true, separator: '_' },
-    { name: 'dog-poodle-fluffy-standing-drawing-adorable', hasSVG: false, separator: '-' },
-    { name: 'dragon-celtic-knotwork-heraldic-mythical-fantasy', hasSVG: true, separator: '_' },
-    { name: 'dragon-roaring-smoke-sketch-head-fantasy', hasSVG: false, separator: '-' },
-    { name: 'dumbledore-wizard-pointing-magic-beard-harry-potte', hasSVG: false, separator: '-' },
-    { name: 'eagle-flying-wolf-howling-mountains-forest', hasSVG: true, separator: '_' },
-    { name: 'eagle-wings-mountains-river-forest-valley', hasSVG: false, separator: '-' },
-    { name: 'fluffy-outside-sassy-inside-highland-cow-flower-cr', hasSVG: false, separator: '-' },
-    { name: 'forest-river-mushrooms-ferns-sunlight-circular', hasSVG: true, separator: '_' },
-    { name: 'fresh-eggs-daily-chicken-rooster-farm', hasSVG: true, separator: '_' },
-    { name: 'german-shepherd-dog-sitting-grass-ears-up-attentiv', hasSVG: false, separator: '-' },
-    { name: 'grim-reaper-scythe-wings-hooded-death-angel', hasSVG: true, separator: '_' },
-    { name: 'hello-call-bullshit-woman-phone-retro', hasSVG: true, separator: '_' },
-    { name: 'hey-you-dropped-this-woman-brain', hasSVG: true, separator: '_' },
-    { name: 'highland-cow-horns-shaggy-cattle-portrait', hasSVG: false, separator: '-' },
-    { name: 'highland-cow-santa-hat-christmas-ornament', hasSVG: false, separator: '-' },
-    { name: 'hulk-flexing-roaring-muscles-angry-superhero', hasSVG: false, separator: '-' },
-    { name: 'i-love-you-rose-engraving-black-white-romantic-flo', hasSVG: false, separator: '-' },
-    { name: 'joker-heath-ledger-dark-knight-villain-portrait-me', hasSVG: false, separator: '-' },
-    { name: 'kill-kindness-poison-stirring-vintage-housewife-sa', hasSVG: true, separator: '_' },
-    { name: 'kratos-god-of-war-bearded-bald-scarred-intense', hasSVG: false, separator: '-' },
-    { name: 'kratos-god-of-war-warrior-axe-blades-viking', hasSVG: false, separator: '-' },
-    { name: 'lantern-skull-vintage-human-hatching-still-life', hasSVG: false, separator: '-' },
-    { name: 'last-flying-fuck-housewife-vintage-butterfly', hasSVG: true, separator: '_' },
-    { name: 'laundry-woman-nobody-doing-me-either', hasSVG: true, separator: '_' },
-    { name: 'laundry-worry-woman-basket-humor-housewife', hasSVG: true, separator: '_' },
-    { name: 'love-you-moon-back-stars-celestial', hasSVG: false, separator: '-' },
-    { name: 'man-werewolf-hybrid-snarling-fangs-beast', hasSVG: false, separator: '-' },
-    { name: 'michael-myers-horror-villain-holding-knife-cracked', hasSVG: false, separator: '-' },
-    { name: 'mother-friend-forever-first-quote-decorative', hasSVG: true, separator: '_' },
-    { name: 'nap-time-happy-hour-sleep-relaxation', hasSVG: true, separator: '_' },
-    { name: 'oh-look-give-fuck-fairy-died-woman-indifference', hasSVG: true, separator: '_' },
-    { name: 'owl-flying-forest-trees-sketch-woodland', hasSVG: false, separator: '-' },
-    { name: 'pikachu-pokemon-electric-attack-lightning-engravin', hasSVG: true, separator: '_' },
-    { name: 'pikachu-pokemon-electric-lightning-attack-dynamic', hasSVG: false, separator: '-' },
-    { name: 'pikachu-pokemon-sitting-engraving-black-white-cute', hasSVG: false, separator: '-' },
-    { name: 'poison-woman-retro-housewife-cooking-kitchen', hasSVG: true, separator: '_' },
-    { name: 'pomeranian-dog-sketch-happy-fluffy-standing', hasSVG: false, separator: '-' },
-    { name: 'pug-dog-pencil-sketch-standing-curly-tail', hasSVG: false, separator: '-' },
-    { name: 'rambo-warrior-knife-bow-archer-muscular', hasSVG: false, separator: '-' },
-    { name: 'respectfully-climb-level-bitch-woman-confident', hasSVG: true, separator: '_' },
-    { name: 'self-made-gothic-script-flourishes-tattoo-letterin', hasSVG: true, separator: '_' },
-    { name: 'size-matters-small-coffee-woman-mug', hasSVG: true, separator: '_' },
-    { name: 'skeleton-samurai-katana-armor-japanese-skull', hasSVG: false, separator: '-' },
-    { name: 'skulls-vortex-ghostly-demonic-swirling-underworld', hasSVG: false, separator: '-' },
-    { name: 'spartan-warrior-colosseum-roman-greek-ancient', hasSVG: false, separator: '-' },
-    { name: 'stronger-drinks-woman-wine-glass-winking-resilienc', hasSVG: true, separator: '_' },
-    { name: 'thor-mjolnir-raising-muscular-beard-warrior', hasSVG: false, separator: '-' },
-    { name: 'thor-mjolnir-superhero-armor-cape-god', hasSVG: false, separator: '-' },
-    { name: 'welder-welding-fix-stupid-quote-humorous', hasSVG: true, separator: '_' },
-    { name: 'witch-casting-stars-moons-celestial-flowing-hair', hasSVG: true, separator: '_' },
-    { name: 'wolf-howling-mountain-moon-forest-night', hasSVG: true, separator: '_' },
-    { name: 'wolf-howling-snow-pencil-sketch-wildlife', hasSVG: false, separator: '-' },
-    { name: 'wolf-snarling-angry-fangs-wild-detailed', hasSVG: false, separator: '-' },
-    { name: 'wolverine-adamantium-claws-smoking-cigar-marvel-co', hasSVG: false, separator: '-' },
-    { name: 'woman-calavera-ornate-portrait-jewelry-long-hair', hasSVG: false, separator: '-' },
-    { name: 'woman-feather-headdress-earrings-bikini-ornate', hasSVG: false, separator: '-' }
-];
+// Gallery data is built from the owner-editable list in artworks.js.
+// To add/remove art, edit artworks.js only — nothing here needs to change.
+const allImages = (window.ARTWORKS || []).map(parseArtwork);
+
+// Turn an artworks.js entry into the internal shape the gallery uses.
+// Accepts either a plain PNG file-name string, or { png, svg }.
+function parseArtwork(entry) {
+    const pngFile = typeof entry === 'string' ? entry : (entry && entry.png) || '';
+    const svgFile = typeof entry === 'string' ? null : (entry && entry.svg) || null;
+    // Display/base name: strip an optional size tag ("-4096px"/"_2048px") and ".png".
+    const name = pngFile
+        .replace(/[_-]\d+px\.png$/i, '')
+        .replace(/\.png$/i, '');
+    return { name, pngFile, svgFile, hasSVG: !!svgFile };
+}
 
 // State
 let currentIndex = 0;
 let filteredImages = [...allImages];
+let formatFilter = 'all'; // 'all' | 'svg'
+let isGridView = false;
 
 // DOM Elements
 const mainImage = document.getElementById('mainImage');
 const imageName = document.getElementById('imageName');
 const imageCounter = document.getElementById('imageCounter');
 const searchInput = document.getElementById('searchInput');
+const searchClear = document.getElementById('searchClear');
 const resultCount = document.getElementById('resultCount');
 const prevBtn = document.getElementById('prevBtn');
 const nextBtn = document.getElementById('nextBtn');
@@ -92,11 +33,28 @@ const downloadPNG = document.getElementById('downloadPNG');
 const downloadSVG = document.getElementById('downloadSVG');
 const imageContainer = document.getElementById('imageContainer');
 const toggleViewBtn = document.getElementById('toggleViewBtn');
+const viewLabel = document.getElementById('viewLabel');
+const viewIcon = document.getElementById('viewIcon');
 const gridView = document.getElementById('gridView');
-const gallery = document.querySelector('.gallery');
-const controls = document.querySelector('.controls');
+const gallery = document.getElementById('gallery');
+const controls = document.getElementById('controls');
+const viewerHint = document.getElementById('viewerHint');
+const svgBadge = document.getElementById('svgBadge');
+const plateLoader = document.getElementById('plateLoader');
+const emptyState = document.getElementById('emptyState');
+const chipAll = document.getElementById('chipAll');
+const chipSvg = document.getElementById('chipSvg');
+const toTop = document.getElementById('toTop');
 
-// Utility function to format image name for display
+// Lightbox elements
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightboxImg');
+const lightboxCaption = document.getElementById('lightboxCaption');
+const lightboxClose = document.getElementById('lightboxClose');
+const lightboxPrev = document.getElementById('lightboxPrev');
+const lightboxNext = document.getElementById('lightboxNext');
+
+// Helpers -------------------------------------------------------------------
 function formatImageName(name) {
     return name
         .split('-')
@@ -104,75 +62,120 @@ function formatImageName(name) {
         .join(' ');
 }
 
-// Load and display image
+function pngPath(image) {
+    return `./img/${image.pngFile}`;
+}
+
+function svgPath(image) {
+    return `./img/${image.svgFile}`;
+}
+
+// Single-image viewer -------------------------------------------------------
 function displayImage() {
     if (filteredImages.length === 0) {
-        mainImage.src = '';
-        mainImage.alt = 'No images found';
-        imageName.textContent = 'No images found';
+        mainImage.removeAttribute('src');
+        mainImage.alt = '';
+        imageName.textContent = 'No engravings found';
         imageCounter.textContent = '';
+        svgBadge.hidden = true;
+        plateLoader.hidden = true;
         downloadPNG.disabled = true;
         downloadSVG.disabled = true;
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
         return;
     }
 
+    if (currentIndex < 0) currentIndex = 0;
+    if (currentIndex > filteredImages.length - 1) currentIndex = filteredImages.length - 1;
+
     const image = filteredImages[currentIndex];
-    const pngPath = `./img/${image.name}${image.separator}4096px.png`;
-    
-    mainImage.src = pngPath;
-    mainImage.alt = formatImageName(image.name);
-    imageName.textContent = formatImageName(image.name);
+    const label = formatImageName(image.name);
+
+    // Loading state
+    mainImage.classList.add('loading');
+    plateLoader.hidden = false;
+
+    mainImage.onload = () => {
+        mainImage.classList.remove('loading');
+        plateLoader.hidden = true;
+    };
+    mainImage.onerror = () => {
+        plateLoader.hidden = true;
+        mainImage.classList.remove('loading');
+        mainImage.alt = 'Preview unavailable';
+    };
+
+    mainImage.src = pngPath(image);
+    mainImage.alt = label;
+    imageName.textContent = label;
     imageCounter.textContent = `${currentIndex + 1} / ${filteredImages.length}`;
-    
-    // Update download buttons
+    svgBadge.hidden = !image.hasSVG;
+
     downloadPNG.disabled = false;
     downloadSVG.disabled = !image.hasSVG;
-    
-    // Update navigation buttons
     prevBtn.disabled = currentIndex === 0;
     nextBtn.disabled = currentIndex === filteredImages.length - 1;
 }
 
-// Navigation
 function showPrevious() {
-    if (currentIndex > 0) {
-        currentIndex--;
-        displayImage();
-    }
+    if (currentIndex > 0) { currentIndex--; displayImage(); }
 }
 
 function showNext() {
-    if (currentIndex < filteredImages.length - 1) {
-        currentIndex++;
-        displayImage();
-    }
+    if (currentIndex < filteredImages.length - 1) { currentIndex++; displayImage(); }
 }
 
-// Search functionality
-function performSearch() {
+// Filtering -----------------------------------------------------------------
+function applyFilters() {
     const query = searchInput.value.toLowerCase().trim();
-    
-    if (!query) {
-        filteredImages = [...allImages];
-        currentIndex = 0;
-        resultCount.textContent = '';
-    } else {
-        filteredImages = allImages.filter(img => 
-            img.name.toLowerCase().includes(query)
-        );
-        currentIndex = 0;
-        resultCount.textContent = `${filteredImages.length} result${filteredImages.length !== 1 ? 's' : ''}`;
-    }
-    
+
+    filteredImages = allImages.filter(img => {
+        const matchesFormat = formatFilter === 'all' || img.hasSVG;
+        const matchesQuery = !query || img.name.toLowerCase().includes(query);
+        return matchesFormat && matchesQuery;
+    });
+
+    currentIndex = 0;
+    searchClear.hidden = query.length === 0;
+
+    const n = filteredImages.length;
+    resultCount.textContent = (query || formatFilter !== 'all')
+        ? `${n} result${n !== 1 ? 's' : ''}`
+        : '';
+
+    updateLayout();
+
     displayImage();
-    
-    // Update grid view if active
-    if (isGridView) {
-        renderGridView();
-    }
+    if (isGridView) renderGridView();
 }
 
-// Download functionality
+// Single source of truth for which view (grid / single / empty) is visible
+function updateLayout() {
+    const empty = filteredImages.length === 0;
+    emptyState.hidden = !empty;
+    gridView.classList.toggle('active', isGridView);
+
+    const showViewer = !isGridView && !empty;
+    gallery.style.display = showViewer ? '' : 'none';
+    controls.style.display = showViewer ? '' : 'none';
+    viewerHint.style.display = showViewer ? '' : 'none';
+}
+
+function resetFilters() {
+    searchInput.value = '';
+    searchClear.hidden = true;
+    setFormatFilter('all');
+}
+
+function setFormatFilter(value) {
+    formatFilter = value;
+    chipAll.setAttribute('aria-pressed', value === 'all' ? 'true' : 'false');
+    chipSvg.setAttribute('aria-pressed', value === 'svg' ? 'true' : 'false');
+    applyFilters();
+}
+
+// Downloads -----------------------------------------------------------------
 function downloadFile(url, filename) {
     const a = document.createElement('a');
     a.href = url;
@@ -183,170 +186,250 @@ function downloadFile(url, filename) {
 }
 
 function downloadCurrentPNG() {
+    if (filteredImages.length === 0) return;
     const image = filteredImages[currentIndex];
-    const url = `./img/${image.name}${image.separator}4096px.png`;
-    downloadFile(url, `${image.name}.png`);
+    downloadFile(pngPath(image), `${image.name}.png`);
+    showToast('Beaming down PNG…');
 }
 
 function downloadCurrentSVG() {
+    if (filteredImages.length === 0) return;
     const image = filteredImages[currentIndex];
     if (image.hasSVG) {
-        const url = `./img/${image.name}.svg`;
-        downloadFile(url, `${image.name}.svg`);
+        downloadFile(svgPath(image), `${image.name}.svg`);
+        showToast('Beaming down SVG…');
     }
 }
 
-// Touch/Swipe support
-let touchStartX = 0;
-let touchEndX = 0;
+// Grid view -----------------------------------------------------------------
+function renderGridView() {
+    gridView.innerHTML = '';
+    const frag = document.createDocumentFragment();
 
-function handleSwipe() {
-    const swipeThreshold = 50;
-    const difference = touchStartX - touchEndX;
-    
-    if (Math.abs(difference) > swipeThreshold) {
-        if (difference > 0) {
-            // Swiped left - show next
-            showNext();
-        } else {
-            // Swiped right - show previous
-            showPrevious();
+    filteredImages.forEach((image, index) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = 'grid-item';
+        item.setAttribute('aria-label', `Open ${formatImageName(image.name)}`);
+
+        const img = document.createElement('img');
+        img.src = pngPath(image);
+        img.alt = formatImageName(image.name);
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        item.appendChild(img);
+
+        if (image.hasSVG) {
+            const badge = document.createElement('span');
+            badge.className = 'grid-badge';
+            badge.textContent = 'SVG';
+            item.appendChild(badge);
         }
+
+        const nameLabel = document.createElement('span');
+        nameLabel.className = 'grid-item-name';
+        nameLabel.textContent = formatImageName(image.name);
+        item.appendChild(nameLabel);
+
+        item.addEventListener('click', () => openLightbox(index));
+
+        frag.appendChild(item);
+    });
+
+    gridView.appendChild(frag);
+}
+
+function setView(grid) {
+    isGridView = grid;
+
+    updateLayout();
+
+    toggleViewBtn.setAttribute('aria-pressed', String(!grid));
+    viewLabel.textContent = grid ? 'Viewer' : 'Grid';
+    toggleViewBtn.title = grid ? 'Switch to single-image view' : 'Switch to grid view';
+    viewIcon.innerHTML = grid
+        ? '<rect x="4" y="4" width="16" height="16" rx="2"></rect><line x1="4" y1="12" x2="20" y2="12"></line>'
+        : '<rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect>';
+
+    if (grid) renderGridView();
+    else displayImage();
+}
+
+function toggleView() {
+    setView(!isGridView);
+}
+
+// Lightbox ------------------------------------------------------------------
+function openLightbox(index) {
+    currentIndex = index;
+    updateLightbox();
+    lightbox.hidden = false;
+    requestAnimationFrame(() => lightbox.classList.add('show'));
+    document.body.style.overflow = 'hidden';
+    lightboxClose.focus();
+}
+
+function updateLightbox() {
+    const image = filteredImages[currentIndex];
+    if (!image) return;
+    lightboxImg.src = pngPath(image);
+    lightboxImg.alt = formatImageName(image.name);
+    lightboxCaption.textContent = formatImageName(image.name);
+    lightboxPrev.disabled = currentIndex === 0;
+    lightboxNext.disabled = currentIndex === filteredImages.length - 1;
+}
+
+function closeLightbox() {
+    lightbox.classList.remove('show');
+    document.body.style.overflow = '';
+    setTimeout(() => { lightbox.hidden = true; }, 250);
+    displayImage();
+}
+
+function lightboxStep(dir) {
+    const next = currentIndex + dir;
+    if (next >= 0 && next < filteredImages.length) {
+        currentIndex = next;
+        updateLightbox();
     }
 }
 
-// Event Listeners
-prevBtn.addEventListener('click', showPrevious);
-nextBtn.addEventListener('click', showNext);
-downloadPNG.addEventListener('click', downloadCurrentPNG);
-downloadSVG.addEventListener('click', downloadCurrentSVG);
-searchInput.addEventListener('input', performSearch);
-toggleViewBtn.addEventListener('click', toggleView);
-
-// Keyboard navigation
-document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft') {
-        e.preventDefault();
-        showPrevious();
-    } else if (e.key === 'ArrowRight') {
-        e.preventDefault();
-        showNext();
+// Toast ---------------------------------------------------------------------
+let toastTimer;
+function showToast(message) {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.className = 'toast';
+        toast.setAttribute('role', 'status');
+        document.body.appendChild(toast);
     }
-});
+    toast.textContent = message;
+    requestAnimationFrame(() => toast.classList.add('show'));
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+}
 
-// Touch events for swipe
+// Touch swipe (single viewer) ----------------------------------------------
+let touchStartX = 0;
 imageContainer.addEventListener('touchstart', (e) => {
     touchStartX = e.changedTouches[0].screenX;
 }, { passive: true });
 
 imageContainer.addEventListener('touchend', (e) => {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
+    const diff = touchStartX - e.changedTouches[0].screenX;
+    if (Math.abs(diff) > 50) { diff > 0 ? showNext() : showPrevious(); }
 }, { passive: true });
 
-// Mouse drag support for desktop (optional enhancement)
-let isDragging = false;
-let dragStartX = 0;
-let dragEndX = 0;
+// Event wiring --------------------------------------------------------------
+prevBtn.addEventListener('click', showPrevious);
+nextBtn.addEventListener('click', showNext);
+downloadPNG.addEventListener('click', downloadCurrentPNG);
+downloadSVG.addEventListener('click', downloadCurrentSVG);
+searchInput.addEventListener('input', applyFilters);
+searchClear.addEventListener('click', () => { searchInput.value = ''; applyFilters(); searchInput.focus(); });
+toggleViewBtn.addEventListener('click', toggleView);
+chipAll.addEventListener('click', () => setFormatFilter('all'));
+chipSvg.addEventListener('click', () => setFormatFilter('svg'));
+document.getElementById('resetSearch').addEventListener('click', resetFilters);
 
-imageContainer.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    dragStartX = e.clientX;
+// Click main image to zoom in the lightbox
+mainImage.addEventListener('click', () => {
+    if (filteredImages.length) openLightbox(currentIndex);
 });
 
-imageContainer.addEventListener('mousemove', (e) => {
-    if (isDragging) {
-        dragEndX = e.clientX;
+// Lightbox controls
+lightboxClose.addEventListener('click', closeLightbox);
+lightboxPrev.addEventListener('click', () => lightboxStep(-1));
+lightboxNext.addEventListener('click', () => lightboxStep(1));
+lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+
+// Back to top
+window.addEventListener('scroll', () => {
+    toTop.hidden = false;
+    toTop.classList.toggle('show', window.scrollY > 500);
+}, { passive: true });
+toTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+// Keyboard — ignore when typing in the search field
+document.addEventListener('keydown', (e) => {
+    const typing = document.activeElement === searchInput;
+
+    if (!lightbox.hidden) {
+        if (e.key === 'Escape') closeLightbox();
+        else if (e.key === 'ArrowLeft') lightboxStep(-1);
+        else if (e.key === 'ArrowRight') lightboxStep(1);
+        return;
     }
+
+    if (typing) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); showPrevious(); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); showNext(); }
 });
 
-imageContainer.addEventListener('mouseup', () => {
-    if (isDragging) {
-        const dragThreshold = 50;
-        const difference = dragStartX - dragEndX;
-        
-        if (Math.abs(difference) > dragThreshold) {
-            if (difference > 0) {
-                showNext();
-            } else {
-                showPrevious();
-            }
+/* ---- Starfield backdrop (self-contained, matches rami.party) ------------- */
+function startStarfield() {
+    const canvas = document.getElementById('starfield');
+    if (!canvas) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ctx = canvas.getContext('2d');
+    let stars = [];
+    let w, h, dpr, rafId;
+
+    function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = canvas.width = Math.floor(innerWidth * dpr);
+        h = canvas.height = Math.floor(innerHeight * dpr);
+        canvas.style.width = innerWidth + 'px';
+        canvas.style.height = innerHeight + 'px';
+        const count = Math.min(160, Math.floor((innerWidth * innerHeight) / 9000));
+        const palette = ['#ffffff', '#c99bff', '#7fe6f7', '#ffd77a', '#ff9ecb'];
+        stars = Array.from({ length: count }, () => ({
+            x: Math.random() * w,
+            y: Math.random() * h,
+            r: (Math.random() * 1.4 + 0.3) * dpr,
+            a: Math.random(),
+            tw: Math.random() * 0.02 + 0.004,
+            dir: Math.random() > 0.5 ? 1 : -1,
+            c: palette[(Math.random() * palette.length) | 0],
+        }));
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, w, h);
+        for (const s of stars) {
+            s.a += s.tw * s.dir;
+            if (s.a <= 0.1 || s.a >= 1) s.dir *= -1;
+            ctx.globalAlpha = Math.max(0.1, Math.min(1, s.a));
+            ctx.fillStyle = s.c;
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+            ctx.fill();
         }
-        
-        isDragging = false;
-        dragStartX = 0;
-        dragEndX = 0;
+        ctx.globalAlpha = 1;
+        rafId = requestAnimationFrame(draw);
     }
-});
 
-imageContainer.addEventListener('mouseleave', () => {
-    isDragging = false;
-});
-
-// Grid View Functionality
-let isGridView = false;
-
-function renderGridView() {
-    gridView.innerHTML = '';
-    
-    filteredImages.forEach((image, index) => {
-        const gridItem = document.createElement('div');
-        gridItem.className = 'grid-item';
-        
-        const img = document.createElement('img');
-        img.src = `./img/${image.name}${image.separator}4096px.png`;
-        img.alt = formatImageName(image.name);
-        img.loading = 'lazy';
-        
-        const nameLabel = document.createElement('div');
-        nameLabel.className = 'grid-item-name';
-        nameLabel.textContent = formatImageName(image.name);
-        
-        gridItem.appendChild(img);
-        gridItem.appendChild(nameLabel);
-        
-        gridItem.addEventListener('click', () => {
-            currentIndex = index;
-            toggleView();
-            displayImage();
-        });
-        
-        gridView.appendChild(gridItem);
+    resize();
+    window.addEventListener('resize', () => {
+        cancelAnimationFrame(rafId);
+        resize();
+        if (!reduceMotion) draw();
     });
+    draw();
+    if (reduceMotion) cancelAnimationFrame(rafId);
 }
 
-function toggleView() {
-    isGridView = !isGridView;
-    
-    if (isGridView) {
-        // Show grid view
-        gallery.classList.add('hidden');
-        controls.classList.add('hidden');
-        gridView.classList.add('active');
-        renderGridView();
-        toggleViewBtn.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="4" y="4" width="16" height="16" rx="2"></rect>
-                <line x1="12" y1="4" x2="12" y2="20"></line>
-            </svg>
-        `;
-        toggleViewBtn.title = 'Toggle single view';
-    } else {
-        // Show single image view
-        gallery.classList.remove('hidden');
-        controls.classList.remove('hidden');
-        gridView.classList.remove('active');
-        toggleViewBtn.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
-            </svg>
-        `;
-        toggleViewBtn.title = 'Toggle grid view';
-    }
+// Initialize ----------------------------------------------------------------
+function init() {
+    const svgCount = allImages.filter(i => i.hasSVG).length;
+    document.getElementById('totalArt').textContent = allImages.length;
+    document.getElementById('countAll').textContent = allImages.length;
+    document.getElementById('countSvg').textContent = svgCount;
+
+    displayImage();
+    startStarfield();
 }
 
-// Initialize
-displayImage();
+init();

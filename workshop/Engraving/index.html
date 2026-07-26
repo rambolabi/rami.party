@@ -1,51 +1,129 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laser Engraving Gallery</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
-        <div class="search-bar">
-            <input type="text" id="searchInput" placeholder="Search laser engravings by name or description...">
-            <span id="resultCount" class="result-count"></span>
-            <button id="toggleViewBtn" class="toggle-view-btn" title="Toggle grid view">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="3" width="7" height="7"></rect>
-                    <rect x="14" y="14" width="7" height="7"></rect>
-                    <rect x="3" y="14" width="7" height="7"></rect>
-                </svg>
-            </button>
-        </div>
+    <meta name="description"
+        content="Laser Engraving Atelier — browse, preview and download a curated gallery of laser-ready engraving artworks as high-resolution PNG or vector SVG.">
+    <meta name="theme-color" content="#0b0524">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Laser Engraving Atelier · rami.party</title>
 
-        <div class="gallery">
-            <button class="nav-btn prev" id="prevBtn" aria-label="Previous image">‹</button>
-            
+    <!-- Shared enchanted theme, then page-specific 3020 styling -->
+    <link rel="stylesheet" href="../../theme.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Orbitron:wght@500;700;900&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%A6%3C/text%3E%3C/svg%3E">
+</head>
+
+<body>
+    <!-- Decorative enchanted backdrop -->
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
+    </div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <a href="#gallery" class="skip-link">Skip to the gallery</a>
+
+    <header class="site-header">
+        <div class="container">
+            <a href="../../" class="back-home" aria-label="Back to rami.party">
+                <span aria-hidden="true">←</span> rami.party
+            </a>
+        </div>
+    </header>
+
+    <main id="top" class="container">
+        <section class="hero" aria-labelledby="hero-title">
+            <p class="eyebrow"><span aria-hidden="true">✦</span> Photon Etching Atelier <span
+                    aria-hidden="true">✦</span></p>
+            <h1 id="hero-title" class="hero-title">LASER ENGRAVING<br><span class="glow">ATELIER</span></h1>
+            <p class="hero-sub">
+                A curated gallery of <strong id="totalArt">0</strong> laser-ready artworks.
+                Preview any piece, then beam it down as a high-resolution <strong>PNG</strong> or,
+                where available, a crisp vector <strong>SVG</strong> for your cutter.
+            </p>
+        </section>
+
+        <!-- Toolbar -->
+        <section class="toolbar" aria-label="Gallery controls">
+            <div class="search-wrap" role="search">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <input type="search" id="searchInput" class="filter-input"
+                    placeholder="Search engravings — e.g. wolf, coffee, dragon…" aria-label="Search engravings"
+                    autocomplete="off" spellcheck="false">
+                <button type="button" id="searchClear" class="filter-clear" aria-label="Clear search" hidden>✕</button>
+            </div>
+
+            <div class="toolbar-row">
+                <div class="chips" role="group" aria-label="Filter by format">
+                    <button type="button" class="chip" id="chipAll" data-filter="all"
+                        aria-pressed="true">All <span class="chip-count" id="countAll">0</span></button>
+                    <button type="button" class="chip" id="chipSvg" data-filter="svg"
+                        aria-pressed="false">Vector SVG <span class="chip-count" id="countSvg">0</span></button>
+                </div>
+
+                <div class="view-toggle" role="group" aria-label="View mode">
+                    <span id="resultCount" class="result-count" aria-live="polite"></span>
+                    <button id="toggleViewBtn" class="icon-btn" type="button" aria-pressed="true"
+                        title="Switch to single-image view">
+                        <svg id="viewIcon" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span id="viewLabel">Grid</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Single-image viewer -->
+        <section class="gallery" id="gallery" aria-label="Engraving viewer">
+            <button class="nav-btn prev" id="prevBtn" type="button" aria-label="Previous engraving">‹</button>
+
             <div class="image-container" id="imageContainer">
-                <img id="mainImage" src="" alt="Gallery image">
+                <div class="plate">
+                    <div class="plate-loader" id="plateLoader" hidden></div>
+                    <img id="mainImage" src="" alt="" draggable="false">
+                    <span class="plate-badge" id="svgBadge" hidden>SVG</span>
+                </div>
                 <div class="image-info">
                     <h2 id="imageName"></h2>
-                    <p id="imageCounter"></p>
+                    <p id="imageCounter" class="counter"></p>
                 </div>
             </div>
 
-            <button class="nav-btn next" id="nextBtn" aria-label="Next image">›</button>
-        </div>
+            <button class="nav-btn next" id="nextBtn" type="button" aria-label="Next engraving">›</button>
+        </section>
 
-        <div class="controls">
-            <button id="downloadPNG" class="download-btn png-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="controls" id="controls">
+            <button id="downloadPNG" class="btn btn-primary download-btn" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                 </svg>
                 Download PNG
             </button>
-            <button id="downloadSVG" class="download-btn svg-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <button id="downloadSVG" class="btn btn-ghost download-btn" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    aria-hidden="true">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -54,9 +132,43 @@
             </button>
         </div>
 
-        <div class="grid-view" id="gridView"></div>
+        <p class="viewer-hint" id="viewerHint">
+            Tip: use <kbd>←</kbd> <kbd>→</kbd> to browse, or open the <strong>Grid</strong> to see everything at once.
+        </p>
+
+        <!-- Grid view -->
+        <section class="grid-view" id="gridView" aria-label="All engravings"></section>
+
+        <p class="empty-state" id="emptyState" hidden>
+            No engravings match your search.
+            <button type="button" id="resetSearch" class="link-btn">Reset filters</button>
+        </p>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>Artworks ready for your laser cutter · Curated at <a href="../../">rami.party</a>.</p>
+                <p class="muted">PNG for raster engraving, SVG for vector cutting where available.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lightbox for grid -->
+    <div class="lightbox" id="lightbox" hidden>
+        <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Close">✕</button>
+        <button class="lightbox-nav prev" id="lightboxPrev" type="button" aria-label="Previous">‹</button>
+        <figure class="lightbox-figure">
+            <img id="lightboxImg" src="" alt="">
+            <figcaption id="lightboxCaption"></figcaption>
+        </figure>
+        <button class="lightbox-nav next" id="lightboxNext" type="button" aria-label="Next">›</button>
     </div>
 
-    <script src="script.js"></script>
+    <button id="toTop" class="to-top" type="button" aria-label="Back to top" hidden>↑</button>
+
+    <script src="artworks.js" defer></script>
+    <script src="script.js" defer></script>
 </body>
+
 </html>
