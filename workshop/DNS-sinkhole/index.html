@@ -1,55 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="DNS Sinkhole Blocklist Collection - Curated lists for blocking ads, trackers, malware, and spam">
-    <title>DNS Sinkhole Blocklists</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div class="container">
+    <meta name="description"
+        content="DNS Sinkhole Blocklist Codex — a curated collection of blocklists for Pi-hole, AdGuard Home and other DNS sinkholes. Block ads, trackers, malware and spam.">
+    <meta name="theme-color" content="#0b0524">
+    <meta name="robots" content="noindex, nofollow">
+    <title>DNS Sinkhole Codex · rami.party</title>
 
-        <header>
-            <h1>DNS Sinkhole Blocklists</h1>
-            <p class="subtitle">Curated collection of blocklists for Pi-hole, AdGuard Home, and other DNS sinkholes</p>
-            <div class="info-box">
-                <h2>Custom Regex Blacklist & Whitelist</h2>
-                <p>
-                    <strong>regex-blacklist.txt</strong>: <a href="regex-blacklist.txt" target="_blank">Download/view</a><br>
-                    <span class="desc">A set of advanced <b>regular expression rules</b> for blocking domains. Use this for more flexible and powerful blocking (e.g., blocking patterns, not just specific domains).</span>
+    <!-- Shared enchanted theme, then page-specific 3020 styling -->
+    <link rel="stylesheet" href="../../theme.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Orbitron:wght@500;700;900&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%B0%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+
+<body>
+    <!-- Decorative enchanted backdrop -->
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
+    </div>
+    <div class="scanlines" aria-hidden="true"></div>
+
+    <a href="#codex" class="skip-link">Skip to the blocklists</a>
+
+    <header class="site-header">
+        <div class="container">
+            <a href="../../" class="back-home" aria-label="Back to rami.party">
+                <span aria-hidden="true">←</span> rami.party
+            </a>
+            <span class="stardate" aria-label="Stardate 3020">STARDATE&nbsp;3020.7</span>
+        </div>
+    </header>
+
+    <main id="top">
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="container">
+                <p class="eyebrow"><span aria-hidden="true">✦</span> Orbital Defense Grid <span
+                        aria-hidden="true">✦</span></p>
+                <h1 id="hero-title" class="hero-title">DNS&nbsp;SINKHOLE<br><span class="glow">CODEX</span></h1>
+                <p class="hero-sub">
+                    A curated arsenal of <strong id="heroCount">52</strong> blocklists for
+                    <strong>Pi-hole</strong>, <strong>AdGuard&nbsp;Home</strong> and any DNS sinkhole.
+                    Feed these URLs to your resolver and it will quietly swallow ads, trackers,
+                    malware and spam before they ever reach your galaxy.
                 </p>
-                <p>
-                    <strong>whitelist.txt</strong>: <a href="whitelist.txt" target="_blank">Download/view</a><br>
-                    <span class="desc">A <b>whitelist</b> of domains that should <u>never</u> be blocked, even if they match a blacklist or regex rule. Use this to prevent false positives and ensure access to important domains.</span>
-                </p>
-                <p style="margin-top:0.5em;color:#0369a1;font-size:0.95em;">
-                    <b>Note:</b> The whitelist is a separate category from the blacklist. <br>
-                    <b>Blacklist</b> = block these domains (or patterns).<br>
-                    <b>Whitelist</b> = always allow these domains, even if they match a blacklist or regex rule.
+                <div class="hero-cta">
+                    <a href="#quickstart" class="btn btn-ghost">How does this work? <span aria-hidden="true">↓</span></a>
+                    <a href="#codex" class="btn btn-primary">Browse blocklists <span aria-hidden="true">→</span></a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick start guide for newcomers -->
+        <section id="quickstart" class="panel-section" aria-labelledby="quickstart-title">
+            <div class="container">
+                <div class="glass-panel guide">
+                    <h2 id="quickstart-title" class="panel-title"><span class="idx">01</span> Quick start</h2>
+                    <ol class="steps">
+                        <li><span class="step-k">Copy</span> one or more blocklist URLs below (or grab them all).</li>
+                        <li><span class="step-k">Open</span> your sinkhole admin — Pi-hole
+                            <em>Adlists</em> or AdGuard Home <em>DNS blocklists</em>.</li>
+                        <li><span class="step-k">Paste</span> the URLs, save, then run an update / <em>gravity</em>.</li>
+                        <li><span class="step-k">Done</span> — your resolver now refuses the bad domains.</li>
+                    </ol>
+                    <p class="guide-note">
+                        New here? Start with just <strong>StevenBlack Unified Hosts</strong> and
+                        <strong>OISD Big</strong> — together they cover most ads, trackers and malware
+                        without breaking sites.
+                    </p>
+                </div>
+
+                <div class="glass-panel guide">
+                    <h2 class="panel-title"><span class="idx">02</span> Fine-tuning files</h2>
+                    <div class="file-links">
+                        <a class="file-card" href="regex-blacklist.txt" target="_blank" rel="noopener">
+                            <span class="file-icon" aria-hidden="true">⛒</span>
+                            <span class="file-body">
+                                <span class="file-name">regex-blacklist.txt</span>
+                                <span class="file-desc">Advanced <b>regex rules</b> that block whole
+                                    patterns of domains, not just single hosts.</span>
+                            </span>
+                        </a>
+                        <a class="file-card" href="whitelist.txt" target="_blank" rel="noopener">
+                            <span class="file-icon" aria-hidden="true">✓</span>
+                            <span class="file-body">
+                                <span class="file-name">whitelist.txt</span>
+                                <span class="file-desc">Domains that must <b>never</b> be blocked —
+                                    even if a blocklist or regex matches them.</span>
+                            </span>
+                        </a>
+                    </div>
+                    <p class="guide-note">
+                        <b>Blacklist</b> = block these. <b>Whitelist</b> = always allow these (wins over
+                        every blocklist). Use the whitelist to fix false positives.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- The codex / blocklist browser -->
+        <section id="codex" class="codex-section" aria-labelledby="codex-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="codex-title" class="section-title"><span class="glow">Blocklist Registry</span></h2>
+                    <p class="section-sub">Search, filter by category, and copy the URLs you want.</p>
+                </div>
+
+                <div class="controls" role="search">
+                    <div class="search-wrap">
+                        <span class="search-icon" aria-hidden="true">🔍</span>
+                        <input type="search" id="filterInput" class="filter-input"
+                            placeholder="Search by name, category or URL…" aria-label="Filter blocklists"
+                            autocomplete="off" spellcheck="false">
+                        <button type="button" id="filterClear" class="filter-clear" aria-label="Clear search"
+                            hidden>✕</button>
+                    </div>
+                    <button id="copyAll" class="btn btn-primary" type="button">Copy visible URLs</button>
+                </div>
+
+                <div class="category-chips" id="categoryChips" role="group" aria-label="Filter by category">
+                    <!-- Category chips injected by script.js -->
+                </div>
+
+                <div class="stats" aria-live="polite">
+                    <span id="totalCount" class="stat-pill">52 blocklists</span>
+                    <span id="filteredCount" class="stat-muted"></span>
+                </div>
+
+                <div class="blocklist-container" id="blocklistContainer">
+                    <!-- Blocklists injected by script.js -->
+                </div>
+
+                <p class="empty-state" id="emptyState" hidden>
+                    No blocklists match your search. <button type="button" id="resetFilters"
+                        class="link-btn">Reset filters</button>
                 </p>
             </div>
-        </header>
+        </section>
+    </main>
 
-        <div class="controls">
-            <input type="text" id="filterInput" placeholder="Filter blocklists..." aria-label="Filter blocklists">
-            <button id="copyAll" class="btn-primary">Copy All URLs</button>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>Add these URLs to your DNS sinkhole to expand its blocking coverage.
+                    Transmitted from <a href="../../">rami.party</a> · Stardate 3020.</p>
+                <p class="muted">Verify lists before deploying — over-blocking can break sites.</p>
+            </div>
         </div>
+    </footer>
 
-        <div class="stats">
-            <span id="totalCount">52 blocklists</span>
-            <span id="filteredCount"></span>
-        </div>
+    <button id="toTop" class="to-top" aria-label="Back to top" hidden>↑</button>
 
-        <div class="blocklist-container" id="blocklistContainer">
-            <!-- Blocklists will be inserted here by JavaScript -->
-        </div>
-
-        <footer>
-            <p>Add these URLs to your DNS sinkhole's blocklist configuration to enhance blocking coverage.</p>
-        </footer>
-    </div>
-
-    <script src="script.js"></script>
+    <script src="script.js" defer></script>
 </body>
+
 </html>
