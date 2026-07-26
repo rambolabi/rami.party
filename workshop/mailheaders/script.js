@@ -4,45 +4,122 @@ const toggleTextbox = document.getElementById('toggleTextbox');
 const textboxContainer = document.getElementById('textboxContainer');
 const headersInput = document.getElementById('headersInput');
 const analyzeBtn = document.getElementById('analyzeBtn');
+const clearBtn = document.getElementById('clearBtn');
+const resetBtn = document.getElementById('resetBtn');
+const copyReportBtn = document.getElementById('copyReportBtn');
 const results = document.getElementById('results');
 const emptyState = document.getElementById('emptyState');
 const securityChecks = document.getElementById('securityChecks');
 const senderInfo = document.getElementById('senderInfo');
 const relayTimeline = document.getElementById('relayTimeline');
 const allHeaders = document.getElementById('allHeaders');
-const themeToggle = document.getElementById('themeToggle');
+const themeSelect = document.getElementById('themeSelect');
+const toastEl = document.getElementById('toast');
+
+// New investigation / preview / export elements
+const dropZone = document.getElementById('dropZone');
+const loadExampleBtn = document.getElementById('loadExampleBtn');
+const exportJsonBtn = document.getElementById('exportJsonBtn');
+const exportMdBtn = document.getElementById('exportMdBtn');
+const investigationSection = document.getElementById('investigationSection');
+const investigationContent = document.getElementById('investigationContent');
+const attachmentsSection = document.getElementById('attachmentsSection');
+const attachmentsList = document.getElementById('attachmentsList');
+const previewSection = document.getElementById('previewSection');
+const previewContainer = document.getElementById('previewContainer');
+const previewTextBtn = document.getElementById('previewTextBtn');
+const previewSafeBtn = document.getElementById('previewSafeBtn');
+const previewRawBtn = document.getElementById('previewRawBtn');
+
+// Keep the latest analysis around for the "Copy summary" / export actions
+let lastChecks = [];
+let lastAnalysis = null;   // { headers, checks, relays, transit, body }
+let lastBody = null;       // { html, text } extracted from a full email
+
+const VALID_THEMES = ['light', 'dark', 'midnight', 'nord', 'solarized', 'matrix'];
 
 // Theme Management
-function initTheme() {
-    const savedTheme = localStorage.getItem('theme') || 'light';
-    if (savedTheme === 'dark') {
-        document.body.classList.add('dark-theme');
+function applyTheme(theme) {
+    const safeTheme = VALID_THEMES.includes(theme) ? theme : 'light';
+    document.documentElement.setAttribute('data-theme', safeTheme);
+    if (themeSelect) themeSelect.value = safeTheme;
+    try {
+        localStorage.setItem('theme', safeTheme);
+    } catch (err) {
+        /* localStorage may be unavailable (private mode) — ignore */
     }
 }
 
-themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-theme');
-    const currentTheme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
-    localStorage.setItem('theme', currentTheme);
-});
+function initTheme() {
+    let savedTheme = 'light';
+    try {
+        savedTheme = localStorage.getItem('theme') || 'light';
+    } catch (err) {
+        /* ignore */
+    }
+    // Migrate old boolean-style value
+    if (savedTheme === 'true') savedTheme = 'dark';
+    applyTheme(savedTheme);
+}
+
+if (themeSelect) {
+    themeSelect.addEventListener('change', () => applyTheme(themeSelect.value));
+}
 
 // Initialize theme on page load
 initTheme();
 
+// Toast helper
+let toastTimer = null;
+function showToast(message, type = '') {
+    if (!toastEl) return;
+    toastEl.textContent = message;
+    toastEl.className = 'toast show' + (type ? ' ' + type : '');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+        toastEl.className = 'toast' + (type ? ' ' + type : '');
+    }, 3000);
+}
+
+// Read from clipboard with graceful fallback
+async function readClipboard() {
+    if (!navigator.clipboard || !navigator.clipboard.readText) {
+        throw new Error('unsupported');
+    }
+    return navigator.clipboard.readText();
+}
+
+function openTextbox() {
+    textboxContainer.classList.remove('hidden');
+    textboxContainer.classList.add('visible');
+    toggleTextbox.classList.add('active');
+    toggleTextbox.setAttribute('aria-expanded', 'true');
+}
+
 // Toggle textbox visibility
 toggleTextbox.addEventListener('click', () => {
+    const isHidden = textboxContainer.classList.contains('hidden');
     textboxContainer.classList.toggle('hidden');
     textboxContainer.classList.toggle('visible');
     toggleTextbox.classList.toggle('active');
+    toggleTextbox.setAttribute('aria-expanded', String(isHidden));
+    if (isHidden) headersInput.focus();
 });
 
 // Paste from clipboard when button clicked
 pasteBtn.addEventListener('click', async () => {
     try {
-        const text = await navigator.clipboard.readText();
+        const text = await readClipboard();
+        if (!text || !text.trim()) {
+            showToast('Clipboard is empty. Paste headers manually instead.', 'error');
+            openTextbox();
+            return;
+        }
         analyzeHeaders(text);
     } catch (err) {
-        alert('Failed to read clipboard. Please use Ctrl+V or paste manually.');
+        showToast('Clipboard access blocked. Paste headers manually below.', 'error');
+        openTextbox();
+        headersInput.focus();
     }
 });
 
@@ -51,18 +128,164 @@ analyzeBtn.addEventListener('click', () => {
     const text = headersInput.value;
     if (text.trim()) {
         analyzeHeaders(text);
+    } else {
+        showToast('Nothing to analyze — paste some headers first.', 'error');
     }
+});
+
+// Clear the manual input
+clearBtn.addEventListener('click', () => {
+    headersInput.value = '';
+    headersInput.focus();
+});
+
+// Clear the rendered results
+function resetResults() {
+    results.classList.add('hidden');
+    emptyState.classList.remove('hidden');
+    securityChecks.innerHTML = '';
+    senderInfo.innerHTML = '';
+    relayTimeline.innerHTML = '';
+    allHeaders.innerHTML = '';
+    if (investigationContent) investigationContent.innerHTML = '';
+    if (investigationSection) investigationSection.classList.add('hidden');
+    if (attachmentsList) attachmentsList.innerHTML = '';
+    if (attachmentsSection) attachmentsSection.classList.add('hidden');
+    if (previewContainer) previewContainer.innerHTML = '';
+    if (previewSection) previewSection.classList.add('hidden');
+    lastChecks = [];
+    lastAnalysis = null;
+    lastBody = null;
+}
+
+if (resetBtn) resetBtn.addEventListener('click', resetResults);
+
+// Copy the security summary to the clipboard
+if (copyReportBtn) {
+    copyReportBtn.addEventListener('click', async () => {
+        if (!lastChecks.length) {
+            showToast('Nothing to copy yet.', 'error');
+            return;
+        }
+        const report = lastChecks.map(c => `${c.label}: ${c.value}`).join('\n');
+        try {
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                throw new Error('unsupported');
+            }
+            await navigator.clipboard.writeText(report);
+            showToast('Summary copied to clipboard.', 'success');
+        } catch (err) {
+            showToast('Could not copy — clipboard blocked.', 'error');
+        }
+    });
+}
+
+// Load an example message
+const EXAMPLE_EMAIL = `Received: from mail.suspicious-domain.xyz (mail.suspicious-domain.xyz [45.83.12.9])
+	by mx.google.com with ESMTPS id abc123
+	for <victim@gmail.com>; Mon, 20 Jul 2026 10:15:30 -0700 (PDT)
+Received: from web01.internal (web01.internal [10.0.0.9])
+	by mail.suspicious-domain.xyz with ESMTP id def456; Mon, 20 Jul 2026 10:15:05 -0700
+Authentication-Results: mx.google.com;
+	spf=fail (google.com: domain of bounce@suspicious-domain.xyz does not designate 45.83.12.9 as permitted sender) smtp.mailfrom=suspicious-domain.xyz;
+	dkim=none;
+	dmarc=fail (p=REJECT) header.from=paypal.com;
+	arc=none
+Received-SPF: fail (google.com: domain of bounce@suspicious-domain.xyz does not designate 45.83.12.9 as permitted sender)
+Return-Path: <bounce@suspicious-domain.xyz>
+From: "PayPal Security" <service@paypal.com>
+Reply-To: recover@account-verify.top
+To: victim@gmail.com
+Subject: Your account has been limited
+Date: Mon, 20 Jul 2026 10:15:00 -0700
+Message-ID: <9f8a7@suspicious-domain.xyz>
+Content-Type: text/html; charset="utf-8"
+
+<html><body><h2>Action required</h2>
+<p>We limited your account. <a href="http://account-verify.top/login">Verify now</a>.</p>
+<img src="http://track.suspicious-domain.xyz/o.gif?id=victim" width="1" height="1">
+</body></html>`;
+
+if (loadExampleBtn) {
+    loadExampleBtn.addEventListener('click', () => {
+        openTextbox();
+        headersInput.value = EXAMPLE_EMAIL;
+        analyzeHeaders(EXAMPLE_EMAIL);
+        showToast('Loaded a phishing-style example.', 'success');
+    });
+}
+
+// Export handlers
+if (exportJsonBtn) {
+    exportJsonBtn.addEventListener('click', () => {
+        if (!lastAnalysis) { showToast('Nothing to export yet.', 'error'); return; }
+        downloadFile('email-header-report.json', JSON.stringify(buildReportObject(), null, 2), 'application/json');
+    });
+}
+if (exportMdBtn) {
+    exportMdBtn.addEventListener('click', () => {
+        if (!lastAnalysis) { showToast('Nothing to export yet.', 'error'); return; }
+        downloadFile('email-header-report.md', buildMarkdownReport(), 'text/markdown');
+    });
+}
+
+// Drag & drop a .eml / .txt file anywhere on the page
+['dragenter', 'dragover'].forEach(evt => {
+    document.addEventListener(evt, (e) => {
+        if (e.dataTransfer && Array.from(e.dataTransfer.types).includes('Files')) {
+            e.preventDefault();
+            if (dropZone) dropZone.classList.add('drag-over');
+        }
+    });
+});
+['dragleave', 'drop'].forEach(evt => {
+    document.addEventListener(evt, (e) => {
+        if (evt === 'dragleave' && e.relatedTarget) return;
+        if (dropZone) dropZone.classList.remove('drag-over');
+    });
+});
+document.addEventListener('drop', (e) => {
+    if (!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files.length) return;
+    e.preventDefault();
+    const file = e.dataTransfer.files[0];
+    if (file.size > 5 * 1024 * 1024) {
+        showToast('File too large (max 5 MB).', 'error');
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+        openTextbox();
+        headersInput.value = String(reader.result);
+        analyzeHeaders(String(reader.result));
+        showToast(`Analyzed "${file.name}".`, 'success');
+    };
+    reader.onerror = () => showToast('Could not read that file.', 'error');
+    reader.readAsText(file);
+});
+
+// Preview mode buttons
+if (previewTextBtn) previewTextBtn.addEventListener('click', () => renderPreview('text'));
+if (previewSafeBtn) previewSafeBtn.addEventListener('click', () => renderPreview('safe'));
+if (previewRawBtn) previewRawBtn.addEventListener('click', () => {
+    const ok = confirm('Raw preview allows scripts and remote content (tracking pixels, beacons, external images). This can notify the sender that you opened the email and may run active content.\n\nContinue?');
+    if (ok) renderPreview('raw');
 });
 
 // Global Ctrl+V listener
 document.addEventListener('keydown', async (e) => {
-    if (e.ctrlKey && e.key === 'v' && document.activeElement !== headersInput) {
+    const isPasteKey = (e.ctrlKey || e.metaKey) && e.key && e.key.toLowerCase() === 'v';
+    const typingInField = document.activeElement === headersInput ||
+        (document.activeElement && document.activeElement.tagName === 'SELECT');
+    if (isPasteKey && !typingInField) {
         e.preventDefault();
         try {
-            const text = await navigator.clipboard.readText();
-            analyzeHeaders(text);
+            const text = await readClipboard();
+            if (text && text.trim()) {
+                analyzeHeaders(text);
+            }
         } catch (err) {
-            console.error('Clipboard read failed:', err);
+            showToast('Clipboard access blocked. Paste headers manually below.', 'error');
+            openTextbox();
         }
     }
 });
@@ -113,26 +336,38 @@ function extractDomain(email) {
 }
 
 // Analyze headers
-function analyzeHeaders(headerText) {
-    if (!headerText.trim()) return;
+function analyzeHeaders(rawText) {
+    if (!rawText.trim()) return;
 
+    // A full email has headers, then a blank line, then the body.
+    const { headerText, body } = splitEmail(rawText);
     const headers = parseHeaders(headerText);
-    
+
     // Hide empty state, show results
     emptyState.classList.add('hidden');
     results.classList.remove('hidden');
 
     // Analyze security
-    displaySecurityChecks(headers);
-    
+    const checks = displaySecurityChecks(headers);
+
     // Display sender info
     displaySenderInfo(headers);
-    
-    // Display relay timeline
-    displayRelayTimeline(headers);
-    
+
+    // External lookup shortcuts (opt-in)
+    displayInvestigation(headers);
+
+    // Display relay timeline (returns parsed relays + transit info)
+    const timeline = displayRelayTimeline(headers);
+
+    // Parse MIME body: attachments + preview
+    const mime = parseMime(headers, body);
+    displayAttachments(mime.attachments);
+    displayPreview(mime);
+
     // Display all headers
     displayAllHeaders(headers);
+
+    lastAnalysis = { headers, checks, timeline, hasBody: !!body };
 }
 
 // Display security checks
@@ -140,7 +375,8 @@ function displaySecurityChecks(headers) {
     securityChecks.innerHTML = '';
 
     const checks = [];
-    const authResults = getHeader(headers, 'Authentication-Results');
+    // Merge ALL Authentication-Results headers (there can be several, one per hop)
+    const authResults = getAllHeaderValues(headers, 'Authentication-Results').join(' ; ');
     const from = getHeader(headers, 'From');
     const fromDomain = from ? extractDomain(from) : '';
 
@@ -408,16 +644,85 @@ function displaySecurityChecks(headers) {
     }
     checks.push({ label: 'Domain', value: domainValue, status: domainStatus });
 
+    // --- ARC (Authenticated Received Chain) ---
+    if (authData.arc.result) {
+        let arcStatus = 'neutral';
+        let arcValue = authData.arc.result;
+        if (authData.arc.result === 'pass') { arcStatus = 'pass'; arcValue = 'Pass ✓'; }
+        else if (authData.arc.result === 'fail') { arcStatus = 'fail'; arcValue = 'Failed ✗'; }
+        else if (authData.arc.result === 'none') { arcStatus = 'neutral'; arcValue = 'None'; }
+        checks.push({ label: 'ARC Chain', value: arcValue, status: arcStatus });
+    }
+
+    // --- Received-SPF reconciliation ---
+    const receivedSpf = getHeader(headers, 'Received-SPF');
+    if (receivedSpf) {
+        const rSpfResult = (receivedSpf.match(/^\s*(\w+)/) || [])[1];
+        if (rSpfResult) {
+            const r = rSpfResult.toLowerCase();
+            let status = 'neutral';
+            if (r === 'pass') status = 'pass';
+            else if (r === 'fail' || r === 'softfail') status = r === 'fail' ? 'fail' : 'warning';
+            let value = rSpfResult;
+            // Reconcile with Authentication-Results SPF
+            if (authData.spf.result && authData.spf.result !== r) {
+                status = 'warning';
+                value = `${rSpfResult} (differs from Auth-Results: ${authData.spf.result})`;
+            }
+            checks.push({ label: 'Received-SPF', value, status });
+        }
+    }
+
+    // --- Display-name spoofing ---
+    if (from) {
+        const displayName = extractDisplayName(from);
+        const spoof = detectDisplayNameSpoof(displayName, fromDomain);
+        if (spoof) {
+            checks.push({ label: 'Display-Name Spoofing', value: spoof, status: 'fail' });
+        }
+    }
+
+    // --- Reply-To mismatch ---
+    const replyTo = getHeader(headers, 'Reply-To');
+    if (replyTo && fromDomain) {
+        const replyDomain = extractDomain(replyTo);
+        if (replyDomain && !domainsRelated(replyDomain, fromDomain)) {
+            checks.push({
+                label: 'Reply-To Mismatch',
+                value: `Replies go to ${replyDomain}, not ${fromDomain} ⚠`,
+                status: 'warning'
+            });
+        }
+    }
+
+    // --- Return-Path mismatch ---
+    if (returnPath && fromDomain) {
+        const rpDomain = extractDomain(returnPath);
+        if (rpDomain && !domainsRelated(rpDomain, fromDomain)) {
+            checks.push({
+                label: 'Return-Path Mismatch',
+                value: `Bounces go to ${rpDomain}, not ${fromDomain} ⚠`,
+                status: 'warning'
+            });
+        }
+    }
+
+    // --- Offline domain / DNS heuristics ---
+    domainHeuristics(headers, fromDomain).forEach(h => checks.push(h));
+
     // Render checks
+    lastChecks = checks;
     checks.forEach(check => {
         const checkDiv = document.createElement('div');
         checkDiv.className = `security-check ${check.status}`;
         checkDiv.innerHTML = `
-            <div class="check-label">${check.label}</div>
-            <div class="check-value">${check.value}</div>
+            <div class="check-label">${escapeHtml(check.label)}</div>
+            <div class="check-value">${escapeHtml(check.value)}</div>
         `;
         securityChecks.appendChild(checkDiv);
     });
+
+    return checks;
 }
 
 // Display sender information
@@ -475,7 +780,7 @@ function displayRelayTimeline(headers) {
     const receivedHeaders = headers['Received'] || headers['received'] || [];
     
     if (receivedHeaders.length === 0) {
-        relayTimeline.innerHTML = '<p style="color: var(--text-secondary); padding: 20px; text-align: center;">No relay information found</p>';
+        relayTimeline.innerHTML = '<p class="timeline-empty">No relay information found</p>';
         return;
     }
 
@@ -513,15 +818,15 @@ function displayRelayTimeline(headers) {
         const forMatch = header.match(/for\s+<([^>]+)>/i);
         if (forMatch) relay.for = forMatch[1];
 
-        // Parse date (multiple formats)
-        const dateMatch = header.match(/;\s*(.+)$/);
-        if (dateMatch) {
-            relay.date = dateMatch[1].trim();
-            try {
-                relay.timestamp = new Date(relay.date);
-            } catch (e) {
-                relay.timestamp = null;
-            }
+        // Parse date — it is always the last ';'-separated segment.
+        // Strip parenthetical timezone comments like "(PDT)" that break Date parsing.
+        const semi = header.lastIndexOf(';');
+        if (semi !== -1) {
+            let dateStr = header.substring(semi + 1).trim();
+            relay.date = dateStr;
+            const cleaned = dateStr.replace(/\([^)]*\)/g, '').trim();
+            const parsed = new Date(cleaned);
+            relay.timestamp = isNaN(parsed.getTime()) ? null : parsed;
         }
 
         return relay;
@@ -529,6 +834,20 @@ function displayRelayTimeline(headers) {
 
     // Reverse to show oldest first (chronological order)
     relays.reverse();
+
+    // Total transit time between first and last timestamped hop
+    const stamped = relays.filter(r => r.timestamp);
+    let transit = null;
+    if (stamped.length >= 2) {
+        const first = stamped[0].timestamp.getTime();
+        const last = stamped[stamped.length - 1].timestamp.getTime();
+        const deltaMs = last - first;
+        transit = { ms: deltaMs, text: formatDuration(deltaMs) };
+        const summary = document.createElement('div');
+        summary.className = 'timeline-summary';
+        summary.innerHTML = `<strong>${escapeHtml(String(relays.length))}</strong> hop(s) · total transit time <strong>${escapeHtml(transit.text)}</strong>`;
+        relayTimeline.appendChild(summary);
+    }
 
     // Display timeline
     relays.forEach((relay, index) => {
@@ -615,6 +934,8 @@ function displayRelayTimeline(headers) {
 
         relayTimeline.appendChild(timelineItem);
     });
+
+    return { relays, transit };
 }
 
 // Display all headers
@@ -715,8 +1036,9 @@ function parseAuthenticationResults(authResults) {
         result.compauth.reason = compauthMatch[2] || null;
     }
 
-    // Parse arc (Authenticated Received Chain)
-    const arcMatch = authResults.match(/arc=(\w+)/i);
+    // Parse arc (Authenticated Received Chain).
+    // Guard against matching the "arc=" inside "dmarc=".
+    const arcMatch = authResults.match(/(?:^|[\s;(])arc=(\w+)/i);
     if (arcMatch) {
         result.arc.result = arcMatch[1].toLowerCase();
     }
@@ -735,4 +1057,521 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/* =========================================================================
+   Investigation, MIME, preview, heuristics and export helpers
+   ========================================================================= */
+
+// Return every value for a header name (headers can repeat, e.g. Received)
+function getAllHeaderValues(headers, name) {
+    const key = Object.keys(headers).find(k => k.toLowerCase() === name.toLowerCase());
+    return key && headers[key] ? headers[key].slice() : [];
+}
+
+// Split a full email into header block + body at the first blank line
+function splitEmail(rawText) {
+    const normalized = rawText.replace(/\r\n/g, '\n');
+    const m = normalized.match(/\n[ \t]*\n/);
+    if (m && m.index !== undefined) {
+        return {
+            headerText: normalized.slice(0, m.index),
+            body: normalized.slice(m.index + m[0].length)
+        };
+    }
+    return { headerText: normalized, body: '' };
+}
+
+// --- Domain helpers -------------------------------------------------------
+
+const TWO_PART_TLDS = new Set([
+    'co.uk', 'org.uk', 'gov.uk', 'ac.uk', 'com.au', 'net.au', 'org.au',
+    'co.jp', 'co.nz', 'com.br', 'co.za', 'com.mx', 'co.in'
+]);
+
+function organizationalDomain(domain) {
+    if (!domain) return '';
+    const parts = domain.toLowerCase().split('.');
+    if (parts.length <= 2) return domain.toLowerCase();
+    const lastTwo = parts.slice(-2).join('.');
+    if (TWO_PART_TLDS.has(lastTwo)) return parts.slice(-3).join('.');
+    return lastTwo;
+}
+
+function domainsRelated(a, b) {
+    if (!a || !b) return false;
+    a = a.toLowerCase(); b = b.toLowerCase();
+    if (a === b) return true;
+    if (a.endsWith('.' + b) || b.endsWith('.' + a)) return true;
+    return organizationalDomain(a) === organizationalDomain(b);
+}
+
+function extractDisplayName(from) {
+    if (!from) return '';
+    const idx = from.indexOf('<');
+    let name = idx > -1 ? from.substring(0, idx) : '';
+    return name.trim().replace(/^"(.*)"$/, '$1').trim();
+}
+
+const IMPERSONATED_BRANDS = [
+    'paypal', 'microsoft', 'apple', 'amazon', 'google', 'netflix', 'facebook',
+    'instagram', 'chase', 'wellsfargo', 'coinbase', 'binance', 'dhl', 'fedex',
+    'ups', 'usps', 'irs', 'docusign', 'office365', 'outlook', 'linkedin', 'bank'
+];
+
+function detectDisplayNameSpoof(displayName, fromDomain) {
+    if (!displayName || !fromDomain) return null;
+    const dn = displayName.toLowerCase();
+
+    // An email address embedded in the display name that differs from the sender
+    const emailInName = dn.match(/[\w.+-]+@([\w.-]+\.[a-z]{2,})/i);
+    if (emailInName && !domainsRelated(emailInName[1], fromDomain)) {
+        return `Name shows ${emailInName[1]} but sender is ${fromDomain} ✗`;
+    }
+    // A bare domain in the display name that differs from the sender
+    const domainInName = dn.match(/\b([a-z0-9-]+\.[a-z]{2,})\b/);
+    if (domainInName && !domainsRelated(domainInName[1], fromDomain)) {
+        return `Name mentions ${domainInName[1]} but sender is ${fromDomain} ✗`;
+    }
+    // Brand impersonation
+    const org = organizationalDomain(fromDomain);
+    for (const brand of IMPERSONATED_BRANDS) {
+        if (dn.includes(brand) && !org.includes(brand)) {
+            return `Claims to be "${brand}" but sender domain is ${fromDomain} ✗`;
+        }
+    }
+    return null;
+}
+
+const RISKY_TLDS = [
+    'zip', 'mov', 'xyz', 'top', 'click', 'link', 'gq', 'tk', 'ml', 'cf', 'ga',
+    'country', 'kim', 'work', 'fit', 'rest', 'loan', 'date', 'review', 'stream'
+];
+
+// Offline DNS/domain heuristics (no network required)
+function domainHeuristics(headers, fromDomain) {
+    const out = [];
+    const allText = Object.values(headers).flat().join(' ');
+
+    if (/xn--/i.test(fromDomain) || /@[^\s@]*xn--/i.test(allText)) {
+        out.push({
+            label: 'IDN / Punycode Domain',
+            value: 'Contains "xn--" — possible homograph / look-alike domain ✗',
+            status: 'fail'
+        });
+    }
+    if (fromDomain) {
+        const tld = fromDomain.split('.').pop();
+        if (RISKY_TLDS.includes(tld)) {
+            out.push({
+                label: 'Risky TLD',
+                value: `Sender uses .${tld} — frequently abused for phishing ⚠`,
+                status: 'warning'
+            });
+        }
+    }
+    const from = getHeader(headers, 'From') || '';
+    if (/@\[?\d{1,3}(\.\d{1,3}){3}\]?/.test(from)) {
+        out.push({
+            label: 'IP-Literal Sender',
+            value: 'From address uses a raw IP instead of a domain ⚠',
+            status: 'warning'
+        });
+    }
+    return out;
+}
+
+// --- External lookups (opt-in) -------------------------------------------
+
+function mxUrl(action, arg) {
+    return `https://mxtoolbox.com/SuperTool.aspx?action=${action}%3a${encodeURIComponent(arg)}&run=toolpage`;
+}
+
+function isPublicIp(ip) {
+    const p = ip.split('.').map(Number);
+    if (p.length !== 4 || p.some(n => isNaN(n) || n < 0 || n > 255)) return false;
+    if (p[0] === 10 || p[0] === 127 || p[0] === 0) return false;
+    if (p[0] === 169 && p[1] === 254) return false;
+    if (p[0] === 172 && p[1] >= 16 && p[1] <= 31) return false;
+    if (p[0] === 192 && p[1] === 168) return false;
+    if (p[0] === 100 && p[1] >= 64 && p[1] <= 127) return false; // CGNAT
+    return true;
+}
+
+function lookupAnchor(label, href, cls) {
+    const a = document.createElement('a');
+    a.className = 'lookup-link' + (cls ? ' ' + cls : '');
+    a.textContent = label;
+    a.href = href;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    return a;
+}
+
+function buildDomainCard(d) {
+    const card = document.createElement('div');
+    card.className = 'lookup-card';
+    const title = document.createElement('div');
+    title.className = 'lookup-title';
+    title.innerHTML = `<span class="lookup-type">domain</span> ${escapeHtml(d)}`;
+    const row = document.createElement('div');
+    row.className = 'lookup-links';
+    row.appendChild(lookupAnchor('WHOIS / Age', `https://who.is/whois/${encodeURIComponent(d)}`));
+    row.appendChild(lookupAnchor('MX / DNS', mxUrl('mx', d)));
+    row.appendChild(lookupAnchor('SPF', mxUrl('spf', d)));
+    row.appendChild(lookupAnchor('DMARC', mxUrl('dmarc', d)));
+    row.appendChild(lookupAnchor('Blacklist', mxUrl('blacklist', d)));
+    row.appendChild(lookupAnchor('VirusTotal ↗', `https://www.virustotal.com/gui/domain/${encodeURIComponent(d)}`, 'vt'));
+    card.appendChild(title);
+    card.appendChild(row);
+    return card;
+}
+
+function buildIpCard(ip) {
+    const card = document.createElement('div');
+    card.className = 'lookup-card';
+    const title = document.createElement('div');
+    title.className = 'lookup-title';
+    title.innerHTML = `<span class="lookup-type">IP</span> ${escapeHtml(ip)}`;
+    const row = document.createElement('div');
+    row.className = 'lookup-links';
+    row.appendChild(lookupAnchor('Blacklist', mxUrl('blacklist', ip)));
+    row.appendChild(lookupAnchor('Reverse DNS', mxUrl('ptr', ip)));
+    row.appendChild(lookupAnchor('ARIN / WHOIS', mxUrl('arin', ip)));
+    row.appendChild(lookupAnchor('AbuseIPDB ↗', `https://www.abuseipdb.com/check/${encodeURIComponent(ip)}`));
+    row.appendChild(lookupAnchor('VirusTotal ↗', `https://www.virustotal.com/gui/ip-address/${encodeURIComponent(ip)}`, 'vt'));
+    card.appendChild(title);
+    card.appendChild(row);
+    return card;
+}
+
+function displayInvestigation(headers) {
+    if (!investigationSection || !investigationContent) return;
+    investigationContent.innerHTML = '';
+
+    const domains = new Set();
+    const ips = new Set();
+    const NON_PUBLIC_TLDS = new Set(['internal', 'local', 'localhost', 'lan', 'corp', 'home', 'arpa', 'intranet']);
+    const addDomain = d => {
+        if (!d) return;
+        d = d.toLowerCase();
+        const tld = d.split('.').pop();
+        if (/\.[a-z]{2,}$/i.test(d) && !NON_PUBLIC_TLDS.has(tld)) domains.add(d);
+    };
+
+    addDomain(extractDomain(getHeader(headers, 'From') || ''));
+    addDomain(extractDomain(getHeader(headers, 'Return-Path') || ''));
+    addDomain(extractDomain(getHeader(headers, 'Reply-To') || ''));
+    addDomain(extractDomain(getHeader(headers, 'Sender') || ''));
+
+    getAllHeaderValues(headers, 'DKIM-Signature').forEach(sig => {
+        const m = sig.match(/d=([^;\s]+)/i);
+        if (m) addDomain(m[1]);
+    });
+
+    getAllHeaderValues(headers, 'Received').forEach(r => {
+        const host = r.match(/from\s+([A-Za-z0-9.-]+\.[A-Za-z]{2,})/i);
+        if (host) addDomain(host[1]);
+        (r.match(/\[?(\d{1,3}(?:\.\d{1,3}){3})\]?/g) || []).forEach(ip => {
+            const clean = ip.replace(/[\[\]]/g, '');
+            if (isPublicIp(clean)) ips.add(clean);
+        });
+    });
+
+    ['X-Originating-IP', 'X-Sender-IP', 'X-Source-IP'].forEach(h => {
+        const v = getHeader(headers, h);
+        if (v) {
+            const m = v.match(/(\d{1,3}(?:\.\d{1,3}){3})/);
+            if (m && isPublicIp(m[1])) ips.add(m[1]);
+        }
+    });
+
+    if (!domains.size && !ips.size) {
+        investigationSection.classList.add('hidden');
+        return;
+    }
+    investigationSection.classList.remove('hidden');
+    domains.forEach(d => investigationContent.appendChild(buildDomainCard(d)));
+    ips.forEach(ip => investigationContent.appendChild(buildIpCard(ip)));
+}
+
+// --- MIME parsing ---------------------------------------------------------
+
+function parseContentType(raw) {
+    const out = { type: 'text/plain', boundary: '', charset: '', name: '' };
+    if (!raw) return out;
+    const typeMatch = raw.match(/^\s*([^;]+)/);
+    if (typeMatch) out.type = typeMatch[1].trim().toLowerCase();
+    const b = raw.match(/boundary=("?)([^";]+)\1/i);
+    if (b) out.boundary = b[2].trim();
+    const cs = raw.match(/charset=("?)([^";]+)\1/i);
+    if (cs) out.charset = cs[2].trim().toLowerCase();
+    const nm = raw.match(/name=("?)([^";]+)\1/i);
+    if (nm) out.name = nm[2].trim();
+    return out;
+}
+
+function filenameFromDisposition(disp) {
+    if (!disp) return '';
+    const m = disp.match(/filename\*?=("?)([^";]+)\1/i);
+    return m ? m[2].trim().replace(/^UTF-8''/i, '') : '';
+}
+
+function splitMultipart(body, boundary) {
+    const delimiter = '--' + boundary;
+    const segments = body.split(delimiter);
+    const parts = [];
+    for (let i = 1; i < segments.length; i++) {
+        let seg = segments[i];
+        if (seg.startsWith('--')) break; // closing boundary
+        seg = seg.replace(/^\r?\n/, '');
+        parts.push(seg);
+    }
+    return parts;
+}
+
+function decodeQuotedPrintable(str) {
+    return str
+        .replace(/=\r?\n/g, '')
+        .replace(/=([0-9A-Fa-f]{2})/g, (m, h) => String.fromCharCode(parseInt(h, 16)));
+}
+
+function decodeToBytes(data, encoding) {
+    if (encoding === 'base64') {
+        const clean = data.replace(/[^A-Za-z0-9+/=]/g, '');
+        try {
+            const bin = atob(clean);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return bytes;
+        } catch (e) {
+            return new Uint8Array(0);
+        }
+    }
+    const src = encoding === 'quoted-printable' ? decodeQuotedPrintable(data) : data;
+    const bytes = new Uint8Array(src.length);
+    for (let i = 0; i < src.length; i++) bytes[i] = src.charCodeAt(i) & 0xff;
+    return bytes;
+}
+
+function decodeToText(data, encoding, charset) {
+    const bytes = decodeToBytes(data, encoding);
+    try {
+        return new TextDecoder(charset || 'utf-8', { fatal: false }).decode(bytes);
+    } catch (e) {
+        let s = '';
+        for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+        return s;
+    }
+}
+
+function walkPart(contentTypeRaw, encoding, partBody, result, disposition, filename) {
+    const ct = parseContentType(contentTypeRaw);
+    if (ct.type.startsWith('multipart/') && ct.boundary) {
+        splitMultipart(partBody, ct.boundary).forEach(raw => {
+            const { headerText, body } = splitEmail(raw);
+            const sub = parseHeaders(headerText);
+            const subCt = getHeader(sub, 'Content-Type') || 'text/plain';
+            const subCte = (getHeader(sub, 'Content-Transfer-Encoding') || '').toLowerCase();
+            const subDisp = getHeader(sub, 'Content-Disposition') || '';
+            const subName = parseContentType(subCt).name || filenameFromDisposition(subDisp);
+            walkPart(subCt, subCte, body, result, subDisp, subName);
+        });
+        return;
+    }
+    const isAttachment = (disposition && /attachment/i.test(disposition)) || !!filename;
+    if (isAttachment) {
+        const bytes = decodeToBytes(partBody, encoding);
+        result.attachments.push({
+            filename: filename || ct.name || 'attachment',
+            mime: ct.type,
+            size: bytes.length,
+            bytes
+        });
+        return;
+    }
+    const text = decodeToText(partBody, encoding, ct.charset);
+    if (ct.type === 'text/html' && !result.html) result.html = text;
+    else if (ct.type === 'text/plain' && !result.text) result.text = text;
+}
+
+function parseMime(headers, body) {
+    const result = { html: '', text: '', attachments: [] };
+    if (!body || !body.trim()) return result;
+    const ct = getHeader(headers, 'Content-Type') || 'text/plain';
+    const cte = (getHeader(headers, 'Content-Transfer-Encoding') || '').toLowerCase();
+    walkPart(ct, cte, body, result);
+    return result;
+}
+
+// --- Attachments ----------------------------------------------------------
+
+async function sha256Hex(bytes) {
+    const buf = await crypto.subtle.digest('SHA-256', bytes);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function formatBytes(n) {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function displayAttachments(attachments) {
+    if (!attachmentsSection || !attachmentsList) return;
+    attachmentsList.innerHTML = '';
+    if (!attachments || !attachments.length) {
+        attachmentsSection.classList.add('hidden');
+        return;
+    }
+    attachmentsSection.classList.remove('hidden');
+    attachments.forEach((att, i) => {
+        const div = document.createElement('div');
+        div.className = 'attachment-item';
+        div.innerHTML = `
+            <div class="attachment-name">${escapeHtml(att.filename)}</div>
+            <div class="attachment-meta">${escapeHtml(att.mime)} · ${escapeHtml(formatBytes(att.size))}</div>
+            <div class="attachment-hash" id="att-hash-${i}">Computing SHA-256…</div>
+        `;
+        attachmentsList.appendChild(div);
+
+        const el = () => document.getElementById(`att-hash-${i}`);
+        if (att.bytes && att.bytes.length && window.crypto && crypto.subtle) {
+            sha256Hex(att.bytes).then(hash => {
+                att.sha256 = hash;
+                const node = el();
+                if (node) {
+                    node.innerHTML =
+                        `<code>${escapeHtml(hash)}</code> ` +
+                        `<a class="lookup-link vt" target="_blank" rel="noopener noreferrer" ` +
+                        `href="https://www.virustotal.com/gui/file/${encodeURIComponent(hash)}">VirusTotal ↗</a>`;
+                }
+            }).catch(() => {
+                const node = el();
+                if (node) node.textContent = 'Hash unavailable';
+            });
+        } else {
+            const node = el();
+            if (node) node.textContent = 'Hash unavailable (empty or unsupported context)';
+        }
+    });
+}
+
+// --- Body preview ---------------------------------------------------------
+
+function stripHtml(html) {
+    const doc = new DOMParser().parseFromString(html || '', 'text/html');
+    return doc.body ? (doc.body.textContent || '') : '';
+}
+
+function displayPreview(mime) {
+    if (!previewSection || !previewContainer) return;
+    lastBody = mime;
+    previewContainer.innerHTML = '';
+    if (!mime || (!mime.html && !mime.text)) {
+        previewSection.classList.add('hidden');
+        return;
+    }
+    previewSection.classList.remove('hidden');
+    const hasHtml = !!mime.html;
+    if (previewSafeBtn) previewSafeBtn.disabled = !hasHtml;
+    if (previewRawBtn) previewRawBtn.disabled = !hasHtml;
+    renderPreview(hasHtml ? 'safe' : 'text');
+}
+
+function renderPreview(mode) {
+    if (!lastBody || !previewContainer) return;
+    previewContainer.innerHTML = '';
+
+    if (mode === 'text') {
+        const pre = document.createElement('pre');
+        pre.className = 'preview-text';
+        pre.textContent = lastBody.text || stripHtml(lastBody.html) || '(empty message body)';
+        previewContainer.appendChild(pre);
+        return;
+    }
+
+    const html = lastBody.html || '';
+    const iframe = document.createElement('iframe');
+    iframe.className = 'preview-frame';
+    iframe.title = 'Message body preview';
+
+    if (mode === 'safe') {
+        // Empty sandbox: no scripts, no forms, no navigation.
+        // CSP blocks every remote request so tracking pixels never load.
+        iframe.setAttribute('sandbox', '');
+        const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:;">`;
+        iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8">${csp}</head><body>${html}</body></html>`;
+    } else {
+        // Raw: scripts + remote content allowed (user already confirmed the risk).
+        iframe.setAttribute('sandbox', 'allow-scripts allow-popups');
+        iframe.srcdoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank"></head><body>${html}</body></html>`;
+    }
+    previewContainer.appendChild(iframe);
+}
+
+// --- Misc + export --------------------------------------------------------
+
+function formatDuration(ms) {
+    if (ms < 0) return 'clock skew (' + formatDuration(-ms) + ' backwards)';
+    const s = Math.round(ms / 1000);
+    if (s < 60) return `${s}s`;
+    const m = Math.floor(s / 60), rs = s % 60;
+    if (m < 60) return `${m}m ${rs}s`;
+    const h = Math.floor(m / 60), rm = m % 60;
+    if (h < 24) return `${h}h ${rm}m`;
+    const d = Math.floor(h / 24), rh = h % 24;
+    return `${d}d ${rh}h`;
+}
+
+function downloadFile(name, content, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast(`Downloaded ${name}.`, 'success');
+}
+
+function buildReportObject() {
+    const h = lastAnalysis ? lastAnalysis.headers : {};
+    const tl = lastAnalysis ? lastAnalysis.timeline : null;
+    return {
+        generatedAt: new Date().toISOString(),
+        tool: 'Email Header Analyzer (rami.party)',
+        securityChecks: lastChecks,
+        transit: tl && tl.transit ? tl.transit : null,
+        relays: tl && tl.relays ? tl.relays.map(r => ({
+            from: r.from, by: r.by, with: r.with, id: r.id, for: r.for, date: r.date
+        })) : [],
+        headers: h
+    };
+}
+
+function mdEsc(s) {
+    return String(s).replace(/\|/g, '\\|');
+}
+
+function buildMarkdownReport() {
+    const obj = buildReportObject();
+    let md = `# Email Header Report\n\n_Generated ${obj.generatedAt}_\n\n`;
+    md += `## Security Analysis\n\n| Check | Result | Status |\n|---|---|---|\n`;
+    obj.securityChecks.forEach(c => {
+        md += `| ${mdEsc(c.label)} | ${mdEsc(c.value)} | ${c.status} |\n`;
+    });
+    if (obj.transit) md += `\n**Total transit time:** ${obj.transit.text}\n`;
+    md += `\n## Relay Path\n\n`;
+    obj.relays.forEach((r, i) => {
+        md += `${i + 1}. ${r.from || r.by || 'unknown'}${r.date ? ' — ' + r.date : ''}\n`;
+    });
+    md += `\n## All Headers\n\n\`\`\`\n`;
+    Object.entries(obj.headers).forEach(([k, vals]) => {
+        vals.forEach(v => { md += `${k}: ${v}\n`; });
+    });
+    md += `\`\`\`\n`;
+    return md;
 }

@@ -1,52 +1,74 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Analyze email headers for SPF, DKIM, DMARC authentication, sender details and relay path. Runs entirely in your browser — nothing is uploaded.">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#3b82f6">
     <title>Email Header Analyzer</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📧</text></svg>">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
-        <button id="themeToggle" class="theme-toggle" title="Toggle Dark/Light Theme">
-            <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="5"/>
-                <line x1="12" y1="1" x2="12" y2="3"/>
-                <line x1="12" y1="21" x2="12" y2="23"/>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-                <line x1="1" y1="12" x2="3" y2="12"/>
-                <line x1="21" y1="12" x2="23" y2="12"/>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        <div class="theme-picker">
+            <svg class="theme-picker-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996C18.928 16.267 22 13.267 22 9.5 22 5.281 17.5 2 12 2z"/>
             </svg>
-            <svg class="moon-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-        </button>
-        
+            <label class="visually-hidden" for="themeSelect">Colour theme</label>
+            <select id="themeSelect" title="Choose colour theme">
+                <option value="light">Light · Slate</option>
+                <option value="dark">Dark · Graphite</option>
+                <option value="midnight">Midnight · Indigo</option>
+                <option value="nord">Nord · Arctic</option>
+                <option value="solarized">Solarized</option>
+                <option value="matrix">Matrix · Terminal</option>
+            </select>
+        </div>
+
         <header>
             <h1>Email Header Analyzer</h1>
-            <p class="subtitle">Analyze email headers for security and authenticity</p>
+            <p class="subtitle">Analyze email headers for security and authenticity — 100% in your browser</p>
         </header>
 
-        <div class="input-section">
+        <div id="dropZone" class="input-section">
             <div class="button-group">
-                <button id="pasteBtn" class="paste-btn">Paste Headers</button>
-                <button id="toggleTextbox" class="toggle-btn" title="Toggle manual input">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                <button id="pasteBtn" class="paste-btn" type="button">Paste &amp; Analyze Headers</button>
+                <button id="toggleTextbox" class="toggle-btn" type="button" title="Toggle manual input" aria-expanded="false" aria-controls="textboxContainer">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                         <path d="M10 3L8.5 4.5L13 9H3v2h10l-4.5 4.5L10 17l7-7z"/>
                     </svg>
                 </button>
             </div>
-            
+
+            <p class="input-hint">
+                Paste raw headers or a full <code>.eml</code> message — or drag a
+                <code>.eml</code>/<code>.txt</code> file anywhere onto this page.
+                <button id="loadExampleBtn" class="link-btn" type="button">Load an example</button>
+            </p>
+
             <div id="textboxContainer" class="textbox-container hidden">
-                <textarea id="headersInput" placeholder="Paste email headers here..."></textarea>
-                <button id="analyzeBtn" class="analyze-btn">Analyze Headers</button>
+                <textarea id="headersInput" placeholder="Paste email headers (or a whole email) here..." spellcheck="false" aria-label="Email headers"></textarea>
+                <div class="textbox-actions">
+                    <button id="analyzeBtn" class="analyze-btn" type="button">Analyze Headers</button>
+                    <button id="clearBtn" class="clear-btn" type="button">Clear</button>
+                </div>
             </div>
         </div>
 
         <div id="results" class="results hidden">
+            <div class="results-toolbar">
+                <button id="copyReportBtn" class="ghost-btn" type="button">Copy summary</button>
+                <button id="exportJsonBtn" class="ghost-btn" type="button">Export JSON</button>
+                <button id="exportMdBtn" class="ghost-btn" type="button">Export Markdown</button>
+                <button id="resetBtn" class="ghost-btn" type="button">Clear results</button>
+            </div>
+
             <div class="security-summary">
                 <h2>Security Analysis</h2>
                 <div id="securityChecks" class="security-checks"></div>
@@ -57,9 +79,40 @@
                 <div id="senderInfo" class="info-grid"></div>
             </div>
 
+            <div id="investigationSection" class="investigation hidden">
+                <h2>External Lookups <span class="section-tag">opt-in</span></h2>
+                <p class="section-note">
+                    Nothing here runs automatically. These buttons only open a new tab
+                    when <em>you</em> click them — the relevant domain, IP or hash is
+                    passed to a third-party service (MXToolbox / VirusTotal / who.is) in that tab.
+                </p>
+                <div id="investigationContent" class="investigation-grid"></div>
+            </div>
+
             <div class="relay-timeline">
                 <h2>Email Relay Timeline</h2>
                 <div id="relayTimeline" class="timeline"></div>
+            </div>
+
+            <div id="attachmentsSection" class="attachments hidden">
+                <h2>Attachments</h2>
+                <p class="section-note">Hashes are computed locally in your browser. VirusTotal links are opt-in.</p>
+                <div id="attachmentsList" class="attachments-list"></div>
+            </div>
+
+            <div id="previewSection" class="email-preview hidden">
+                <h2>Message Body Preview</h2>
+                <div class="preview-warning">
+                    ⚠ The message body can contain tracking pixels, phishing links and scripts.
+                    The <strong>Safe</strong> preview blocks all scripts and remote content (no tracking).
+                    Only use <strong>Raw</strong> if you understand the risk.
+                </div>
+                <div class="preview-controls">
+                    <button id="previewTextBtn" class="ghost-btn" type="button">Plain text</button>
+                    <button id="previewSafeBtn" class="ghost-btn" type="button">Safe HTML (no scripts/remote)</button>
+                    <button id="previewRawBtn" class="ghost-btn danger" type="button">Raw HTML ⚠</button>
+                </div>
+                <div id="previewContainer" class="preview-container"></div>
             </div>
 
             <div class="all-headers">
@@ -69,13 +122,19 @@
         </div>
 
         <div id="emptyState" class="empty-state">
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
                 <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
             <p>Paste email headers to analyze</p>
-            <p class="hint">Press Ctrl+V or click "Paste Headers" button</p>
+            <p class="hint">Press Ctrl+V or click "Paste &amp; Analyze Headers"</p>
         </div>
+
+        <footer class="page-footer">
+            <p>Everything runs locally in your browser — no headers ever leave this page.</p>
+        </footer>
     </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script src="script.js"></script>
 </body>
