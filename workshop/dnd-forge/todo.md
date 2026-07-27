@@ -8,6 +8,20 @@ requested community features.
 
 ---
 
+## 🚢 v1.7 — Surfaced on the hub (2026-07-27)
+
+- **📁 Folder renamed `D&D Forge/` → `dnd-forge/`.** The old name contained a space and an
+  `&`, which had to be percent-encoded in every URL — a permanent source of broken links on
+  GitHub Pages. Renamed with `git mv` so history is preserved.
+- **🔗 Registered in the realm catalogue.** The project was previously **orphaned** — fully
+  built but linked from nowhere, while `RAMI_PLANNED` still claimed the spell had not been
+  cast. It now has a `RAMI_WORKSHOP` entry (glyph 🐉, aura gold, `status:'live'`) with a
+  keyword-rich hidden `search` string, and the stale `RAMI_PLANNED` entry is gone.
+- **🔎 SEO.** Added `robots: index, follow`, a canonical URL, and an entry in the site
+  `sitemap.xml`.
+
+---
+
 ## 🔥 BUILD NOTES — v1 shipped (2026-07-24)
 
 **D&D Forge v1 is live and fully playable.** Files:

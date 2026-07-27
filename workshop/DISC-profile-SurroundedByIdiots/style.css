@@ -160,6 +160,32 @@ a { color: var(--brand-ink); }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7.5px) rotate(-45deg); }
 
+/* Language switcher */
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.lang-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--card-2);
+}
+.lang-switch button {
+  border: 0;
+  background: none;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+.lang-switch button:hover { color: var(--ink); }
+.lang-switch button.on { background: var(--brand); color: #fff; }
+
 /* ============================ BUTTONS ============================ */
 .btn {
   display: inline-flex;
@@ -615,6 +641,52 @@ a { color: var(--brand-ink); }
 .opt.chosen { border-color: var(--c); background: color-mix(in srgb, var(--c) 8%, transparent); }
 .options-quick .opt { justify-content: flex-start; }
 
+/* Colour-blind answering: neutralise every colour cue on the options */
+.options.colours-hidden .opt { --c: var(--muted); }
+.options.colours-hidden .opt::before { visibility: hidden; }
+
+.colour-toggle {
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 9px;
+  margin: 0 auto 20px;
+  padding: 6px 12px 6px 8px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--card-2);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.18s var(--ease);
+}
+.colour-toggle:hover { border-color: var(--brand); color: var(--ink-2); }
+.colour-toggle-track {
+  flex: none;
+  width: 30px;
+  height: 17px;
+  border-radius: 999px;
+  background: var(--line);
+  position: relative;
+  transition: background 0.18s var(--ease);
+}
+.colour-toggle-knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s var(--ease);
+}
+.colour-toggle[aria-checked="true"] { border-color: var(--brand); color: var(--brand-ink); }
+.colour-toggle[aria-checked="true"] .colour-toggle-track { background: var(--brand); }
+.colour-toggle[aria-checked="true"] .colour-toggle-knob { transform: translateX(13px); }
+
 .quiz-back {
   margin-top: 22px;
   background: none;
@@ -635,6 +707,7 @@ a { color: var(--brand-ink); }
   gap: 32px;
   align-items: start;
 }
+.quiz-stage[hidden] { display: none; }
 .reading-who {
   font-size: 0.85rem;
   font-weight: 600;
@@ -898,6 +971,11 @@ a { color: var(--brand-ink); }
 }
 @media (max-width: 720px) {
   .nav-toggle { display: flex; }
+  .nav { gap: 8px; }
+  .nav-right { gap: 6px; }
+  .brand { font-size: 1.02rem; min-width: 0; }
+  .brand-text { white-space: nowrap; }
+  .lang-switch button { padding: 5px 7px; font-size: 0.68rem; }
   .nav-links {
     position: absolute;
     top: 68px;
@@ -921,6 +999,7 @@ a { color: var(--brand-ink); }
   .cards-grid, .cards-grid-pairs { grid-template-columns: 1fr; }
 }
 @media (max-width: 460px) {
+  .brand-text { display: none; }
   .color-grid { grid-template-columns: 1fr; }
   .likert { grid-template-columns: repeat(5, 1fr); gap: 5px; }
   .likert button { padding: 14px 2px; font-size: 0.66rem; }
@@ -930,7 +1009,7 @@ a { color: var(--brand-ink); }
 /* ============================ PRINT ============================ */
 @media print {
   .topbar, .hero, .nav-toggle, .quiz-back, .result-actions,
-  .footer, .matrix-block, .quiz-progress, .skip-link { display: none !important; }
+  .footer, .matrix-block, .quiz-progress, .skip-link, .lang-switch { display: none !important; }
   body { background: #fff; }
   .section, .section.alt { padding: 12px 0; border: 0; background: #fff; }
   .quiz-shell { box-shadow: none; border: 1px solid #ccc; }

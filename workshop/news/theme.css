@@ -363,7 +363,7 @@ h1 {
 
 /* Verified Stamp */
 .tool-card[data-verified="true"]::before {
-    content: "📍 lebon.info";
+    content: "📍 rami.party";
     position: absolute;
     top: 5px;
     right: 5px;

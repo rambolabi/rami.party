@@ -13,6 +13,9 @@
     blendPairLink, resultDetailHTML, escapeHTML,
   } = window.DUI;
 
+  const t = DISC_I18N.t;
+  const cap = DISC_I18N.cap;
+
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
@@ -69,7 +72,7 @@
           <div class="cc-name">${c.name}</div>
           <div class="cc-label">${c.label}</div>
           <p class="cc-tag">${c.tagline}</p>
-          <span class="cc-more">Explore ${c.name} →</span>
+          <span class="cc-more">${t("explore", { name: c.name })}</span>
         </button>`;
     }).join("");
 
@@ -85,19 +88,19 @@
             <div class="detail-title">${c.name} — ${c.archetype}</div>
             <div class="detail-sub">${c.label}</div>
           </div>
-          <button class="detail-close" aria-label="Close">✕</button>
+          <button class="detail-close" aria-label="${t("close")}">✕</button>
         </div>
         <p class="detail-summary">${c.summary}</p>
-        <div class="chips">${c.traits.map((t) => `<span class="chip">${t}</span>`).join("")}</div>
+        <div class="chips">${c.traits.map((t2) => `<span class="chip">${t2}</span>`).join("")}</div>
         <div class="detail-grid">
-          <div class="detail-cell"><h4>Communication</h4><p>${c.communication}</p></div>
-          <div class="detail-cell"><h4>Decision making</h4><p>${c.decisions}</p></div>
-          <div class="detail-cell"><h4>Work environment</h4><p>${c.workEnv}</p></div>
-          <div class="detail-cell"><h4>Under stress</h4><p>${c.stress}</p></div>
-          <div class="detail-cell"><h4>Strengths</h4><ul>${c.strengths.map((s) => `<li>${s}</li>`).join("")}</ul></div>
-          <div class="detail-cell neg"><h4>Watch-outs</h4><ul>${c.weaknesses.map((s) => `<li>${s}</li>`).join("")}</ul></div>
-          <div class="detail-cell"><h4>Motivated by</h4><ul>${c.motivators.map((s) => `<li>${s}</li>`).join("")}</ul></div>
-          <div class="detail-cell"><h4>How to connect</h4><p>${c.interact}</p></div>
+          <div class="detail-cell"><h4>${t("d_comm")}</h4><p>${c.communication}</p></div>
+          <div class="detail-cell"><h4>${t("d_dec")}</h4><p>${c.decisions}</p></div>
+          <div class="detail-cell"><h4>${t("d_env")}</h4><p>${c.workEnv}</p></div>
+          <div class="detail-cell"><h4>${t("d_stress")}</h4><p>${c.stress}</p></div>
+          <div class="detail-cell"><h4>${t("d_str")}</h4><ul>${c.strengths.map((s) => `<li>${s}</li>`).join("")}</ul></div>
+          <div class="detail-cell neg"><h4>${t("d_watch")}</h4><ul>${c.weaknesses.map((s) => `<li>${s}</li>`).join("")}</ul></div>
+          <div class="detail-cell"><h4>${t("d_motiv")}</h4><ul>${c.motivators.map((s) => `<li>${s}</li>`).join("")}</ul></div>
+          <div class="detail-cell"><h4>${t("d_connect")}</h4><p>${c.interact}</p></div>
         </div>`;
       $(".detail-close", detail).addEventListener("click", close);
     }
@@ -151,11 +154,11 @@
 
     function render() {
       if (!state.a || !state.b) {
-        out.textContent = "Choose a colour in each row above.";
+        out.textContent = t("matrix_empty");
         return;
       }
       const text = DISC.interactions[state.a][state.b];
-      out.innerHTML = `<span><strong style="color:${hex(state.a)}">${name(state.a)}</strong> &nbsp;meets&nbsp; <strong style="color:${hex(state.b)}">${name(state.b)}</strong> — ${text}</span>`;
+      out.innerHTML = `<span><strong style="color:${hex(state.a)}">${name(state.a)}</strong> &nbsp;${t("matrix_meets")}&nbsp; <strong style="color:${hex(state.b)}">${name(state.b)}</strong> — ${text}</span>`;
     }
 
     build(rowA, "a");
@@ -235,8 +238,8 @@
 
       const pk = blendPairLink(pct, ranked);
       $("#selfPairCta").innerHTML = pk
-        ? `<a class="btn btn-ghost" href="communicate.html?c=${pk}">📇 Share your “How to communicate with me” card →</a>`
-        : `<a class="btn btn-ghost" href="communicate.html?c=${top}">📇 Share your ${name(top)} communication card →</a>`;
+        ? `<a class="btn btn-ghost" href="communicate.html?c=${pk}">${t("cta_pair_self")}</a>`
+        : `<a class="btn btn-ghost" href="communicate.html?c=${top}">${t("cta_single_self", { name: name(top) })}</a>`;
 
       if (chart) chart.destroy();
       show("result");
@@ -280,6 +283,7 @@
     const countEl = $("#obsCount");
     const backBtn = $('[data-action="back-obs"]', shell);
     const leadEl = $("#obsLead");
+    const colourToggle = $("#obsColourToggle");
     // Pass 2 (adapted)
     const aqEl = $("#obsAdaptQ");
     const aOptsEl = $("#obsAdaptOptions");
@@ -292,8 +296,8 @@
     let subjectName = "";
     let liveChart = null, resultChart = null;
 
-    const who = () => (subjectName ? escapeHTML(subjectName) : "they");
-    const Who = () => (subjectName ? escapeHTML(subjectName) : "They");
+    const who = () => (subjectName ? escapeHTML(subjectName) : t("who_fallback"));
+    const Who = () => cap(who());
 
     function show(stage) {
       Object.entries(stages).forEach(([n, el]) => (el.hidden = n !== stage));
@@ -310,7 +314,7 @@
       natQ = shuffle(DISC.othersQuestions);
       natA = new Array(natQ.length).fill(null);
       natIdx = 0;
-      whoEl.innerHTML = subjectName ? `Reading: <b>${escapeHTML(subjectName)}</b> · natural style` : "Reading: <b>this person</b> · natural style";
+      whoEl.innerHTML = t("reading_who", { who: who() });
       show("run");
       if (liveChart) liveChart.destroy();
       liveChart = makeRadar($("#obsChart"), { red: 0, yellow: 0, green: 0, blue: 0 });
@@ -331,13 +335,15 @@
     function updateLive(count) {
       const pct = toPercents(tally(natA, count));
       if (count === 0) {
-        leadEl.textContent = "Answer to begin…";
+        leadEl.textContent = t("live_wait");
         renderBars($("#obsLiveBars"), { red: 0, yellow: 0, green: 0, blue: 0 });
         if (liveChart) { liveChart.data.datasets[0].data = [0, 0, 0, 0]; liveChart.update(); }
         return;
       }
       const top = rank(pct)[0];
-      leadEl.innerHTML = `<span style="color:${hex(top)}">${DISC.colors[top].icon} ${name(top)}</span> leading`;
+      leadEl.innerHTML = t("live_leading", {
+        c: `<span style="color:${hex(top)}">${DISC.colors[top].icon} ${name(top)}</span>`,
+      });
       renderBars($("#obsLiveBars"), pct, { winner: top });
       if (liveChart) {
         liveChart.data.datasets[0].data = ORDER.map((k) => pct[k]);
@@ -357,9 +363,10 @@
     function toBridge() {
       const pct = toPercents(tally(natA, natQ.length));
       const top = rank(pct)[0];
-      $("#obsBridgeText").innerHTML =
-        `At their natural best, ${who()} read as mostly <strong style="color:${hex(top)}">${name(top)}</strong>. ` +
-        `Now, six quick questions on how ${who()} behave <em>under pressure</em> — their <strong>adapted</strong> style.`;
+      $("#obsBridgeText").innerHTML = t("bridge_text", {
+        who: who(),
+        top: `<strong style="color:${hex(top)}">${name(top)}</strong>`,
+      });
       show("bridge");
       stages.bridge.scrollIntoView({ behavior: "smooth", block: "start" });
     }
@@ -392,15 +399,26 @@
     /* ----- Combined result ----- */
     function shiftNote(natPct, adaptPct, natTop, adaptTop) {
       let riser = null, riseAmt = -Infinity, faller = null, fallAmt = Infinity;
+      const S = (k) => `<strong style="color:${hex(k)}">${name(k)}</strong>`;
       ORDER.forEach((k) => {
         const d = adaptPct[k] - natPct[k];
         if (d > riseAmt) { riseAmt = d; riser = k; }
         if (d < fallAmt) { fallAmt = d; faller = k; }
       });
       if (natTop === adaptTop && riseAmt < 12) {
-        return `<h4>Natural vs. under pressure</h4><p>${Who()} stay fairly consistent — <strong style="color:${hex(natTop)}">${name(natTop)}</strong> leads whether relaxed or stretched. What you see is close to what you get.</p>`;
+        return `<h4>${t("shift_h4")}</h4><p>${t("shift_same", {
+          Who: Who(),
+          nat: S(natTop),
+        })}</p>`;
       }
-      return `<h4>Natural vs. under pressure</h4><p>At ease, ${who()} lead with <strong style="color:${hex(natTop)}">${name(natTop)}</strong>. Under pressure ${who()} shift toward <strong style="color:${hex(adaptTop)}">${name(adaptTop)}</strong> — the <strong style="color:${hex(riser)}">${name(riser)}</strong> side rises while <strong style="color:${hex(faller)}">${name(faller)}</strong> fades. Expect a noticeably different person on a stressful day, and adjust how you approach ${who()}.</p>`;
+      return `<h4>${t("shift_h4")}</h4><p>${t("shift_diff", {
+        who: who(),
+        Who: Who(),
+        nat: S(natTop),
+        adapt: S(adaptTop),
+        riser: S(riser),
+        faller: S(faller),
+      })}</p>`;
     }
 
     function finish() {
@@ -410,9 +428,9 @@
       const natTop = natRank[0];
       const adaptTop = rank(adaptPct)[0];
       const gap = natPct[natRank[0]] - natPct[natRank[1]];
-      const confidence = gap >= 25 ? "High confidence" : gap >= 12 ? "Moderate confidence" : "Low confidence — a genuine blend";
+      const confidence = gap >= 25 ? t("conf_high") : gap >= 12 ? t("conf_mid") : t("conf_low");
 
-      $("#obsResultEyebrow").textContent = subjectName ? `${subjectName}'s natural style` : "Their natural style";
+      $("#obsResultEyebrow").textContent = cap(t("obs_eyebrow", { who: who() }));
       $("#obsResultTitle").innerHTML = `${DISC.colors[natTop].icon} ${name(natTop)} <span style="color:${hex(natTop)}">${DISC.colors[natTop].label}</span>`;
       $("#obsResultBlurb").textContent = DISC.colors[natTop].tagline;
       $("#obsConfidence").textContent = confidence;
@@ -425,17 +443,23 @@
       const pk = blendPairLink(natPct, natRank);
       const ctaEl = $("#obsPairCta");
       ctaEl.innerHTML = pk
-        ? `<a class="btn btn-ghost" href="communicate.html?c=${pk}">📇 Their “How to communicate with them” card →</a>`
-        : `<a class="btn btn-ghost" href="communicate.html?c=${natTop}">📇 The ${name(natTop)} communication card →</a>`;
+        ? `<a class="btn btn-ghost" href="communicate.html?c=${pk}">${t("cta_pair_other")}</a>`
+        : `<a class="btn btn-ghost" href="communicate.html?c=${natTop}">${t("cta_single_other", { name: name(natTop) })}</a>`;
 
       if (resultChart) resultChart.destroy();
       show("result");
-      resultChart = makeRadarPair($("#obsResultChart"), natPct, adaptPct, "Natural", "Under pressure");
+      resultChart = makeRadarPair($("#obsResultChart"), natPct, adaptPct, t("radar_natural"), t("radar_pressure"));
       stages.result.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     /* ----- Wiring ----- */
     $('[data-action="start-obs"]', shell).addEventListener("click", start);
+    colourToggle.addEventListener("click", () => {
+      const hidden = colourToggle.getAttribute("aria-checked") !== "true";
+      colourToggle.setAttribute("aria-checked", String(hidden));
+      optsEl.classList.toggle("colours-hidden", hidden);
+      $(".colour-toggle-label", colourToggle).textContent = hidden ? t("toggle_hide") : t("toggle_show");
+    });
     nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") start(); });
     backBtn.addEventListener("click", () => { if (natIdx > 0) { natIdx--; updateLive(natIdx); paintNat(); } });
     $('[data-action="start-adapt"]', shell).addEventListener("click", startAdapt);
@@ -558,7 +582,7 @@
   function initTips() {
     $("#tipsGrid").innerHTML = ORDER.map((k) => {
       const c = DISC.colors[k];
-      const t = DISC.tips[k];
+      const tip = DISC.tips[k];
       return `
         <div class="tip-card" style="--c:${c.hex}">
           <div class="tip-head">
@@ -566,12 +590,12 @@
             <b>${c.name}</b>
           </div>
           <ul class="tip-list do">
-            <h5>Do</h5>
-            ${t.do.map((x) => `<li>${x}</li>`).join("")}
+            <h5>${t("tip_do")}</h5>
+            ${tip.do.map((x) => `<li>${x}</li>`).join("")}
           </ul>
           <ul class="tip-list dont last">
-            <h5>Don't</h5>
-            ${t.dont.map((x) => `<li>${x}</li>`).join("")}
+            <h5>${t("tip_dont")}</h5>
+            ${tip.dont.map((x) => `<li>${x}</li>`).join("")}
           </ul>
         </div>`;
     }).join("");

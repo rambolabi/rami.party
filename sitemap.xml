@@ -1,59 +1,228 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  rami.party sitemap — only real, reachable, indexable pages.
+  (The previous version was a joke listing /test, /demo and /coffee, none of which exist.)
+
+  Keep in sync with projects.js:
+    • status:'soon' realms are intentionally omitted — a locked teaser has nothing to crawl.
+    • external:true realms live on their own domains and are not listed here.
+    • /admin/, /404.html, the DM companion screens and /workshop/laser-forge-v2/ are noindex
+      on purpose, so they are absent by design.
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  
-  <!-- Main landing page -->
+
+  <!-- ── The hub ─────────────────────────────────────────────────────────── -->
   <url>
     <loc>https://rami.party/</loc>
-    <lastmod>2026-01-11</lastmod>
-    <changefreq>daily</changefreq>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
-  
-  <!-- The pages you weren't looking for -->
+
+  <!-- ── The three great realms ──────────────────────────────────────────── -->
   <url>
-    <loc>https://rami.party/404</loc>
-    <lastmod>2026-01-11</lastmod>
-    <changefreq>always</changefreq>
-    <priority>0.8</priority>
-    <!-- Most visited page, statistically speaking -->
-  </url>
-  
-  <!-- Experimental pages (may or may not exist) -->
-  <url>
-    <loc>https://rami.party/test</loc>
-    <lastmod>2026-01-11</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.5</priority>
-    <!-- Schrödinger's page: simultaneously working and broken -->
-  </url>
-  
-  <url>
-    <loc>https://rami.party/demo</loc>
-    <lastmod>2026-01-11</lastmod>
+    <loc>https://rami.party/workshop/</loc>
+    <lastmod>2026-07-27</lastmod>
     <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/wasteland/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <!-- ── The Gallery of Wonders ──────────────────────────────────────────── -->
+  <url>
+    <loc>https://rami.party/gallery/militaryalphabet/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/gallery/lore/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-  
-  <!-- The void where old projects disappear -->
   <url>
-    <loc>https://rami.party/wasteland</loc>
-    <lastmod>2025-12-01</lastmod>
+    <loc>https://rami.party/gallery/prankscreens/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- ── The Workshop — live projects ────────────────────────────────────── -->
+  <url>
+    <loc>https://rami.party/workshop/tools/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/dm-screen/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/dm-screen/guide.html</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/dnd-forge/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/personality-library/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/laser-forge/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/3d-forge/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/demoscene-forge/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/character-forge/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/mailheaders/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/webcheck/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/subnets/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/DNS-sinkhole/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/batlistener/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/todo/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/md/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/Engraving/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/scoreboard/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/news/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/blur/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/clear/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/trace-results/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/to-check/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/bbq/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/fill/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- ── The Wastelands — preserved relics ───────────────────────────────── -->
+  <url>
+    <loc>https://rami.party/wasteland/neko/</loc>
+    <lastmod>2026-07-27</lastmod>
     <changefreq>never</changefreq>
-    <priority>0.1</priority>
-    <!-- Here lie the abandoned experiments -->
+    <priority>0.3</priority>
   </url>
-  
-  <!-- Easter eggs and mysteries -->
   <url>
-    <loc>https://rami.party/coffee</loc>
-    <lastmod>2026-01-11</lastmod>
-    <changefreq>always</changefreq>
-    <priority>0.9</priority>
-    <!-- I'm a teapot (418) -->
+    <loc>https://rami.party/wasteland/old-rami.party/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>never</changefreq>
+    <priority>0.2</priority>
   </url>
-  
-  <!-- Note: Some URLs may lead to undiscovered territories -->
-  <!-- Warning: Actual page existence not guaranteed -->
-  <!-- "Do or do not, there is no try" - Yoda's Guide to Web Development -->
-  
+  <url>
+    <loc>https://rami.party/wasteland/notes/</loc>
+    <lastmod>2026-07-27</lastmod>
+    <changefreq>never</changefreq>
+    <priority>0.2</priority>
+  </url>
+
 </urlset>

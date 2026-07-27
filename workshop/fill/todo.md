@@ -58,8 +58,8 @@ Location: `rami.party/workshop/fill/` · Files: `index.html`, `style.css`, `scri
 
 ## 🔜 Still to do / optional
 
-- [ ] **Add it to the rami.party workshop catalogue** (`projects.js` → `RAMI_WORKSHOP`)
-      with a hidden `search` description, if it should appear on the hub.
+- [x] **Added to the rami.party workshop catalogue** (`projects.js` → `RAMI_WORKSHOP`) as
+      **Disk Filler**, with a hidden `search` description.
 - [ ] Optional: swap emoji cats for real cat images/GIFs (the original used photos)
       if you want a pixel-faithful look — needs bundled image assets.
 - [ ] Optional: add a real `trololo` audio file instead of the synthesized loop.

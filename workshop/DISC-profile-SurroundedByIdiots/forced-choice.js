@@ -8,6 +8,7 @@
   "use strict";
 
   const { ORDER, hex, name, shuffle, toPercents, rank, makeRadar, renderBars, blendPairLink, resultDetailHTML } = window.DUI;
+  const T = DISC_I18N.t;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
 
@@ -51,8 +52,8 @@
       <div class="fc-row${p.most === o.color ? " is-most" : ""}${p.least === o.color ? " is-least" : ""}" data-c="${o.color}">
         <span class="fc-word">${o.word}</span>
         <div class="fc-btns">
-          <button class="fc-most" data-pick="most" aria-label="Most like me">Most</button>
-          <button class="fc-least" data-pick="least" aria-label="Least like me">Least</button>
+          <button class="fc-most" data-pick="most" aria-label="${T("fc_most_aria")}">${T("fc_most")}</button>
+          <button class="fc-least" data-pick="least" aria-label="${T("fc_least_aria")}">${T("fc_least")}</button>
         </div>
       </div>`
       )
@@ -107,8 +108,8 @@
 
     const pk = blendPairLink(pct, ranked);
     $("#fcPairCta").innerHTML = pk
-      ? `<a class="btn btn-ghost" href="communicate.html?c=${pk}">📇 Your “How to communicate with me” card →</a>`
-      : `<a class="btn btn-ghost" href="communicate.html?c=${top}">📇 Your ${name(top)} communication card →</a>`;
+      ? `<a class="btn btn-ghost" href="communicate.html?c=${pk}">${T("fc_cta_pair")}</a>`
+      : `<a class="btn btn-ghost" href="communicate.html?c=${top}">${T("fc_cta_single", { name: name(top) })}</a>`;
 
     if (chart) chart.destroy();
     show("result");

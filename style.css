@@ -294,6 +294,7 @@
     padding: 1px;
     background: var(--card-aura, var(--spell));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     opacity: 0;
@@ -408,6 +409,24 @@
 .realm-card.is-external .realm-enter::after {
     content: '↗';
     font-size: 0.85em;
+}
+
+/* Secondary link on a "reborn elsewhere" card, pointing at the husk kept in the ruins. */
+.realm-relic {
+    margin-top: 8px;
+    font-size: 0.86rem;
+}
+
+.realm-relic a {
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 1px dotted currentColor;
+    transition: color 0.25s ease;
+}
+
+.realm-relic a:hover,
+.realm-relic a:focus-visible {
+    color: var(--card-ink, var(--cyan));
 }
 
 /* Aura color variants */

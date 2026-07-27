@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-i18n-title="fc_meta_title" data-i18n-desc="fc_meta_desc">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -59,18 +59,25 @@
         <span class="brand-dots" aria-hidden="true">
           <i style="--c:#e63946"></i><i style="--c:#f0a500"></i><i style="--c:#2a9d5c"></i><i style="--c:#2e6fd6"></i>
         </span>
-        <span class="brand-text">Four&nbsp;Colours</span>
+        <span class="brand-text" data-i18n="brand">Four&nbsp;Colours</span>
       </a>
-      <a class="back" href="index.html#self">← Back to workshop</a>
+      <div class="nav-right">
+        <a class="back" href="index.html#self" data-i18n="fc_back">← Back to workshop</a>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="en">EN</button>
+          <button type="button" data-lang="nl">NL</button>
+          <button type="button" data-lang="fr">FR</button>
+        </div>
+      </div>
     </div>
   </header>
 
   <main class="section">
     <div class="wrap">
       <header class="section-head">
-        <p class="kicker">Alternative method</p>
-        <h2>Forced-choice self-test</h2>
-        <p class="section-sub">
+        <p class="kicker" data-i18n="fc_kicker">Alternative method</p>
+        <h2 data-i18n="fc_h2">Forced-choice self-test</h2>
+        <p class="section-sub" data-i18n-html="fc_sub">
           The classic DISC approach some practitioners prefer: for each group of four words, pick the
           one that is <em>most</em> like you and the one that is <em>least</em> like you. Compare your
           result with the <a href="index.html#self">Likert test</a> to see which feels truer.
@@ -82,9 +89,9 @@
         <div class="quiz-stage" data-stage="intro">
           <div class="quiz-intro">
             <span class="quiz-intro-icon">⚖️</span>
-            <h3>10 word groups</h3>
-            <p>In each group of four, choose your <b>Most</b> and your <b>Least</b>. Quick and instinctive is best.</p>
-            <button class="btn btn-primary" data-action="fc-start">Begin test</button>
+            <h3 data-i18n="fc_intro_h3">10 word groups</h3>
+            <p data-i18n-html="fc_intro_p">In each group of four, choose your <b>Most</b> and your <b>Least</b>. Quick and instinctive is best.</p>
+            <button class="btn btn-primary" data-action="fc-start" data-i18n="fc_start">Begin test</button>
           </div>
         </div>
 
@@ -94,30 +101,30 @@
             <div class="quiz-progress-bar"><span id="fcBar"></span></div>
             <span class="quiz-progress-text" id="fcCount"></span>
           </div>
-          <p class="quiz-question">Which is most &amp; least like you?</p>
-          <div class="fc-legend">
+          <p class="quiz-question" data-i18n-html="fc_question">Which is most &amp; least like you?</p>
+          <div class="fc-legend" data-i18n-html="fc_legend">
             <span><b class="m">● Most</b> — most like me</span>
             <span><b class="l">● Least</b> — least like me</span>
           </div>
           <div class="fc-rows" id="fcRows"></div>
-          <button class="quiz-back" data-action="fc-back" hidden>← Previous</button>
+          <button class="quiz-back" data-action="fc-back" data-i18n="prev" hidden>← Previous</button>
         </div>
 
         <!-- Result -->
         <div class="quiz-stage" data-stage="result" hidden>
           <div class="result-head">
-            <p class="result-eyebrow">Your dominant style (forced-choice)</p>
+            <p class="result-eyebrow" data-i18n="fc_eyebrow">Your dominant style (forced-choice)</p>
             <h3 class="result-title" id="fcResultTitle"></h3>
             <p class="result-blurb" id="fcResultBlurb"></p>
           </div>
           <div class="result-body">
             <div class="result-chart">
-              <canvas id="fcChart" width="320" height="320" role="img" aria-label="Your DISC colour balance"></canvas>
+              <canvas id="fcChart" width="320" height="320" role="img" data-i18n-aria="self_chart_aria" aria-label="Your DISC colour balance"></canvas>
             </div>
             <div class="result-bars" id="fcBars"></div>
           </div>
           <div class="result-detail" id="fcResultDetail"></div>
-          <div class="fc-note">
+          <div class="fc-note" data-i18n-html="fc_note">
             <b>Comparing methods:</b> forced-choice (ipsative) scoring exaggerates your strongest and
             weakest colours because every pick trades one colour off against another. The
             <a href="index.html#self">Likert test</a> lets colours score independently, so mild blends
@@ -125,9 +132,9 @@
           </div>
           <div class="result-cta" id="fcPairCta"></div>
           <div class="result-actions">
-            <button class="btn btn-ghost" data-action="fc-restart">Retake</button>
-            <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
-            <a class="btn btn-primary" href="index.html#self">Try the Likert test →</a>
+            <button class="btn btn-ghost" data-action="fc-restart" data-i18n="retake">Retake</button>
+            <button class="btn btn-ghost" data-action="print" data-i18n="print">Print / Save PDF</button>
+            <a class="btn btn-primary" href="index.html#self" data-i18n="fc_to_likert">Try the Likert test →</a>
           </div>
         </div>
       </div>
@@ -136,16 +143,19 @@
 
   <footer class="footer">
     <div class="wrap footer-inner">
-      <p class="footer-support">
+      <p class="footer-support" data-i18n-html="footer_support">
         Want the full picture? <strong>Read <em>Surrounded by Idiots</em> by Thomas Erikson</strong> —
         buy the book and support the author.
       </p>
-      <p class="footer-meta"><a href="index.html">The Four Colours workshop</a> · <span id="year"></span></p>
+      <p class="footer-meta"><a href="index.html" data-i18n="footer_workshop">The Four Colours workshop</a> · <span id="year"></span></p>
     </div>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="data.js"></script>
+  <script src="data.nl.js"></script>
+  <script src="data.fr.js"></script>
+  <script src="i18n.js"></script>
   <script src="shared.js"></script>
   <script src="forced-choice.js"></script>
 </body>

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-i18n-desc="cc_meta_desc">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -91,9 +91,16 @@
         <span class="brand-dots" aria-hidden="true">
           <i style="--c:#e63946"></i><i style="--c:#f0a500"></i><i style="--c:#2a9d5c"></i><i style="--c:#2e6fd6"></i>
         </span>
-        <span class="brand-text">Four&nbsp;Colours</span>
+        <span class="brand-text" data-i18n="brand">Four&nbsp;Colours</span>
       </a>
-      <a class="back" href="index.html#cards">← All cards & workshop</a>
+      <div class="nav-right">
+        <a class="back" href="index.html#cards" data-i18n="cc_back_all">← All cards &amp; workshop</a>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="en">EN</button>
+          <button type="button" data-lang="nl">NL</button>
+          <button type="button" data-lang="fr">FR</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -102,25 +109,28 @@
     <div class="comm-body" id="commBody"></div>
 
     <nav class="comm-nav">
-      <h3>Other communication cards</h3>
+      <h3 data-i18n="cc_other">Other communication cards</h3>
       <div class="comm-related" id="commSingles"></div>
-      <h3>Two-colour blends</h3>
+      <h3 data-i18n="cards_pairs">Two-colour blends</h3>
       <div class="comm-related" id="commPairs"></div>
-      <a class="btn btn-primary" href="index.html">← Back to the workshop</a>
+      <a class="btn btn-primary" href="index.html" data-i18n="cc_back_workshop">← Back to the workshop</a>
     </nav>
   </main>
 
   <footer class="footer">
     <div class="wrap footer-inner">
-      <p class="footer-support">
+      <p class="footer-support" data-i18n-html="footer_support">
         Want the full picture? <strong>Read <em>Surrounded by Idiots</em> by Thomas Erikson</strong> —
         buy the book and support the author.
       </p>
-      <p class="footer-meta"><a href="index.html">The Four Colours workshop</a> · <span id="year"></span></p>
+      <p class="footer-meta"><a href="index.html" data-i18n="footer_workshop">The Four Colours workshop</a> · <span id="year"></span></p>
     </div>
   </footer>
 
   <script src="data.js"></script>
+  <script src="data.nl.js"></script>
+  <script src="data.fr.js"></script>
+  <script src="i18n.js"></script>
   <script src="shared.js"></script>
   <script src="communicate.js"></script>
 </body>

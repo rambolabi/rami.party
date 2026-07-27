@@ -1,72 +1,46 @@
 # ✨ rami.party — Follow-ups & Decisions
 
-Living notes for the enchanted-playground revamp. The `workshop/projects` migration is now done. ✅
+Living notes for the enchanted playground. **Decisions only** — the full task backlog now lives
+in [`workshop/todo.md`](workshop/todo.md).
 
 ---
 
 ## 🗺️ Current structure
 ```
 /                     hub (index.html, theme.css, style.css, script.js, projects.js)
-favicon.svg · og-image.png · admin/ · 404.html
-gallery/lore/         📜 Lore Gallery  (Gallery of Wonders)
-gallery/prankscreens/ 🖥️ Prank Screens (Gallery of Wonders)
-workshop/             ⚗️ The Workshop — now a data-driven catalogue of every WIP
-  bluetooth/ blur/ clear/ dashboard_v1/ DNS-sinkhole/ Engraving/ fakeupdate/
-  house/ laser/ mailheaders/ md/ militaryalphabet/ news/ prank/ rami/
-  random-first-player/ scoreboard/ subnets/ to-check/ trace-results/ webcheck/
+favicon.svg · og-image.png · admin/ · 404.html · robots.txt · sitemap.xml
+gallery/              🏛️ The Gallery of Wonders
+  militaryalphabet/   🔤 Phonetic Codex
+  lore/               📜 Lore Gallery
+  prankscreens/       🖥️ Prank Screens
+workshop/             ⚗️ The Workshop — a data-driven catalogue of every WIP
+  3d-forge/ batlistener/ bbq/ blur/ character-forge/ clear/ dashboard_v1/
+  demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/ fill/ laser/
+  laser-forge/ laser-forge-v2/ mailheaders/ md/ news/ personality-library/ rami/
+  scoreboard/ subnets/ to-check/ todo/ tools/ trace-results/ webcheck/
+  personality-library/ + its 15 book workshops (DISC, Big Five, MBTI, Enneagram,
+    Attachment, Love Languages, Temperaments, Conflict Styles, EQ, Liars,
+    Vampires, Bad Bosses, Psychopaths, Narcissists, Setbacks)
 wasteland/            ☄️ The Wastelands (index)
-  neko/           🐱 Neko Paradise (relic)
-  old-rami.party/ 🏚️ jQuery-era relic
-  adhd/           🌀 empty husk
+  neko/  old-rami.party/  adhd/  notes/  bluetooth/  house/  random-first-player/
 ```
-External realms surfaced on the hub: 🔥 The BBQ (lebon.info/bbq).
+Realms that graduated to their own domains: GhostTooth, Huiskeuring, TapFate — the husks stay
+in `wasteland/` as mementos, each reachable from its card.
 
 ---
 
-## ✅ Done this round
-- **Emptied `workshop/projects/`** — all 20 project folders were moved up one level into
-  `workshop/<name>/`, and `house.zip` was extracted to `workshop/house/`. The now-empty
-  `projects/` folder (plus the obsolete lebon.info listing page, `projects.css`, and the empty
-  `fill` stub) was **deleted**.
-- **The Workshop is now a real catalogue.** `workshop/index.html` renders its cards from a new
-  `RAMI_WORKSHOP` array in `projects.js` (single source of truth, ranked top-to-bottom). Card
-  markup is shared with the hub via `window.cardMarkup` in `script.js`.
-- **Hidden 4th category added — “Planned Spells.”** Names of not-yet-started ideas render as a
-  chip list at the bottom of `workshop/index.html`, sourced from `RAMI_PLANNED` in `projects.js`.
-  Styling lives in `style.css` (`.planned-list` / `.planned-chip`).
-- **Hub Workshop teaser updated** — the “A new spell is brewing” placeholder now reads
-  “Enter the Workshop · 21 spells brewing” and links into the populated `/workshop/`.
-- **WIP vs not-started audit** — every folder was inspected. Only `fill` was truly empty →
-  it became the sole “Planned” entry (**Screen Fill**). Everything else had real, functional
-  content and is listed in the Workshop as `status:'live'`.
-- **Broken links fixed after the move:**
-  - `workshop/bluetooth/` back-link pointed to lebon.info → now `/workshop/`.
-  - `workshop/news/` depended on lebon.info’s shared `Tools/style.css` → copied locally as
-    `workshop/news/theme.css`; back-link now `/workshop/`.
-- **Validated** the whole thing over a local static server: hub, workshop catalogue, planned
-  chips, and every moved project (`/workshop/<name>/`) all return 200 and render correctly.
+## ✅ Decisions taken (2026-07-27)
 
----
-
-## 🔮 Still open / next
-- [ ] **`workshop/laser/` is missing its media.** The page references `./media/*.jpg` (hero,
-      gallery) but has no `media/` folder. Add the images or leave it as an obvious WIP.
-- [ ] **BBQ full migration is blocked by the backend.** The BBQ mailer needs a server-side
-      handler (`submit.php` on lebon.info); rami.party is static (GitHub Pages), so it stays an
-      **external link** for now. To bring it here: swap the form to a static-friendly backend
-      (e.g. Formspree / a serverless function), then copy `lebon.info/bbq` → `gallery/bbq/` and
-      flip the BBQ realm in `projects.js` from `external:true` to `./gallery/bbq/`.
-- [ ] **Possible duplicate:** `workshop/bluetooth/` (GHOSTTOOTH) overlaps with the standalone
-      `ghosttooth.labidi.eu` project. Decide whether to keep both or retire the copy here.
-- [ ] **Residual lebon.info branding** in a few projects (page `<title>`s / code comments in
-      `subnets`, `webcheck`, `bluetooth`). Cosmetic only — rename to rami.party if desired.
-- [ ] **Per-project completeness review.** Every Workshop entry is currently `status:'live'`.
-      Set any you’d rather lock as a teaser to `status:'soon'` in `RAMI_WORKSHOP`.
-- [ ] **Grow the Planned list.** Only *Screen Fill* is listed. Add more future ideas as objects
-      in `RAMI_PLANNED` (`{ name, note }`).
-- [ ] **SEO / sitemap** — still deferred (site is `noindex`). When ready: flip `robots` off
-      `noindex`, refresh `sitemap.xml` to list `/`, `/gallery/lore/`, `/gallery/prankscreens/`,
-      `/workshop/`, `/wasteland/`, `/wasteland/neko/`, and add canonical URLs.
+| Decision | Choice | Why |
+|---|---|---|
+| **Indexing** | **Publish.** `noindex` removed from real content pages; canonicals added. | `robots.txt` already invited crawlers and linked a sitemap — the signals contradicted each other. Reverse by putting `content="noindex, nofollow"` back. |
+| Still `noindex` | `404.html`, `admin/`, `dm-screen/player.html`, `dm-screen/characters.html`, `laser-forge-v2/`, `wasteland/bluetooth/` | Error page, private, companion screens, and two duplicate-content pages (v2 canonicals to v1, bluetooth canonicals to ghosttooth.labidi.eu). |
+| **`D&D Forge` folder name** | Renamed to **`dnd-forge/`** via `git mv`. | A space and `&` in a path must be percent-encoded everywhere — a permanent source of broken links. |
+| **The 15 book workshops** | Surfaced as **one** catalogue entry, *The People Library*. | 15 near-identical cards would drown the Workshop; the library page is already a good hub. |
+| **BBQ Mailer** | Keep local, no backend needed. | It composes a `mailto:` link (`sendEmail()` in `script.js`) — it never needed `submit.php`. The old note was wrong. |
+| **`workshop/laser/` photography** | Local SVG placeholders + `status:'soon'`. | Honest, keeps the layout intact, and swapping in real photos is a one-file change. |
+| **lebon.info branding** | User-visible strings rebranded; *source-comment attributions kept*. | `/* Based on lebon.info Terminal Theme */` is accurate history, not a leak. |
+| **External lebon.info links** | Kept (`scan.lebon.info`, `note.lebon.info`, `lebon.info/project/`). | Those are real tools hosted there, not stale references. |
 
 ---
 
@@ -78,5 +52,29 @@ External realms surfaced on the hub: 🔥 The BBQ (lebon.info/bbq).
   `status:'live'` is clickable; `status:'soon'` shows a locked teaser.
 - **Planned idea (name only):** add `{ name, note }` to `RAMI_PLANNED`. Move it up into
   `RAMI_WORKSHOP` once its folder exists and has content.
+- **Then add it to `sitemap.xml`** — the one manual step left. (A generator is on the backlog as
+  *Sitemap Scribe*.)
 
-Nothing else to touch — the hub and the Workshop page both render from `projects.js`.
+---
+
+## ⚖️ Open decisions (need a human)
+
+- [ ] **`wasteland/bluetooth/` — keep or delete?** It duplicates `ghosttooth.labidi.eu`. It is now
+      noindexed and canonicalised to the live site, so keeping it is harmless. Delete if you'd
+      rather not maintain two copies.
+- [ ] **`workshop/laser/` — real business site or demo?** If it's only a layout demo, say so on
+      the page (the testimonials are fictional people). If it's meant to be a real storefront, it
+      needs real photography, a real address and a working contact form.
+- [ ] **`workshop/to-check/` — still useful?** A link dump of GitHub tools. Fold into
+      *IT Tools Workbench* or retire it.
+- [ ] **`workshop/rami/` and `workshop/dashboard_v1/`** — both are now `status:'soon'`. Finish
+      them, or move them to `wasteland/`.
+- [ ] **Chart.js CDN in the DISC workshop** — every other realm is offline-first. Vendor it
+      locally, or accept the exception.
+- [ ] **`wasteland/index.html` is hand-written** while everything else renders from
+      `projects.js`. Make it data-driven too, or accept the divergence.
+
+---
+
+_Task backlog: [`workshop/todo.md`](workshop/todo.md) · Per-project detail: each project's own
+`todo.md`._

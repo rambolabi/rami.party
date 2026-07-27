@@ -161,31 +161,24 @@ window.DUI = (function () {
   /* Always name the top two colours. If three or four colours sit close       */
   /* together, describe the person as a bigger situational mix.                */
   function blendText(pct, ranked, subject) {
-    const self = subject !== "other";
-    const Subj = self ? "You" : "They";
-    const are = self ? "You're" : "They're";
-    const your = self ? "your" : "their";
-    const them = self ? "you" : "them";
-    const they = self ? "you" : "they";
+    const t = DISC_I18N.t;
+    const sfx = subject === "other" ? "_other" : "_self";
     const S = (k) => `<strong style="color:${hex(k)}">${name(k)}</strong>`;
     const [c1, c2, c3, c4] = ranked;
+    const v = { 1: S(c1), 2: S(c2), 3: S(c3), 4: S(c4) };
 
     const onlyOne = pct[c2] === 0 && pct[c3] === 0 && pct[c4] === 0;
-    if (onlyOne) return `${Subj} score as an almost pure ${S(c1)} — a rare, unusually clear single-colour profile.`;
+    if (onlyOne) return t("blend_pure" + sfx, v);
 
     const spread4 = pct[c1] - pct[c4];
     const spread3 = pct[c1] - pct[c3];
     const gap12 = pct[c1] - pct[c2];
 
-    if (spread4 <= 12) {
-      return `${are} an unusually even blend of all four colours — ${S(c1)}, ${S(c2)}, ${S(c3)} and ${S(c4)} sit close together. Rather than one fixed style, ${they} shift considerably depending on the situation and the people around ${them}. Read the moment before deciding which colour ${self ? "you're" : "they're"} showing.`;
-    }
-    if (spread3 <= 12) {
-      return `${are} a broad three-colour blend of ${S(c1)}, ${S(c2)} and ${S(c3)}. ${Subj} draw on whichever fits the moment, so ${your} style flexes noticeably with the situation rather than staying fixed.`;
-    }
-    if (gap12 >= 20) return `${Subj} lead strongly with ${S(c1)}, backed by ${S(c2)} as ${your} clear secondary style.`;
-    if (gap12 >= 8) return `${Subj} lead with ${S(c1)}, strongly supported by ${S(c2)} — a common two-colour blend.`;
-    return `${are} an almost even blend of ${S(c1)} and ${S(c2)}, flexing fluidly between the two.`;
+    if (spread4 <= 12) return t("blend_four" + sfx, v);
+    if (spread3 <= 12) return t("blend_three" + sfx, v);
+    if (gap12 >= 20) return t("blend_strong" + sfx, v);
+    if (gap12 >= 8) return t("blend_common" + sfx, v);
+    return t("blend_even" + sfx, v);
   }
 
   /* Should we point the reader at a two-colour communication card? */
@@ -200,6 +193,7 @@ window.DUI = (function () {
   }
 
   function resultDetailHTML(k, pct, ranked, subject) {
+    const t = DISC_I18N.t;
     const c = DISC.colors[k];
     const self = subject === "self";
     return `
@@ -207,10 +201,10 @@ window.DUI = (function () {
       <p>${blendText(pct, ranked, self ? "self" : "other")}</p>
       <p>${c.summary}</p>
       <div class="rd-grid" style="--c:${c.hex}">
-        <div><h5>Core strengths</h5><ul>${c.strengths.slice(0, 4).map((s) => `<li>${s}</li>`).join("")}</ul></div>
-        <div><h5>Watch-outs</h5><ul>${c.weaknesses.slice(0, 4).map((s) => `<li>${s}</li>`).join("")}</ul></div>
-        <div><h5>${self ? "You are" : "They are"} motivated by</h5><ul>${c.motivators.slice(0, 4).map((s) => `<li>${s}</li>`).join("")}</ul></div>
-        <div><h5>${self ? "How you connect best" : "How to connect with them"}</h5><ul><li>${c.interact}</li></ul></div>
+        <div><h5>${t("rd_strengths")}</h5><ul>${c.strengths.slice(0, 4).map((s) => `<li>${s}</li>`).join("")}</ul></div>
+        <div><h5>${t("rd_watch")}</h5><ul>${c.weaknesses.slice(0, 4).map((s) => `<li>${s}</li>`).join("")}</ul></div>
+        <div><h5>${t(self ? "rd_motiv_self" : "rd_motiv_other")}</h5><ul>${c.motivators.slice(0, 4).map((s) => `<li>${s}</li>`).join("")}</ul></div>
+        <div><h5>${t(self ? "rd_connect_self" : "rd_connect_other")}</h5><ul><li>${c.interact}</li></ul></div>
       </div>`;
   }
 

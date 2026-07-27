@@ -5,9 +5,12 @@
 
    All content lives here so the logic in app.js stays clean and the workshop
    text can be edited without touching the engine.
+
+   This is the English source. Translations live in data.nl.js / data.fr.js and
+   i18n.js picks the right one and exposes it as `DISC`.
    ========================================================================== */
 
-const DISC = {
+const DISC_EN = {
   /* ---- The four colour profiles ------------------------------------------ */
   colors: {
     red: {
@@ -632,3 +635,5 @@ const DISC = {
     },
   },
 };
+
+window.DISC_EN = DISC_EN;

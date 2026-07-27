@@ -117,7 +117,7 @@ function sortTools() {
         }
 
         const row = document.createElement('tr');
-        const verifiedStamp = tool.verified ? ' <span class="verified-stamp">📍 lebon.info</span>' : '';
+        const verifiedStamp = tool.verified ? ' <span class="verified-stamp">📍 rami.party</span>' : '';
         row.innerHTML = `
             <td class="tool-name">${tool.nameHtml}${verifiedStamp}</td>
             <td class="tool-type-cell">${tool.type}</td>
