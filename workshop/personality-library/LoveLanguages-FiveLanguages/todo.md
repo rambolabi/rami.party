@@ -2,7 +2,7 @@
 
 ## Overview
 Interactive workshop on Gary Chapman's five love languages.
-Part of **The People Library** (../personality-library/index.html).
+Part of **The People Library** (../index.html).
 
 ## Delivered
 - Shared engine (index.html / style.css / app.js), rose accent.

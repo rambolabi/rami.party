@@ -20,7 +20,6 @@ To Stack Overflow, for debugging my life
 To all the 404 errors, for keeping things interesting
 
 /* SITE */
-I did an update on: 2026/01/11
 Standards: HTML5, CSS3, Movie Quotes
 Components: Sunset vibes, disappearing pages, questionable decisions
 Software: VS Code, Copilot/Claude (my AI overlords), and hope

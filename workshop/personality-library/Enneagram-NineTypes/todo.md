@@ -2,7 +2,7 @@
 
 ## Overview
 Interactive workshop on the nine Enneagram types (motivation-based personality).
-Part of **The People Library** (../personality-library/index.html).
+Part of **The People Library** (../index.html).
 
 ## Delivered
 - Shared engine (index.html / style.css / app.js), pink accent.

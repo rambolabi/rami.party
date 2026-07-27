@@ -2,7 +2,7 @@
 
 ## Overview
 Interactive workshop on the four-axis, 16-type model (Myers–Briggs / Jung), presented with honest
-scientific caveats. Part of **The People Library** (../personality-library/index.html).
+scientific caveats. Part of **The People Library** (../index.html).
 
 ## Delivered
 - Shared engine (index.html / style.css / app.js), purple accent.

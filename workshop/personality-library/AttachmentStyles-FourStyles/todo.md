@@ -2,7 +2,7 @@
 
 ## Overview
 Interactive workshop on the four adult attachment styles (Bowlby / Ainsworth and later research).
-Part of **The People Library** (../personality-library/index.html).
+Part of **The People Library** (../index.html).
 
 ## Delivered
 - Shared engine (index.html / style.css / app.js), teal accent.

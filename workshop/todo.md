@@ -616,9 +616,9 @@ a quick review pass (does it work? is it finished? should it be `status:'soon'` 
 | `gallery/militaryalphabet/` | Phonetic Codex | live, undocumented |
 
 Also worth noting: `workshop/demoscene-forge/todo.md` and
-`workshop/DISC-profile-SurroundedByIdiots/todo.md` are *specification briefs* rather than
-build logs — neither records what actually shipped or what is left. Convert them to the same
-"Delivered / Still open" shape the other project todos use.
+`workshop/personality-library/DISC-profile-SurroundedByIdiots/todo.md` are *specification briefs*
+rather than build logs — neither records what actually shipped or what is left. Convert them to the
+same "Delivered / Still open" shape the other project todos use.
 
 ---
 

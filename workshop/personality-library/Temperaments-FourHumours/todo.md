@@ -2,7 +2,7 @@
 
 ## Overview
 Interactive workshop on the classical four temperaments (Hippocrates / Galen) and how they map
-onto DISC and modern models. Part of **The People Library** (../personality-library/index.html).
+onto DISC and modern models. Part of **The People Library** (../index.html).
 
 ## Delivered
 - Shared engine (index.html / style.css / app.js), violet accent.
