@@ -289,14 +289,14 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'The People Library',
-        href: './personality-library/',
+        href: '#',                                  // real path once live: './personality-library/'
         glyph: '🧠',
         tagline: '15 people-reading workshops',
         description: 'A whole shelf of interactive workshops on personality and behaviour — DISC colours, the Big Five, the 16 types, the Enneagram, attachment styles, manipulation, narcissism and more, each with its own quiz.',
         search: 'Interactive personality psychology and behaviour workshops with quizzes, self assessments and observer assessments: DISC colour profile from Surrounded by Idiots by Thomas Erikson, the Big Five OCEAN traits, MBTI 16 types Myers-Briggs, the Enneagram nine types, adult attachment styles, the five love languages, the four temperaments and humours, Thomas-Kilmann conflict styles, emotional intelligence EQ, Surrounded by Liars deception and lie detection, Surrounded by Energy Vampires, Surrounded by Bad Bosses leadership, Surrounded by Psychopaths manipulation, Surrounded by Narcissists, and resilience after setbacks.',
         tags: ['workshop', 'psychology'],
         aura: 'pink',
-        status: 'live',
+        status: 'soon',
     },
     {
         title: 'Webcheck',
