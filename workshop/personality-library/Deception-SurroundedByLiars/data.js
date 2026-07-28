@@ -4,7 +4,7 @@
    Understanding deception and testing lie-detection literacy.
    Assessment mode: "quiz" (myth or fact).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "liars",
     title: "Surrounded by Liars",
@@ -289,3 +289,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

@@ -3,7 +3,7 @@
    Educational workshop on the five conflict-handling modes.
    Assessment mode: "classify" (five styles).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "conflict",
     title: "Conflict Styles",
@@ -187,3 +187,5 @@ const BOOK = {
     { q: "Can my style change?", a: "Yes. Styles are habits, not fixed traits. With awareness and practice you can widen your range and choose your response." },
   ],
 };
+
+window.BOOK_EN = BOOK_EN;

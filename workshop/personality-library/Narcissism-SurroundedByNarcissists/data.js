@@ -4,7 +4,7 @@
    Recognising narcissistic styles and holding your ground — NOT a clinical or
    diagnostic tool. Assessment mode: "classify" (four narcissist styles).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "narcissists",
     title: "Surrounded by Narcissists",
@@ -281,3 +281,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

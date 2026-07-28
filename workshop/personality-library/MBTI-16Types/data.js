@@ -4,7 +4,7 @@
    (built on Carl Jung). Assessment mode: "axes" (four dichotomies → 4-letter type).
    Presented with the usual scientific caveats — a mirror, not a box.
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "mbti",
     title: "The 16 Types",
@@ -210,3 +210,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

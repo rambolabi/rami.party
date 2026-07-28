@@ -2,36 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Personality Workshop</title>
-  <meta name="description" id="metaDesc" content="An educational personality & behaviour workshop." />
+  <meta name="description" id="metaDesc" content="An educational personality &amp; behaviour workshop." />
   <meta name="author" content="rami.party" />
   <meta name="theme-color" content="#2e6fd6" id="metaTheme" />
+  <meta name="color-scheme" content="light" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Personality Workshop" />
+  <meta property="og:description" content="An educational personality &amp; behaviour workshop." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <a class="skip-link" href="#main">Skip to content</a>
+  <a class="skip-link" href="#main" data-i18n="skip">Skip to content</a>
 
   <header class="topbar" id="top">
     <nav class="nav" aria-label="Primary">
       <a href="#top" class="brand" data-nav>
-        <span class="brand-badge" id="brandBadge">📘</span>
+        <span class="brand-badge" id="brandBadge" aria-hidden="true">📘</span>
         <span class="brand-text" id="brandText">Workshop</span>
       </a>
-      <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Toggle navigation">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav-links" id="nav-links">
-        <li><a href="#learn" data-nav>Learn</a></li>
-        <li><a href="#test" data-nav id="navTest">Assess</a></li>
-        <li hidden id="navTest2Li"><a href="#test2" data-nav id="navTest2">More</a></li>
-        <li><a href="#handle" data-nav id="navHandle">Handle</a></li>
-        <li hidden id="navDiscLi"><a href="#disc" data-nav id="navDisc">Colours</a></li>
-        <li><a href="#faq" data-nav>FAQ</a></li>
-      </ul>
+
+      <div class="nav-right">
+        <ul class="nav-links" id="nav-links">
+          <li><a href="#learn" data-nav id="navLearn">Learn</a></li>
+          <li><a href="#test" data-nav id="navTest">Assess</a></li>
+          <li hidden id="navTest2Li"><a href="#test2" data-nav id="navTest2">More</a></li>
+          <li><a href="#handle" data-nav id="navHandle">Handle</a></li>
+          <li hidden id="navDiscLi"><a href="#disc" data-nav id="navDisc">Colours</a></li>
+          <li><a href="#faq" data-nav data-i18n="nav_faq">FAQ</a></li>
+        </ul>
+
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" data-lang="en">EN</button>
+          <button type="button" data-lang="nl">NL</button>
+          <button type="button" data-lang="fr">FR</button>
+        </div>
+
+        <button class="nav-toggle" aria-expanded="false" aria-controls="nav-links" data-i18n-aria="nav_toggle" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
     </nav>
   </header>
 
@@ -39,12 +53,12 @@
     <!-- HERO -->
     <section class="hero" id="home">
       <div class="wrap hero-inner">
-        <p class="eyebrow" id="heroEyebrow">A Personality Workshop</p>
+        <p class="eyebrow" id="heroEyebrow"></p>
         <h1 class="hero-title" id="heroTitle"></h1>
         <p class="hero-lead" id="heroLead"></p>
         <div class="hero-cta">
           <a class="btn btn-primary" href="#test" data-nav id="heroCta"></a>
-          <a class="btn btn-ghost" href="#learn" data-nav>Learn the ideas</a>
+          <a class="btn btn-ghost" href="#learn" data-nav data-i18n="hero_cta2">Learn the ideas</a>
         </div>
         <div class="hero-cards" id="heroCards" aria-hidden="true"></div>
       </div>
@@ -54,7 +68,7 @@
     <section class="section" id="learn">
       <div class="wrap">
         <header class="section-head">
-          <p class="kicker" id="learnKicker">The Ideas</p>
+          <p class="kicker" id="learnKicker"></p>
           <h2 id="learnHeading"></h2>
           <p class="section-sub" id="learnSub"></p>
         </header>
@@ -67,34 +81,34 @@
     <section class="section alt" id="test">
       <div class="wrap">
         <header class="section-head">
-          <p class="kicker" id="testKicker">Assessment</p>
+          <p class="kicker" id="testKicker"></p>
           <h2 id="testHeading"></h2>
           <p class="section-sub" id="testSub"></p>
         </header>
         <div class="quiz-shell assess" id="assessQuiz">
           <div class="quiz-stage" data-stage="intro">
             <div class="quiz-intro">
-              <span class="quiz-intro-icon a-icon">📝</span>
+              <span class="quiz-intro-icon a-icon" aria-hidden="true">📝</span>
               <h3 class="a-introTitle"></h3>
               <p class="a-introText"></p>
-              <button class="btn btn-primary" data-action="start">Begin</button>
+              <button type="button" class="btn btn-primary" data-action="start" data-i18n="begin">Begin</button>
             </div>
           </div>
           <div class="quiz-stage" data-stage="run" hidden>
             <div class="quiz-progress">
-              <div class="quiz-progress-bar"><span class="a-bar"></span></div>
+              <div class="quiz-progress-bar a-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-i18n-aria="progress_aria"><span class="a-bar"></span></div>
               <span class="quiz-progress-text a-count"></span>
             </div>
-            <p class="quiz-question a-q"></p>
+            <p class="quiz-question a-q" aria-live="polite"></p>
             <div class="options a-options"></div>
-            <button class="quiz-back" data-action="back" hidden>← Previous</button>
+            <button type="button" class="quiz-back" data-action="back" data-i18n="prev" hidden>← Previous</button>
           </div>
           <div class="quiz-stage" data-stage="result" hidden>
             <div class="a-result"></div>
             <div class="result-actions">
-              <button class="btn btn-ghost" data-action="restart">Retake</button>
-              <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
-              <a class="btn btn-primary" href="#handle" data-nav id="resultCta">How to handle it →</a>
+              <button type="button" class="btn btn-ghost" data-action="restart" data-i18n="retake">Retake</button>
+              <button type="button" class="btn btn-ghost" data-action="print" data-i18n="print">Print / Save PDF</button>
+              <a class="btn btn-primary handle-cta" href="#handle" data-nav>How to handle it →</a>
             </div>
           </div>
         </div>
@@ -105,34 +119,34 @@
     <section class="section" id="test2" hidden>
       <div class="wrap">
         <header class="section-head">
-          <p class="kicker" id="testKicker2">Assessment</p>
+          <p class="kicker" id="testKicker2"></p>
           <h2 id="testHeading2"></h2>
           <p class="section-sub" id="testSub2"></p>
         </header>
         <div class="quiz-shell assess" id="assessQuiz2">
           <div class="quiz-stage" data-stage="intro">
             <div class="quiz-intro">
-              <span class="quiz-intro-icon a-icon">📝</span>
+              <span class="quiz-intro-icon a-icon" aria-hidden="true">📝</span>
               <h3 class="a-introTitle"></h3>
               <p class="a-introText"></p>
-              <button class="btn btn-primary" data-action="start">Begin</button>
+              <button type="button" class="btn btn-primary" data-action="start" data-i18n="begin">Begin</button>
             </div>
           </div>
           <div class="quiz-stage" data-stage="run" hidden>
             <div class="quiz-progress">
-              <div class="quiz-progress-bar"><span class="a-bar"></span></div>
+              <div class="quiz-progress-bar a-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-i18n-aria="progress_aria"><span class="a-bar"></span></div>
               <span class="quiz-progress-text a-count"></span>
             </div>
-            <p class="quiz-question a-q"></p>
+            <p class="quiz-question a-q" aria-live="polite"></p>
             <div class="options a-options"></div>
-            <button class="quiz-back" data-action="back" hidden>← Previous</button>
+            <button type="button" class="quiz-back" data-action="back" data-i18n="prev" hidden>← Previous</button>
           </div>
           <div class="quiz-stage" data-stage="result" hidden>
             <div class="a-result"></div>
             <div class="result-actions">
-              <button class="btn btn-ghost" data-action="restart">Retake</button>
-              <button class="btn btn-ghost" data-action="print">Print / Save PDF</button>
-              <a class="btn btn-primary" href="#handle" data-nav>How to handle it →</a>
+              <button type="button" class="btn btn-ghost" data-action="restart" data-i18n="retake">Retake</button>
+              <button type="button" class="btn btn-ghost" data-action="print" data-i18n="print">Print / Save PDF</button>
+              <a class="btn btn-primary handle-cta" href="#handle" data-nav>How to handle it →</a>
             </div>
           </div>
         </div>
@@ -143,7 +157,7 @@
     <section class="section alt" id="handle">
       <div class="wrap">
         <header class="section-head">
-          <p class="kicker" id="handleKicker">Field Guide</p>
+          <p class="kicker" id="handleKicker"></p>
           <h2 id="handleHeading"></h2>
           <p class="section-sub" id="handleSub"></p>
         </header>
@@ -155,7 +169,7 @@
     <section class="section" id="disc" hidden>
       <div class="wrap">
         <header class="section-head">
-          <p class="kicker" id="discKicker">The Four Colours</p>
+          <p class="kicker" id="discKicker"></p>
           <h2 id="discHeading"></h2>
           <p class="section-sub" id="discSub"></p>
         </header>
@@ -168,8 +182,8 @@
     <section class="section alt" id="faq">
       <div class="wrap wrap-narrow">
         <header class="section-head">
-          <p class="kicker">Questions</p>
-          <h2>Frequently asked</h2>
+          <p class="kicker" data-i18n="faq_kicker">Questions</p>
+          <h2 data-i18n="faq_heading">Frequently asked</h2>
         </header>
         <div class="faq" id="faqList"></div>
       </div>
@@ -181,13 +195,16 @@
       <p class="footer-note" id="footerNote"></p>
       <p class="footer-support" id="footerSupport"></p>
       <p class="footer-meta">
-        <a href="../index.html">The People Library</a> ·
+        <a href="../index.html" data-i18n="foot_library">The People Library</a> ·
         <a href="../../../index.html">rami.party</a> · <span id="year"></span>
       </p>
     </div>
   </footer>
 
   <script src="data.js"></script>
+  <script src="data.nl.js"></script>
+  <script src="data.fr.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
    Recognising who drains you and protecting your energy.
    Assessment mode: "classify" (four energy-vampire types).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "vampires",
     title: "Surrounded by Vampires",
@@ -322,3 +322,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

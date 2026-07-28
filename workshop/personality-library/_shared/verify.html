@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>People Library â€” content pack verifier</title>
+  <style>
+    body { font: 13px/1.5 ui-monospace, Consolas, monospace; padding: 20px; background: #0f1117; color: #d6dae2; }
+    h1 { font-size: 16px; color: #fff; }
+    .ok { color: #4ade80; } .err { color: #f87171; } .warn { color: #fbbf24; } .head { color: #93c5fd; margin-top: 14px; }
+    pre { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>People Library â€” content pack verifier</h1>
+  <pre id="out">runningâ€¦</pre>
+  <script>
+  const DIRS = [
+    "AttachmentStyles-FourStyles","BigFive-OCEAN","ConflictStyles-ThomasKilmann",
+    "Deception-SurroundedByLiars","EmotionalIntelligence-EQ","EnergyDrain-SurroundedByVampires",
+    "Enneagram-NineTypes","Leadership-SurroundedByBadBosses","LoveLanguages-FiveLanguages",
+    "Manipulation-SurroundedByPsychopaths","MBTI-16Types","Narcissism-SurroundedByNarcissists",
+    "Resilience-SurroundedBySetbacks","Temperaments-FourHumours"
+  ];
+
+  // Structural string identifiers that must never be translated. Numbers and
+  // booleans are frozen by type, so `points` (scoring) is covered automatically
+  // while `concepts[].points` (an array of prose) is correctly left translatable.
+  const FROZEN_STR = new Set(["key","mode","accent","color","icon","emoji",
+    "cat","trait","side","code","axis","tone","link","axisColor"]);
+  const FROZEN_PARENT = new Set(["traitOrder"]);
+
+  const TAG = /<\/?[a-zA-Z][^>]*>/g;
+  const tags = s => (String(s).match(TAG) || []).map(t => t.replace(/\s+/g," ").trim()).sort().join("|");
+
+  function compare(en, tr, trail, errs, stats) {
+    const p = trail.join(".");
+    if (Array.isArray(en)) {
+      if (!Array.isArray(tr)) return errs.push(p + ": expected array");
+      if (en.length !== tr.length) return errs.push(`${p}: length ${en.length} vs ${tr.length}`);
+      return en.forEach((v,i) => compare(v, tr[i], trail.concat(i), errs, stats));
+    }
+    if (en && typeof en === "object") {
+      if (!tr || typeof tr !== "object") return errs.push(p + ": expected object");
+      const ek = Object.keys(en), tk = Object.keys(tr);
+      const missing = ek.filter(k => !tk.includes(k));
+      const extra = tk.filter(k => !ek.includes(k));
+      if (missing.length) errs.push(`${p}: MISSING keys [${missing}]`);
+      if (extra.length) errs.push(`${p}: EXTRA keys [${extra}]`);
+      return ek.filter(k => tk.includes(k)).forEach(k => compare(en[k], tr[k], trail.concat(k), errs, stats));
+    }
+    const leaf = trail[trail.length-1], parent = trail[trail.length-2];
+    if (typeof en === "number" || typeof en === "boolean") {
+      if (en !== tr) errs.push(`${p}: FROZEN ${typeof en} changed ${JSON.stringify(en)} -> ${JSON.stringify(tr)}`);
+      return;
+    }
+    if (typeof en === "string" && (FROZEN_STR.has(leaf) || FROZEN_PARENT.has(parent))) {
+      if (en !== tr) errs.push(`${p}: FROZEN id changed ${JSON.stringify(en)} -> ${JSON.stringify(tr)}`);
+      return;
+    }
+    if (typeof en === "string") {
+      stats.strings++;
+      if (tags(en) !== tags(tr)) errs.push(`${p}: HTML tags differ "${tags(en)}" vs "${tags(tr)}"`);
+      if (en.trim() && en === tr) stats.identical.push(p + " = " + JSON.stringify(en.slice(0,60)));
+    } else if (en !== tr) errs.push(`${p}: ${JSON.stringify(en)} -> ${JSON.stringify(tr)}`);
+  }
+
+  function modeChecks(book, label, errs) {
+    ["assessment","assessment2"].forEach(slot => {
+      const A = book[slot]; if (!A) return;
+      const at = label + "." + slot;
+      if (A.mode === "classify") {
+        const keys = Object.keys(A.categories || {}), used = new Set();
+        (A.questions||[]).forEach((q,i) => (q.options||[]).forEach((o,j) => {
+          if (!keys.includes(o.cat)) errs.push(`${at}.q[${i}].opt[${j}].cat "${o.cat}" not in categories`);
+          used.add(o.cat);
+        }));
+        keys.filter(k => !used.has(k)).forEach(k => errs.push(`${at}: category "${k}" unreachable`));
+      }
+      if (A.mode === "quiz") (A.questions||[]).forEach((q,i) => {
+        const n = (q.options||[]).filter(o => o.correct).length;
+        if (n !== 1) errs.push(`${at}.q[${i}]: ${n} correct flags (must be 1)`);
+      });
+      if (A.mode === "profile") {
+        const tk = Object.keys(A.traits || {});
+        (A.traitOrder||[]).forEach(k => { if (!tk.includes(k)) errs.push(`${at}: traitOrder "${k}" not in traits`); });
+        (A.questions||[]).forEach((q,i) => { if (!tk.includes(q.trait)) errs.push(`${at}.q[${i}].trait "${q.trait}" not in traits`); });
+      }
+      if (A.mode === "axes") {
+        const keys = (A.axes||[]).map(a => a.key);
+        (A.questions||[]).forEach((q,i) => {
+          if (!keys.includes(q.axis)) errs.push(`${at}.q[${i}].axis "${q.axis}" not in axes`);
+          (q.options||[]).forEach((o,j) => { if (o.side!=="L"&&o.side!=="R") errs.push(`${at}.q[${i}].opt[${j}].side "${o.side}" invalid`); });
+        });
+        const combos = (A.axes||[]).reduce((acc,a) => acc.flatMap(pre => [a.left.code, a.right.code].map(c => pre+c)), [""]);
+        combos.forEach(c => { if (!(A.types||{})[c]) errs.push(`${at}: types MISSING reachable code "${c}"`); });
+        Object.keys(A.types||{}).forEach(c => { if (!combos.includes(c)) errs.push(`${at}: types has UNREACHABLE code "${c}"`); });
+      }
+      if (A.mode === "score" || A.mode === "quiz") {
+        const mins = (A.bands||[]).map(b => b.min);
+        if (!mins.length) errs.push(at + ": no bands");
+        else if (Math.min(...mins) > 0) errs.push(`${at}: bands do not cover 0 (lowest ${Math.min(...mins)})`);
+      }
+      if (A.mode === "score") (A.questions||[]).forEach((q,i) => (q.options||[]).forEach((o,j) => {
+        if (typeof o.points !== "number") errs.push(`${at}.q[${i}].opt[${j}]: points not numeric`);
+      }));
+    });
+  }
+
+  (async () => {
+    const lines = [];
+    const say = (t, c) => lines.push(c ? `<span class="${c}">${t}</span>` : t);
+    let totalErr = 0, totalSame = 0, totalStr = 0;
+
+    for (const dir of DIRS) {
+      const errs = [];
+      const box = {};
+      for (const [f, name] of [["data.js","BOOK_EN"],["data.nl.js","BOOK_NL"],["data.fr.js","BOOK_FR"]]) {
+        try {
+          const src = await (await fetch(`../${dir}/${f}`)).text();
+          box[name] = new Function(`"use strict";const window={};${src};return window.${name};`)();
+        } catch (e) { errs.push(`${f}: ${e.message}`); }
+      }
+      const { BOOK_EN: en, BOOK_NL: nl, BOOK_FR: fr } = box;
+      if (!en) errs.push("BOOK_EN missing"); if (!nl) errs.push("BOOK_NL missing"); if (!fr) errs.push("BOOK_FR missing");
+
+      const packs = [];
+      if (en && nl) { const s={strings:0,identical:[]}; compare(en,nl,["nl"],errs,s); packs.push(["nl",s]); }
+      if (en && fr) { const s={strings:0,identical:[]}; compare(en,fr,["fr"],errs,s); packs.push(["fr",s]); }
+      if (en) modeChecks(en,"en",errs); if (nl) modeChecks(nl,"nl",errs); if (fr) modeChecks(fr,"fr",errs);
+
+      const modes = ["assessment","assessment2"].filter(k => en && en[k]).map(k => en[k].mode).join(" + ");
+      const sum = packs.map(([l,s]) => { totalSame += s.identical.length; totalStr += s.strings; return `${l} ${s.identical.length}/${s.strings}`; }).join("  ");
+      say(`\n=== ${dir}  [${modes}]  untranslated: ${sum}`, "head");
+      if (errs.length) { totalErr += errs.length; errs.slice(0,30).forEach(e => say("  ERROR " + e, "err")); if (errs.length>30) say(`  â€¦ +${errs.length-30} more`, "err"); }
+      else say("  OK â€” structure identical, mode contracts satisfied", "ok");
+      packs.forEach(([l,s]) => s.identical.slice(0,10).forEach(x => say(`  same-as-EN [${l}] ${x}`, "warn")));
+    }
+    say(`\n\n==== ${DIRS.length} workshops Â· ${totalErr} errors Â· ${totalSame} identical of ${totalStr} strings ====`, totalErr ? "err" : "ok");
+    document.getElementById("out").innerHTML = lines.join("\n");
+    window.__done = { totalErr, totalSame, totalStr, text: lines.join("\n").replace(/<[^>]+>/g,"") };
+  })();
+  </script>
+</body>
+</html>
+

@@ -4,7 +4,7 @@
    Recognising manipulation and protecting yourself — NOT a clinical/diagnostic
    tool. Assessment mode: "score" (manipulation red-flag risk).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "psychopaths",
     title: "Surrounded by Psychopaths",
@@ -266,3 +266,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

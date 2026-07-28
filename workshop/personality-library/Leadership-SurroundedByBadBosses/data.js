@@ -3,7 +3,7 @@
    Educational workshop inspired by Thomas Erikson's book. Recognising leadership
    failure modes and how to manage up. Assessment mode: "classify" (boss types).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "bad-bosses",
     title: "Surrounded by Bad Bosses",
@@ -384,3 +384,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

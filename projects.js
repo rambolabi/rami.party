@@ -233,6 +233,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Personal Trainer Forge',
+        href: './trainer-forge/',
+        glyph: '💪',
+        tagline: 'A plan that knows the date',
+        description: 'Answer six questions and walk away with a real training block — rest days, weekly progression and deload weeks included. From five minutes a day to a full gym session, and every day is yours to change.',
+        search: 'A free custom workout plan generator and training program builder. Choose a goal — strength without getting bulky with calisthenics, hypertrophy for bigger arms and back, running further and building stamina and endurance, fat loss and conditioning, mobility and posture, all-round health, or short 5, 10 and 15 minute movement snacks and micro workouts for people with no time — then set your days per week, session length in minutes, available equipment (bodyweight, pull-up bar, resistance bands, dumbbells or a full gym) and the muscles you want to focus on. Generates a day by day workout schedule with warm-ups, sets, reps, rest times, RPE, rest days, progressive overload and deload weeks. Swap any single exercise you do not like, turn any training day into a rest day, or drop a quick 10 minute session in instead. Includes a 140 exercise library with coaching cues and easier or harder variations, day-aware today view with days remaining, session logging, shareable links, JSON export and import, and printable PDF plans. Push pull legs, upper lower and full body splits, desk reset and morning mobility routines, couch to 5k style run walk progressions and interval, tempo and long run sessions.',
+        tags: ['app', 'fitness'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'Isekai Forge',
         href: './character-forge/',
         glyph: '🎲',

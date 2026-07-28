@@ -3,7 +3,7 @@
    Educational workshop on the classical four temperaments (Hippocrates / Galen)
    and how they map onto modern models. Assessment mode: "classify" (four types).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "temperaments",
     title: "The Four Temperaments",
@@ -188,3 +188,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

@@ -3,7 +3,7 @@
    Educational workshop on the nine Enneagram types (motivation-based personality).
    Assessment mode: "classify" (nine types).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "enneagram",
     title: "The Enneagram",
@@ -199,3 +199,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

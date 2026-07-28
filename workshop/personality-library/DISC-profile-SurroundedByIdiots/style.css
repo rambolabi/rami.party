@@ -54,7 +54,14 @@ body {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  overflow-wrap: break-word;
 }
+
+/* Charts carry width/height attributes for their drawing buffer. Without this
+   they report that intrinsic size as their layout width, which pushes the grid
+   column they sit in wider than the viewport on phones. */
+img, svg, canvas { max-width: 100%; }
+canvas { height: auto; }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -202,6 +209,7 @@ a { color: var(--brand-ink); }
   text-decoration: none;
   transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.2s var(--ease);
   white-space: nowrap;
+  max-width: 100%;
 }
 .btn:active { transform: translateY(1px); }
 .btn-primary {
@@ -272,7 +280,7 @@ a { color: var(--brand-ink); }
 }
 .hero-cards {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
   max-width: 720px;
   margin: 0 auto;
@@ -434,7 +442,7 @@ a { color: var(--brand-ink); }
 }
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
   gap: 20px;
 }
 .detail-cell h4 {
@@ -703,10 +711,13 @@ a { color: var(--brand-ink); }
 /* ============================ OBSERVE LIVE ============================ */
 .observe-run {
   display: grid;
-  grid-template-columns: 1fr 320px;
+  grid-template-columns: minmax(0, 1fr) 320px;
   gap: 32px;
   align-items: start;
 }
+/* `minmax(0, …)` above and `min-width: 0` here stop the live chart's intrinsic
+   size from dictating the width of the whole assessment. */
+.observe-question-col, .observe-live-col { min-width: 0; }
 .quiz-stage[hidden] { display: none; }
 .reading-who {
   font-size: 0.85rem;
@@ -742,21 +753,25 @@ a { color: var(--brand-ink); }
 }
 .live-bars, .result-bars { display: flex; flex-direction: column; gap: 10px; }
 .live-bars { margin-top: 14px; }
-.bar-row { display: flex; align-items: center; gap: 10px; }
+.bar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 54px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
 .bar-key {
-  width: 54px;
-  flex: none;
   text-align: left;
   font-weight: 600;
   font-size: 0.82rem;
   color: var(--ink-2);
+  min-width: 0;
 }
 .bar-track {
-  flex: 1;
   height: 12px;
   background: var(--line);
   border-radius: 999px;
   overflow: hidden;
+  min-width: 0;
 }
 .bar-fill {
   display: block;
@@ -766,7 +781,7 @@ a { color: var(--brand-ink); }
   background: var(--c);
   transition: width 0.5s var(--ease);
 }
-.bar-val { width: 40px; flex: none; text-align: right; font-weight: 700; font-size: 0.82rem; color: var(--ink); }
+.bar-val { text-align: right; font-weight: 700; font-size: 0.82rem; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 /* ============================ RESULTS ============================ */
 .result-head { text-align: center; margin-bottom: 30px; }
@@ -792,12 +807,12 @@ a { color: var(--brand-ink); }
 }
 .result-body {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
   gap: 34px;
   align-items: center;
   margin-bottom: 30px;
 }
-.result-chart { display: grid; place-items: center; }
+.result-chart { display: grid; place-items: center; min-width: 0; }
 .result-detail {
   background: var(--card-2);
   border: 1px solid var(--line);
@@ -811,7 +826,7 @@ a { color: var(--brand-ink); }
 .result-detail p:last-child { margin-bottom: 0; }
 .result-detail .rd-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
   gap: 18px;
   margin-top: 16px;
 }
@@ -841,7 +856,7 @@ a { color: var(--brand-ink); }
 .quick-result p { color: var(--ink-2); max-width: 460px; margin: 0 auto 22px; }
 
 /* ============================ TIPS ============================ */
-.tips-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+.tips-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap: 20px; }
 .tip-card {
   --c: var(--blue);
   background: var(--card);
@@ -963,9 +978,9 @@ a { color: var(--brand-ink); }
 /* ============================ RESPONSIVE ============================ */
 @media (max-width: 900px) {
   .color-grid { grid-template-columns: repeat(2, 1fr); }
-  .observe-run { grid-template-columns: 1fr; }
-  .live-panel { position: static; order: -1; }
-  .result-body { grid-template-columns: 1fr; }
+  .observe-run { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .live-panel { position: static; }
+  .result-body { grid-template-columns: minmax(0, 1fr); }
   .result-chart { max-width: 280px; margin: 0 auto; }
   .cards-grid-pairs { grid-template-columns: repeat(2, 1fr); }
 }
@@ -995,15 +1010,41 @@ a { color: var(--brand-ink); }
   }
   .nav-links.open { transform: none; opacity: 1; pointer-events: auto; }
   .nav-links a { padding: 12px 14px; border-radius: 10px; }
-  .hero-cards { grid-template-columns: repeat(2, 1fr); }
+  .hero-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cards-grid, .cards-grid-pairs { grid-template-columns: 1fr; }
 }
+/* Below this width five Likert columns leave ~45px per option, which no
+   language can label legibly. Stack them into a tappable list instead — the
+   red-to-green dots keep the sense of a scale running top to bottom. */
+@media (max-width: 560px) {
+  .likert { grid-template-columns: 1fr; gap: 8px; }
+  .likert button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    padding: 12px 16px;
+    min-height: 44px;
+    font-size: 0.95rem;
+  }
+  .likert button::before { margin: 0; flex: none; }
+  .likert button br { display: none; }
+
+  /* Long labels (“Commencer la lecture”, “Read another person”) are wider than a
+     phone-width card, so let them wrap rather than run off the edge. */
+  .btn { white-space: normal; text-align: center; line-height: 1.3; padding: 12px 20px; min-height: 44px; }
+  .hero-cta .btn, .result-actions .btn, .quiz-intro .btn { flex: 1 1 100%; }
+}
+
 @media (max-width: 460px) {
   .brand-text { display: none; }
   .color-grid { grid-template-columns: 1fr; }
-  .likert { grid-template-columns: repeat(5, 1fr); gap: 5px; }
-  .likert button { padding: 14px 2px; font-size: 0.66rem; }
-  .likert button::before { width: 13px; height: 13px; margin-bottom: 6px; }
+  /* “Conscientiousness” / “Consciëntieusheid” cannot fit two-up at this width. */
+  .hero-cards { grid-template-columns: 1fr; }
+  .quiz-shell { padding: 20px 16px; border-radius: var(--radius-sm); }
+  .live-panel { padding: 18px 14px; }
+  .observe-run { gap: 22px; }
+  .bar-row { grid-template-columns: minmax(0, 48px) minmax(0, 1fr) auto; gap: 8px; }
 }
 
 /* ============================ PRINT ============================ */

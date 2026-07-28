@@ -3,7 +3,7 @@
    Educational workshop on the four adult attachment styles (Bowlby / Ainsworth).
    Assessment mode: "classify" (four styles).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "attachment",
     title: "Attachment Styles",
@@ -182,3 +182,5 @@ const BOOK = {
     { q: "Is this therapy?", a: "No. It's an educational tool for reflection. If attachment wounds are seriously affecting your life, a qualified therapist can help you work toward security." },
   ],
 };
+
+window.BOOK_EN = BOOK_EN;

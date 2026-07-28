@@ -35,7 +35,7 @@
     .comm-essence { max-width: 560px; margin: 0 auto; color: var(--ink-2); font-size: 1.12rem; }
     .comm-share { margin-top: 16px; font-size: 0.88rem; color: var(--muted); }
 
-    .comm-body { --c: var(--blue); display: grid; gap: 18px; padding-bottom: 24px; }
+    .comm-body { --c: var(--blue); display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; padding-bottom: 24px; }
     .comm-card {
       background: var(--card); border: 1px solid var(--line); border-left: 6px solid var(--c);
       border-radius: var(--radius); padding: clamp(20px, 3.5vw, 30px); box-shadow: var(--shadow-sm);
@@ -54,7 +54,7 @@
       width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
       background: var(--c); color: #fff; font-weight: 800; font-size: 0.9rem;
     }
-    .comm-two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    .comm-two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
     .comm-two .comm-card { border-left-width: 6px; }
     .do-card { border-left-color: var(--green); }
     .dont-card { border-left-color: var(--red); }
@@ -69,7 +69,7 @@
     }
     .phrase.good li { border-left: 4px solid var(--green); }
     .phrase.bad li { border-left: 4px solid var(--red); }
-    .comm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; }
+    .comm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: 18px; }
     .comm-mini h3 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 6px; }
     .comm-mini p { color: var(--ink-2); font-size: 0.96rem; }
     .comm-howto { list-style: none; }
@@ -80,7 +80,7 @@
     .comm-nav h3 { font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; margin-bottom: 14px; }
     .comm-related { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 26px; }
 
-    @media (max-width: 640px) { .comm-two { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) { .comm-two { grid-template-columns: minmax(0, 1fr); } }
     @media print { .topbar, .comm-nav, .comm-share { display: none !important; } }
   </style>
 </head>

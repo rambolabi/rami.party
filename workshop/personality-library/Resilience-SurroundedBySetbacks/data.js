@@ -4,7 +4,7 @@
    Understanding the setback spiral and building a resilient response.
    Assessment mode: "score" (resilience level).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "setbacks",
     title: "Surrounded by Setbacks",
@@ -266,3 +266,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

@@ -3,7 +3,7 @@
    Educational workshop on the most research-backed model of personality.
    Assessment mode: "profile" (five independent trait meters).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "bigfive",
     title: "The Big Five",
@@ -213,3 +213,5 @@ const BOOK = {
     },
   },
 };
+
+window.BOOK_EN = BOOK_EN;

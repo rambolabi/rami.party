@@ -3,7 +3,7 @@
    Educational workshop on emotional intelligence (Goleman's domains).
    Assessment mode: "score" (a self-reported EQ reading).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "eq",
     title: "Emotional Intelligence",
@@ -141,3 +141,5 @@ const BOOK = {
     { q: "How do I actually raise my EQ?", a: "Start small and specific: label your feelings, pause before reacting, and truly listen to one person a day. Skills grow with repetition." },
   ],
 };
+
+window.BOOK_EN = BOOK_EN;

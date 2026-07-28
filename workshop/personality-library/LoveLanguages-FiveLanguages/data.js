@@ -3,7 +3,7 @@
    Educational workshop on Gary Chapman's five love languages.
    Assessment mode: "classify" (five languages, forced-choice pairs).
    ========================================================================== */
-const BOOK = {
+const BOOK_EN = {
   meta: {
     key: "lovelanguages",
     title: "The Five Love Languages",
@@ -137,3 +137,5 @@ const BOOK = {
     { q: "Isn't 'gifts' just materialism?", a: "No. For a gifts person it's the thought and symbolism, not the price. A hand-picked wildflower can mean more than something expensive." },
   ],
 };
+
+window.BOOK_EN = BOOK_EN;
