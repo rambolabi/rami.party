@@ -22,19 +22,29 @@ working with the cable cut. `/workshop/OASIS/`
 | `style.css` | Design system + 5 themes via `[data-theme]` + print stylesheet. |
 | `geo.js` | Pure geodesy/astronomy → `window.GEO`. No DOM. |
 | `data-knowledge.js` | Chapters → cards. The doctrine. |
-| `data-reference.js` | `OASIS_TABLES` (lookup tables) + `OASIS_LINKS` (sources to mirror). |
+| `data-scenarios.js` | `OASIS_BANDS` + `OASIS_SCENARIOS` — before/during/after playbooks. |
+| `data-reference.js` | `OASIS_SOURCES` (attribution registry) + `OASIS_TABLES` + `OASIS_LINKS`. |
 | `tools.js` | `OASIS_TOOLS` — declarative calculators. |
-| `app.js` | Router, renderer, search, field log, theme, offline plumbing. |
+| `app.js` | Router, renderer, search, field log, theme, install, offline plumbing. |
 | `sw.js` | Cache-first service worker, self-healing shell cache. |
 
 ## Built
 
-- [x] 11 chapters, 65 cards, 16 tables, 23 calculators, 24 vetted sources
-- [x] Hash router with deep links to any card or tool (`#/c/medical/bleeding`)
-- [x] Instant weighted search across cards, tables, tools and sources (`/` to focus)
+- [x] 11 chapters, 70 cards, **33 playbooks**, 21 tables, 23 calculators, 24 mirrorable sources
+- [x] **Playbooks**: every scenario answered as before / during / after, across 7 bands —
+      infrastructure, natural, CBRN, disease, conflict, isolation, long-term collapse
+- [x] **Source attribution**: 40 named authorities (WHO, CDC, FEMA, ICRC, IAEA, NOAA,
+      USGS, Sphere, ERC, ITU, UNHCR…) cited per chapter, card and playbook
+- [x] **Install**: `beforeinstallprompt` captured, install button in the status bar,
+      install card on Home and About with per-platform manual steps (iOS Safari,
+      Android, desktop Chromium, Firefox) and installed-state detection
+- [x] Communications expanded: satellite, digital modes over radio, non-electronic
+      methods, running a net, repairing a radio, plus a master table of 38 channels
+- [x] Hash router with deep links to any card, tool or playbook (`#/play/nuclear`)
+- [x] Instant weighted search across cards, playbooks, tables, tools and sources
 - [x] 5 themes — tactical, daylight, field, survival, **night vision** (red-only,
       monochrome glyphs so nothing destroys dark adaptation)
-- [x] Adjustable text size, screen wake lock, print layout per chapter
+- [x] Adjustable text size, screen wake lock, print layout per chapter and playbook
 - [x] Geodesy: DD/DDM/DMS ⇄ UTM ⇄ MGRS ⇄ Maidenhead, distance/bearing,
       waypoint projection, iterative resection, sun/moon, plot board canvas
 - [x] Field log with timestamps and text export; GPS fix stored locally
@@ -93,7 +103,10 @@ working with the cable cut. `/workshop/OASIS/`
       with no network at all
 - [ ] Spoken CPR coaching for hands-busy use
 - [ ] Chapter: animals, bites, stings and envenomation (region-aware)
-- [ ] Chapter: civil and legal — checkpoints, documents, rights, borders
+- [ ] Playbook: pet and livestock care through each scenario
+- [ ] Playbook: pregnancy, birth and infants without medical support
+- [ ] Playbook: dental emergencies with no dentist
+- [ ] Region selector that surfaces the playbooks relevant to where you live
 
 ## Content backlog
 
@@ -121,3 +134,7 @@ working with the cable cut. `/workshop/OASIS/`
   draft had at least one wrong cell.
 - Canvas drawing reads CSS custom properties, so anything drawn must be
   re-drawn when the theme changes (`sec._redraw`).
+- Search is substring-based and requires **all** terms to match, so write `keys`
+  in the words a frightened person would actually type. "warzone", "shtf",
+  "deserted island" and "martial law" all returned nothing until they were added.
+- Every playbook needs `sources`; the structural audit fails the build otherwise.
