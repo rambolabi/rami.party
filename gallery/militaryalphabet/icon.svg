@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Phonetic Alphabet Studio">
+    <rect width="512" height="512" rx="96" fill="#0d1117"/>
+    <rect x="24" y="24" width="464" height="464" rx="76" fill="none" stroke="#4c8dff" stroke-width="8" opacity="0.5"/>
+    <text x="256" y="330" font-family="'Courier New', monospace" font-size="260" font-weight="bold"
+          text-anchor="middle" fill="#4c8dff">A</text>
+    <text x="256" y="410" font-family="'Courier New', monospace" font-size="52" letter-spacing="10"
+          text-anchor="middle" fill="#a9c8ff">ALPHA</text>
+</svg>

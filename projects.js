@@ -167,6 +167,17 @@ window.RAMI_REALMS = [
    ========================================================================== */
 window.RAMI_WORKSHOP = [
     {
+        title: 'O.A.S.I.S.',
+        href: './OASIS/',
+        glyph: '◉',
+        tagline: 'The lights-out library',
+        description: 'An air-gapped survival and field reference — emergency medicine, water, shelter, navigation, radio, power and hazards — with 23 working calculators. It loads once and then never needs the internet again.',
+        search: 'Offline Advanced System for Information and Survival. An offline-first air-gapped survival guide, emergency preparedness manual and field reference that works with no internet, no server and no tracking, installable as a PWA. Emergency first aid and trauma medicine: MARCH, massive haemorrhage and tourniquets, wound packing, CPR and defibrillation, choking, shock, chest seals, burns and the rule of nines, fractures and splinting, hypothermia and heat stroke, oral rehydration salts, sepsis, stroke FAST and anaphylaxis. Water: finding, purification and treatment — boiling times by altitude, household bleach and chlorine dioxide dosing, iodine, filters, SODIS solar disinfection, storage and rationing. Shelter and fire: heat loss, lean-to and debris huts, snow shelters, tinder, feather sticks and fire lays, clothing layering. Food: calorie planning, shelf life, foraging and the universal edibility test, hygiene and latrines. Navigation and positioning: coordinate converter between decimal degrees, degrees and minutes, DMS, UTM, MGRS military grid reference and Maidenhead grid squares; great-circle distance and bearing; magnetic declination; waypoint projection; two-bearing resection to fix your position without GPS; sunrise, sunset, twilight, solar noon and solar azimuth for finding true north; moon phase; pace count and dead reckoning; and a plot board that draws waypoints to scale with a route card. Communications: PMR446, FRS, GMRS, MURS, CB, marine VHF, amateur radio band plans, distress and calling frequencies including 121.5 MHz, channel 16 and 406 MHz beacons, mayday and pan-pan scripts, voice procedure and the NATO phonetic alphabet, antenna cutting chart, radio horizon calculator, LoRa mesh networks and Meshtastic, Morse code translator with tone and screen flash. Signals and reconnaissance: RTL-SDR software defined radio, scanning and listening plans, receiving NOAA APT and Meteor LRPT weather satellite images, signal discipline. Power: watt-hours, battery chemistry and runtime, solar panel sizing, energy budgeting, generator and carbon monoxide safety. Hazards: shelter in place, nuclear fallout and the 7-10 decay rule, radiation shielding, severe weather, lightning distance, wildfire and flood. Kit lists for everyday carry, a 72-hour go bag, home preparedness, vehicle kit and documents. Includes a searchable index, a timestamped field log, five themes including a red night-vision mode, printable chapters and a list of sources worth mirroring offline.',
+        tags: ['reference', 'offline', 'survival'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'Lore Gallery',
         href: '../gallery/lore/',
         glyph: '📜',
@@ -197,6 +208,17 @@ window.RAMI_WORKSHOP = [
         search: 'An IT toolkit and curated collection of information technology tools and resources: network, security, development, system utilities, forensics, self-hosting, Microsoft portals, DNS and hosting and more. Includes locally hosted tools such as a weekly CVE checker and CyberChef.',
         tags: ['tool', 'reference'],
         aura: 'gold',
+        status: 'live',
+    },
+    {
+        title: 'Frostcaller',
+        href: './frostcaller/',
+        glyph: '❄️',
+        tagline: 'Bewitch the air conditioner',
+        description: 'A beginner’s guide to building your own infrared blaster so Home Assistant can switch the air conditioning on and off — no soldering, from about €5. Tick the parts you own, follow the path that fits, then talk to the board straight from your browser.',
+        search: 'A beginner friendly DIY guide and tutorial for building a cheap Wi-Fi infrared IR blaster or IR remote to control an air conditioner, air conditioning unit or heat pump from Home Assistant, with no soldering required. Interactive what parts do you have inventory picker: tick the components you already own and it shows which build paths are ready, what is still missing and what it costs, saved between visits and shareable as a permalink. Six paths — ESPHome with an ESP32, ESP8266, Wemos D1 mini, M5Stack Atom Lite or M5StickC and a KY-005 IR transmitter LED module wired with dupont jumper wires; a ready made Athom blaster with ESPHome pre-installed; re-flashing a cheap Tuya or Moes Wi-Fi IR blaster with tuya-cloudcutter, ltchiptool and LibreTiny; the Broadlink RM4 Mini with the native Home Assistant integration and SmartIR; and a UFO-R11 Zigbee IR blaster with Zigbee2MQTT. Includes an ESPHome YAML config generator and builder that writes the finished configuration file for your board, pin and air conditioner brand and lets you download it. Fully built buy and forget options compared: Athom, Broadlink, SwitchBot Hub 2, Xiaomi Mi smart remote, Sensibo, Tado and Nature Remo, rated local versus cloud. Software bench with download links and guides for Home Assistant, ESPHome Builder, ESPHome Web, the Arduino IDE, the IRremoteESP8266 library, PlatformIO, Tasmota and its web installer, esptool, HACS, SmartIR and Zigbee2MQTT, plus six different ways to flash or write the firmware including a complete Arduino sketch. Includes the ESPHome climate_ir brand table (coolix, daikin, LG, midea, mitsubishi, gree, toshiba, tcl112, fujitsu, whirlpool, heatpumpir), remote_transmitter and remote_receiver YAML, how to capture and replay raw IR codes from your own remote, infrared line of sight and range advice, and extras such as room temperature sensors, knowing whether the AC is really running, presence and window automations, sleep ramps, controlling the TV, Alexa Google and Siri, notifications, running costs, troubleshooting and safety. Full text search across the guide, a printable version, a copyable shopping list with price search links, live currency conversion and four colour themes including a light and a high contrast one. Also includes a side by side comparison of every path, a what went wrong troubleshooting wizard, a pin map showing which GPIO pins are safe on the ESP32, ESP8266 and ESP32-C3, a log reader that explains ESPHome and Tasmota log lines, a raw infrared code toolbox that converts captured timings into ESPHome buttons and Pronto codes, a running cost estimator, a QR code and Markdown export, keyboard shortcuts and offline support. A companion Web Serial page called The Scribe connects to the board over USB from the browser to identify the chip, watch the live serial log, capture infrared codes from your remote and send Tasmota IRHVAC commands, with no drivers or serial monitor to install.',
+        tags: ['guide', 'smart home'],
+        aura: 'cyan',
         status: 'live',
     },
     {

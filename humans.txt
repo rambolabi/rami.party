@@ -37,5 +37,6 @@ Visit at your own risk. We take no responsibility for:
 - Existential questions about web development
 
 For actual professional services, visit: compyra.com
-For an index of other projects: lebon.info
+For an index of other projects: labidi.eu
+For my testing domain: rami.party
 For home inspection services: huiskeuring.be

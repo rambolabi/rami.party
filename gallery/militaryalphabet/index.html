@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Phonetic Alphabet Studio // Military, World & Fantasy Spelling Codes</title>
-    <meta name="description" content="Interactive phonetic alphabet reference with a live text-to-phonetic translator. Military NATO code, world language spelling alphabets and fantasy tongues (Elvish, Dwarvish, Draconic, Valyrian). Switchable themes. Tap any letter to hear it.">
+    <title>Phonetic Alphabet Studio // Military, World &amp; Fantasy Spelling Codes</title>
+    <meta name="description" content="Interactive phonetic alphabet reference with a two-way translator, Morse code, practice drills, a printable cheat sheet and a screen wake lock timer. NATO, police, historical, world language and fantasy spelling alphabets.">
     <meta name="theme-color" content="#0d1117">
     <meta name="color-scheme" content="dark light">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23041209'/%3E%3Ctext x='8' y='12' font-size='11' text-anchor='middle' fill='%2339ff9e' font-family='monospace' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.webmanifest">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="scanlines" aria-hidden="true"></div>
     <div class="vignette" aria-hidden="true"></div>
@@ -18,57 +21,335 @@
         <header class="term-header">
             <div class="brand">
                 <span class="brand-dot" aria-hidden="true"></span>
-                <h1 class="term-title">PHONETIC ALPHABET STUDIO</h1>
+                <h1 class="term-title" data-i18n="app.brand">PHONETIC ALPHABET STUDIO</h1>
             </div>
             <div class="header-actions">
-                <button type="button" id="muteToggle" class="status-pill" aria-pressed="true" title="Toggle sound">
-                    <span class="pip" id="mutePip" aria-hidden="true">🔇</span>
-                    <span id="muteText">SOUND: OFF</span>
+                <button type="button" id="muteToggle" class="status-pill" aria-pressed="true" data-i18n-title="sound.title" title="Toggle sound (M)">
+                    <span class="pip pip-glyph" id="mutePip" aria-hidden="true">🔇</span>
+                    <span id="muteText" data-i18n="sound.off">SOUND: OFF</span>
                 </button>
-                <button type="button" id="wakeToggle" class="status-pill" aria-pressed="false" title="Toggle screen wake lock">
-                    <span class="pip" id="wakePip" aria-hidden="true"></span>
-                    <span id="wakeText">WAKE LOCK: INIT…</span>
+                <button type="button" id="wakeToggle" class="status-pill" aria-pressed="false" data-i18n-title="wake.title" title="Toggle screen wake lock (W)">
+                    <span class="pip" aria-hidden="true"></span>
+                    <span id="wakeText" data-i18n="wake.init">WAKE LOCK: INIT…</span>
+                </button>
+                <button type="button" id="timerToggle" class="status-pill" aria-expanded="false" aria-controls="timerPanel" data-i18n-title="timer.pill.title" title="Wake lock timer (T)">
+                    <span class="pip pip-glyph" aria-hidden="true">⏱</span>
+                    <span id="timerText" class="countdown" data-i18n="timer.pill.off">TIMER: OFF</span>
+                </button>
+                <button type="button" id="shortcutsToggle" class="status-pill" data-i18n-title="keys.pill.title" title="Keyboard shortcuts (?)">
+                    <span class="pip pip-glyph" aria-hidden="true">⌨</span>
+                    <span data-i18n="keys.pill">KEYS</span>
                 </button>
             </div>
         </header>
 
+        <!-- ============ WAKE LOCK CONTROL CENTRE ============ -->
+        <section id="timerPanel" class="timer-panel" hidden data-i18n-aria-label="timer.pill.title" aria-label="Wake lock timer">
+            <div class="timer-head">
+                <span class="timer-title" data-i18n="timer.heading">KEEP THIS SCREEN AWAKE FOR…</span>
+                <button type="button" id="timerClose" class="timer-close" data-i18n-aria-label="timer.close" aria-label="Close timer panel">✕</button>
+            </div>
+
+            <div class="timer-body">
+                <div class="timer-ring" id="wakeRing">
+                    <svg viewBox="0 0 64 64" aria-hidden="true">
+                        <circle class="ring-track" cx="32" cy="32" r="26"></circle>
+                        <circle class="ring-arc" id="wakeRingArc" cx="32" cy="32" r="26"></circle>
+                    </svg>
+                    <span class="ring-label countdown" id="wakeRingLabel">∞</span>
+                </div>
+
+                <div class="timer-choices">
+                    <div class="timer-presets" id="timerPresets" role="group" data-i18n-aria-label="timer.presets" aria-label="Preset durations">
+                        <button type="button" class="timer-preset" data-minutes="15" aria-pressed="false" data-i18n="timer.p15">15 MIN</button>
+                        <button type="button" class="timer-preset" data-minutes="30" aria-pressed="false" data-i18n="timer.p30">30 MIN</button>
+                        <button type="button" class="timer-preset" data-minutes="60" aria-pressed="false" data-i18n="timer.p60">1 HOUR</button>
+                        <button type="button" class="timer-preset" data-minutes="120" aria-pressed="false" data-i18n="timer.p120">2 HOURS</button>
+                        <button type="button" class="timer-preset" data-minutes="240" aria-pressed="false" data-i18n="timer.p240">4 HOURS</button>
+                        <button type="button" class="timer-preset" data-minutes="480" aria-pressed="false" data-i18n="timer.p480">8 HOURS</button>
+                        <button type="button" class="timer-preset" data-minutes="720" aria-pressed="false" data-i18n="timer.p720">12 HOURS</button>
+                        <button type="button" class="timer-preset" data-minutes="0" aria-pressed="false" data-i18n="timer.nolimit">∞ NO LIMIT</button>
+                        <button type="button" class="timer-preset is-special" id="timerPomodoro" aria-pressed="false" data-i18n="timer.pomodoro">🍅 POMODORO</button>
+                    </div>
+
+                    <div class="timer-row">
+                        <label class="timer-label" for="timerCustom" data-i18n="timer.custom">CUSTOM</label>
+                        <input type="number" id="timerCustom" class="timer-input" min="1" max="1440" step="1"
+                               inputmode="numeric" data-i18n-placeholder="timer.minutes" placeholder="minutes"
+                               data-i18n-aria-label="timer.customAria" aria-label="Custom duration in minutes">
+                        <button type="button" id="timerStart" class="btn" data-i18n="timer.start">▶ START</button>
+                        <button type="button" id="timerPlus15" class="btn btn-small" data-i18n="timer.plus15">+15m</button>
+                        <button type="button" id="timerPlus60" class="btn btn-small" data-i18n="timer.plus60">+1h</button>
+                    </div>
+
+                    <div class="timer-row">
+                        <label class="timer-label" for="timerUntil" data-i18n="timer.until">UNTIL</label>
+                        <input type="time" id="timerUntil" class="timer-input timer-input-time"
+                               data-i18n-aria-label="timer.untilAria" aria-label="Keep awake until this time">
+                        <button type="button" id="timerUntilBtn" class="btn" data-i18n="timer.untilBtn">▶ UNTIL THEN</button>
+                        <button type="button" id="timerStop" class="btn btn-ghost" data-i18n="timer.cancel">✕ CANCEL TIMER</button>
+                    </div>
+                </div>
+            </div>
+
+            <p class="timer-status" id="timerStatus" aria-live="polite"></p>
+
+            <div class="timer-options" role="group" data-i18n-aria-label="timer.options" aria-label="Wake lock behaviour">
+                <label class="switch"><input type="checkbox" id="optTitle"><span data-i18n="opt.title">Countdown in the tab title</span></label>
+                <label class="switch"><input type="checkbox" id="optChime"><span data-i18n="opt.chime">Chime when the timer ends</span></label>
+                <label class="switch"><input type="checkbox" id="optNotify"><span data-i18n="opt.notify">System notification when it ends</span></label>
+                <label class="switch"><input type="checkbox" id="optActivity"><span data-i18n="opt.activity">Only while I am active</span></label>
+                <label class="switch"><input type="checkbox" id="optBattery"><span data-i18n="opt.battery">Release below 20% battery</span></label>
+                <label class="switch"><input type="checkbox" id="optFallback"><span data-i18n="opt.fallback">Video fallback (old browsers)</span></label>
+            </div>
+
+            <details class="timer-why">
+                <summary data-i18n="why.summary">Why did the wake lock pause?</summary>
+                <p data-i18n-html="why.p1"></p>
+                <p data-i18n-html="why.p2"></p>
+                <p data-i18n-html="why.p3"></p>
+            </details>
+        </section>
+
         <p class="intro">
-            <span id="alphaNote"><strong>NATO / ICAO</strong> spelling alphabet — spell anything clearly over radio or phone.</span>
-            <span class="intro-sub">This screen stays awake while the page is open · tap a tile to hear it · sound is muted by default.</span>
+            <span id="alphaNote"><strong>NATO / ICAO</strong> — spell anything clearly over radio or phone.</span>
+            <span class="intro-sub" data-i18n-html="intro.sub"></span>
         </p>
 
-        <section class="controls" aria-label="Alphabet and theme controls">
+        <!-- ============ GLOBAL CONTROLS ============ -->
+        <section class="controls" data-i18n-aria-label="ctl.aria" aria-label="Alphabet, theme and language">
             <label class="control">
-                <span class="control-label">ALPHABET</span>
-                <select id="alphabetSelect" class="select" aria-label="Choose alphabet"></select>
+                <span class="control-label"><span data-i18n="ctl.alphabet">ALPHABET</span> <span class="control-hint" id="alphaCount"></span></span>
+                <select id="alphabetSelect" class="select" data-i18n-aria-label="ctl.alphabetAria" aria-label="Choose alphabet"></select>
             </label>
             <label class="control">
-                <span class="control-label">THEME</span>
-                <select id="themeSelect" class="select" aria-label="Choose theme"></select>
+                <span class="control-label" data-i18n="ctl.theme">THEME</span>
+                <select id="themeSelect" class="select" data-i18n-aria-label="ctl.themeAria" aria-label="Choose theme"></select>
+            </label>
+            <label class="control">
+                <span class="control-label" data-i18n="ctl.language">LANGUAGE</span>
+                <select id="langSelect" class="select" data-i18n-aria-label="ctl.languageAria" aria-label="Choose interface language"></select>
             </label>
         </section>
 
-        <section class="translator" aria-label="Text to phonetic translator">
-            <div class="field-label"><span class="prompt">&gt;</span> TRANSLATE TEXT → PHONETIC</div>
-            <textarea id="input" class="translate-input" rows="2" placeholder="Type a word or message…  e.g. Rami 24" autocomplete="off" spellcheck="false"></textarea>
-            <div class="io-actions">
-                <button type="button" id="speakBtn" class="btn">▶ SPEAK</button>
-                <button type="button" id="copyBtn" class="btn">⧉ COPY</button>
-                <button type="button" id="clearBtn" class="btn btn-ghost">✕ CLEAR</button>
+        <details class="voice-settings">
+            <summary data-i18n="voice.summary">Voice &amp; reading speed</summary>
+            <div class="voice-grid">
+                <label class="control">
+                    <span class="control-label" data-i18n="voice.voice">VOICE</span>
+                    <select id="voiceSelect" class="select" data-i18n-aria-label="voice.voiceAria" aria-label="Speech voice"></select>
+                </label>
+                <label class="control">
+                    <span class="control-label"><span data-i18n="voice.rate">RATE</span> <span class="control-hint" id="rateValue"></span></span>
+                    <input type="range" id="rateRange" class="range" min="0.5" max="2" step="0.02">
+                </label>
+                <label class="control">
+                    <span class="control-label"><span data-i18n="voice.pitch">PITCH</span> <span class="control-hint" id="pitchValue"></span></span>
+                    <input type="range" id="pitchRange" class="range" min="0.5" max="2" step="0.05">
+                </label>
+                <label class="control">
+                    <span class="control-label"><span data-i18n="voice.gap">PAUSE BETWEEN LETTERS</span> <span class="control-hint" id="gapValue"></span></span>
+                    <input type="range" id="gapRange" class="range" min="0" max="1200" step="20">
+                </label>
             </div>
-            <output id="output" class="output" aria-live="polite"></output>
+        </details>
+
+        <!-- ============ TABS ============ -->
+        <nav class="tabs" role="tablist" data-i18n-aria-label="tabs.aria" aria-label="Sections">
+            <button type="button" class="tab" role="tab" data-tab="translate" id="tab-translate" aria-controls="panel-translate" aria-selected="true" data-i18n="tab.translate">TRANSLATE</button>
+            <button type="button" class="tab" role="tab" data-tab="chart" id="tab-chart" aria-controls="panel-chart" aria-selected="false" data-i18n="tab.chart">CHART</button>
+            <button type="button" class="tab" role="tab" data-tab="practice" id="tab-practice" aria-controls="panel-practice" aria-selected="false" data-i18n="tab.practice">PRACTICE</button>
+            <button type="button" class="tab" role="tab" data-tab="codes" id="tab-codes" aria-controls="panel-codes" aria-selected="false" data-i18n="tab.codes">CODES</button>
+        </nav>
+
+        <!-- ---- TRANSLATE ---- -->
+        <section class="tab-panel" data-panel="translate" id="panel-translate" role="tabpanel" aria-labelledby="tab-translate">
+            <div class="translator">
+                <div class="field-label">
+                    <span class="prompt">&gt;</span>
+                    <button type="button" id="dirToggle" class="dir-toggle" data-i18n-title="dir.title" title="Swap direction (X)">TEXT → PHONETIC</button>
+                </div>
+
+                <textarea id="input" class="translate-input" rows="2"
+                          placeholder="Type a word or message…  e.g. Rami 24" autocomplete="off" spellcheck="false"></textarea>
+
+                <div class="io-options">
+                    <label class="control control-inline" id="formatField">
+                        <span class="control-label" data-i18n="out.label">OUTPUT</span>
+                        <select id="formatSelect" class="select select-small" data-i18n-aria-label="out.aria" aria-label="Output format"></select>
+                    </label>
+                    <label class="switch" id="callsignField">
+                        <input type="checkbox" id="callsignToggle"><span data-i18n="callsign">Callsign mode (ignore spaces &amp; punctuation)</span>
+                    </label>
+                </div>
+
+                <div class="io-actions">
+                    <button type="button" id="speakBtn" class="btn" data-i18n="btn.speak">▶ SPEAK</button>
+                    <button type="button" id="copyBtn" class="btn" data-i18n="btn.copy">⧉ COPY</button>
+                    <button type="button" id="imageBtn" class="btn" data-i18n="btn.image">🖼 IMAGE</button>
+                    <button type="button" id="shareBtn" class="btn" data-i18n="btn.share">🔗 SHARE</button>
+                    <button type="button" id="micBtn" class="btn" data-i18n="btn.dictate" data-i18n-title="btn.dictateTitle" title="Dictate code words">🎤 DICTATE</button>
+                    <button type="button" id="clearBtn" class="btn btn-ghost" data-i18n="btn.clear">✕ CLEAR</button>
+                </div>
+
+                <!-- The chip list is rebuilt on every keystroke, so the concise
+                     meter below is the live region instead of the whole output. -->
+                <output id="output" class="output" aria-live="off"></output>
+                <p class="output-meter" id="outputMeter" aria-live="polite"></p>
+            </div>
+
+            <section class="history" data-i18n-aria-label="hist.aria" aria-label="Recent translations">
+                <div class="history-head">
+                    <span class="section-label" data-i18n="hist.label">RECENT</span>
+                    <button type="button" id="historyClear" class="btn btn-ghost btn-small" data-i18n="hist.clear">✕ CLEAR HISTORY</button>
+                </div>
+                <ul class="history-list" id="historyList"></ul>
+            </section>
         </section>
 
-        <section class="grid" id="grid" aria-label="Phonetic alphabet tiles"></section>
+        <!-- ---- CHART ---- -->
+        <section class="tab-panel" data-panel="chart" id="panel-chart" role="tabpanel" aria-labelledby="tab-chart" hidden>
+            <div class="chart-tools">
+                <div class="search-wrap">
+                    <input type="search" id="gridSearch" class="search-input"
+                           data-i18n-placeholder="chart.search" placeholder="Search letters, words, Morse…  (press / )"
+                           data-i18n-aria-label="chart.searchAria" aria-label="Search the alphabet">
+                    <button type="button" id="gridSearchClear" class="search-clear" data-i18n-aria-label="chart.clearAria" aria-label="Clear search">✕</button>
+                </div>
+                <label class="switch"><input type="checkbox" id="morseToggle"><span data-i18n="chart.morse">Morse</span></label>
+                <button type="button" id="presentToggle" class="btn btn-small" data-i18n="btn.present">🖵 PRESENT</button>
+                <button type="button" id="printBtn" class="btn btn-small" data-i18n="btn.print">🖨 PRINT / PDF</button>
+                <button type="button" id="csvBtn" class="btn btn-small" data-i18n="btn.csv">⭳ CSV</button>
+                <button type="button" id="jsonBtn" class="btn btn-small" data-i18n="btn.json">⭳ JSON</button>
+            </div>
+
+            <section class="grid" id="grid" data-i18n-aria-label="chart.tilesAria" aria-label="Phonetic alphabet tiles"></section>
+            <p class="grid-empty" id="gridEmpty" data-i18n="chart.empty" hidden>No tile matches that search.</p>
+        </section>
+
+        <!-- ---- PRACTICE ---- -->
+        <section class="tab-panel" data-panel="practice" id="panel-practice" role="tabpanel" aria-labelledby="tab-practice" hidden>
+            <div class="quiz-setup">
+                <label class="control control-inline">
+                    <span class="control-label" data-i18n="quiz.drill">DRILL</span>
+                    <select id="quizMode" class="select select-small" data-i18n-aria-label="quiz.drillAria" aria-label="Practice mode"></select>
+                </label>
+                <label class="switch" id="quizTimedField">
+                    <input type="checkbox" id="quizTimed"><span data-i18n="quiz.timed">60-second run</span>
+                </label>
+                <label class="control control-inline" id="quizWordField" hidden>
+                    <span class="control-label" data-i18n="quiz.word">WORD</span>
+                    <input type="text" id="quizWord" class="search-input" data-i18n-placeholder="quiz.wordPh" placeholder="e.g. your name" autocomplete="off">
+                </label>
+                <button type="button" id="quizStart" class="btn" data-i18n="quiz.start">▶ START</button>
+                <button type="button" id="quizStop" class="btn btn-ghost btn-small" data-i18n="quiz.stop">■ STOP</button>
+            </div>
+
+            <div class="quiz-scores">
+                <span class="quiz-stat"><span data-i18n="quiz.score">SCORE</span> <strong id="quizScore">0 / 0</strong></span>
+                <span class="quiz-stat"><span data-i18n="quiz.streak">STREAK</span> <strong id="quizStreak">0</strong></span>
+                <span class="quiz-stat"><span data-i18n="quiz.best">BEST</span> <strong id="quizBest">0</strong></span>
+                <span class="quiz-stat countdown" id="quizTimer" hidden>01:00</span>
+            </div>
+
+            <div class="quiz-stage" id="quizStage" hidden>
+                <div class="quiz-prompt" id="quizPrompt"></div>
+                <p class="quiz-hint" id="quizHint"></p>
+                <button type="button" id="quizReplay" class="btn btn-small" data-i18n="quiz.replay" hidden>🔊 PLAY AGAIN</button>
+                <div class="quiz-options" id="quizOptions"></div>
+            </div>
+
+            <p class="quiz-result" id="quizResult" hidden></p>
+        </section>
+
+        <!-- ---- CODES ---- -->
+        <section class="tab-panel" data-panel="codes" id="panel-codes" role="tabpanel" aria-labelledby="tab-codes" hidden>
+            <div class="codes-grid">
+                <section class="code-block">
+                    <h2 class="section-label" data-i18n="codes.prowords">PROWORDS</h2>
+                    <dl class="code-list" id="prowordList"></dl>
+                </section>
+                <section class="code-block">
+                    <h2 class="section-label" data-i18n="codes.q">Q-CODES</h2>
+                    <dl class="code-list" id="qcodeList"></dl>
+                </section>
+                <section class="code-block">
+                    <h2 class="section-label"><span data-i18n="codes.ten">TEN-CODES</span> <span class="control-hint" data-i18n="codes.tenNote">usage varies by agency</span></h2>
+                    <dl class="code-list" id="tencodeList"></dl>
+                </section>
+                <section class="code-block">
+                    <h2 class="section-label" data-i18n="codes.punct">PUNCTUATION &amp; SYMBOLS</h2>
+                    <dl class="code-list" id="punctList"></dl>
+                </section>
+            </div>
+        </section>
 
         <footer class="term-footer">
-            <span class="hint">TIP: click a tile to hear &amp; copy · <span id="clock">--:--:--</span></span>
+            <span class="hint"><span data-i18n="footer.tip">TIP: click a tile to hear &amp; copy · </span><span id="clock">--:--:--</span></span>
             <span class="blink" aria-hidden="true">█</span>
         </footer>
     </main>
 
+    <!-- ============ PRESENTATION MODE ============ -->
+    <div id="presentOverlay" class="overlay present" hidden role="dialog" aria-modal="true" data-i18n-aria-label="present.aria" aria-label="Presentation mode">
+        <button type="button" id="presentClose" class="overlay-close" data-i18n-aria-label="present.close" aria-label="Leave presentation mode">✕</button>
+        <div class="present-stage">
+            <span class="present-letter" id="presentLetter">A</span>
+            <span class="present-word" id="presentWord">ALPHA</span>
+            <span class="present-pron" id="presentPron">AL-FAH</span>
+        </div>
+        <div class="present-controls">
+            <button type="button" id="presentPrev" class="btn" data-i18n-aria-label="present.prev" aria-label="Previous">◀</button>
+            <button type="button" id="presentPlay" class="btn" data-i18n="present.play">▶ PLAY</button>
+            <button type="button" id="presentNext" class="btn" data-i18n-aria-label="present.next" aria-label="Next">▶</button>
+            <span class="present-index countdown" id="presentIndex">1 / 36</span>
+        </div>
+    </div>
+
+    <!-- ============ SHORTCUTS ============ -->
+    <div id="shortcutsOverlay" class="overlay" hidden role="dialog" aria-modal="true" data-i18n-aria-label="keys.heading" aria-label="Keyboard shortcuts">
+        <div class="overlay-card">
+            <div class="overlay-head">
+                <h2 class="section-label" data-i18n="keys.heading">KEYBOARD SHORTCUTS</h2>
+                <button type="button" id="shortcutsClose" class="overlay-close" data-i18n-aria-label="keys.close" aria-label="Close">✕</button>
+            </div>
+            <dl class="code-list">
+                <dt><kbd>S</kbd></dt><dd data-i18n="keys.speak">Speak the translation, letter by letter</dd>
+                <dt><kbd>C</kbd></dt><dd data-i18n="keys.copy">Copy the translation</dd>
+                <dt><kbd>X</kbd></dt><dd data-i18n="keys.swap">Swap translation direction</dd>
+                <dt><kbd>M</kbd></dt><dd data-i18n="keys.mute">Mute / unmute</dd>
+                <dt><kbd>W</kbd></dt><dd data-i18n="keys.wake">Wake lock on / off</dd>
+                <dt><kbd>T</kbd></dt><dd data-i18n="keys.timer">Open the wake lock timer</dd>
+                <dt><kbd>P</kbd></dt><dd data-i18n="keys.present">Presentation mode</dd>
+                <dt><kbd>/</kbd></dt><dd data-i18n="keys.search">Jump to the chart and search</dd>
+                <dt><kbd>1</kbd>…<kbd>4</kbd></dt><dd data-i18n="keys.tabs">Switch tab</dd>
+                <dt><kbd>?</kbd></dt><dd data-i18n="keys.help">This help</dd>
+                <dt><kbd>Esc</kbd></dt><dd data-i18n="keys.escape">Close the topmost panel</dd>
+                <dt><kbd>←</kbd> <kbd>→</kbd></dt><dd data-i18n="keys.arrows">Previous / next card in presentation mode</dd>
+            </dl>
+        </div>
+    </div>
+
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <script src="script.js"></script>
+    <script src="js/core.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/lang/en.js"></script>
+    <script src="js/lang/fr.js"></script>
+    <script src="js/lang/nl.js"></script>
+    <script src="js/data-alphabets.js"></script>
+    <script src="js/data-reference.js"></script>
+    <script src="js/speech.js"></script>
+    <script src="js/wake.js"></script>
+    <script src="js/translator.js"></script>
+    <script src="js/grid.js"></script>
+    <script src="js/quiz.js"></script>
+    <script src="js/exporters.js"></script>
+    <script src="js/ui-wake.js"></script>
+    <script src="js/ui-translate.js"></script>
+    <script src="js/ui-present.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
 </body>
+
 </html>

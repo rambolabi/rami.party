@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Frostcaller — a beginner-friendly, no-soldering guide to building your own Wi-Fi infrared blaster so Home Assistant can turn your air conditioning on and off. Pick the parts you have and follow the path that fits.">
+    <meta name="theme-color" content="#0b0524">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/frostcaller/">
+    <title>Frostcaller · Smart AC control without soldering · rami.party</title>
+
+    <!-- Shared enchanted theme, then page-specific styling -->
+    <link rel="stylesheet" href="../../theme.css">
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9D%84%EF%B8%8F%3C/text%3E%3C/svg%3E">
+</head>
+
+<body>
+    <!-- Decorative enchanted backdrop -->
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
+    </div>
+
+    <a href="#picker" class="skip-link" data-i18n="skip">Skip to the path picker</a>
+
+    <header class="site-header">
+        <div class="container">
+            <a href="../../" class="back-home" aria-label="Back to rami.party">
+                <span aria-hidden="true">←</span> rami.party
+            </a>
+            <nav class="page-nav" aria-label="Sections">
+                <a href="#inventory" data-i18n="nav.parts">My parts</a>
+                <a href="#paths" data-i18n="nav.paths">Paths</a>
+                <a href="#brands" data-i18n="nav.brands">Brands</a>
+                <a href="#builder" data-i18n="nav.yaml">YAML</a>
+                <a href="writer/" data-i18n="nav.writer">Writer</a>
+                <a href="#toolbox" data-i18n="nav.tools">Tools</a>
+                <a href="#fixit" data-i18n="nav.fixit">Fix it</a>
+                <a href="#faq" data-i18n="nav.faq">FAQ</a>
+            </nav>
+        </div>
+        <div class="toolbar">
+            <div class="container">
+                <div class="search-wrap">
+                    <label class="sr-only" for="searchInput" data-i18n="search.label">Search the whole
+                        guide</label>
+                    <input id="searchInput" type="search" class="search-input" autocomplete="off"
+                        placeholder="Search everything — press /" data-i18n-ph="search.placeholder"
+                        aria-describedby="searchHint">
+                    <span id="searchHint" class="sr-only" data-i18n="search.hint">Searches every path,
+                        chapter, part and question on this page.</span>
+                    <div id="searchResults" class="search-results" role="listbox" hidden></div>
+                </div>
+
+                <div class="tool-group">
+                    <label class="tool-field">
+                        <span class="tool-label" data-i18n="tool.lang">Language</span>
+                        <select id="langSelect" aria-label="Language"></select>
+                    </label>
+                    <label class="tool-field">
+                        <span class="tool-label" data-i18n="tool.prices">Prices</span>
+                        <select id="curSelect" aria-label="Show prices in this currency"></select>
+                    </label>
+                    <label class="tool-field">
+                        <span class="tool-label" data-i18n="tool.theme">Theme</span>
+                        <select id="themeSelect" aria-label="Colour theme"></select>
+                    </label>
+                    <button id="shareBtn" type="button" class="tool-btn" data-i18n-title="tip.share"
+                        title="Copy a link that carries your choices">⚓ <span
+                            data-i18n="tool.share">Share</span></button>
+                    <button id="printBtn" type="button" class="tool-btn" data-i18n-title="tip.print"
+                        title="Print the whole guide, or save it as a PDF">⎙ <span
+                            data-i18n="tool.print">Print</span></button>
+                    <button id="helpBtn" type="button" class="tool-btn" data-i18n-title="tip.keys"
+                        title="Keyboard shortcuts">? <span data-i18n="tool.keys">Keys</span></button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="top">
+        <!-- ── Hero ───────────────────────────────────────────────────────── -->
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="container">
+                <p class="eyebrow"><span aria-hidden="true">❄️</span> <span data-i18n="hero.eyebrow">A charm
+                        for the summer</span> <span aria-hidden="true">❄️</span></p>
+                <h1 id="hero-title" class="hero-title">FROST<span class="glow">CALLER</span></h1>
+                <p class="hero-sub" data-i18n="hero.sub" data-i18n-html="true">
+                    Build a little box that sits in the room, points an <strong>invisible infrared beam</strong>
+                    at your air conditioner, and does exactly what the handheld remote does —
+                    except <strong>Home Assistant</strong> is holding it. No soldering iron.
+                    No electronics knowledge. From about <strong>€5</strong>.
+                </p>
+                <div class="hero-cta">
+                    <a href="#inventory" class="btn btn-primary"><span data-i18n="hero.cta1">Start with what I
+                            have</span> <span aria-hidden="true">→</span></a>
+                    <a href="#how" class="btn btn-ghost"><span data-i18n="hero.cta2">How does this even
+                            work?</span> <span aria-hidden="true">↓</span></a>
+                </div>
+                <ul class="hero-facts" role="list">
+                    <li><span class="fact-k">6</span><span class="fact-v" data-i18n="hero.f1">routes to choose
+                            from</span></li>
+                    <li><span class="fact-k">0</span><span class="fact-v" data-i18n="hero.f2">soldering
+                            required</span></li>
+                    <li><span class="fact-k">€5–22</span><span class="fact-v" data-i18n="hero.f3">depending on
+                            the route</span></li>
+                    <li><span class="fact-k">1</span><span class="fact-v" data-i18n="hero.f4">evening,
+                            roughly</span></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- ── How it works ───────────────────────────────────────────────── -->
+        <section id="how" class="section" aria-labelledby="how-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="how-title" class="section-title" data-i18n="sec.how">How this works, in plain words</h2>
+                    <p class="section-sub" data-i18n="sec.how.sub">Four sentences, then you never have to think
+                        about it again.</p>
+                </div>
+                <ol class="explainer" role="list">
+                    <li>
+                        <span class="ex-glyph" aria-hidden="true">📺</span>
+                        <h3 data-i18n="how.1.t">Your remote is a torch</h3>
+                        <p data-i18n="how.1.d">An air-con remote is just an infrared LED — a little torch your
+                            eyes cannot see — blinking a pattern of light. The AC watches for that pattern.</p>
+                    </li>
+                    <li>
+                        <span class="ex-glyph" aria-hidden="true">🔦</span>
+                        <h3 data-i18n="how.2.t">We build a second torch</h3>
+                        <p data-i18n="how.2.d">A cheap Wi-Fi chip with an infrared LED on it can blink the exact
+                            same pattern. The AC cannot tell the difference, and does not need to.</p>
+                    </li>
+                    <li>
+                        <span class="ex-glyph" aria-hidden="true">🧙</span>
+                        <h3 data-i18n="how.3.t">ESPHome writes the code</h3>
+                        <p data-i18n-rich="how.3.d"><a href="https://esphome.io/" target="_blank"
+                                rel="noopener">ESPHome</a> already knows the patterns for dozens of AC brands.
+                            You write about 12 lines of settings — no programming — and it builds the firmware
+                            for you.</p>
+                    </li>
+                    <li>
+                        <span class="ex-glyph" aria-hidden="true">🏠</span>
+                        <h3 data-i18n="how.4.t">Home Assistant gets a thermostat</h3>
+                        <p data-i18n="how.4.d">The box appears in Home Assistant as a normal thermostat card:
+                            mode, temperature, fan speed. From there, automate it however you like.</p>
+                    </li>
+                </ol>
+                <p class="caveat" data-i18n-rich="how.catch">
+                    <strong>The one honest catch:</strong> infrared is one-way. The box shouts at the AC but
+                    never hears back, so Home Assistant shows what it <em>believes</em> it set, not what the
+                    unit is truly doing. Everything below is designed around that. Keep your original remote.
+                </p>
+            </div>
+        </section>
+
+        <!-- ── What have you got? ──────────────────────────────────────── -->
+        <section id="inventory" class="section" aria-labelledby="inv-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="inv-title" class="section-title" data-i18n="sec.inv">What is already in your
+                        drawer?</h2>
+                    <p class="section-sub" data-i18n="sec.inv.sub">Tick everything you own — old boards
+                        absolutely count.</p>
+                </div>
+
+                <div class="picker-grid">
+                    <form id="invForm" class="glass-panel picker" novalidate>
+                        <!-- inventory chips injected by app.js -->
+                    </form>
+
+                    <aside id="invStatus" class="glass-panel result" aria-live="polite">
+                        <!-- readiness list injected by app.js -->
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Path picker ────────────────────────────────────────────── -->
+        <section id="picker" class="section" aria-labelledby="picker-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="picker-title" class="section-title" data-i18n="sec.picker">Which path is yours?</h2>
+                    <p class="section-sub" data-i18n="sec.picker.sub">Four questions about taste rather than
+                        hardware.</p>
+                </div>
+
+                <div class="picker-grid">
+                    <form id="pickerForm" class="glass-panel picker" novalidate>
+                        <!-- questions injected by app.js -->
+                    </form>
+
+                    <aside id="result" class="glass-panel result" aria-live="polite" aria-atomic="false">
+                        <!-- result injected by app.js -->
+                    </aside>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── The paths ──────────────────────────────────────────────────── -->
+        <section id="paths" class="section" aria-labelledby="paths-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="paths-title" class="section-title" data-i18n="sec.paths">The six paths</h2>
+                    <p class="section-sub" data-i18n="sec.paths.sub">Different roads, same destination-ish.</p>
+                </div>
+                <div id="pathList" class="path-list">
+                    <p class="loading">Unrolling the maps…</p>
+                </div>
+
+                <h3 class="sub-head" id="compare" data-i18n="sec.compare">All six, side by side</h3>
+                <p class="sub-lead" data-i18n="sec.compare.sub">The same information without the storytelling.
+                    Tap a name to open its steps.</p>
+                <div id="compareTable">
+                    <p class="loading">Lining them up…</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Fully built ────────────────────────────────────────────── -->
+        <section id="ready" class="section" aria-labelledby="ready-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="ready-title" class="section-title" data-i18n="sec.ready">Fully built, nothing to make</h2>
+                    <p class="section-sub" data-i18n="sec.ready.sub">If the making is not the point. Every one
+                        of these arrives finished — the question is only how much of your independence you
+                        hand over with it.</p>
+                </div>
+                <div id="readyList" class="ready-list">
+                    <p class="loading">Opening the boxes…</p>
+                </div>
+                <p class="caveat" data-i18n-rich="sec.ready.note">
+                    <strong>Read the middle column first.</strong> “Fully local” means the device keeps working
+                    with the internet unplugged and no company can switch it off. “Cloud” means the maker can
+                    change the rules, add a subscription, or shut the servers down — which has happened to
+                    plenty of smart-home products. That is the whole argument for the DIY paths, and it is
+                    yours to weigh.
+                </p>
+            </div>
+        </section>
+
+        <!-- ── Parts bench ────────────────────────────────────────────────── -->
+        <section id="parts" class="section" aria-labelledby="parts-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="parts-title" class="section-title" data-i18n="sec.parts">The parts bench</h2>
+                    <p class="section-sub" data-i18n="sec.parts.sub">Everything any path might ask for, with a
+                        search link and a rough price. Links open an AliExpress <em>search</em> — never a
+                        specific seller.</p>
+                </div>
+                <div id="partList" class="part-grid">
+                    <p class="loading">Laying out the components…</p>
+                </div>
+                <p class="caveat">
+                    <strong>About the prices:</strong> they are typical AliExpress asking prices, seen
+                    mid-2026, before shipping and import VAT, and they move constantly.
+                    Sort by orders and reviews rather than by the lowest price, and prefer a seller with a
+                    local warehouse if you would rather not wait a month. Nothing here is sponsored.
+                    <br><strong>About the other currencies:</strong> this page makes no network calls, so
+                    the exchange rates are fixed and rounded, not live. They are for a sense of scale —
+                    trust the euro figure and your own checkout page.
+                </p>
+            </div>
+        </section>
+        <!-- ── Brands & devices ──────────────────────────────────────── -->
+        <section id="brands" class="section" aria-labelledby="brands-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="brands-title" class="section-title" data-i18n="sec.brands">Will it work with mine?
+                    </h2>
+                    <p class="section-sub" data-i18n="sec.brands.sub">Air conditioners first, then everything
+                        else in the room that answers to infrared. Weighted towards what is actually sold in
+                        Belgium.</p>
+                </div>
+
+                <div class="brand-bar">
+                    <input id="brandSearch" type="search" class="search-input" data-i18n-ph="brand.find"
+                        placeholder="Find your brand…" aria-label="Search the brand list" autocomplete="off">
+                    <label class="deck-check">
+                        <input id="brandBe" type="checkbox">
+                        <span data-i18n="brand.be">🇧🇪 Only what is sold in Belgium</span>
+                    </label>
+                </div>
+                <div id="brandTable"></div>
+
+                <p class="caveat" data-i18n-rich="sec.brands.note">
+                    <strong>“Try it” is not a cop-out.</strong> Most budget units are made by a handful of
+                    factories and rebadged, so the name on the front tells you less than the shape of the
+                    remote. Start with the platform named, give it thirty seconds, and if the unit stays
+                    silent go and <a href="#ch-learn">copy your own remote</a> — that route has never failed
+                    anybody.
+                </p>
+
+                <h3 class="sub-head" id="devices" data-i18n="sec.devices">Everything else in the room</h3>
+                <p class="sub-lead" data-i18n="sec.devices.sub">The same transmitter runs all of it. One
+                    well-placed blaster can drive every infrared thing you own — add a button per command and
+                    stop losing remotes.</p>
+                <div id="deviceTable"></div>
+
+                <h3 class="sub-head" id="remote" data-i18n="sec.remote">Not sure? Go by the shape of the
+                    handset</h3>
+                <p class="sub-lead" data-i18n="sec.remote.sub">The shape of the remote tells you more than the
+                    badge on the air conditioner, because the same handset is sold under a dozen brand names.
+                    Find the one that looks like yours and the guide will set the protocol for you.</p>
+                <div id="remoteId" class="remote-grid"></div>
+                <p id="remoteSay" class="caveat" data-i18n="sec.remote.note">Pick the closest match — it does
+                    not have to be exact. The colour and the button labels vary a lot; the outline is what
+                    carries the information.</p>
+            </div>
+        </section>
+
+        <!-- ── The writer ────────────────────────────────────────────── -->
+        <section id="writer" class="section" aria-labelledby="writer-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="writer-title" class="section-title" data-i18n="sec.writer">Talk to the board
+                        itself</h2>
+                    <p class="section-sub" data-i18n="sec.writer.sub">There is a second page here that opens a
+                        serial port straight from your browser — no drivers, no serial monitor, nothing
+                        installed.</p>
+                </div>
+                <a class="writer-card" href="writer/">
+                    <span class="writer-glyph" aria-hidden="true">🪶</span>
+                    <span class="writer-body">
+                        <span class="writer-name">The Scribe <span class="pick-flag"
+                                data-i18n="writer.card.flag">companion page</span></span>
+                        <span class="writer-say" data-i18n-rich="writer.card.say">Identify your chip in one
+                            click, watch the live log, catch the codes your remote is shouting and turn them
+                            into config. It speaks <strong>Flipper Zero</strong> too — use the dolphin as your
+                            receiver and it becomes the easiest capture rig in the house.</span>
+                        <span class="writer-tags">
+                            <span class="tag good" data-i18n="writer.tag1">No install</span>
+                            <span class="tag good" data-i18n="writer.tag2">Reads .ir files</span>
+                            <span class="tag good" data-i18n="writer.tag3">Exports ESPHome &amp; SmartIR</span>
+                            <span class="tag" data-i18n="writer.tag4">Chrome or Edge</span>
+                        </span>
+                    </span>
+                    <span class="writer-go" aria-hidden="true">→</span>
+                </a>
+            </div>
+        </section>
+        <!-- ── YAML builder ───────────────────────────────────────────────── -->
+        <section id="builder" class="section" aria-labelledby="builder-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="builder-title" class="section-title" data-i18n="sec.builder">The config writer</h2>
+                    <p class="section-sub" data-i18n="sec.builder.sub">Answer five things and walk away with
+                        the finished ESPHome file — pins, brand and extras already filled in. Copy it, or
+                        download it and drop it straight into ESPHome Builder.</p>
+                </div>
+                <div class="builder-grid">
+                    <form id="builderForm" class="glass-panel builder-form" novalidate>
+                        <!-- fields injected by app.js -->
+                    </form>
+                    <div id="builderOut" class="builder-out">
+                        <!-- generated YAML injected by app.js -->
+                    </div>
+                </div>
+
+                <h3 class="sub-head" id="pinmap" data-i18n="sec.pin">Which pin can I use?</h3>
+                <p class="sub-lead" data-i18n="sec.pin.sub">Not every pin on these boards is free, and the ones
+                    that are not will let you find out the hard way — by refusing to boot. This is the map for
+                    the board you picked above.</p>
+                <div id="pinMap" class="glass-panel pin-panel">
+                    <p class="loading">Unfolding the pinout…</p>
+                </div>
+                <p class="caveat" data-i18n-rich="sec.builder.note">
+                    <strong>This writes the file, not the firmware.</strong> You still press Install in
+                    ESPHome, and the first build takes a while. If ESPHome rejects a board name, the board
+                    list has simply moved on — try <code>esp32dev</code>, which works on almost anything with
+                    an ESP32 in it.
+                </p>
+            </div>
+        </section>
+
+        <!-- ── Software ───────────────────────────────────────────────────── -->
+        <section id="software" class="section" aria-labelledby="sw-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="sw-title" class="section-title" data-i18n="sec.software">The software bench</h2>
+                    <p class="section-sub" data-i18n="sec.software.sub">Every tool any path might send you to
+                        fetch, what it is actually for, and a link straight to the download. All of it is
+                        free.</p>
+                </div>
+                <div id="swList" class="sw-grid">
+                    <p class="loading">Fetching the tools…</p>
+                </div>
+
+                <h3 class="sub-head" id="flashing" data-i18n="sec.flash">Six ways to get firmware onto the
+                    chip</h3>
+                <p class="sub-lead" data-i18n="sec.flash.sub">This guide uses the first one throughout, because
+                    it is the kindest. The others all work too, and one of them may suit you better —
+                    especially if you would rather write code than configuration.</p>
+                <div id="flashList" class="chapter-list">
+                    <p class="loading">Warming up the flashers…</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Extras ─────────────────────────────────────────────────────── -->
+        <section id="features" class="section" aria-labelledby="feat-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="feat-title" class="section-title" data-i18n="sec.feat">Extras people ask for</h2>
+                    <p class="section-sub" data-i18n="sec.feat.sub">Once the basic thing works, these are what
+                        everyone wants next — each small enough for an evening, with the configuration to
+                        paste.</p>
+                </div>
+                <div id="featureList" class="chapter-list">
+                    <p class="loading">Rummaging for extras…</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Bench tools ────────────────────────────────────────────────── -->
+        <section id="toolbox" class="section" aria-labelledby="toolbox-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="toolbox-title" class="section-title" data-i18n="sec.tools">The bench tools</h2>
+                    <p class="section-sub" data-i18n="sec.tools.sub">Three small machines for the moments the
+                        guide cannot answer on its own. Everything you paste stays in your browser.</p>
+                </div>
+
+                <div class="tool-panel" id="logreader">
+                    <h3 class="tool-title" data-i18n="tool.log.t">📜 Read this log for me</h3>
+                    <p class="tool-lead" data-i18n-rich="tool.log.d">Paste anything from the ESPHome
+                        <strong>LOGS</strong> window, the Tasmota console or a serial monitor. It marks the
+                        lines that mean something and says what they mean in plain words.</p>
+                    <textarea id="logInput" class="tool-input" rows="5" spellcheck="false"
+                        placeholder="[16:04:22][D][remote.raw:028]: Received Raw: 4088, -1542, 1019, -510, ..."
+                        aria-label="Paste log lines"></textarea>
+                    <div class="mini-row">
+                        <button type="button" id="logClear" class="mini-btn" data-i18n="btn.clear">Clear</button>
+                    </div>
+                    <div id="logOutput" class="tool-out"></div>
+                </div>
+
+                <div class="tool-panel" id="rawtool">
+                    <h3 class="tool-title" data-i18n="tool.raw.t">🧮 Turn captured timings into something
+                        usable</h3>
+                    <p class="tool-lead" data-i18n-rich="tool.raw.d">Paste a <code>Received Raw:</code> line and
+                        get back a ready-to-paste ESPHome button, the same code in Pronto form for Broadlink
+                        and SmartIR, and a guess at which protocol you are looking at.</p>
+                    <textarea id="rawInput" class="tool-input" rows="5" spellcheck="false"
+                        placeholder="Received Raw: 4088, -1542, 1019, -510, 513, -1019, 510, -509, 511, -510"
+                        aria-label="Paste raw infrared timings"></textarea>
+                    <div class="mini-row">
+                        <button type="button" id="rawClear" class="mini-btn" data-i18n="btn.clear">Clear</button>
+                    </div>
+                    <div id="rawOutput" class="tool-out"></div>
+                </div>
+
+                <div class="tool-panel" id="costtool">
+                    <h3 class="tool-title" data-i18n="tool.cost.t">💶 What is this actually costing me?</h3>
+                    <p class="tool-lead" data-i18n="tool.cost.d">The argument for automating it at all. Rough
+                        numbers from the nameplate rating — useful for deciding, not for accounting.</p>
+                    <div class="cost-grid-wrap">
+                        <form id="costForm" class="glass-panel cost-form" novalidate></form>
+                        <div id="costOut" class="cost-out"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Fix-it wizard ──────────────────────────────────────────────── -->
+        <section id="fixit" class="section" aria-labelledby="fixit-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="fixit-title" class="section-title" data-i18n="sec.fixit">What went wrong?</h2>
+                    <p class="section-sub" data-i18n="sec.fixit.sub">Say where it fails and you get an ordered
+                        list of causes — most likely first. Work down it and stop when something changes.</p>
+                </div>
+                <div class="glass-panel fixit">
+                    <div id="fixitPicker" class="chips" role="group" aria-label="Choose a symptom"></div>
+                    <div id="fixitBody" class="fixit-body"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── House planner ──────────────────────────────────────────────── -->
+        <section id="planner" class="section" aria-labelledby="planner-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="planner-title" class="section-title" data-i18n="sec.planner">More than one room?</h2>
+                    <p class="section-sub" data-i18n="sec.planner.sub">Infrared cannot go through walls, so
+                        every air conditioner needs its own box.</p>
+                </div>
+                <div class="picker-grid">
+                    <div class="glass-panel">
+                        <div class="mini-row">
+                            <button type="button" id="roomAdd" class="btn btn-primary"
+                                data-i18n="room.add">+ Add a room</button>
+                            <button type="button" id="roomClear" class="mini-btn"
+                                data-i18n="room.clear">Clear the plan</button>
+                        </div>
+                        <div id="roomList" class="room-list"></div>
+                    </div>
+                    <aside id="roomSummary" class="glass-panel result" aria-live="polite"></aside>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Build journal ──────────────────────────────────────────────── -->
+        <section id="journal" class="section" aria-labelledby="journal-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="journal-title" class="section-title" data-i18n="sec.journal">How is it going?</h2>
+                    <p class="section-sub" data-i18n="sec.journal.sub">Tick things off as you reach them.</p>
+                </div>
+                <div class="builder-grid">
+                    <div class="glass-panel">
+                        <div id="journalBody"></div>
+                    </div>
+                    <div class="glass-panel">
+                        <h3 class="tool-title" data-i18n="sec.library">📖 Your own codes</h3>
+                        <div id="libBody"></div>
+                        <h3 class="tool-title" style="margin-top:22px" data-i18n="sec.handover">📋 When you
+                            hand it over</h3>
+                        <p class="tool-lead" data-i18n="sec.handover.sub">Whoever lives with this next — a
+                            housemate, a tenant, or you in two years — deserves one page explaining what the
+                            little box is and what to do if it misbehaves.</p>
+                        <button type="button" id="handoverBtn" class="btn btn-primary"
+                            data-i18n="handover.make">Make a handover sheet</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Shared chapters ────────────────────────────────────────────── -->
+        <section id="chapters" class="section" aria-labelledby="chapters-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="chapters-title" class="section-title" data-i18n="sec.chapters">Shared chapters</h2>
+                    <p class="section-sub" data-i18n="sec.chapters.sub">The bits every path leans on. Read them
+                        when a step points you here.</p>
+                </div>
+                <p id="langNote" class="caveat" data-i18n="lang.partial" hidden></p>
+                <div id="chapterList" class="chapter-list">
+                    <p class="loading">Opening the grimoire…</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── FAQ ────────────────────────────────────────────────────────── -->
+        <section id="faq" class="section" aria-labelledby="faq-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="faq-title" class="section-title" data-i18n="sec.faq">Questions people actually ask</h2>
+                    <p class="section-sub" data-i18n="sec.faq.sub">Including the awkward ones.</p>
+                </div>
+                <div id="faqList" class="chapter-list">
+                    <p class="loading">Consulting the oracle…</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-bottom" style="border:0;">
+                <p>&copy; <span id="year">2026</span> rami.party ·
+                    <span class="muted" data-i18n="footer.note">Built with ESPHome and Home Assistant, neither
+                        of which owe you anything. Mind the mains, mind the warranty, keep the remote.</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <button id="toTop" class="to-top" type="button" hidden aria-label="Back to top">↑</button>
+
+    <!-- ── Overlays ───────────────────────────────────────────────── -->
+    <div id="qrPanel" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="qr-title">
+        <div class="overlay-card">
+            <h2 id="qr-title" class="overlay-title" data-i18n="qr.t">Take it to your phone</h2>
+            <div id="qrBox" class="qr-box"></div>
+            <button type="button" id="qrClose" class="btn btn-ghost" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <div id="helpPanel" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <div class="overlay-card">
+            <h2 id="help-title" class="overlay-title" data-i18n="keys.t">Keyboard shortcuts</h2>
+            <div id="helpBox"></div>
+            <button type="button" id="helpClose" class="btn btn-ghost" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <div id="cardPanel" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="card-title">
+        <div class="overlay-card">
+            <h2 id="card-title" class="overlay-title" data-i18n="card.t">Your shopping card</h2>
+            <div id="cardBox"></div>
+            <button type="button" id="cardClose" class="btn btn-ghost" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <div id="handoverPanel" class="overlay" hidden role="dialog" aria-modal="true"
+        aria-labelledby="handover-title">
+        <div class="overlay-card">
+            <h2 id="handover-title" class="overlay-title" data-i18n="handover.t">Handover sheet</h2>
+            <div id="handoverBox"></div>
+            <button type="button" id="handoverClose" class="btn btn-ghost" data-i18n="close">Close</button>
+        </div>
+    </div>
+
+    <script src="i18n.js" defer></script>
+    <script src="text.js" defer></script>
+    <script src="ui.js" defer></script>
+    <script src="data-themes.js" defer></script>
+    <script src="data-brands.js" defer></script>
+    <script src="data-guide.js" defer></script>
+    <script src="data-chapters.js" defer></script>
+    <script src="diagrams.js" defer></script>
+    <script src="app.js" defer></script>
+    <script src="tools.js" defer></script>
+    <script src="planner.js" defer></script>
+</body>
+
+</html>

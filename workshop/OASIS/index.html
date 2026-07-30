@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="tactical">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description"
+        content="O.A.S.I.S. — Offline Advanced System for Information and Survival. An air-gapped field reference: emergency medicine, water, shelter, navigation, radio communications, power and hazard response, with working calculators. Works with no internet, no server and no tracking.">
+    <meta name="theme-color" content="#080a09">
+    <meta name="color-scheme" content="dark light">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/OASIS/">
+    <title>O.A.S.I.S. · Offline Advanced System for Information and Survival</title>
+
+    <!--
+      AIR-GAP POLICY
+      No fonts, no CDNs, no analytics, no frameworks. Every byte this page needs
+      is in this folder. If it loads for you once, it works forever, offline.
+    -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23080a09'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%2358f5a5' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23f5a524'/%3E%3Cpath d='M32 4v10M32 50v10M4 32h10M50 32h10' stroke='%2358f5a5' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+
+<body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="hdr">
+        <div class="hdr-row">
+            <a class="brand" href="#/home" aria-label="O.A.S.I.S. home">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 64 64" width="30" height="30">
+                        <circle cx="32" cy="32" r="19" fill="none" stroke="currentColor" stroke-width="3" />
+                        <circle cx="32" cy="32" r="4" fill="currentColor" class="mark-dot" />
+                        <path d="M32 4v10M32 50v10M4 32h10M50 32h10" stroke="currentColor" stroke-width="3"
+                            stroke-linecap="round" />
+                    </svg>
+                </span>
+                <span class="brand-text">
+                    <b>O.A.S.I.S.</b>
+                    <small>Offline Advanced System for Information &amp; Survival</small>
+                </span>
+            </a>
+
+            <div class="hdr-search">
+                <label class="sr-only" for="q">Search everything</label>
+                <input id="q" type="search" autocomplete="off" spellcheck="false" enterkeyhint="search"
+                    placeholder="Search — bleeding, water, 121.5, tourniquet…  (press /)">
+                <kbd class="search-kbd" aria-hidden="true">/</kbd>
+            </div>
+
+            <div class="hdr-tools">
+                <label class="field compact">
+                    <span class="sr-only">Theme</span>
+                    <select id="themeSel" aria-label="Colour theme">
+                        <option value="tactical">Tactical</option>
+                        <option value="daylight">Daylight</option>
+                        <option value="military">Field</option>
+                        <option value="survival">Survival</option>
+                        <option value="nightvis">Night vision</option>
+                    </select>
+                </label>
+                <div class="type-scale" role="group" aria-label="Text size">
+                    <button type="button" id="fontDown" title="Smaller text">A<span>−</span></button>
+                    <button type="button" id="fontUp" title="Larger text">A<span>+</span></button>
+                </div>
+                <button type="button" id="wakeBtn" class="icon-btn" aria-pressed="false"
+                    title="Keep the screen awake">☀</button>
+            </div>
+        </div>
+
+        <div class="statusbar" id="statusbar">
+            <span class="chip" id="netChip" title="Connection state">◍ checking…</span>
+            <span class="chip" id="cacheChip" title="Offline package state">⛁ cache…</span>
+            <span class="chip" id="clockChip" title="Local time / UTC">⏱</span>
+            <span class="chip ghost" id="posChip" title="Last known position">⌖ no fix</span>
+            <button type="button" class="chip act" id="fixBtn" title="Take a GPS fix and store it locally">Get
+                fix</button>
+            <a class="chip ghost home-link" href="../../" title="Back to rami.party">↖ rami.party</a>
+        </div>
+    </header>
+
+    <div class="shell">
+        <nav class="rail" id="rail" aria-label="Sections"></nav>
+        <main id="main" tabindex="-1"></main>
+    </div>
+
+    <footer class="ftr">
+        <p><b>O.A.S.I.S.</b> is a reference, not a rescue service. Where emergency services exist,
+            call them first. Nothing here replaces hands-on training.</p>
+        <p class="muted">Static, air-gapped, no tracking, no network calls. <span id="verLine"></span></p>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="geo.js"></script>
+    <script src="data-knowledge.js"></script>
+    <script src="data-reference.js"></script>
+    <script src="tools.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

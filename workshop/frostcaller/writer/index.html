@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="The Scribe — talk to your ESP board straight from the browser over USB. Identify the chip, read the live log, capture infrared codes from your remote and send commands, with nothing to install.">
+    <meta name="theme-color" content="#0b0524">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/frostcaller/writer/">
+    <title>The Scribe · talk to the board from your browser · Frostcaller</title>
+
+    <link rel="stylesheet" href="../../../theme.css">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="style.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+        rel="stylesheet">
+
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%AA%B6%3C/text%3E%3C/svg%3E">
+</head>
+
+<body>
+    <canvas id="starfield" aria-hidden="true"></canvas>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
+    </div>
+
+    <a href="#deck" class="skip-link" data-i18n="w.skip">Skip to the console</a>
+
+    <header class="site-header">
+        <div class="container">
+            <a href="../" class="back-home" aria-label="Back to Frostcaller">
+                <span aria-hidden="true">←</span> Frostcaller
+            </a>
+            <nav class="page-nav" aria-label="Sections">
+                <a href="#deck" data-i18n="w.nav.deck">Console</a>
+                <a href="#flipper" data-i18n="w.nav.flipper">Flipper</a>
+                <a href="#captures" data-i18n="w.nav.captures">Captures</a>
+                <a href="#lab" data-i18n="w.nav.lab">Lab</a>
+                <a href="#send" data-i18n="w.nav.send">Send</a>
+                <a href="#quiz" data-i18n="w.nav.quiz">Quiz</a>
+                <a href="#flash" data-i18n="w.nav.flash">Flashing</a>
+            </nav>
+        </div>
+        <div class="toolbar">
+            <div class="container">
+                <div class="tool-group">
+                    <label class="tool-field">
+                        <span class="tool-label" data-i18n="tool.lang">Language</span>
+                        <select id="langSelect" aria-label="Language"></select>
+                    </label>
+                    <label class="tool-field">
+                        <span class="tool-label" data-i18n="tool.theme">Theme</span>
+                        <select id="themeSelect" aria-label="Colour theme"></select>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="top">
+        <section class="hero" aria-labelledby="hero-title">
+            <div class="container">
+                <p class="eyebrow"><span aria-hidden="true">🪶</span> <span
+                        data-i18n="w.eyebrow">Frostcaller · the writing desk</span> <span
+                        aria-hidden="true">🪶</span></p>
+                <h1 id="hero-title" class="hero-title">THE <span class="glow">SCRIBE</span></h1>
+                <p class="hero-sub" data-i18n="w.hero.sub" data-i18n-html="true">
+                    Plug the board into this computer and talk to it <strong>from this page</strong> —
+                    no drivers to hunt down, no serial monitor to install, nothing uploaded anywhere.
+                    Identify the chip, watch the live log, catch the codes your remote is shouting,
+                    and send commands back. It speaks <strong>Flipper Zero</strong> too.
+                </p>
+                <div class="hero-cta">
+                    <button id="connectBtn" class="btn btn-primary" type="button"
+                        data-i18n="w.connect">Connect a board</button>
+                    <a href="#flash" class="btn btn-ghost"><span data-i18n="w.wantflash">I want to install
+                            firmware</span> <span aria-hidden="true">↓</span></a>
+                </div>
+                <p id="support" class="support-note" role="status"></p>
+            </div>
+        </section>
+
+        <!-- ── The console ────────────────────────────────────────────────── -->
+        <section id="deck" class="section" aria-labelledby="deck-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="deck-title" class="section-title" data-i18n="w.deck.t">The console</h2>
+                    <p class="section-sub" data-i18n="w.deck.d">Everything the board says, as it says it. This
+                        is the same stream ESPHome shows you in its LOGS window, and the same one the Arduino
+                        Serial Monitor would show — only you did not have to install either.</p>
+                </div>
+
+                <div class="deck">
+                    <div class="deck-bar">
+                        <span id="status" class="status is-off">Not connected</span>
+                        <label class="deck-field">
+                            <span class="tool-label" data-i18n="w.baud">Baud</span>
+                            <select id="baudSelect" aria-label="Serial speed">
+                                <option value="115200" selected>115200 — ESPHome, Tasmota, bootloader</option>
+                                <option value="9600">9600</option>
+                                <option value="74880">74880 — ESP8266 boot messages</option>
+                                <option value="230400">230400</option>
+                                <option value="921600">921600</option>
+                            </select>
+                        </label>
+                        <button id="identifyBtn" class="mini-btn" type="button" disabled
+                            data-i18n="w.identify">Identify the board</button>
+                        <button id="resetBtn" class="mini-btn" type="button" disabled
+                            data-i18n="w.restart">Restart it</button>
+                        <button id="pauseBtn" class="mini-btn" type="button" disabled>Pause</button>
+                        <button id="clearBtn" class="mini-btn" type="button" data-i18n="btn.clear">Clear</button>
+                        <button id="copyLogBtn" class="mini-btn" type="button" data-i18n="w.copylog">Copy
+                            log</button>
+                        <button id="saveLogBtn" class="mini-btn" type="button" data-i18n="w.savelog">Save
+                            log</button>
+                        <button id="disconnectBtn" class="mini-btn" type="button" disabled
+                            data-i18n="w.disconnect">Disconnect</button>
+                    </div>
+
+                    <div id="chipCard" class="chip-card" hidden></div>
+
+                    <div class="deck-filter">
+                        <input id="filterInput" type="search" class="search-input" data-i18n-ph="w.filter"
+                            placeholder="Only show lines containing…" aria-label="Filter the log"
+                            autocomplete="off">
+                        <label class="deck-check">
+                            <input id="autoscroll" type="checkbox" checked>
+                            <span data-i18n="w.follow">Follow along</span>
+                        </label>
+                    </div>
+
+                    <div id="log" class="log" role="log" aria-live="polite" aria-label="Serial output"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Flipper Zero ───────────────────────────────────────────────── -->
+        <section id="flipper" class="section" aria-labelledby="flip-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="flip-title" class="section-title"><span data-i18n="w.flip.t1">The</span> <span
+                            class="glow" data-i18n="w.flip.t2">dolphin</span> <span
+                            data-i18n="w.flip.t3">is welcome here</span></h2>
+                    <p class="section-sub" data-i18n="w.flip.d">A Flipper Zero is a serial port with a command
+                        line on it, which means this page can drive it. It becomes the best infrared receiver
+                        in the house — no wiring, no config, no board to flash — and whatever it catches is
+                        converted straight into ESPHome, Tasmota, Broadlink or SmartIR.</p>
+                </div>
+
+                <div class="glass-panel">
+                    <div id="flipperPanel"></div>
+                </div>
+
+                <div class="flash-grid" style="margin-top:16px">
+                    <article class="flash-card">
+                        <h3 data-i18n="w.imp.t">Bring a <code>.ir</code> file in</h3>
+                        <p data-i18n="w.imp.d">Somebody has probably already captured your air conditioner.
+                            Take the file from one of the databases below, drop it here, and it becomes
+                            ESPHome config — you do not even need to own a Flipper for this part.</p>
+                        <div id="irDrop" class="drop">
+                            <p data-i18n="w.imp.drop">Drop <code>.ir</code> files here</p>
+                            <label class="mini-btn" for="irFile" data-i18n="w.imp.choose">or choose files</label>
+                            <input id="irFile" type="file" accept=".ir,text/plain" multiple hidden>
+                        </div>
+                        <details class="find">
+                            <summary class="mini-btn" data-i18n="w.imp.paste">or paste one ▾</summary>
+                            <div style="margin-top:10px">
+                                <textarea id="irPaste" class="tool-input" rows="5" spellcheck="false"
+                                    placeholder="Filetype: IR signals file&#10;Version: 1&#10;#&#10;name: Power&#10;type: parsed&#10;protocol: NEC&#10;address: 00 00 00 00&#10;command: 15 00 00 00"
+                                    aria-label="Paste the contents of a .ir file"></textarea>
+                                <div class="mini-row">
+                                    <button type="button" id="irPasteBtn" class="mini-btn"
+                                        data-i18n="w.imp.go">Import it</button>
+                                </div>
+                            </div>
+                        </details>
+                    </article>
+
+                    <article class="flash-card">
+                        <h3 data-i18n="w.exp.t">Send one back out</h3>
+                        <p data-i18n-rich="w.exp.d">Everything in your capture list can be written back as a
+                            <code>.ir</code> file and copied onto the Flipper over USB — so a code caught by an
+                            ESP board ends up on the dolphin, and the other way around.</p>
+                        <div class="mini-row">
+                            <button type="button" id="expIr" class="btn btn-primary" data-i18n="w.exp.save">Save
+                                everything as .ir</button>
+                        </div>
+                        <p class="step-note" data-i18n-rich="w.exp.note">Put the file in
+                            <code>/ext/infrared/</code> on the SD card. The Flipper lists it under Infrared →
+                            Saved Remotes.</p>
+                    </article>
+                </div>
+
+                <h3 class="sub-head" id="repos" data-i18n="w.repos.t">Where the codes already live</h3>
+                <p class="sub-lead" data-i18n="w.repos.d">The community has captured an enormous number of
+                    remotes already, air conditioners very much included. All free, all plain text files.</p>
+                <div id="repoList" class="sw-grid"></div>
+            </div>
+        </section>
+
+        <!-- ── Captures ───────────────────────────────────────────────────── -->
+        <section id="captures" class="section" aria-labelledby="cap-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="cap-title" class="section-title" data-i18n="w.cap.t">Caught in the act</h2>
+                    <p class="section-sub" data-i18n="w.cap.d">Anything that looks like an infrared code gets
+                        pulled out of the stream and kept here — from an ESP board, from a Flipper, or from a
+                        file you dropped in. They survive a reload, so an evening of pressing buttons is not
+                        lost to a stray refresh.</p>
+                </div>
+                <div class="glass-panel">
+                    <p class="tool-lead" data-i18n-rich="w.cap.lead">For an ESP board you need a config with
+                        <code>remote_receiver:</code> and <code>dump: all</code> — <a
+                            href="../#ch-learn">the capturing chapter</a> has the eight lines, and <a
+                            href="../#builder">the config writer</a> can tick the box for you. For a Flipper,
+                        just press Listen above.</p>
+                    <div class="mini-row">
+                        <span class="status is-off" id="capCount">none yet</span>
+                        <button id="capCopy" class="mini-btn" type="button" data-i18n="w.cap.copy">Copy them
+                            all</button>
+                        <button id="expYaml" class="mini-btn" type="button" data-i18n="w.cap.yaml">Export as
+                            ESPHome</button>
+                        <button id="expSmartir" class="mini-btn" type="button" data-i18n="w.cap.smartir">Export
+                            as SmartIR</button>
+                        <button id="expJson" class="mini-btn" type="button" data-i18n="w.cap.json">Export as
+                            JSON</button>
+                        <button id="capClear" class="mini-btn" type="button" data-i18n="w.cap.clear">Forget
+                            them all</button>
+                    </div>
+                    <div id="capList" class="cap-list"></div>
+                </div>
+
+                <h3 class="sub-head" id="diff" data-i18n="w.diff.t">Compare two of them</h3>
+                <p class="sub-lead" data-i18n="w.diff.d">Capture the same thing twice with one setting changed
+                    — 22 degrees, then 23 — tick both, and see exactly which part of the message carries the
+                    temperature. This is how an unknown protocol gets taken apart, and nothing else makes it
+                    easy.</p>
+                <div class="glass-panel">
+                    <div id="diffBody"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Send ──────────────────────────────────────────────────────── -->
+        <!-- ── The lab ────────────────────────────────────────────────────── -->
+        <section id="lab" class="section" aria-labelledby="lab-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="lab-title" class="section-title"><span data-i18n="w.lab.t1">The</span> <span
+                            class="glow" data-i18n="w.lab.t2">laboratory</span></h2>
+                    <p class="section-sub" data-i18n="w.lab.d">Past copying codes and into understanding them.
+                        This is what turns “a few buttons that work” into a driver that gives everybody a real
+                        thermostat.</p>
+                </div>
+
+                <div class="tool-panel" id="checksum">
+                    <h3 class="tool-title" data-i18n="w.sum.t">🧮 Work out the checksum</h3>
+                    <p class="tool-lead" data-i18n="w.sum.d">Nearly every air-conditioner message ends with a
+                        check byte, and until you know how it is calculated you can only replay the states you
+                        captured. Tick two or more raw captures above: this decodes them into bytes, highlights
+                        the ones that move, and tries the common schemes until one explains every message.</p>
+                    <div id="checksumBody"></div>
+                </div>
+
+                <div class="tool-panel" id="skeleton">
+                    <h3 class="tool-title" data-i18n="w.skel.t">🧬 Generate an ESPHome component</h3>
+                    <p class="tool-lead" data-i18n-rich="w.skel.d">The real prize. If you have worked out a
+                        protocol nobody supports, this writes the skeleton of a <code>climate_ir</code>
+                        component using the timings from your own captures — so your unit can become natively
+                        supported for everybody.</p>
+                    <label class="bf" style="max-width:320px">
+                        <span class="bf-label" data-i18n="w.skel.name">What is the brand called?</span>
+                        <input id="skeletonName" type="text" value="MyBrand" maxlength="32"
+                            aria-label="Brand name for the generated component">
+                    </label>
+                    <div id="skeletonOut"></div>
+                </div>
+
+                <div class="tool-panel" id="session">
+                    <h3 class="tool-title" data-i18n="w.rec.t">🎬 Record and replay</h3>
+                    <p class="tool-lead" data-i18n="w.rec.d">Save everything on screen — the log and the
+                        captures — into one file. Somebody else can load it here and see exactly what you saw,
+                        which makes helping a stranger remotely genuinely possible.</p>
+                    <div class="mini-row">
+                        <button type="button" id="sessionSave" class="mini-btn" data-i18n="w.rec.save">Save this
+                            session</button>
+                        <label class="mini-btn" for="sessionFile" data-i18n="w.rec.load">Load a session</label>
+                        <input id="sessionFile" type="file" accept=".json,application/json" hidden>
+                    </div>
+                </div>
+
+                <div class="tool-panel" id="irdb">
+                    <h3 class="tool-title" data-i18n="w.irdb.t">🌐 Pull from Flipper-IRDB</h3>
+                    <div id="irdbBody"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Send ───────────────────────────────────────────────────────── -->
+        <section id="send" class="section" aria-labelledby="send-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="send-title" class="section-title" data-i18n="w.send.t">Writing back</h2>
+                    <p class="section-sub" data-i18n="w.send.d">The console works both ways. What that gets you
+                        depends entirely on what the board is running — so read the honest note before
+                        wondering why nothing happens.</p>
+                </div>
+
+                <div class="glass-panel">
+                    <div class="send-row">
+                        <input id="sendInput" type="text" class="send-input" data-i18n-ph="w.send.ph"
+                            placeholder="Type a command and press Enter" aria-label="Command to send"
+                            autocomplete="off" spellcheck="false">
+                        <button id="sendBtn" class="btn btn-primary" type="button" disabled
+                            data-i18n="w.send.btn">Send</button>
+                    </div>
+                    <label class="deck-check">
+                        <input id="sendNewline" type="checkbox" checked>
+                        <span data-i18n="w.send.nl">Add a newline at the end (nearly always right)</span>
+                    </label>
+
+                    <h3 class="tool-title" data-i18n="w.hvac.t">Ready-made air-conditioner commands</h3>
+                    <p class="tool-lead" data-i18n-rich="w.hvac.d">For a board running <strong>Tasmota</strong>,
+                        these are complete working commands. Build one, send it, and the unit should answer.
+                    </p>
+                    <div id="hvacForm" class="hvac-form"></div>
+                    <div id="hvacOut"></div>
+
+                    <p class="step-note" id="sendTruth"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Protocol quiz ──────────────────────────────────────────────── -->
+        <section id="quiz" class="section" aria-labelledby="quiz-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="quiz-title" class="section-title"><span data-i18n="w.quiz.t1">Which protocol</span>
+                        <span class="glow" data-i18n="w.quiz.t2">is it</span>?
+                    </h2>
+                    <p class="section-sub" data-i18n="w.quiz.d">Stop guessing from a brand table. Send one
+                        candidate at a time and watch the unit — the one it answers to is the one you want.</p>
+                </div>
+                <div class="glass-panel">
+                    <div id="quizBody"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Flashing ───────────────────────────────────────────────────── -->
+        <section id="flash" class="section" aria-labelledby="flash-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="flash-title" class="section-title" data-i18n="w.flash.t">Putting firmware on it
+                    </h2>
+                    <p class="section-sub" data-i18n="w.flash.d">The honest state of play, and the two buttons
+                        that actually do it today.</p>
+                </div>
+
+                <p class="caveat" data-i18n-rich="w.flash.why">
+                    <strong>This page does not write firmware yet — on purpose.</strong> Reading from a board
+                    is harmless; writing to one can leave you holding a brick, and I will not ship flashing
+                    code I have not run against real hardware. What this page <em>does</em> do is prove the
+                    hard part works: your cable, your driver, your port and your chip, all confirmed by the
+                    <strong>Identify the board</strong> button above. Once that succeeds, either installer
+                    below will succeed too. The full plan for bringing flashing in-page — including why it is
+                    more than a weekend — is written out in
+                    <a href="../todo-writer.md">todo-writer.md</a>.
+                </p>
+
+                <div class="flash-grid">
+                    <article class="flash-card">
+                        <h3>ESPHome Web</h3>
+                        <p data-i18n="w.flash.esp.d">The official browser installer. Prepares a blank board,
+                            joins it to your Wi-Fi and hands it to your own ESPHome. This is the route the
+                            guide assumes.</p>
+                        <a class="btn btn-primary" href="https://web.esphome.io/" target="_blank"
+                            rel="noopener" data-i18n="w.flash.esp.go">Open ESPHome Web ↗</a>
+                    </article>
+                    <article class="flash-card">
+                        <h3 data-i18n="w.flash.tas.t">Tasmota installer</h3>
+                        <p data-i18n-rich="w.flash.tas.d">Pick the <code>tasmota-ir</code> build and you get a
+                            finished infrared firmware with no compiling at all. It talks to Home Assistant
+                            over MQTT, and the Writing back section above drives it directly.</p>
+                        <a class="btn btn-ghost" href="https://tasmota.github.io/install/" target="_blank"
+                            rel="noopener" data-i18n="w.flash.tas.go">Open the Tasmota installer ↗</a>
+                    </article>
+                </div>
+
+                <p class="step-note" data-i18n-rich="w.flash.note">
+                    <strong>Close this page's connection first.</strong> A serial port belongs to one tab at a
+                    time — press Disconnect above before an installer tries to open it, or it will
+                    tell you the port is unavailable and you will blame the cable.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-bottom" style="border:0;">
+                <p>&copy; <span id="year">2026</span> rami.party ·
+                    <span class="muted" data-i18n="w.footer">Web Serial only works over HTTPS or on localhost,
+                        and only in Chrome-family browsers. Nothing here leaves your machine.</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <button id="toTop" class="to-top" type="button" hidden aria-label="Back to top">↑</button>
+
+    <script src="../i18n.js" defer></script>
+    <script src="../i18n-writer.js" defer></script>
+    <script src="../text.js" defer></script>
+    <script src="../ui.js" defer></script>
+    <script src="../data-themes.js" defer></script>
+    <script src="../data-brands.js" defer></script>
+    <script src="flipper.js" defer></script>
+    <script src="app.js" defer></script>
+    <script src="lab.js" defer></script>
+</body>
+
+</html>
