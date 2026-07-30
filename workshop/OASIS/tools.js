@@ -334,6 +334,56 @@
         },
 
         {
+            id: 'declination',
+            chapter: 'nav',
+            title: 'Find magnetic declination from the sun',
+            glyph: '⊕',
+            blurb: 'No magnetic model, no internet, no map margin. Compare the compass bearing you read to the sun against the sun\'s true bearing computed here, and the difference IS your local declination.',
+            fields: [
+                { k: 'pos', label: 'Position (lat, lon)', type: 'text', def: '50.85034, 4.35171', wide: true },
+                { k: 'when', label: 'Time of the observation (local)', type: 'datetime-local', def: '' },
+                { k: 'obs', label: 'Compass bearing you read to the sun (°)', type: 'number', def: 180, step: 0.5, min: 0, max: 360 },
+            ],
+            run(v) {
+                const P = G.parseLatLon(v.pos);
+                if (!P) return { rows: [], msg: 'Enter a position as "lat, lon".', alarm: true };
+                const when = v.when ? new Date(v.when) : new Date();
+                if (isNaN(when)) return { rows: [], msg: 'Invalid date.', alarm: true };
+
+                const s = G.sunPosition(when, P.lat, P.lon);
+                const obs = G.norm360(n(v.obs, 0));
+                /* declination = true - magnetic, east positive */
+                const dec = ((s.azimuth - obs + 540) % 360) - 180;
+
+                const rows = [
+                    ['Local declination', `${dec >= 0 ? '+' : ''}${f(dec, 1)}° ${dec >= 0 ? 'EAST' : 'WEST'}`, 'hero'],
+                    ['Sun\'s true bearing now', `${f(s.azimuth, 1)}° (${G.compassPoint(s.azimuth)})`],
+                    ['Sun altitude', `${f(s.altitude, 1)}°`],
+                    ['Use it: true → magnetic', `${dec >= 0 ? 'subtract' : 'add'} ${f(Math.abs(dec), 1)}°`],
+                    ['Use it: magnetic → true', `${dec >= 0 ? 'add' : 'subtract'} ${f(Math.abs(dec), 1)}°`],
+                ];
+
+                let msg = 'Sight the sun with the compass — safely, never through a lens and never staring at it. '
+                    + 'Take three readings and average them. Then set this number on your compass\'s declination '
+                    + 'adjustment and write it on the compass and in your log.';
+                let alarm = false;
+                if (s.altitude < 0) {
+                    msg = '⚠ The sun is below the horizon at that time and place, so no bearing to it exists. Check the time.';
+                    alarm = true;
+                } else if (s.altitude > 60) {
+                    msg = '⚠ The sun is very high (' + f(s.altitude, 0) + '°). A bearing to a high sun is inaccurate — '
+                        + 'take the observation within a couple of hours of sunrise or sunset instead.';
+                    alarm = true;
+                }
+                return { rows, msg, alarm };
+            },
+            mount(el, ctx) {
+                const input = el.closest('.tool').querySelector('[name="when"]');
+                if (input && !input.value) { input.value = localISO(new Date()); ctx.recompute(); }
+            },
+        },
+
+        {
             id: 'pace',
             chapter: 'nav',
             title: 'Pace count',
@@ -1015,25 +1065,53 @@
                 readout.className = 'chip';
                 readout.textContent = '0 compressions';
 
+                /* Spoken coaching, using the browser's built-in synthesiser.
+                   Hands are busy during CPR; a voice is worth more than a screen. */
+                const speak = txt => {
+                    if (!voiceOn || !window.speechSynthesis) return;
+                    try {
+                        window.speechSynthesis.cancel();
+                        const u = new SpeechSynthesisUtterance(txt);
+                        u.rate = 1.05;
+                        window.speechSynthesis.speak(u);
+                    } catch (e) { /* not available */ }
+                };
+
+                let voiceOn = false;
+                const btnVoice = document.createElement('button');
+                btnVoice.type = 'button'; btnVoice.className = 'btn ghost';
+                btnVoice.textContent = '🔈 Voice coaching off';
+                btnVoice.addEventListener('click', () => {
+                    if (!window.speechSynthesis) { btnVoice.textContent = 'No voice on this device'; return; }
+                    voiceOn = !voiceOn;
+                    btnVoice.textContent = voiceOn ? '🔊 Voice coaching ON' : '🔈 Voice coaching off';
+                    if (voiceOn) speak('Voice coaching on. Push hard and fast in the centre of the chest.');
+                });
+
                 btn.addEventListener('click', () => {
                     if (timer) {
                         clearInterval(timer); timer = null;
                         btn.textContent = '▶ Start metronome';
+                        if (window.speechSynthesis) window.speechSynthesis.cancel();
                         return;
                     }
                     const bpm = clamp(n(ctx.values().bpm, 110), 60, 140);
                     count = 0;
                     btn.textContent = '■ Stop';
+                    speak('Starting. Push hard and fast, five to six centimetres, centre of the chest.');
                     const tick = () => {
                         count++;
                         beep(count % 30 === 0 ? 1200 : 880, 45, 0.3);
                         readout.textContent = `${count} compressions · ${Math.floor(count / 30)} cycles`;
+                        if (count % 30 === 0) speak('Two breaths.');
+                        else if (count % 220 === 0) speak('Two minutes. Change rescuer if you can.');
+                        else if (count === 10) speak('Let the chest come all the way back up each time.');
                     };
                     tick();
                     timer = setInterval(tick, 60000 / bpm);
                 });
 
-                row.append(btn, readout);
+                row.append(btn, btnVoice, readout);
                 el.appendChild(row);
             },
         },

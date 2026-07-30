@@ -40,7 +40,8 @@ in `wasteland/` as mementos, each reachable from its card.
 | **BBQ Mailer** | Keep local, no backend needed. | It composes a `mailto:` link (`sendEmail()` in `script.js`) — it never needed `submit.php`. The old note was wrong. |
 | **`workshop/laser/` photography** | Local SVG placeholders + `status:'soon'`. | Honest, keeps the layout intact, and swapping in real photos is a one-file change. |
 | **lebon.info branding** | User-visible strings rebranded; *source-comment attributions kept*. | `/* Based on lebon.info Terminal Theme */` is accurate history, not a leak. |
-| **External lebon.info links** | Kept (`scan.lebon.info`, `note.lebon.info`, `lebon.info/project/`). | Those are real tools hosted there, not stale references. |
+| **External lebon.info links** | **Removed.** `note.lebon.info` → `note.labidi.eu`, `lebon.info/project/` → `labidi.eu/#projects`, the `scan.lebon.info` "Network Scanner" card dropped (no successor). | lebon.info is being retired; links now point at the live rami.party / labidi.eu equivalents. |
+| **`BBQ@lebon.info`** | **Open.** Still hardcoded in `workshop/bbq/` (`index.html`, `script.js`). | It is a real mailbox, not a link — needs a working replacement address before it can be swapped. |
 
 ---
 

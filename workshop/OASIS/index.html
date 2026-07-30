@@ -74,7 +74,8 @@
             <span class="chip" id="netChip" title="Connection state">◍ checking…</span>
             <span class="chip" id="cacheChip" title="Offline package state">⛁ cache…</span>
             <span class="chip" id="clockChip" title="Local time / UTC">⏱</span>
-            <span class="chip ghost" id="posChip" title="Last known position">⌖ no fix</span>
+            <span class="chip ghost" id="posChip" title="Last known position — click for actions"
+                role="button" tabindex="0">⌖ no fix</span>
             <button type="button" class="chip act" id="fixBtn" title="Take a GPS fix and store it locally">Get
                 fix</button>
             <button type="button" class="chip install" id="installBtn" hidden
@@ -91,6 +92,9 @@
     <footer class="ftr">
         <p><b>O.A.S.I.S.</b> is a reference, not a rescue service. Where emergency services exist,
             call them first. Nothing here replaces hands-on training.</p>
+        <p class="muted">Something missing, wrong or hard to find? Tell us —
+            <a id="contactLink" href="mailto:oasis@labidi.eu">oasis@labidi.eu</a>.
+            The most useful thing you can send is the word you searched for that found nothing.</p>
         <p class="muted">Static, air-gapped, no tracking, no network calls. <span id="verLine"></span></p>
     </footer>
 
@@ -99,6 +103,7 @@
     <script src="geo.js"></script>
     <script src="data-knowledge.js"></script>
     <script src="data-scenarios.js"></script>
+    <script src="data-trees.js"></script>
     <script src="data-reference.js"></script>
     <script src="tools.js"></script>
     <script src="app.js"></script>

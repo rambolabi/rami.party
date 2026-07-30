@@ -23,33 +23,38 @@ working with the cable cut. `/workshop/OASIS/`
 | `geo.js` | Pure geodesy/astronomy → `window.GEO`. No DOM. |
 | `data-knowledge.js` | Chapters → cards. The doctrine. |
 | `data-scenarios.js` | `OASIS_BANDS` + `OASIS_SCENARIOS` — before/during/after playbooks. |
+| `data-trees.js` | `OASIS_TREES` — interactive decision guides. |
 | `data-reference.js` | `OASIS_SOURCES` (attribution registry) + `OASIS_TABLES` + `OASIS_LINKS`. |
 | `tools.js` | `OASIS_TOOLS` — declarative calculators. |
-| `app.js` | Router, renderer, search, field log, theme, install, offline plumbing. |
+| `app.js` | Router, renderer, search, log, card, position, theme, install, offline. |
 | `sw.js` | Cache-first service worker, self-healing shell cache. |
 
 ## Built
 
-- [x] 11 chapters, 70 cards, **33 playbooks**, 21 tables, 23 calculators, 24 mirrorable sources
-- [x] **Playbooks**: every scenario answered as before / during / after, across 7 bands —
-      infrastructure, natural, CBRN, disease, conflict, isolation, long-term collapse
-- [x] **Source attribution**: 40 named authorities (WHO, CDC, FEMA, ICRC, IAEA, NOAA,
-      USGS, Sphere, ERC, ITU, UNHCR…) cited per chapter, card and playbook
-- [x] **Install**: `beforeinstallprompt` captured, install button in the status bar,
-      install card on Home and About with per-platform manual steps (iOS Safari,
-      Android, desktop Chromium, Firefox) and installed-state detection
-- [x] Communications expanded: satellite, digital modes over radio, non-electronic
-      methods, running a net, repairing a radio, plus a master table of 38 channels
-- [x] Hash router with deep links to any card, tool or playbook (`#/play/nuclear`)
-- [x] Instant weighted search across cards, playbooks, tables, tools and sources
-- [x] 5 themes — tactical, daylight, field, survival, **night vision** (red-only,
-      monochrome glyphs so nothing destroys dark adaptation)
-- [x] Adjustable text size, screen wake lock, print layout per chapter and playbook
-- [x] Geodesy: DD/DDM/DMS ⇄ UTM ⇄ MGRS ⇄ Maidenhead, distance/bearing,
-      waypoint projection, iterative resection, sun/moon, plot board canvas
-- [x] Field log with timestamps and text export; GPS fix stored locally
-- [x] PWA — installable, offline-first, self-healing cache, "cache everything" button
-- [x] Tool inputs persist per tool; "erase all local data" in About
+- [x] 12 chapters, 93 cards, **42 playbooks**, **6 decision guides**, 21 tables,
+      24 calculators, 43 named source authorities
+- [x] **`#/now` — "I need help now"**: 13 one-tap critical links plus interactive
+      decision guides for unknown situation, casualty, navigation, meeting people,
+      water safety and stay-or-go
+- [x] **Playbooks**: before / during / after across 8 bands — everyday, infrastructure,
+      natural, CBRN, disease, conflict, isolation, long-term collapse
+- [x] **People chapter**: what really happens in disasters, meeting strangers,
+      running a group, trade and barter, working across a language barrier
+- [x] **Navigation**: WGS84 vs ETRS89 vs UTM, using a compass, making a compass,
+      night navigation, navigating under cloud, plus the existing sun/stars work
+- [x] **Medical completeness**: penetrating trauma, poisoning and fumes, crush and
+      entrapment, drowning, electrical injury, bites and envenomation, abdominal
+      injury and hernia, eye injuries, childbirth, dental
+- [x] **Communications**: satellite, digital modes, non-electronic methods, running
+      a net, repairing a radio, CB on 12/24 V, obtaining a beacon, building a
+      crystal radio, master table of 38 channels, global alerting table with BE-Alert
+- [x] **Position page** (`#/pos`, or tap the status chip): all formats, copy, log,
+      save waypoints, GPX export, and a locally drawn range-ring map
+- [x] **Emergency card** (`#/card`): fillable, printable, stored only on the device
+- [x] Install: `beforeinstallprompt` captured, status-bar button, install card with
+      per-platform manual steps and installed-state detection
+- [x] 5 themes including red night vision; adjustable text; wake lock; print layouts
+- [x] Field log, GPS fix, tool-input persistence, "erase all local data"
 
 ### Verified
 
@@ -90,23 +95,35 @@ working with the cable cut. `/workshop/OASIS/`
 
 ## Next
 
-- [ ] Offline raster/vector map tiles for a user-chosen region — the one genuine
-      gap. The plot board is a substitute, not a map.
-- [ ] Magnetic declination without a lookup: ship a reduced WMM coefficient set,
-      or derive it from the solar azimuth tool and store it per location
-- [ ] Waypoint import/export as GPX so the plot board talks to real GPS units
-- [ ] Printable one-page emergency card (position, contacts, allergies, PACE plan)
+- [ ] **Offline map tiles** for a user-chosen region — the one genuine gap. The
+      position page draws range rings and waypoints to scale, which is a
+      substitute, not a map. Any real solution means bundling tiles, which
+      conflicts with the zero-fetch rule unless the user imports them by hand.
+- [ ] Ship a reduced WMM/IGRF coefficient set so declination needs no observation
+      (the solar method now covers it, but a model would work at night)
+- [ ] GPX **import** (export is done)
 - [ ] Translations — NL/FR first, to match the rest of rami.party
 - [ ] Satellite pass prediction from stored TLEs (SGP4 is ~200 lines)
-- [ ] Triage decision trees: chest pain, breathlessness, abdominal pain
-- [ ] Group mode: share a waypoint set or config as a QR code, device to device,
-      with no network at all
-- [ ] Spoken CPR coaching for hands-busy use
-- [ ] Chapter: animals, bites, stings and envenomation (region-aware)
-- [ ] Playbook: pet and livestock care through each scenario
-- [ ] Playbook: pregnancy, birth and infants without medical support
-- [ ] Playbook: dental emergencies with no dentist
-- [ ] Region selector that surfaces the playbooks relevant to where you live
+- [ ] Share a waypoint set or the emergency card as a QR code, device to device,
+      with no network (needs a QR encoder, ~200 lines)
+- [ ] Region selector that surfaces the playbooks and alerting systems for where
+      you live, and hides the irrelevant ones
+- [ ] More decision guides: chest pain, breathlessness, abdominal pain, fever
+- [ ] Playbook: dam failure, train derailment, sinkhole, mass gathering crush
+
+## Migration to oasis.labidi.eu
+
+The code is already origin-agnostic — every internal link is relative and every
+asset is local, so the folder runs from any path, any domain, or `file://`.
+
+1. Copy the folder to the new repository root.
+2. Edit the `CONFIG` block at the top of `app.js`: set `parentSite: null` to drop
+      the "back to rami.party" chip, or repoint it.
+3. Update `<link rel="canonical">` in `index.html`.
+4. Add `CNAME` containing `oasis.labidi.eu`, plus `robots.txt` and a `sitemap.xml`.
+5. Leave a redirect at `/workshop/OASIS/` — installed copies keep working either
+      way, but bookmarks and search results will not.
+6. Bump `CACHE` in `sw.js` so existing installs pick up the change.
 
 ## Content backlog
 
@@ -137,4 +154,10 @@ working with the cable cut. `/workshop/OASIS/`
 - Search is substring-based and requires **all** terms to match, so write `keys`
   in the words a frightened person would actually type. "warzone", "shtf",
   "deserted island" and "martial law" all returned nothing until they were added.
-- Every playbook needs `sources`; the structural audit fails the build otherwise.
+  Add plurals too — "rupture" does not match a search for "ruptures".
+- Search scores three fields: title, `keys`, body. Whole-word matches beat
+  substring matches and an all-terms-whole-word hit gets a 1.6× bonus. Without
+  that, "car" matched inside "cargo" and "car crash" returned the aircraft playbook.
+- Every playbook needs `sources`; every tree option must point at a node that
+  exists and every path must terminate. The structural audit checks both.
+- Contact for gaps is `oasis@labidi.eu`, shown in the footer and on About.

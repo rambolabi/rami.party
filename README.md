@@ -59,7 +59,6 @@ accessible, and respects `prefers-reduced-motion`.
 
 - Professional projects — [Labidi.eu](https://labidi.eu)
 - Professional services — [Compyra.com](https://compyra.com)
-- Project index — [Lebon.info](https://lebon.info)
 - Home inspection — [Huiskeuring.be](https://huiskeuring.be)
 
 ## 📝 Notes

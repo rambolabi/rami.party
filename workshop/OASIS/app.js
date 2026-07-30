@@ -13,7 +13,19 @@
 (function () {
     'use strict';
 
-    const VERSION = '1.1.0';
+    const VERSION = '1.2.0';
+
+    /* --------------------------------------------------------------- config
+       Everything environment-specific lives here. When this system moves to
+       its own domain, this block is the only thing that has to change: every
+       internal link is relative and every asset is local. */
+    const CONFIG = {
+        contact: 'oasis@labidi.eu',
+        futureHome: 'oasis.labidi.eu',
+        parentSite: '../../',            // set to null once it stands alone
+        parentName: 'rami.party',
+    };
+
     const K = window.OASIS_KNOWLEDGE || [];
     const T = window.OASIS_TABLES || [];
     const TOOLS = window.OASIS_TOOLS || [];
@@ -21,6 +33,7 @@
     const SCEN = window.OASIS_SCENARIOS || [];
     const BANDS = window.OASIS_BANDS || [];
     const SRC = window.OASIS_SOURCES || {};
+    const TREES = window.OASIS_TREES || [];
 
     /* ------------------------------------------------------------ tiny DOM */
 
@@ -63,7 +76,22 @@
 
     const store = {
         get(k, fb) {
-            try { const v = localStorage.getItem('oasis.' + k); return v == null ? fb : JSON.parse(v); }
+            try {
+                const v = localStorage.getItem('oasis.' + k);
+                if (v == null) return fb;
+                const parsed = JSON.parse(v);
+                /* `v == null` only catches a *missing* key. A stored literal
+                   "null", or a value whose shape no longer matches what the
+                   caller expects — a half-finished write, another tab, an older
+                   version of this app — parses fine and then explodes as a
+                   TypeError somewhere far away from here. Match the fallback's
+                   shape or hand back the fallback. */
+                if (parsed == null) return fb;
+                if (fb == null) return parsed;
+                if (Array.isArray(fb) !== Array.isArray(parsed)) return fb;
+                if (typeof parsed !== typeof fb) return fb;
+                return parsed;
+            }
             catch (e) { return fb; }
         },
         set(k, v) {
@@ -71,6 +99,27 @@
         },
         del(k) { try { localStorage.removeItem('oasis.' + k); } catch (e) { } },
     };
+
+    /**
+     * The stored fix is used arithmetically in a few dozen places — toFixed,
+     * MGRS, bearings, the plot canvas. A fix written by an older version, a
+     * partial write, or a hand-edited value must degrade to "no fix" here,
+     * not to a TypeError on the home screen when someone opens this in a
+     * genuine emergency.
+     */
+    function readFix() {
+        const f = store.get('fix', null);
+        if (!f || typeof f !== 'object' || Array.isArray(f)) return null;
+        const lat = Number(f.lat), lon = Number(f.lon);
+        if (!isFinite(lat) || !isFinite(lon)) return null;
+        if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+        const acc = Number(f.acc), t = Number(f.t);
+        return {
+            lat, lon,
+            acc: isFinite(acc) && acc >= 0 ? acc : 0,
+            t: isFinite(t) && t > 0 ? t : Date.now(),
+        };
+    }
 
     let toastTimer = null;
     function toast(msg) {
@@ -84,11 +133,13 @@
     /* ---------------------------------------------------------------- pages */
 
     const PAGES = [
+        { id: 'now', title: 'I need help now', glyph: '⌁', group: null },
         { id: 'home', title: 'Command', glyph: '◉', group: null },
         { id: 'play', title: 'Playbooks', glyph: '▤', group: null },
     ].concat(K.map(c => ({ id: 'c/' + c.id, title: c.title, glyph: c.glyph, group: 'Doctrine', chapter: c })))
         .concat([
             { id: 'tools', title: 'All tools', glyph: '⚙', group: 'Systems' },
+            { id: 'card', title: 'Emergency card', glyph: '▭', group: 'Systems' },
             { id: 'log', title: 'Field log', glyph: '✎', group: 'Systems' },
             { id: 'library', title: 'Sources', glyph: '⛁', group: 'Systems' },
             { id: 'about', title: 'About & offline', glyph: 'ⓘ', group: 'Systems' },
@@ -454,7 +505,7 @@
             ]) : null,
             el('div', { class: 'btn-row' }, [
                 el('button', { class: 'btn ghost', type: 'button', onclick: getFix }, '⌖ Take a fix'),
-                el('a', { class: 'btn ghost', href: '#/tools' }, 'Convert it'),
+                el('a', { class: 'btn ghost', href: '#/pos' }, 'Position tools →'),
             ]),
         ]));
 
@@ -540,6 +591,526 @@
                 el('a', { class: 'btn ghost', href: l.url, target: '_blank', rel: 'noopener noreferrer external' }, 'Open ↗'),
             ]),
         ]);
+    }
+
+    /* --------------------------------------------------------- decision trees */
+
+    /**
+     * An interactive walker. The reader answers a few questions and lands on a
+     * specific instruction rather than a chapter. It is a router into the
+     * doctrine, never a replacement for it — every result links onward.
+     */
+    function renderTree(tree, autoStart) {
+        const sec = el('section', { class: 'tree card', id: 'tree-' + tree.id });
+        sec.appendChild(el('h3', null, [
+            el('span', { class: 'g', 'aria-hidden': 'true', text: tree.glyph }),
+            document.createTextNode(tree.title),
+        ]));
+        if (tree.lede) sec.appendChild(el('p', { class: 'lede', text: tree.lede }));
+
+        const trail = el('ol', { class: 'trail' });
+        const body = el('div', { class: 'tree-body' });
+        const controls = el('div', { class: 'btn-row' });
+        sec.append(trail, body, controls);
+
+        let stack = [];
+
+        function goTo(id) {
+            const node = tree.nodes[id];
+            body.textContent = '';
+            if (!node) {
+                body.appendChild(el('p', { class: 'note', text: 'That branch is missing. Start again.' }));
+                return;
+            }
+
+            if (node.result) {
+                const r = el('div', { class: 'tree-result' });
+                const h = el('h4', null, [document.createTextNode(node.result)]);
+                const tg = tagFor(node.tag);
+                if (tg) h.appendChild(tg);
+                r.appendChild(h);
+                const ol = el('ol');
+                (node.steps || []).forEach(s => ol.appendChild(el('li', null, rich(s))));
+                r.appendChild(ol);
+                if (node.note) r.appendChild(el('p', { class: 'note' }, rich(node.note)));
+                if (node.link) r.appendChild(el('div', { class: 'btn-row' }, [
+                    el('a', { class: 'btn', href: node.link }, 'Open the full guidance →'),
+                ]));
+                body.appendChild(r);
+            } else {
+                const q = el('div', { class: 'tree-q' });
+                q.appendChild(el('p', { class: 'tree-question' }, rich(node.q)));
+                if (node.hint) q.appendChild(el('p', { class: 'note', text: node.hint }));
+                const opts = el('div', { class: 'tree-opts' });
+                (node.options || []).forEach(o => {
+                    opts.appendChild(el('button', {
+                        type: 'button', class: 'tree-opt',
+                        onclick: () => { stack.push({ id: id, answer: o.a }); goTo(o.to); },
+                    }, o.a));
+                });
+                q.appendChild(opts);
+                body.appendChild(q);
+            }
+
+            /* Breadcrumb of what has been answered so far. */
+            trail.textContent = '';
+            stack.forEach(s => trail.appendChild(el('li', { text: s.answer })));
+            trail.hidden = !stack.length;
+
+            controls.textContent = '';
+            if (stack.length) {
+                controls.appendChild(el('button', {
+                    class: 'btn ghost', type: 'button',
+                    onclick: () => { const prev = stack.pop(); goTo(prev.id); },
+                }, '← Back'));
+                controls.appendChild(el('button', {
+                    class: 'btn ghost', type: 'button',
+                    onclick: () => { stack = []; goTo(tree.start); },
+                }, 'Start again'));
+            }
+        }
+
+        if (autoStart) goTo(tree.start);
+        else {
+            body.appendChild(el('div', { class: 'btn-row' }, [
+                el('button', { class: 'btn', type: 'button', onclick: () => goTo(tree.start) }, 'Start ▸'),
+            ]));
+        }
+        return sec;
+    }
+
+    function pageNow(treeId) {
+        const frag = document.createDocumentFragment();
+
+        const head = el('div', { class: 'page-head' });
+        head.appendChild(el('p', { class: 'eyebrow', text: 'Immediate' }));
+        head.appendChild(el('h1', null, [
+            el('span', { class: 'g', 'aria-hidden': 'true', text: '⌁' }),
+            document.createTextNode('I need help now'),
+        ]));
+        head.appendChild(el('p', {
+            text: 'If you do not know what is happening or what to do, start with the first question below. '
+                + 'Everything here is a few taps from an actual instruction.',
+        }));
+        frag.appendChild(head);
+
+        frag.appendChild(sectionHead('Minutes matter — go straight there'));
+        const fast = el('div', { class: 'jump' });
+        [['Severe bleeding', '#/c/medical/bleeding'],
+        ['Not breathing — CPR', '#/c/medical/cpr'],
+        ['Choking', '#/c/medical/choking'],
+        ['Unconscious but breathing', '#/c/medical/airway'],
+        ['Stabbed or shot', '#/c/medical/penetrating'],
+        ['Fire', '#/play/structure-fire'],
+        ['Fumes, gas or poison', '#/c/medical/poisoning'],
+        ['Drowning', '#/c/medical/drowning'],
+        ['Electric shock', '#/c/medical/electrical'],
+        ['Trapped or crushed', '#/c/medical/crush'],
+        ['Someone is threatening us', '#/play/threat'],
+        ['Send a distress call', '#/c/triage/mayday'],
+        ['Lost', '#/c/nav/nav-lost']]
+            .forEach(([t, h]) => fast.appendChild(el('a', { class: 'jump-link urgent', href: h }, t)));
+        frag.appendChild(fast);
+
+        const one = treeId && TREES.filter(t => t.id === treeId)[0];
+        if (one) {
+            frag.appendChild(sectionHead(one.title));
+            frag.appendChild(renderTree(one, true));
+            frag.appendChild(el('div', { class: 'btn-row' }, [
+                el('a', { class: 'btn ghost', href: '#/now' }, '← All decision guides'),
+            ]));
+            return frag;
+        }
+
+        frag.appendChild(sectionHead('Work it out — answer a few questions'));
+        const g = el('div', { class: 'grid wide' });
+        TREES.forEach(t => g.appendChild(renderTree(t, t.id === 'unknown')));
+        frag.appendChild(g);
+
+        frag.appendChild(el('p', {
+            class: 'note', style: 'margin-top:24px',
+            text: 'These guides route you to the right page fast. They do not replace the chapters — '
+                + 'read those on a calm day, because that is when the reading actually sticks.',
+        }));
+        return frag;
+    }
+
+    /* ------------------------------------------------------- position actions */
+
+    /**
+     * The stored fix is not just a number to look at — it is the input to half
+     * the system. Clicking the chip opens what you can actually do with it,
+     * including a locally drawn map. There are no tiles to fetch and never will
+     * be, so the map is built from your own saved waypoints and a scale grid:
+     * honest about what it is, and it works with the cable cut.
+     */
+    function positionPanel() {
+        const fix = store.get('fix', null);
+        const wrap = el('div', { class: 'card pos-panel' });
+
+        wrap.appendChild(el('h3', null, [
+            el('span', { class: 'g', 'aria-hidden': 'true', text: '⌖' }),
+            document.createTextNode('Position'),
+        ]));
+
+        if (!fix) {
+            wrap.appendChild(el('p', { class: 'lede', text: 'No position stored yet. Take a fix while you still have a clear sky and a charged battery — it costs nothing and it is the one thing you cannot reconstruct later.' }));
+            wrap.appendChild(el('div', { class: 'btn-row' }, [
+                el('button', { class: 'btn', type: 'button', onclick: getFix }, '⌖ Take a fix'),
+            ]));
+            return wrap;
+        }
+
+        const G = window.GEO;
+        const age = Math.round((Date.now() - fix.t) / 60000);
+        wrap.appendChild(el('dl', { class: 'facts' }, [
+            el('div', null, [el('dt', { text: 'Decimal' }), el('dd', { text: `${fix.lat.toFixed(6)}, ${fix.lon.toFixed(6)}` })]),
+            el('div', null, [el('dt', { text: 'Deg + min' }), el('dd', { text: G.toDDM(fix.lat, fix.lon) })]),
+            el('div', null, [el('dt', { text: 'MGRS' }), el('dd', { text: G.toMGRS(fix.lat, fix.lon, 5) || '—' })]),
+            el('div', null, [el('dt', { text: 'UTM' }), el('dd', { text: (u => u ? `${u.zone}${u.band} ${Math.round(u.easting)}E ${Math.round(u.northing)}N` : '—')(G.toUTM(fix.lat, fix.lon)) })]),
+            el('div', null, [el('dt', { text: 'Grid square' }), el('dd', { text: G.toMaidenhead(fix.lat, fix.lon, 6) })]),
+            el('div', null, [el('dt', { text: 'Accuracy' }), el('dd', { text: `±${Math.round(fix.acc)} m` })]),
+            el('div', null, [el('dt', { text: 'Taken' }), el('dd', { text: `${new Date(fix.t).toLocaleString()} (${age < 60 ? age + ' min' : Math.round(age / 60) + ' h'} ago)` })]),
+        ]));
+
+        const sun = G.sunPosition(new Date(), fix.lat, fix.lon);
+        const times = G.sunTimes(new Date(), fix.lat, fix.lon, [-0.833]);
+        const day = times.events['-0.833'];
+        wrap.appendChild(el('p', { class: 'note' }, rich(
+            `Sun bearing here and now: **${sun.azimuth.toFixed(0)}° true** (${G.compassPoint(sun.azimuth)}), `
+            + `altitude ${sun.altitude.toFixed(0)}°. `
+            + (day.state === 'ok' && day.set
+                ? `Sunset ${day.set.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}.`
+                : '')
+            + ' Point that bearing at the sun and you have found true north without a compass.'
+        )));
+
+        const map = el('div', { class: 'pos-map' });
+        wrap.appendChild(map);
+        drawLocalMap(map, fix);
+
+        const actions = el('div', { class: 'btn-row' });
+        const add = (label, fn, ghost) => actions.appendChild(
+            el('button', { class: 'btn' + (ghost ? ' ghost' : ''), type: 'button', onclick: fn }, label));
+
+        add('⌖ Update fix', getFix);
+        add('⧉ Copy all formats', () => {
+            const txt = [
+                `${fix.lat.toFixed(6)}, ${fix.lon.toFixed(6)} (WGS84)`,
+                G.toDDM(fix.lat, fix.lon),
+                G.toDMS(fix.lat, fix.lon),
+                'MGRS ' + (G.toMGRS(fix.lat, fix.lon, 5) || '—'),
+                'Grid ' + G.toMaidenhead(fix.lat, fix.lon, 6),
+                '±' + Math.round(fix.acc) + ' m, ' + new Date(fix.t).toISOString(),
+            ].join('\n');
+            copyText(txt, 'Position copied in every format.');
+        }, true);
+        add('✎ Log this position', () => {
+            const entries = store.get('log', []);
+            entries.push({ t: Date.now(), text: `POSITION ${fix.lat.toFixed(6)}, ${fix.lon.toFixed(6)} (WGS84) · ${G.toMGRS(fix.lat, fix.lon, 5) || ''} · ±${Math.round(fix.acc)} m` });
+            store.set('log', entries);
+            toast('Position written to the field log.');
+        }, true);
+        add('◎ Save as waypoint', () => {
+            const name = prompt('Name for this waypoint:', 'WP ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
+            if (name === null) return;
+            const wps = store.get('waypoints', []);
+            wps.push({ name: name || 'WP', lat: fix.lat, lon: fix.lon, t: Date.now() });
+            store.set('waypoints', wps);
+            toast(`Waypoint "${name}" saved. ${wps.length} stored.`);
+            route();
+        }, true);
+        add('▤ Send to plot board', () => {
+            const wps = store.get('waypoints', []);
+            const lines = [`HERE, ${fix.lat.toFixed(6)}, ${fix.lon.toFixed(6)}`]
+                .concat(wps.map(w => `${w.name}, ${w.lat.toFixed(6)}, ${w.lon.toFixed(6)}`));
+            const saved = store.get('tool.plot', {});
+            saved.wps = lines.join('\n');
+            store.set('tool.plot', saved);
+            toast('Loaded into the plot board.');
+            location.hash = '#/c/nav/plot';
+        }, true);
+        add('⭳ Export GPX', () => exportGPX(fix), true);
+        wrap.appendChild(actions);
+
+        const wps = store.get('waypoints', []);
+        if (wps.length) {
+            wrap.appendChild(sectionHead('Saved waypoints'));
+            const list = el('div', { class: 'wp-list' });
+            wps.forEach((w, i) => {
+                const d = G.distance(fix.lat, fix.lon, w.lat, w.lon);
+                const b = G.bearing(fix.lat, fix.lon, w.lat, w.lon);
+                list.appendChild(el('div', { class: 'wp-row' }, [
+                    el('b', { text: w.name }),
+                    el('span', { class: 'mono', text: `${G.fmtDistance(d)} · ${b.toFixed(0).padStart(3, '0')}° true (${G.compassPoint(b)})` }),
+                    el('button', {
+                        class: 'btn ghost', type: 'button', style: 'padding:2px 9px;font-size:.72em',
+                        onclick: () => {
+                            const all = store.get('waypoints', []);
+                            all.splice(i, 1);
+                            store.set('waypoints', all);
+                            route();
+                        },
+                    }, 'Delete'),
+                ]));
+            });
+            wrap.appendChild(list);
+        }
+
+        wrap.appendChild(el('p', { class: 'note' }, rich(
+            'There are no map tiles here and there never will be — that would mean fetching from a server. '
+            + 'The map above is drawn from your own fix and saved waypoints with a true scale bar and north '
+            + 'arrow. For real terrain, print a paper map of your area **before** you need it.')));
+        return wrap;
+    }
+
+    /** A scale plot of the fix and stored waypoints. No tiles, no network. */
+    function drawLocalMap(host, fix) {
+        const G = window.GEO;
+        let cv = host.querySelector('canvas');
+        if (!cv) {
+            cv = el('canvas', { class: 'plot', width: 900, height: 560, role: 'img', 'aria-label': 'Local position plot' });
+            host.appendChild(cv);
+        }
+        const g = cv.getContext('2d');
+        const cs = getComputedStyle(document.documentElement);
+        const ink = cs.getPropertyValue('--ink').trim() || '#ddd';
+        const dim = cs.getPropertyValue('--ink-dim').trim() || '#888';
+        const acc = cs.getPropertyValue('--accent').trim() || '#5f5';
+        const warn = cs.getPropertyValue('--warn').trim() || '#fa4';
+        const bg = cs.getPropertyValue('--bg-2').trim() || '#111';
+
+        g.fillStyle = bg;
+        g.fillRect(0, 0, cv.width, cv.height);
+
+        const wps = store.get('waypoints', []);
+        const pts = wps.map(w => Object.assign({}, w, G.project(fix.lat, fix.lon, w.lat, w.lon)));
+        const far = pts.reduce((m, p) => Math.max(m, Math.hypot(p.x, p.y)), 0);
+        const span = Math.max(far * 2.4, 400);                 // metres across
+        const k = Math.min(cv.width, cv.height) / span;
+        const cx = cv.width / 2, cy = cv.height / 2;
+        const X = x => cx + x * k, Y = y => cy - y * k;
+
+        /* Range rings at a round interval. */
+        const raw = span / 5;
+        const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+        let ring = [1, 2, 5, 10].map(m => m * pow).filter(s => s >= raw)[0] || pow * 10;
+        if (!isFinite(ring) || ring <= 0) ring = 100;
+
+        g.strokeStyle = dim;
+        g.font = '600 12px ui-monospace, monospace';
+        for (let r = ring; r <= span; r += ring) {
+            g.globalAlpha = 0.22;
+            g.beginPath(); g.arc(cx, cy, r * k, 0, Math.PI * 2); g.stroke();
+            g.globalAlpha = 0.5;
+            g.fillStyle = dim;
+            g.fillText(r >= 1000 ? (r / 1000) + ' km' : r + ' m', cx + 4, cy - r * k - 4);
+        }
+        g.globalAlpha = 1;
+
+        /* Cardinal spokes. */
+        g.strokeStyle = dim; g.globalAlpha = 0.25;
+        [0, 90, 180, 270].forEach(a => {
+            const rad = a * Math.PI / 180;
+            g.beginPath(); g.moveTo(cx, cy);
+            g.lineTo(cx + Math.sin(rad) * cv.height, cy - Math.cos(rad) * cv.height);
+            g.stroke();
+        });
+        g.globalAlpha = 1;
+        g.fillStyle = ink;
+        g.font = '700 15px ui-monospace, monospace';
+        g.fillText('N', cx - 5, 20);
+        g.fillText('S', cx - 5, cv.height - 8);
+        g.fillText('E', cv.width - 18, cy + 5);
+        g.fillText('W', 8, cy + 5);
+
+        /* Waypoints. */
+        g.font = '600 14px ui-monospace, monospace';
+        pts.forEach(p => {
+            const px = X(p.x), py = Y(p.y);
+            g.fillStyle = acc;
+            g.beginPath(); g.arc(px, py, 5, 0, Math.PI * 2); g.fill();
+            g.strokeStyle = acc; g.globalAlpha = 0.45; g.lineWidth = 1;
+            g.beginPath(); g.moveTo(cx, cy); g.lineTo(px, py); g.stroke();
+            g.globalAlpha = 1;
+            g.fillStyle = ink;
+            g.fillText(p.name, px + 9, py + 4);
+        });
+
+        /* You. */
+        g.fillStyle = warn;
+        g.beginPath(); g.arc(cx, cy, 7, 0, Math.PI * 2); g.fill();
+        g.strokeStyle = bg; g.lineWidth = 2; g.stroke();
+        g.fillStyle = warn;
+        g.font = '700 13px ui-monospace, monospace';
+        g.fillText('YOU', cx + 11, cy - 9);
+
+        /* Accuracy circle. */
+        if (fix.acc && fix.acc * k > 3) {
+            g.strokeStyle = warn; g.globalAlpha = 0.5; g.setLineDash([4, 4]);
+            g.beginPath(); g.arc(cx, cy, fix.acc * k, 0, Math.PI * 2); g.stroke();
+            g.setLineDash([]); g.globalAlpha = 1;
+        }
+    }
+
+    function copyText(txt, msg) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(txt).then(() => toast(msg)).catch(() => toast('Could not copy.'));
+        } else {
+            const ta = el('textarea', { style: 'position:fixed;opacity:0' });
+            ta.value = txt;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); toast(msg); } catch (e) { toast('Could not copy.'); }
+            ta.remove();
+        }
+    }
+
+    /** GPX is the universal exchange format for GPS units and mapping apps. */
+    function exportGPX(fix) {
+        const wps = store.get('waypoints', []).slice();
+        if (fix) wps.unshift({ name: 'CURRENT FIX', lat: fix.lat, lon: fix.lon, t: fix.t });
+        if (!wps.length) { toast('No waypoints to export.'); return; }
+        const esc = s => String(s).replace(/[<>&"']/g, c =>
+            ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]));
+        const body = wps.map(w =>
+            `  <wpt lat="${w.lat.toFixed(7)}" lon="${w.lon.toFixed(7)}">\n` +
+            `    <name>${esc(w.name)}</name>\n` +
+            (w.t ? `    <time>${new Date(w.t).toISOString()}</time>\n` : '') +
+            `  </wpt>`).join('\n');
+        const gpx = `<?xml version="1.0" encoding="UTF-8"?>\n`
+            + `<gpx version="1.1" creator="OASIS" xmlns="http://www.topografix.com/GPX/1/1">\n`
+            + `  <metadata><name>OASIS waypoints</name><time>${new Date().toISOString()}</time></metadata>\n`
+            + body + `\n</gpx>\n`;
+        downloadBlob(gpx, 'oasis-waypoints.gpx', 'application/gpx+xml');
+        toast(`${wps.length} waypoints exported as GPX.`);
+    }
+
+    function downloadBlob(text, filename, type) {
+        const blob = new Blob([text], { type: type || 'text/plain' });
+        const a = el('a', { href: URL.createObjectURL(blob), download: filename });
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    }
+
+    function pagePosition() {
+        const frag = document.createDocumentFragment();
+        const head = el('div', { class: 'page-head' });
+        head.appendChild(el('p', { class: 'eyebrow', text: 'Navigation' }));
+        head.appendChild(el('h1', null, [
+            el('span', { class: 'g', 'aria-hidden': 'true', text: '⌖' }),
+            document.createTextNode('Where I am'),
+        ]));
+        head.appendChild(el('p', { text: 'Your stored fix, in every format anyone will ask for, with the things you can actually do with it.' }));
+        frag.appendChild(head);
+        frag.appendChild(positionPanel());
+        frag.appendChild(el('div', { class: 'btn-row', style: 'margin-top:16px' }, [
+            el('a', { class: 'btn ghost', href: '#/c/nav' }, 'Navigation chapter'),
+            el('a', { class: 'btn ghost', href: '#/now/where' }, 'Which way is north?'),
+            el('a', { class: 'btn ghost', href: '#/c/nav/plot' }, 'Plot board'),
+        ]));
+        return frag;
+    }
+
+    /* --------------------------------------------------- emergency card page */
+
+    const CARD_FIELDS = [
+        { k: 'name', label: 'Full name', ph: '' },
+        { k: 'dob', label: 'Date of birth', ph: '' },
+        { k: 'blood', label: 'Blood group', ph: 'e.g. O+' },
+        { k: 'allergies', label: 'Allergies', ph: 'Drug, food, insect — or "none known"', big: true },
+        { k: 'meds', label: 'Regular medication', ph: 'Generic names and doses — brand names differ between countries', big: true },
+        { k: 'conditions', label: 'Medical conditions', ph: 'Asthma, diabetes, epilepsy, pacemaker, pregnancy…', big: true },
+        { k: 'ice1', label: 'Emergency contact 1', ph: 'Name, relationship, phone' },
+        { k: 'ice2', label: 'Emergency contact 2', ph: 'Name, relationship, phone' },
+        { k: 'outArea', label: 'Out-of-area contact', ph: 'Someone far away — local circuits jam first' },
+        { k: 'rally1', label: 'Rally point — near home', ph: 'Where you meet if the house is not usable' },
+        { k: 'rally2', label: 'Rally point — outside the area', ph: 'Where you meet if the area is evacuated' },
+        { k: 'pace', label: 'PACE plan', ph: 'Primary / Alternate / Contingency / Emergency — how you communicate', big: true },
+        { k: 'radio', label: 'Radio plan', ph: 'Channel or frequency, and the times you listen', big: true },
+        { k: 'notes', label: 'Other', ph: 'Insurance numbers, doctor, vet, anything you would want on paper', big: true },
+    ];
+
+    function pageCard() {
+        const frag = document.createDocumentFragment();
+        const data = store.get('card', {});
+
+        const head = el('div', { class: 'page-head no-print' });
+        head.appendChild(el('p', { class: 'eyebrow', text: 'Systems' }));
+        head.appendChild(el('h1', null, [
+            el('span', { class: 'g', 'aria-hidden': 'true', text: '▭' }),
+            document.createTextNode('Emergency card'),
+        ]));
+        head.appendChild(el('p', {
+            text: 'One page, on paper, in a wallet and a go bag and a glovebox. Paper needs no battery, no '
+                + 'password and no signal, and it works when you are unconscious. Fill it in once, print it, '
+                + 'and update it when something changes. It never leaves this device.',
+        }));
+        head.appendChild(el('div', { class: 'btn-row' }, [
+            el('button', { class: 'btn', type: 'button', onclick: () => window.print() }, '🖨 Print the card'),
+            el('button', {
+                class: 'btn ghost', type: 'button', onclick: () => {
+                    const lines = ['O.A.S.I.S. EMERGENCY CARD', ''];
+                    CARD_FIELDS.forEach(f => lines.push(f.label + ': ' + (data[f.k] || '')));
+                    downloadBlob(lines.join('\n'), 'emergency-card.txt', 'text/plain');
+                },
+            }, '⭳ Export as text'),
+            el('button', {
+                class: 'btn ghost', type: 'button', onclick: () => {
+                    if (!confirm('Clear every field on this card?')) return;
+                    store.set('card', {});
+                    route();
+                },
+            }, 'Clear'),
+        ]));
+        frag.appendChild(head);
+
+        const form = el('div', { class: 'card card-form' });
+        const fields = el('div', { class: 'fields' });
+        CARD_FIELDS.forEach(f => {
+            const wrap = el('label', { class: 'field' + (f.big ? ' span-all' : '') });
+            wrap.appendChild(el('span', { text: f.label }));
+            const input = f.big
+                ? el('textarea', { name: f.k, rows: 2, placeholder: f.ph })
+                : el('input', { name: f.k, type: 'text', placeholder: f.ph, autocomplete: 'off' });
+            input.value = data[f.k] || '';
+            input.addEventListener('input', () => {
+                const d = store.get('card', {});
+                d[f.k] = input.value;
+                store.set('card', d);
+                const out = document.getElementById('cardline-' + f.k);
+                if (out) out.textContent = input.value || '—';
+            });
+            wrap.appendChild(input);
+            fields.appendChild(wrap);
+        });
+        form.appendChild(fields);
+        frag.appendChild(form);
+
+        /* The printable side. Hidden on screen, this is what comes out. */
+        const sheet = el('div', { class: 'print-card' });
+        sheet.appendChild(el('h2', { text: 'EMERGENCY CARD' }));
+        const dl = el('dl', { class: 'facts' });
+        CARD_FIELDS.forEach(f => dl.appendChild(el('div', null, [
+            el('dt', { text: f.label }),
+            el('dd', { id: 'cardline-' + f.k, text: data[f.k] || '—' }),
+        ])));
+        sheet.appendChild(dl);
+
+        const fix = store.get('fix', null);
+        sheet.appendChild(el('p', { class: 'note', text: fix
+            ? `Home / last known position: ${fix.lat.toFixed(5)}, ${fix.lon.toFixed(5)} (WGS84) · ${window.GEO.toMGRS(fix.lat, fix.lon, 4) || ''}`
+            : 'No position stored on this device.' }));
+        sheet.appendChild(el('p', { class: 'note', text: 'Emergency numbers: 112 across the EU and much of the world · 911 in North America · 999 in the UK and Ireland · 000 in Australia. 112 reaches any available network, not only your own operator.' }));
+        frag.appendChild(sheet);
+
+        frag.appendChild(el('p', {
+            class: 'note no-print', style: 'margin-top:18px',
+            text: 'Print it, fold it, and put a copy in every bag. Write the date on it. '
+                + 'If you carry nothing else from this system, carry this.',
+        }));
+        return frag;
     }
 
     /* ------------------------------------------------------- playbooks page */
@@ -754,11 +1325,7 @@
             lines.push(e.text);
             lines.push('');
         });
-        const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-        const a = el('a', { href: URL.createObjectURL(blob), download: 'oasis-log.txt' });
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        downloadBlob(lines.join('\n'), 'oasis-log.txt', 'text/plain');
     }
 
     /* ------------------------------------------------------------ library page */
@@ -817,6 +1384,21 @@
                 el('button', { class: 'btn ghost', type: 'button', onclick: () => window.print() }, '🖨 Print'),
             ]),
             el('p', { class: 'note', id: 'aboutCache', text: '' }),
+        ]));
+
+        g.appendChild(el('div', { class: 'card' }, [
+            el('h3', null, [document.createTextNode('Tell us what is missing'), tagFor('priority')]),
+            el('p', { class: 'lede', text: 'This system is only as good as its gaps are reported. If something you needed was not here, was wrong, was out of date for your country, or was hard to find — say so. That is genuinely the most useful thing you can send.' }),
+            el('dl', { class: 'facts' }, [
+                el('div', null, [el('dt', { text: 'Contact' }), el('dd', null, [el('a', { href: 'mailto:' + CONFIG.contact }, CONFIG.contact)])]),
+                el('div', null, [el('dt', { text: 'Most useful' }), el('dd', { text: 'the search word you tried that found nothing' })]),
+                el('div', null, [el('dt', { text: 'Also useful' }), el('dd', { text: 'local alerting systems, national emergency numbers, regional hazards' })]),
+                el('div', null, [el('dt', { text: 'Corrections' }), el('dd', { text: 'cite the authority — guidance differs by country and by year' })]),
+            ]),
+            el('div', { class: 'btn-row' }, [
+                el('a', { class: 'btn', href: 'mailto:' + CONFIG.contact + '?subject=OASIS%20—%20missing%20information' }, '✉ Report a gap'),
+            ]),
+            el('p', { class: 'note', text: 'This system is moving to its own home at ' + CONFIG.futureHome + '. Everything is relative and self-contained, so an installed copy and any bookmark you keep locally will continue to work either way.' }),
         ]));
 
         g.appendChild(el('div', { class: 'card' }, [
@@ -901,11 +1483,12 @@
             });
             ch.cards.forEach(c => {
                 const body = [c.lede, (c.steps || []).join(' '), (c.dont || []).join(' '),
-                (c.facts || []).map(f => f.join(' ')).join(' '), c.note, c.keys]
+                (c.facts || []).map(f => f.join(' ')).join(' '), c.note]
                     .filter(Boolean).join(' ');
                 INDEX.push({
                     kind: ch.title, title: c.title, sub: c.lede || '', href: `#/c/${ch.id}/${c.id}`,
                     hay: (c.title + ' ' + body).toLowerCase(), titleHay: c.title.toLowerCase(),
+                    keyHay: (c.keys || '').toLowerCase(),
                     boost: c.tag === 'critical' ? 3 : 1,
                 });
             });
@@ -923,10 +1506,24 @@
         SCEN.forEach(s => {
             const body = [s.lede, s.horizon, (s.before || []).join(' '), (s.during || []).join(' '),
             (s.after || []).join(' '), (s.dont || []).join(' '),
-            (s.facts || []).map(f => f.join(' ')).join(' '), s.keys].filter(Boolean).join(' ');
+            (s.facts || []).map(f => f.join(' ')).join(' ')].filter(Boolean).join(' ');
             INDEX.push({
                 kind: 'Playbook', title: s.title, sub: s.lede || '', href: '#/play/' + s.id,
-                hay: (s.title + ' ' + body).toLowerCase(), titleHay: s.title.toLowerCase(), boost: 3,
+                hay: (s.title + ' ' + body).toLowerCase(), titleHay: s.title.toLowerCase(),
+                keyHay: (s.keys || '').toLowerCase(), boost: 3,
+            });
+        });
+        TREES.forEach(t => {
+            const body = Object.keys(t.nodes).map(k => {
+                const n = t.nodes[k];
+                return n.result
+                    ? n.result + ' ' + (n.steps || []).join(' ')
+                    : n.q + ' ' + (n.options || []).map(o => o.a).join(' ');
+            }).join(' ');
+            INDEX.push({
+                kind: 'Decision guide', title: t.title, sub: t.lede || '', href: '#/now/' + t.id,
+                hay: (t.title + ' ' + (t.lede || '') + ' ' + body).toLowerCase(),
+                titleHay: t.title.toLowerCase(), keyHay: (t.keys || '').toLowerCase(), boost: 3,
             });
         });
         LINKS.forEach(l => INDEX.push({
@@ -938,18 +1535,41 @@
     function search(q) {
         const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
         if (!terms.length) return [];
+
+        /* Three weighted fields — title, curated keywords, body — and a strong
+           preference for whole-word matches. Without that, "car" matches
+           inside "cargo" and "carry", and a search for "car crash" surfaces
+           the aircraft playbook ahead of the road traffic one. */
+        const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const wordRes = terms.map(t => {
+            try { return new RegExp('\\b' + esc(t) + '\\b'); } catch (e) { return null; }
+        });
+
         const out = [];
         for (const item of INDEX) {
-            let score = 0, all = true;
-            for (const t of terms) {
-                let s = 0;
-                if (item.titleHay && item.titleHay.includes(t)) s += 8;
-                if (item.hay.includes(t)) s += 2;
-                if (item.hay.includes(' ' + t)) s += 1;
+            let score = 0, all = true, allWholeWords = true;
+            for (let i = 0; i < terms.length; i++) {
+                const t = terms[i], re = wordRes[i];
+                let s = 0, whole = false;
+                if (item.titleHay && item.titleHay.indexOf(t) >= 0) {
+                    const w = re && re.test(item.titleHay);
+                    s += w ? 15 : 6; whole = whole || w;
+                }
+                if (item.keyHay && item.keyHay.indexOf(t) >= 0) {
+                    const w = re && re.test(item.keyHay);
+                    s += w ? 10 : 3; whole = whole || w;
+                }
+                if (item.hay.indexOf(t) >= 0) {
+                    const w = re && re.test(item.hay);
+                    s += w ? 4 : 1; whole = whole || w;
+                }
                 if (!s) { all = false; break; }
+                if (!whole) allWholeWords = false;
                 score += s;
             }
-            if (all) out.push({ item, score: score * (item.boost || 1) });
+            if (!all) continue;
+            if (allWholeWords) score *= 1.6;
+            out.push({ item, score: score * (item.boost || 1) });
         }
         return out.sort((a, b) => b.score - a.score).slice(0, 50).map(x => x.item);
     }
@@ -1012,7 +1632,11 @@
         window.scrollTo(0, 0);
 
         if (!parts.length || parts[0] === 'home') { render(pageHome(), 'home'); }
+        else if (parts[0] === 'now') { render(pageNow(parts[1]), 'now'); }
+        else if (parts[0] === 'tree') { render(pageNow(parts[1]), 'now'); }
         else if (parts[0] === 'play') { render(pagePlaybooks(parts[1]), 'play'); }
+        else if (parts[0] === 'pos') { render(pagePosition(), null); }
+        else if (parts[0] === 'card') { render(pageCard(), 'card'); }
         else if (parts[0] === 'c' && parts[1]) { render(pageChapter(parts[1], parts[2]), 'c/' + parts[1]); }
         else if (parts[0] === 'tools') { render(pageTools(), 'tools'); }
         else if (parts[0] === 'log') { render(pageLog(), 'log'); }
@@ -1287,7 +1911,9 @@
         applyTheme(store.get('theme', 'tactical'));
         applyFontScale(store.get('fs', 1));
         $('#themeSel').value = store.get('theme', 'tactical');
-        $('#verLine').textContent = `Build ${VERSION} · ${K.reduce((s, c) => s + c.cards.length, 0)} cards · ${TOOLS.length} tools · ${T.length} tables.`;
+        $('#verLine').textContent = `Build ${VERSION} · ${K.reduce((s, c) => s + c.cards.length, 0)} cards · ${SCEN.length} playbooks · ${TREES.length} decision guides · ${TOOLS.length} tools · ${T.length} tables.`;
+        const mail = $('#contactLink');
+        if (mail) { mail.href = 'mailto:' + CONFIG.contact; mail.textContent = CONFIG.contact; }
 
         buildRail();
         route();
@@ -1316,6 +1942,7 @@
         $('#fontDown').addEventListener('click', () => applyFontScale(Math.max(0.8, +store.get('fs', 1) - 0.1)));
         $('#wakeBtn').addEventListener('click', toggleWake);
         $('#fixBtn').addEventListener('click', getFix);
+        $('#posChip').addEventListener('click', () => { location.hash = '#/pos'; });
 
         let searchTimer = null;
         q.addEventListener('input', () => {
