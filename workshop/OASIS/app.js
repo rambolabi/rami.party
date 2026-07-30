@@ -13,11 +13,14 @@
 (function () {
     'use strict';
 
-    const VERSION = '1.0.0';
+    const VERSION = '1.1.0';
     const K = window.OASIS_KNOWLEDGE || [];
     const T = window.OASIS_TABLES || [];
     const TOOLS = window.OASIS_TOOLS || [];
     const LINKS = window.OASIS_LINKS || [];
+    const SCEN = window.OASIS_SCENARIOS || [];
+    const BANDS = window.OASIS_BANDS || [];
+    const SRC = window.OASIS_SOURCES || {};
 
     /* ------------------------------------------------------------ tiny DOM */
 
@@ -82,6 +85,7 @@
 
     const PAGES = [
         { id: 'home', title: 'Command', glyph: '◉', group: null },
+        { id: 'play', title: 'Playbooks', glyph: '▤', group: null },
     ].concat(K.map(c => ({ id: 'c/' + c.id, title: c.title, glyph: c.glyph, group: 'Doctrine', chapter: c })))
         .concat([
             { id: 'tools', title: 'All tools', glyph: '⚙', group: 'Systems' },
@@ -120,6 +124,26 @@
         return el('span', { class: 'tag ' + tag, text: tag });
     }
 
+    /**
+     * Source attribution. Every claim in this system should be traceable to a
+     * named body rather than to an anonymous page, so chapters, cards and
+     * playbooks all render the authorities they are drawn from.
+     */
+    function sourceChips(keys, label) {
+        if (!keys || !keys.length) return null;
+        const wrap = el('div', { class: 'srcs' });
+        wrap.appendChild(el('span', { class: 'srcs-label', text: label || 'Sources' }));
+        keys.forEach(k => {
+            const s = SRC[k];
+            if (!s) return;
+            wrap.appendChild(el('a', {
+                class: 'src', href: s.url, title: s.full,
+                target: '_blank', rel: 'noopener noreferrer external',
+            }, s.name));
+        });
+        return wrap;
+    }
+
     function renderCard(card) {
         const c = el('article', { class: 'card', id: 'card-' + card.id });
         const h = el('h3');
@@ -153,6 +177,8 @@
         }
 
         if (card.note) c.appendChild(el('p', { class: 'note' }, rich(card.note)));
+        const s = sourceChips(card.sources);
+        if (s) c.appendChild(s);
         return c;
     }
 
@@ -345,12 +371,32 @@
 
         const cta = el('div', { class: 'btn-row' }, [
             el('a', { class: 'btn', href: '#/c/triage' }, 'Start here → First Response'),
+            el('a', { class: 'btn ghost', href: '#/play' }, 'Playbooks — before, during, after'),
             el('a', { class: 'btn ghost', href: '#/c/medical/bleeding' }, 'Stop the bleeding'),
             el('a', { class: 'btn ghost', href: '#/tools' }, 'All calculators'),
-            el('a', { class: 'btn ghost', href: '#/about' }, 'Make it work offline'),
         ]);
         hero.appendChild(cta);
         frag.appendChild(hero);
+
+        /* Install first: a copy on the device is worth more than anything below it. */
+        frag.appendChild(sectionHead('Do this first'));
+        const first = el('div', { class: 'grid' });
+        first.appendChild(installCard());
+        first.appendChild(el('div', { class: 'card' }, [
+            el('h3', { text: 'Then, in order' }),
+            el('ol', null, [
+                el('li', null, rich('**Print** First Response, Medical and the frequency tables. Paper needs no battery.')),
+                el('li', null, rich('**Copy the folder** to a second device and a USB stick.')),
+                el('li', null, rich('**Take a position fix** now, while you have sky and battery.')),
+                el('li', null, rich('**Read one playbook** for the thing most likely to happen where you live.')),
+                el('li', null, rich('**Write the PACE plan** with your household and give everyone a copy.')),
+            ]),
+            el('div', { class: 'btn-row' }, [
+                el('a', { class: 'btn ghost', href: '#/play' }, 'Open the playbooks'),
+                el('a', { class: 'btn ghost', href: '#/c/triage/pace' }, 'PACE plan'),
+            ]),
+        ]));
+        frag.appendChild(first);
 
         /* Critical cards, surfaced. */
         frag.appendChild(sectionHead('Immediate — the pages you may have seconds to find'));
@@ -448,6 +494,8 @@
         head.appendChild(el('div', { class: 'btn-row' }, [
             el('button', { class: 'btn ghost', type: 'button', onclick: () => window.print() }, '🖨 Print this chapter'),
         ]));
+        const chSrc = sourceChips(ch.sources, 'Chapter drawn from');
+        if (chSrc) head.appendChild(chSrc);
         frag.appendChild(head);
 
         const grid = el('div', { class: 'grid' });
@@ -492,6 +540,106 @@
                 el('a', { class: 'btn ghost', href: l.url, target: '_blank', rel: 'noopener noreferrer external' }, 'Open ↗'),
             ]),
         ]);
+    }
+
+    /* ------------------------------------------------------- playbooks page */
+
+    /** One scenario: what to do before, during and after. */
+    function renderScenario(s) {
+        const c = el('article', { class: 'card scenario', id: 'play-' + s.id });
+
+        const h = el('h3', null, [
+            el('span', { class: 'g', 'aria-hidden': 'true', text: s.glyph }),
+            document.createTextNode(s.title),
+        ]);
+        c.appendChild(h);
+        if (s.horizon) c.appendChild(el('p', { class: 'horizon', text: '⏱ ' + s.horizon }));
+        if (s.lede) c.appendChild(el('p', { class: 'lede' }, rich(s.lede)));
+
+        const phases = el('div', { class: 'phases' });
+        [['before', 'Before', 'Prepare'], ['during', 'During', 'Act'], ['after', 'After', 'Recover']]
+            .forEach(([key, title, sub]) => {
+                const list = s[key];
+                if (!list || !list.length) return;
+                const box = el('section', { class: 'phase ' + key });
+                box.appendChild(el('h4', null, [
+                    document.createTextNode(title),
+                    el('span', { class: 'phase-sub', text: sub }),
+                ]));
+                const ol = el('ol');
+                list.forEach(x => ol.appendChild(el('li', null, rich(x))));
+                box.appendChild(ol);
+                phases.appendChild(box);
+            });
+        c.appendChild(phases);
+
+        if (s.facts && s.facts.length) {
+            const dl = el('dl', { class: 'facts' });
+            s.facts.forEach(([k, v]) => dl.appendChild(el('div', null, [
+                el('dt', null, rich(k)), el('dd', null, rich(v)),
+            ])));
+            c.appendChild(dl);
+        }
+
+        if (s.dont && s.dont.length) {
+            const box = el('div', { class: 'dont' }, el('h4', { text: 'Do not' }));
+            const ul = el('ul');
+            s.dont.forEach(x => ul.appendChild(el('li', null, rich(x))));
+            box.appendChild(ul);
+            c.appendChild(box);
+        }
+
+        const src = sourceChips(s.sources);
+        if (src) c.appendChild(src);
+        return c;
+    }
+
+    function pagePlaybooks(anchor) {
+        const frag = document.createDocumentFragment();
+
+        const head = el('div', { class: 'page-head' });
+        head.appendChild(el('p', { class: 'eyebrow', text: 'Playbooks' }));
+        head.appendChild(el('h1', null, [
+            el('span', { class: 'g', 'aria-hidden': 'true', text: '▤' }),
+            document.createTextNode('Before · During · After'),
+        ]));
+        head.appendChild(el('p', {
+            text: `${SCEN.length} situations, each answered in three parts. `
+                + 'The "before" column is where survival is actually decided and it is the part almost '
+                + 'nobody does. The "after" column matters more than people expect — in storms, floods '
+                + 'and earthquakes a large share of the deaths happen once the event is over.',
+        }));
+        head.appendChild(el('div', { class: 'btn-row' }, [
+            el('button', { class: 'btn ghost', type: 'button', onclick: () => window.print() }, '🖨 Print all playbooks'),
+        ]));
+        frag.appendChild(head);
+
+        /* Jump grid — there are far too many playbooks to scroll blindly. */
+        const jump = el('div', { class: 'jump' });
+        SCEN.forEach(s => jump.appendChild(
+            el('a', { class: 'jump-link', href: '#/play/' + s.id }, [
+                el('span', { 'aria-hidden': 'true', text: s.glyph }),
+                document.createTextNode(' ' + s.title),
+            ])
+        ));
+        frag.appendChild(jump);
+
+        BANDS.forEach(band => {
+            const list = SCEN.filter(s => s.band === band.id);
+            if (!list.length) return;
+            frag.appendChild(sectionHead(band.title));
+            if (band.blurb) frag.appendChild(el('p', { class: 'note', style: 'margin:-6px 0 14px', text: band.blurb }));
+            const g = el('div', { class: 'grid wide' });
+            list.forEach(s => g.appendChild(renderScenario(s)));
+            frag.appendChild(g);
+        });
+
+        if (anchor) setTimeout(() => {
+            const t = document.getElementById('play-' + anchor);
+            if (t) t.scrollIntoView({ block: 'start' });
+        }, 40);
+
+        return frag;
     }
 
     /* -------------------------------------------------------------- tools page */
@@ -652,6 +800,8 @@
 
         const g = el('div', { class: 'grid' });
 
+        g.appendChild(installCard());
+
         g.appendChild(el('div', { class: 'card' }, [
             el('h3', null, [document.createTextNode('Make it permanent'), tagFor('priority')]),
             el('p', { class: 'lede', text: 'Three minutes now buys you a reference that survives the network.' }),
@@ -675,6 +825,7 @@
             el('dl', { class: 'facts' }, [
                 el('div', null, [el('dt', { text: 'Version' }), el('dd', { text: VERSION })]),
                 el('div', null, [el('dt', { text: 'Chapters' }), el('dd', { text: String(K.length) })]),
+                el('div', null, [el('dt', { text: 'Playbooks' }), el('dd', { text: String(SCEN.length) })]),
                 el('div', null, [el('dt', { text: 'Cards' }), el('dd', { text: String(K.reduce((s, c) => s + c.cards.length, 0)) })]),
                 el('div', null, [el('dt', { text: 'Tables' }), el('dd', { text: String(T.length) })]),
                 el('div', null, [el('dt', { text: 'Tools' }), el('dd', { text: String(TOOLS.length) })]),
@@ -769,6 +920,15 @@
             hay: (t.title + ' ' + (t.blurb || '') + ' ' + t.fields.map(f => f.label).join(' ')).toLowerCase(),
             titleHay: t.title.toLowerCase(), boost: 2,
         }));
+        SCEN.forEach(s => {
+            const body = [s.lede, s.horizon, (s.before || []).join(' '), (s.during || []).join(' '),
+            (s.after || []).join(' '), (s.dont || []).join(' '),
+            (s.facts || []).map(f => f.join(' ')).join(' '), s.keys].filter(Boolean).join(' ');
+            INDEX.push({
+                kind: 'Playbook', title: s.title, sub: s.lede || '', href: '#/play/' + s.id,
+                hay: (s.title + ' ' + body).toLowerCase(), titleHay: s.title.toLowerCase(), boost: 3,
+            });
+        });
         LINKS.forEach(l => INDEX.push({
             kind: 'Source', title: l.title, sub: l.what, href: '#/library',
             hay: (l.title + ' ' + l.what + ' ' + l.url).toLowerCase(), titleHay: l.title.toLowerCase(), boost: 0.5,
@@ -852,6 +1012,7 @@
         window.scrollTo(0, 0);
 
         if (!parts.length || parts[0] === 'home') { render(pageHome(), 'home'); }
+        else if (parts[0] === 'play') { render(pagePlaybooks(parts[1]), 'play'); }
         else if (parts[0] === 'c' && parts[1]) { render(pageChapter(parts[1], parts[2]), 'c/' + parts[1]); }
         else if (parts[0] === 'tools') { render(pageTools(), 'tools'); }
         else if (parts[0] === 'log') { render(pageLog(), 'log'); }
@@ -940,6 +1101,111 @@
             btn.setAttribute('aria-pressed', 'true');
             toast('Screen will stay awake. Watch your battery.');
         } catch (e) { toast('Could not hold the screen awake.'); }
+    }
+
+    /* ---------------------------------------------------------------- install */
+
+    /**
+     * Installing this as an app is the single most useful thing a reader can
+     * do, so it gets a real button rather than a paragraph of instructions.
+     * Chrome and Edge hand us a deferred prompt; Safari and Firefox do not, so
+     * those platforms get exact manual steps instead.
+     */
+    let installPrompt = null;
+
+    function isInstalled() {
+        return window.matchMedia('(display-mode: standalone)').matches
+            || window.matchMedia('(display-mode: fullscreen)').matches
+            || window.navigator.standalone === true;
+    }
+
+    function platform() {
+        const ua = navigator.userAgent;
+        const iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        if (iOS) return /CriOS|FxiOS|EdgiOS/.test(ua) ? 'ios-other' : 'ios';
+        if (/Android/.test(ua)) return /Firefox/.test(ua) ? 'android-ff' : 'android';
+        if (/Firefox/.test(ua)) return 'firefox';
+        return 'desktop';
+    }
+
+    const INSTALL_STEPS = {
+        'ios': ['Tap the **Share** button at the bottom of Safari (the square with an arrow).',
+            'Scroll down and tap **Add to Home Screen**.',
+            'Tap **Add**. O.A.S.I.S. now opens full screen, like an app, with no browser and no connection.'],
+        'ios-other': ['On iPhone and iPad, only **Safari** can install an app to the home screen.',
+            'Open this page in Safari, then tap **Share → Add to Home Screen**.'],
+        'android': ['Tap the **⋮ menu** in the top right.',
+            'Tap **Install app** or **Add to Home screen**.',
+            'Confirm. It then opens full screen with its own icon.'],
+        'android-ff': ['Tap the **⋮ menu**.', 'Tap **Install** or **Add to Home screen**.'],
+        'firefox': ['Firefox on the desktop does not install web apps.',
+            'Either open this page in Chrome or Edge and install it there, or bookmark it — everything still works offline once loaded.'],
+        'desktop': ['Look for the **install icon** in the address bar (a screen with a downward arrow), and click it.',
+            'Or open the **⋮ menu → Cast, save and share → Install page as app**.',
+            'It then opens in its own window, appears in your launcher, and works with no connection.'],
+    };
+
+    function installCard() {
+        const card = el('div', { class: 'card install-card' });
+
+        if (isInstalled()) {
+            card.appendChild(el('h3', null, [document.createTextNode('Installed'), tagFor('routine')]));
+            card.appendChild(el('p', { class: 'lede', text: 'You are running O.A.S.I.S. as an installed app. It will open and work with no connection. Now put a copy on a second device and print the pages you would want with a dead battery.' }));
+            return card;
+        }
+
+        card.appendChild(el('h3', null, [document.createTextNode('Install it on this device'), tagFor('priority')]));
+        card.appendChild(el('p', {
+            class: 'lede',
+            text: 'Installing takes about ten seconds and makes this work like an app: its own icon, full screen, '
+                + 'and no connection required — ever again. This is the single most useful thing you can do with this page.',
+        }));
+
+        const row = el('div', { class: 'btn-row' });
+        const btn = el('button', {
+            class: 'btn', type: 'button', id: 'installCardBtn',
+            onclick: () => doInstall(),
+        }, '⤓ Install O.A.S.I.S.');
+        if (!installPrompt) btn.disabled = true;
+        row.appendChild(btn);
+        row.appendChild(el('button', { class: 'btn ghost', type: 'button', onclick: precache }, 'Cache everything now'));
+        card.appendChild(row);
+
+        const steps = el('ol', { style: 'margin-top:12px' });
+        (INSTALL_STEPS[platform()] || INSTALL_STEPS.desktop).forEach(s =>
+            steps.appendChild(el('li', null, rich(s))));
+        card.appendChild(el('p', { class: 'note', style: 'margin-top:12px' },
+            rich(installPrompt
+                ? 'Or do it manually:'
+                : 'Your browser has not offered an automatic install, so do it manually:')));
+        card.appendChild(steps);
+
+        card.appendChild(el('p', { class: 'note' }, rich(
+            'No app store, no account, no permissions, no tracking. It is the same folder of files, '
+            + 'stored on your device. You can also copy the whole folder to a USB stick and open '
+            + '`index.html` — it runs from anywhere.')));
+        return card;
+    }
+
+    function doInstall() {
+        if (!installPrompt) {
+            toast('Use the manual steps below — this browser does not offer an install button.');
+            return;
+        }
+        installPrompt.prompt();
+        installPrompt.userChoice.then(res => {
+            if (res.outcome === 'accepted') toast('Installing. Look for the O.A.S.I.S. icon.');
+            installPrompt = null;
+            refreshInstallUI();
+        }).catch(() => { });
+    }
+
+    function refreshInstallUI() {
+        const chip = $('#installBtn');
+        if (!chip) return;
+        chip.hidden = isInstalled() || !installPrompt;
+        const cardBtn = $('#installCardBtn');
+        if (cardBtn) cardBtn.disabled = !installPrompt;
     }
 
     /* ---------------------------------------------------------------- offline */
@@ -1076,6 +1342,23 @@
         netStatus();
         window.addEventListener('online', netStatus);
         window.addEventListener('offline', netStatus);
+
+        /* Install lifecycle. Chrome and Edge fire this when the app qualifies;
+           we stash it so the user can install at a moment of their choosing
+           rather than being interrupted by the browser's own banner. */
+        window.addEventListener('beforeinstallprompt', e => {
+            e.preventDefault();
+            installPrompt = e;
+            refreshInstallUI();
+        });
+        window.addEventListener('appinstalled', () => {
+            installPrompt = null;
+            refreshInstallUI();
+            toast('Installed. It will now open and work with no connection.');
+        });
+        $('#installBtn').addEventListener('click', doInstall);
+        refreshInstallUI();
+
         tickClock();
         setInterval(tickClock, 20000);
         showFix(store.get('fix', null));

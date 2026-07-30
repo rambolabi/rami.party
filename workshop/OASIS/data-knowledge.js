@@ -27,6 +27,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'First Response',
         glyph: '⚠︎',
         blurb: 'What to do in the first sixty seconds, before you know anything else. Start here.',
+        sources: ['fema', 'icrc', 'who', 'erc'],
         cards: [
             {
                 id: 'rule-of-threes',
@@ -172,6 +173,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'Medical',
         glyph: '✚',
         blurb: 'Trauma and field medicine in priority order — the things that kill within minutes, then hours, then days.',
+        sources: ['erc', 'who', 'tccc', 'nhs', 'hesperian'],
         cards: [
             {
                 id: 'march',
@@ -498,6 +500,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'Water',
         glyph: '≈',
         blurb: 'Finding it, judging it, making it safe. Three days is the outer limit and performance collapses long before that.',
+        sources: ['cdc', 'who', 'epa', 'sphere'],
         cards: [
             {
                 id: 'water-need',
@@ -603,6 +606,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'Shelter & Fire',
         glyph: '⌂',
         blurb: 'Three hours in bad weather. Heat management is the real skill — both directions.',
+        sources: ['nasar', 'cdc', 'nfpa', 'icrc'],
         cards: [
             {
                 id: 'heat-loss',
@@ -711,6 +715,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'Food',
         glyph: '◈',
         blurb: 'The least urgent and most emotionally loaded need. Calories, storage, and what not to eat.',
+        sources: ['usda', 'fao', 'who', 'sphere'],
         cards: [
             {
                 id: 'calories',
@@ -814,6 +819,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'Navigation',
         glyph: '⌖',
         blurb: 'Knowing where you are and getting somewhere else, with or without a satellite.',
+        sources: ['nasar', 'noaa', 'usgs'],
         cards: [
             {
                 id: 'nav-basics',
@@ -976,7 +982,8 @@ window.OASIS_KNOWLEDGE = [
         id: 'comms',
         title: 'Communications',
         glyph: '∏',
-        blurb: 'Getting a message out when the network is down. Radio, mesh, and the physics that decides whether it works.',
+        blurb: 'Getting a message out when the network is down. Radio, satellite, mesh, runners, and the physics that decides whether it works.',
+        sources: ['itu', 'iaru', 'arrl', 'imo', 'icrc'],
         cards: [
             {
                 id: 'comms-priority',
@@ -1140,6 +1147,129 @@ window.OASIS_KNOWLEDGE = [
                 ],
                 keys: 'signal mirror heliograph whistle smoke ground to air panels sos morse rescue',
             },
+            {
+                id: 'comms-satellite',
+                title: 'Satellite — the channel that ignores the ground',
+                tag: 'priority',
+                lede: 'Satellites do not care that the masts are down, the exchange is flooded or the country has no grid. If you buy one thing for communications resilience, buy something that talks to a satellite.',
+                steps: [
+                    '**406 MHz beacon (PLB / EPIRB).** One-way distress only, no subscription, works anywhere on Earth. Register it — an unregistered beacon still alerts, but rescuers then have no idea who or what they are looking for. Activate it with a clear view of the sky and **leave it running**.',
+                    '**Satellite messenger** (Garmin inReach, ZOLEO, SPOT). Two-way text plus an SOS button that reaches a 24-hour coordination centre. This is the practical choice for most people: it lets you say *what* is wrong, not just *that* something is.',
+                    '**Phone satellite SOS.** Recent iPhone and Android models can text emergency services via satellite. Free, already in your pocket, but needs a clear sky, correct orientation, and it is not available in every country.',
+                    '**Satellite phone.** Real voice anywhere. Slow to acquire a signal and useless indoors — go outside with a view of the sky.',
+                    '**Satellite broadband.** Full internet, but plan for 50–100 W continuously. That is a serious power budget in a blackout.',
+                    'All of them need **sky**. Not a window, not a canopy, not a valley wall. Go outside, get clear of buildings and trees, and be patient.',
+                    'Test yours. Send a check-in message once a month so you know the subscription is live and you know which buttons to press.',
+                ],
+                facts: [
+                    ['Beacon', '406 MHz, no subscription, register it, global'],
+                    ['Messenger', 'two-way text + SOS, subscription, global'],
+                    ['Phone SOS', 'free, recent handsets, country-dependent'],
+                    ['All of them', 'need an unobstructed view of the sky'],
+                    ['Beacon transmit time', 'typically 24–48 hours once activated'],
+                ],
+                dont: ['Do not activate a distress beacon for convenience or to test it. False alerts divert real rescue assets and are a criminal offence.'],
+                sources: ['imo', 'noaa', 'uscg'],
+                keys: 'satellite phone messenger inreach zoleo spot starlink iridium epirb plb beacon cospas sarsat sos',
+            },
+            {
+                id: 'comms-digital-modes',
+                title: 'Data over radio — email with no internet',
+                tag: 'skill',
+                lede: 'A radio plus a sound card carries text, forms, files and pictures. Weak-signal digital modes get through when voice cannot: FT8 decodes roughly 20 dB below what an ear can hear, which is the difference between "no contact" and "contact".',
+                steps: [
+                    '**Winlink** is the important one. It moves real email — with attachments and standard forms — over HF or VHF through volunteer gateway stations. Emergency services and aid organisations use it precisely because it needs no internet at your end.',
+                    '**JS8Call** gives keyboard-to-keyboard conversation at weak-signal levels, and will relay a message through other stations automatically.',
+                    '**FT8 / FT4** are not conversational, but they prove a path exists and get a callsign and grid square across when nothing else will.',
+                    '**APRS** beacons your position and carries short messages through digipeaters — automatic, and readable by anyone monitoring.',
+                    '**SSTV** sends a still image over voice bandwidth. A photograph of an injury, a map or a document can be worth an hour of description.',
+                    'Keep the **offline installers** and your configuration on local storage. You will not be downloading software in a crisis.',
+                    'Practise on a normal day. Every one of these has a setup step that will defeat you if the first time you try is the day it matters.',
+                ],
+                facts: [
+                    ['Winlink', 'email over radio, via gateway stations'],
+                    ['JS8Call', 'weak-signal chat with automatic relay'],
+                    ['FT8', 'decodes ~20 dB below audible'],
+                    ['Requirement', 'licence to transmit; receiving is free and legal almost everywhere'],
+                ],
+                sources: ['arrl', 'iaru', 'itu'],
+                keys: 'winlink js8call ft8 psk31 packet aprs sstv rtty vara digital modes data email over radio',
+            },
+            {
+                id: 'comms-noninfra',
+                title: 'Communication with no electronics at all',
+                tag: 'skill',
+                lede: 'These are not quaint. They are what actually reconnected families after the 2004 tsunami, after Katrina, and in every conflict since the invention of the noticeboard. They need no power, cannot be jammed, and cannot be traced.',
+                steps: [
+                    '**The runner.** A person carrying a written note is a complete communications system. Write the message down — memory under stress is unreliable — and include time, sender and location.',
+                    '**Notice boards.** A wall at a known landmark where people post names, dates and destinations. This is how large-scale reunification has always worked. Agree a board with your group in advance.',
+                    '**Dead drops and chalk marks.** A pre-agreed location and a simple mark system: a chalk line means "message waiting", two means "moved to the alternate". Asynchronous, low-profile, nothing to intercept.',
+                    '**Signal fires and smoke.** Three fires in a triangle or a line means distress worldwide. Green vegetation or oily rags make dark smoke by day; bright flame is best at night.',
+                    '**Sound.** Whistle, horn, bell, drum. Three of anything means distress; two means "message received". Agree your own codes: one blast = gather, two = all clear, three = emergency.',
+                    '**Light.** Torch, mirror, lantern in a window. Morse SOS is · · · − − − · · ·. A mirror flash has been seen from tens of kilometres and from aircraft.',
+                    '**Ground panels.** Symbols laid out at least 3 m per stroke: **V** = require assistance, **X** = require medical assistance.',
+                    '**Window cards.** A coloured card in the window — green "we are fine", red "we need help" — lets a whole street be surveyed in one walk. Agree it with neighbours before anything happens.',
+                    '**Semaphore and flags.** Rarely needed, but a coloured cloth on a pole is a message visible at a kilometre and costs nothing.',
+                ],
+                facts: [
+                    ['Distress', 'three of anything'],
+                    ['Acknowledged', 'two of anything'],
+                    ['Ground panel', 'minimum 3 m per stroke, maximum contrast'],
+                    ['Window card', 'green = fine · red = help needed'],
+                    ['Highest value per gram', 'a whistle and a signal mirror'],
+                ],
+                sources: ['icrc', 'ifrc', 'nasar'],
+                keys: 'runner courier note dead drop chalk mark notice board signal fire smoke whistle bell semaphore window card',
+            },
+            {
+                id: 'comms-net',
+                title: 'Running a net',
+                tag: 'skill',
+                lede: 'A net is a scheduled, controlled conversation between several stations. It is the difference between a group with radios and a group with communications.',
+                steps: [
+                    'Appoint **net control**: one station that calls the roll, allocates who speaks, and keeps a written log. It does not have to be the strongest station, but it must be the most disciplined.',
+                    'Fix the schedule and write it down: primary net time, alternate net time, and a short listening window at the top of each hour.',
+                    'Open with a roll call in a fixed order. Each station answers with callsign, location if agreed safe, status, and whether they have traffic.',
+                    'Handle traffic one item at a time. Net control says who transmits; nobody else keys up.',
+                    '**"Break, break"** interrupts for emergency traffic only. Everyone else stops immediately.',
+                    'Log everything with times: who checked in, what was passed, what is outstanding. The log is the product.',
+                    'Close the net formally so people know they can stop listening and save battery.',
+                    'Agree in advance what triggers a move down the PACE plan — for example two missed nets.',
+                ],
+                facts: [
+                    ['Roll call', 'fixed order, callsign + status + traffic'],
+                    ['Emergency interrupt', '"Break, break"'],
+                    ['Battery discipline', 'short scheduled windows, not continuous monitoring'],
+                    ['The product', 'the written log'],
+                ],
+                sources: ['arrl', 'itu'],
+                keys: 'net control roll call schedule traffic handling radio discipline group communications',
+            },
+            {
+                id: 'comms-improvise',
+                title: 'When the radio is broken',
+                tag: 'skill',
+                lede: 'Most field radio failures are the antenna, the connector, the battery or the setting — almost never the radio itself. Work the list in that order.',
+                steps: [
+                    '**Battery.** Cold halves lithium capacity. Warm it in a pocket first. Check contacts for corrosion; clean with a pencil eraser.',
+                    '**Antenna and connector.** Wiggle-test everything. A broken centre conductor or a loose SMA is the most common fault in the field.',
+                    '**Settings.** Wrong channel, wrong tone (CTCSS/DCS), transmit inhibited, low power, squelch too high, VOX enabled, keypad locked. Carry a written cheat sheet of your own settings — every radio buries them differently.',
+                    'Improvise an antenna: wire cut to length (quarter wave = 71.25 ÷ MHz in metres) taped to a fibreglass pole or thrown into a tree, with three radials of the same length.',
+                    'Improvise a feed: any coax will do temporarily. Keep it short and keep the connectors dry.',
+                    'Improvise power: most handhelds will run from a 12 V source with the right adapter. Note the polarity before you connect anything.',
+                    '**Height beats everything.** Before you conclude the radio is broken, walk to higher ground or hang the antenna in a tree.',
+                    'Keep spares of the cheap things that fail: adapters, coax patch leads, fuses, battery trays and the programming cable.',
+                ],
+                facts: [
+                    ['Fault order', 'battery → antenna → connector → setting → radio'],
+                    ['Quarter wave (m)', '71.25 ÷ frequency in MHz'],
+                    ['Never', 'transmit without an antenna connected'],
+                    ['Carry', 'a written card of your own radio settings'],
+                ],
+                dont: ['Never transmit without an antenna — you can destroy the output stage in seconds.'],
+                sources: ['arrl', 'iaru'],
+                keys: 'radio repair troubleshooting antenna improvise broken no signal ctcss settings adapter',
+            },
         ],
     },
 
@@ -1149,6 +1279,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'Signals & Recon',
         glyph: '◎',
         blurb: 'Listening. A receiver tells you what is happening when every other information channel is gone.',
+        sources: ['itu', 'noaa', 'iaru'],
         cards: [
             {
                 id: 'sdr-intro',
@@ -1236,6 +1367,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'Power',
         glyph: '↯',
         blurb: 'Watt-hours, not gadgets. Know what you have, what you draw, and how long that lasts.',
+        sources: ['fema', 'cdc', 'osha'],
         cards: [
             {
                 id: 'power-basics',
@@ -1345,6 +1477,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'Hazards',
         glyph: '☢︎',
         blurb: 'Weather, fire, flood, chemical and radiological. What the first hour looks like for each.',
+        sources: ['fema', 'iaea', 'noaa', 'who', 'cdc'],
         cards: [
             {
                 id: 'shelter-in-place',
@@ -1450,6 +1583,7 @@ window.OASIS_KNOWLEDGE = [
         title: 'Kit',
         glyph: '▣',
         blurb: 'Checklists that assume you had thirty seconds to grab something, or thirty days to prepare.',
+        sources: ['fema', 'icrc', 'ifrc', 'unhcr'],
         cards: [
             {
                 id: 'edc',

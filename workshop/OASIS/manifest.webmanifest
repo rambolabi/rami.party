@@ -1,10 +1,12 @@
 {
+  "id": "/workshop/OASIS/",
   "name": "O.A.S.I.S. — Offline Advanced System for Information and Survival",
   "short_name": "OASIS",
-  "description": "An air-gapped field reference: emergency medicine, water, shelter, navigation, radio communications, power and hazard response, with working calculators. No network, no tracking.",
+  "description": "An air-gapped field reference: before/during/after playbooks for every major emergency, plus emergency medicine, water, shelter, navigation, radio communications, power and hazard response, with working calculators. No network, no tracking.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "orientation": "any",
   "background_color": "#080a09",
   "theme_color": "#080a09",
@@ -24,6 +26,7 @@
     }
   ],
   "shortcuts": [
+    { "name": "Playbooks — before, during, after", "url": "./#/play" },
     { "name": "First Response", "url": "./#/c/triage" },
     { "name": "Medical", "url": "./#/c/medical" },
     { "name": "All tools", "url": "./#/tools" },

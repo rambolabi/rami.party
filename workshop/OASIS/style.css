@@ -989,6 +989,171 @@ canvas.plot {
     letter-spacing: .08em;
 }
 
+/* --- Playbooks ------------------------------------------------------------ */
+.scenario>h3 {
+    align-items: center;
+}
+
+.scenario>h3 .g {
+    color: var(--accent);
+    font-size: 1.25em;
+}
+
+.horizon {
+    font-family: var(--mono);
+    font-size: .74em;
+    letter-spacing: .06em;
+    color: var(--warn);
+    margin-top: 6px;
+}
+
+.phases {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+    margin-top: 14px;
+}
+
+.phase {
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--line);
+    border-radius: 0 0 var(--r-sm) var(--r-sm);
+    background: var(--panel-2);
+    padding: 10px 12px 12px;
+    min-width: 0;
+}
+
+.phase.before {
+    border-top-color: var(--info);
+}
+
+.phase.during {
+    border-top-color: var(--crit);
+}
+
+.phase.after {
+    border-top-color: var(--accent);
+}
+
+.phase h4 {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.phase.before h4 {
+    color: var(--info);
+}
+
+.phase.during h4 {
+    color: var(--crit);
+}
+
+.phase.after h4 {
+    color: var(--accent);
+}
+
+.phase-sub {
+    font-size: .82em;
+    letter-spacing: .08em;
+    color: var(--ink-dim);
+}
+
+.phase ol {
+    margin-top: 8px;
+    font-size: .89em;
+    gap: 7px;
+}
+
+/* Jump index for the playbook list */
+.jump {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.jump-link {
+    font-size: .8em;
+    color: var(--ink-dim);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 12px;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.jump-link:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* --- Source attribution --------------------------------------------------- */
+.srcs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 13px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+}
+
+.srcs-label {
+    font-family: var(--mono);
+    font-size: .68em;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+}
+
+.src {
+    font-family: var(--mono);
+    font-size: .7em;
+    letter-spacing: .05em;
+    color: var(--ink-dim);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 9px;
+    text-decoration: none;
+}
+
+.src:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* --- Install -------------------------------------------------------------- */
+.chip.install {
+    color: var(--accent-ink);
+    background: var(--accent);
+    border-color: var(--accent);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.chip.install:hover {
+    filter: brightness(1.12);
+}
+
+.install-card {
+    border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+    background:
+        linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+        var(--panel);
+}
+
+.install-card .btn:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
 /* --- Search results ------------------------------------------------------- */
 .hit {
     display: block;
@@ -1221,6 +1386,19 @@ mark {
 
     .grid {
         grid-template-columns: 1fr 1fr;
+    }
+
+    .phases {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .jump,
+    .install-card {
+        display: none !important;
+    }
+
+    .srcs {
+        font-size: .9em;
     }
 
     a {

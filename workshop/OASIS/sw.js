@@ -13,7 +13,7 @@
    Bump CACHE whenever SHELL changes.
    ========================================================================== */
 
-const CACHE = 'oasis-v1';
+const CACHE = 'oasis-v2';
 
 const SHELL = [
     './',
@@ -21,6 +21,7 @@ const SHELL = [
     './style.css',
     './geo.js',
     './data-knowledge.js',
+    './data-scenarios.js',
     './data-reference.js',
     './tools.js',
     './app.js',

@@ -508,7 +508,7 @@ window.OASIS_SCENARIOS = [
         ],
         dont: ['Do not go to the window to look. That single instinct produced almost all the Chelyabinsk casualties.'],
         sources: ['nasa', 'esa', 'fema'],
-        keys: 'asteroid comet impact airburst tunguska chelyabinsk fireball shockwave blast glass',
+        keys: 'asteroid comet impact airburst tunguska chelyabinsk fireball shockwave blast glass meteor strike meteorite',
     },
 
     {
@@ -807,7 +807,7 @@ window.OASIS_SCENARIOS = [
             'Do not use hair conditioner after exposure.',
         ],
         sources: ['fema', 'iaea', 'who', 'cdc', 'nwss'],
-        keys: 'nuclear war bomb fallout radiation shelter potassium iodide decontamination blast flash',
+        keys: 'nuclear war bomb fallout radiation shelter potassium iodide decontamination blast flash nuclear winter atomic warhead icbm mushroom cloud',
     },
 
     {
@@ -919,7 +919,7 @@ window.OASIS_SCENARIOS = [
         ],
         dont: ['Do not self-medicate with stockpiled antibiotics.'],
         sources: ['who', 'cdc', 'ecdc'],
-        keys: 'anthrax biological weapon release outbreak deliberate ppe respirator prophylaxis quarantine',
+        keys: 'anthrax biological weapon release outbreak deliberate ppe respirator prophylaxis quarantine biohazard germ warfare bioweapon',
     },
 
     /* ============================================================ HEALTH == */
@@ -1006,7 +1006,7 @@ window.OASIS_SCENARIOS = [
             'Do not let news consumption run continuously in the background.',
         ],
         sources: ['who', 'unhcr', 'ifrc', 'nhs'],
-        keys: 'lockdown quarantine curfew restriction confinement isolation mental health checkpoint',
+        keys: 'lockdown quarantine curfew restriction confinement isolation mental health checkpoint martial law stay at home order',
     },
 
     {
@@ -1103,7 +1103,7 @@ window.OASIS_SCENARIOS = [
             'Do not photograph checkpoints, military positions or damage in front of armed personnel.',
         ],
         sources: ['icrc', 'unhcr', 'who', 'unmas'],
-        keys: 'war shelling bombing air raid conflict shelter uxo landmine checkpoint tourniquet blast civilian',
+        keys: 'war warzone war zone shelling bombing air raid conflict shelter uxo landmine checkpoint tourniquet blast civilian invasion occupation martial law siege artillery drone',
     },
 
     {
@@ -1284,7 +1284,7 @@ window.OASIS_SCENARIOS = [
             'Do not eat unidentified fish, and never any fungus.',
         ],
         sources: ['imo', 'noaa', 'icrc', 'nasar'],
-        keys: 'castaway marooned desert island shipwreck stranded coast signal beacon epirb foraging shellfish',
+        keys: 'castaway marooned desert island deserted island shipwreck stranded coast signal beacon epirb foraging shellfish tropical atoll',
     },
 
     {
@@ -1462,6 +1462,6 @@ window.OASIS_SCENARIOS = [
             'Do not neglect sanitation in favour of security. The statistics are unambiguous.',
         ],
         sources: ['sphere', 'who', 'icrc', 'unhcr', 'fao'],
-        keys: 'collapse apocalypse rebuilding long term community sanitation seeds governance famine society',
+        keys: 'collapse apocalypse rebuilding long term community sanitation seeds governance famine society shtf doomsday end of the world societal collapse dark age',
     },
 ];
