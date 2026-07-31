@@ -54,14 +54,14 @@ window.RAMI_REALMS = [
     {
         category: 'gallery',
         title: 'Phonetic Codex',
-        href: './gallery/militaryalphabet/',
+        href: '#',                  // real path once the folder returns: './gallery/militaryalphabet/'
         glyph: '🔤',
         tagline: 'Alpha, Bravo, Charlie…',
         description: 'A terminal-styled NATO phonetic alphabet reference and live text-to-phonetic translator — tap any letter to hear it, and it keeps your screen awake while you learn.',
         search: 'NATO phonetic alphabet reference and text to phonetic converter. Learn the Alpha Bravo Charlie military spelling alphabet, click letters to hear the pronunciation with audio, and it keeps the screen awake with a wake lock.',
         tags: ['reference', 'tool'],
         aura: 'cyan',
-        status: 'live',
+        status: 'soon',
     },
     {
         category: 'gallery',
@@ -225,14 +225,14 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Frostcaller',
-        href: '#',                  // real path once live: './frostcaller/'
+        href: './frostcaller/',
         glyph: '❄️',
         tagline: 'Bewitch the air conditioner',
         description: 'A beginner’s guide to building your own infrared blaster so Home Assistant can switch the air conditioning on and off — no soldering, from about €5. Tick the parts you own, follow the path that fits, then talk to the board straight from your browser.',
         search: 'A beginner friendly DIY guide and tutorial for building a cheap Wi-Fi infrared IR blaster or IR remote to control an air conditioner, air conditioning unit or heat pump from Home Assistant, with no soldering required. Interactive what parts do you have inventory picker: tick the components you already own and it shows which build paths are ready, what is still missing and what it costs, saved between visits and shareable as a permalink. Six paths — ESPHome with an ESP32, ESP8266, Wemos D1 mini, M5Stack Atom Lite or M5StickC and a KY-005 IR transmitter LED module wired with dupont jumper wires; a ready made Athom blaster with ESPHome pre-installed; re-flashing a cheap Tuya or Moes Wi-Fi IR blaster with tuya-cloudcutter, ltchiptool and LibreTiny; the Broadlink RM4 Mini with the native Home Assistant integration and SmartIR; and a UFO-R11 Zigbee IR blaster with Zigbee2MQTT. Includes an ESPHome YAML config generator and builder that writes the finished configuration file for your board, pin and air conditioner brand and lets you download it. Fully built buy and forget options compared: Athom, Broadlink, SwitchBot Hub 2, Xiaomi Mi smart remote, Sensibo, Tado and Nature Remo, rated local versus cloud. Software bench with download links and guides for Home Assistant, ESPHome Builder, ESPHome Web, the Arduino IDE, the IRremoteESP8266 library, PlatformIO, Tasmota and its web installer, esptool, HACS, SmartIR and Zigbee2MQTT, plus six different ways to flash or write the firmware including a complete Arduino sketch. Includes the ESPHome climate_ir brand table (coolix, daikin, LG, midea, mitsubishi, gree, toshiba, tcl112, fujitsu, whirlpool, heatpumpir), remote_transmitter and remote_receiver YAML, how to capture and replay raw IR codes from your own remote, infrared line of sight and range advice, and extras such as room temperature sensors, knowing whether the AC is really running, presence and window automations, sleep ramps, controlling the TV, Alexa Google and Siri, notifications, running costs, troubleshooting and safety. Full text search across the guide, a printable version, a copyable shopping list with price search links, live currency conversion and four colour themes including a light and a high contrast one. Also includes a side by side comparison of every path, a what went wrong troubleshooting wizard, a pin map showing which GPIO pins are safe on the ESP32, ESP8266 and ESP32-C3, a log reader that explains ESPHome and Tasmota log lines, a raw infrared code toolbox that converts captured timings into ESPHome buttons and Pronto codes, a running cost estimator, a QR code and Markdown export, keyboard shortcuts and offline support. A companion Web Serial page called The Scribe connects to the board over USB from the browser to identify the chip, watch the live serial log, capture infrared codes from your remote and send Tasmota IRHVAC commands, with no drivers or serial monitor to install.',
         tags: ['guide', 'smart home'],
         aura: 'cyan',
-        status: 'soon',
+        status: 'live',
     },
     {
         title: 'Loregate',
@@ -346,6 +346,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Breachlight',
+        href: './breachlight/',
+        glyph: '🚨',
+        tagline: 'The moment after you clicked',
+        description: 'Incident triage for the worst five minutes of your day — interactive decision trees for phishing, stolen passwords, missing money, malicious QR codes, hijacked accounts and ransomware, in one mode for people and one for responders.',
+        search: 'A cyber security incident response and triage guide for the moment after you clicked a bad link. Interactive decision trees and step by step first aid for phishing emails, stolen or leaked passwords and credentials, missing money and bank fraud, malicious QR codes and quishing, hacked or hijacked accounts, malware and ransomware infections, identity theft and account recovery. Includes a plain language glossary and a defence bench of protective measures, with two modes: one for ordinary people and one for incident responders. Works fully offline with no fonts, CDNs, analytics or trackers.',
+        tags: ['guide', 'security'],
+        aura: 'pink',
+        status: 'live',
+    },
+    {
         title: 'Mail Ward',
         href: './mail-ward/',
         glyph: '🛡️',
@@ -358,14 +369,14 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Mail Headers',
-        href: './mailheaders/',
+        href: '#',                  // real path once the folder returns: './mailheaders/'
         glyph: '✉️',
         tagline: 'Header diviner',
         description: 'Decode the tangled runes of email headers to trace a message’s journey and unmask delivery curses.',
         search: 'An email header analyzer and parser. Decode raw email headers to trace the delivery path and hops and diagnose spam or email delivery problems.',
         tags: ['tool', 'email'],
         aura: 'violet',
-        status: 'live',
+        status: 'soon',
     },
     {
         title: 'Subnet Calculator',
@@ -524,14 +535,14 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Volume Seer',
-        href: './trace-results/',
+        href: '#',                  // real path once the folder returns: './trace-results/'
         glyph: '📊',
         tagline: 'Charts of the flow',
         description: 'A Chart.js dashboard visualising email traffic over time.',
         search: 'A Chart.js dashboard that visualizes email traffic volume over time with graphs. Email statistics and analytics charts.',
         tags: ['tool', 'data'],
         aura: 'pink',
-        status: 'live',
+        status: 'soon',
     },
     {
         title: 'Wishlist Scroll',

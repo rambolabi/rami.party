@@ -55,7 +55,7 @@
     padding: 10px 20px;
     border-radius: 999px;
     border: 1px solid var(--card-border);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--surface-soft);
     cursor: pointer;
     transition: all 0.28s var(--ease);
 }
@@ -67,11 +67,11 @@
 }
 
 .category-buttons button.active {
-    color: #fff;
+    color: var(--btn-primary-ink);
     border-color: transparent;
     background: var(--spell);
     background-size: 200% auto;
-    box-shadow: 0 8px 22px rgba(168, 85, 247, 0.4);
+    box-shadow: 0 8px 22px var(--accent-glow);
 }
 
 /* Search */
@@ -85,7 +85,7 @@
     padding: 14px 22px;
     border-radius: 999px;
     border: 1px solid var(--card-border);
-    background: rgba(10, 6, 25, 0.6);
+    background: var(--card);
     color: var(--text);
     font-family: var(--font-body);
     font-size: 1rem;
@@ -190,7 +190,7 @@ body.lightbox-open {
 #lightbox {
     position: fixed;
     inset: 0;
-    background: rgba(6, 3, 15, 0.92);
+    background: var(--overlay-bg);
     backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
@@ -229,7 +229,7 @@ body.lightbox-open {
     font-family: var(--font-body);
     font-weight: 600;
     font-size: 1.2rem;
-    background: rgba(11, 5, 36, 0.7);
+    background: var(--card);
     padding: 10px 18px;
     border-radius: 999px;
     border: 1px solid var(--card-border);
@@ -247,15 +247,15 @@ body.lightbox-open {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: rgba(11, 5, 36, 0.6);
+    background: var(--card);
     border: 1px solid var(--card-border);
     transition: all 0.2s ease;
 }
 
 .close-btn:hover, .prev-btn:hover, .next-btn:hover {
-    color: #fff;
+    color: var(--text);
     border-color: var(--cyan);
-    background: rgba(34, 211, 238, 0.15);
+    background: var(--accent-soft);
 }
 
 .close-btn { top: 22px; right: 26px; }

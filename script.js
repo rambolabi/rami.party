@@ -9,20 +9,22 @@ const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').match
 
 /* ---- Realm cards --------------------------------------------------------- */
 function cardMarkup(r) {
-    const soon = r.status === 'soon';
-    const tags = (r.tags || []).map(t => `<span>${t}</span>`).join('');
+    const soon = r.status === 'soon' || !r.href || r.href === '#';
+    const tags = (r.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('');
     const ext = r.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const titleInner = soon ? r.title : `<a href="${r.href}"${ext}>${r.title}</a>`;
+    const titleInner = soon
+        ? escapeHtml(r.title)
+        : `<a href="${escapeHtml(r.href)}"${ext}>${escapeHtml(r.title)}</a>`;
     const enter = soon
         ? `<span class="realm-enter">🔒 ${r.tagline === 'Never drew breath' ? 'Nothing to see' : 'Coming soon'}</span>`
         : `<span class="realm-enter">${r.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
 
     return `
-        <li class="realm-card aura-${r.aura || 'violet'}${soon ? ' is-soon' : ''}${r.external ? ' is-external' : ''} reveal">
-            <div class="realm-glyph" aria-hidden="true">${r.glyph || '✨'}</div>
-            <p class="realm-tagline">${r.tagline || ''}</p>
+        <li class="realm-card aura-${escapeHtml(r.aura || 'violet')}${soon ? ' is-soon' : ''}${r.external ? ' is-external' : ''} reveal">
+            <div class="realm-glyph" aria-hidden="true">${escapeHtml(r.glyph || '✨')}</div>
+            <p class="realm-tagline">${escapeHtml(r.tagline || '')}</p>
             <h3>${titleInner}</h3>
-            <p class="realm-desc">${r.description || ''}</p>
+            <p class="realm-desc">${escapeHtml(r.description || '')}</p>
             <div class="realm-tags">${tags}</div>
             ${enter}
         </li>`;
@@ -43,9 +45,9 @@ function renderRealms() {
         section.className = 'realm-group';
         section.innerHTML = `
             <header class="group-head">
-                <span class="group-emoji" aria-hidden="true">${g.emoji}</span>
-                <h3>${g.title}</h3>
-                <p>${g.blurb}</p>
+                <span class="group-emoji" aria-hidden="true">${escapeHtml(g.emoji || '')}</span>
+                <h3>${escapeHtml(g.title || '')}</h3>
+                <p>${escapeHtml(g.blurb || '')}</p>
             </header>
             <ul class="realm-grid" role="list">
                 ${items.map(cardMarkup).join('')}
@@ -127,15 +129,15 @@ function resultCardMarkup(e) {
     const it = e.item;
     const soon = !e.url || e.url === '#';
     const ext = e.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const title = soon ? escapeHtml(it.title) : `<a href="${e.url}"${ext}>${escapeHtml(it.title)}</a>`;
+    const title = soon ? escapeHtml(it.title) : `<a href="${escapeHtml(e.url)}"${ext}>${escapeHtml(it.title)}</a>`;
     const tags = (it.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('');
     const enter = soon
         ? `<span class="realm-enter">🔒 Nothing to visit</span>`
         : `<span class="realm-enter">${e.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
     return `
-        <li class="realm-card aura-${it.aura || 'violet'}${soon ? ' is-soon' : ''}${e.external ? ' is-external' : ''} visible">
+        <li class="realm-card aura-${escapeHtml(it.aura || 'violet')}${soon ? ' is-soon' : ''}${e.external ? ' is-external' : ''} visible">
             <span class="status-badge ${e.meta.cls}">${e.meta.icon} ${e.meta.label}</span>
-            <div class="realm-glyph" aria-hidden="true">${it.glyph || '✨'}</div>
+            <div class="realm-glyph" aria-hidden="true">${escapeHtml(it.glyph || '✨')}</div>
             <p class="realm-tagline">${escapeHtml(it.tagline || '')}</p>
             <h3>${title}</h3>
             <p class="realm-desc">${escapeHtml(it.description || '')}</p>
@@ -185,12 +187,29 @@ function setupSearch() {
 
 
 /* ---- Starfield ----------------------------------------------------------- */
+const DEFAULT_STARS = ['#ffffff', '#c99bff', '#7fe6f7', '#ffd77a', '#ff9ecb'];
+
+function themeStarStyle() {
+    const cs = getComputedStyle(document.documentElement);
+    const raw = cs.getPropertyValue('--star-colors').trim();
+    const colors = raw ? raw.split(',').map(c => c.trim()).filter(Boolean) : [];
+    const opacity = parseFloat(cs.getPropertyValue('--star-opacity'));
+    return {
+        colors: colors.length ? colors : DEFAULT_STARS,
+        opacity: Number.isFinite(opacity) ? opacity : 1,
+    };
+}
+
 function startStarfield() {
     const canvas = document.getElementById('starfield');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     let stars = [];
-    let w, h, dpr;
+    let style = themeStarStyle();
+    let w = 0, h = 0, dpr = 1;
+    let rafId = null;
+    let resizeTimer = null;
 
     function resize() {
         dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -199,7 +218,6 @@ function startStarfield() {
         canvas.style.width = innerWidth + 'px';
         canvas.style.height = innerHeight + 'px';
         const count = Math.min(160, Math.floor((innerWidth * innerHeight) / 9000));
-        const palette = ['#ffffff', '#c99bff', '#7fe6f7', '#ffd77a', '#ff9ecb'];
         stars = Array.from({ length: count }, () => ({
             x: Math.random() * w,
             y: Math.random() * h,
@@ -207,42 +225,53 @@ function startStarfield() {
             a: Math.random(),
             tw: Math.random() * 0.02 + 0.004,
             dir: Math.random() > 0.5 ? 1 : -1,
-            c: palette[(Math.random() * palette.length) | 0],
+            c: style.colors[(Math.random() * style.colors.length) | 0],
         }));
     }
 
-    function draw() {
+    function paint(animate) {
         ctx.clearRect(0, 0, w, h);
         for (const s of stars) {
-            s.a += s.tw * s.dir;
-            if (s.a <= 0.1 || s.a >= 1) s.dir *= -1;
-            ctx.globalAlpha = Math.max(0.1, Math.min(1, s.a));
+            if (animate) {
+                s.a += s.tw * s.dir;
+                if (s.a <= 0.1 || s.a >= 1) s.dir *= -1;
+            }
+            ctx.globalAlpha = Math.max(0.1, Math.min(1, s.a)) * style.opacity;
             ctx.fillStyle = s.c;
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.globalAlpha = 1;
-        rafId = requestAnimationFrame(draw);
     }
 
-    let rafId;
+    function loop() {
+        paint(true);
+        rafId = requestAnimationFrame(loop);
+    }
+
+    function render() {
+        if (rafId !== null) cancelAnimationFrame(rafId);
+        rafId = null;
+        if (reduceMotion) paint(false);
+        else loop();
+    }
+
+    function recolor() {
+        style = themeStarStyle();
+        for (const s of stars) s.c = style.colors[(Math.random() * style.colors.length) | 0];
+        if (reduceMotion) paint(false);
+    }
+
     resize();
-    window.addEventListener('resize', () => { cancelAnimationFrame(rafId); resize(); if (!reduceMotion) draw(); });
+    render();
 
-    if (reduceMotion) {
-        // Draw a single static frame.
-        for (const s of stars) {
-            ctx.globalAlpha = s.a;
-            ctx.fillStyle = s.c;
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-    } else {
-        draw();
-    }
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => { resize(); render(); }, 120);
+    });
+
+    document.addEventListener('rami:themechange', recolor);
 }
 
 /* ---- Mobile navigation --------------------------------------------------- */

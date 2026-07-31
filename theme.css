@@ -13,7 +13,7 @@
 }
 
 :root {
-    /* Enchanted palette */
+    /* Enchanted palette (default theme: Midnight Arcana) */
     --night-0: #06030f;
     --night-1: #0b0524;
     --night-2: #150a3a;
@@ -28,6 +28,39 @@
     --card-border: rgba(168, 85, 247, 0.28);
     --glass-blur: 16px;
 
+    /* Themed surfaces & chrome ------------------------------------------- */
+    --body-bg:
+        radial-gradient(1200px 700px at 12% -10%, rgba(168, 85, 247, 0.22), transparent 60%),
+        radial-gradient(1000px 800px at 90% 10%, rgba(34, 211, 238, 0.14), transparent 55%),
+        radial-gradient(900px 900px at 50% 120%, rgba(236, 72, 153, 0.16), transparent 60%),
+        linear-gradient(180deg, var(--night-1) 0%, var(--night-0) 100%);
+    --header-bg: rgba(11, 5, 36, 0.55);
+    --footer-bg: rgba(6, 3, 15, 0.6);
+    --overlay-bg: rgba(6, 3, 15, 0.92);
+    --surface-soft: rgba(255, 255, 255, 0.05);
+    --surface-softer: rgba(255, 255, 255, 0.03);
+    --border-soft: rgba(168, 85, 247, 0.18);
+    --border-hairline: rgba(255, 255, 255, 0.08);
+    --chip-bg: rgba(255, 255, 255, 0.05);
+    --chip-border: rgba(255, 255, 255, 0.08);
+    --accent-soft: rgba(168, 85, 247, 0.18);
+    --accent-glow: rgba(168, 85, 247, 0.45);
+    --ink-violet: #c99bff;
+    --ink-cyan: #7fe6f7;
+    --ink-pink: #ff9ecb;
+    --ink-gold: #ffd77a;
+    --ink-ash: #c3c9d6;
+    --btn-primary-ink: #fff;
+    --focus-ring: var(--cyan);
+    --scheme: dark;
+    --meta-theme-color: #0b0524;
+
+    /* Backdrop ------------------------------------------------------------ */
+    --aurora-opacity: 0.35;
+    --aurora-blend: screen;
+    --star-opacity: 1;
+    --star-colors: #ffffff, #c99bff, #7fe6f7, #ffd77a, #ff9ecb;
+
     --radius: 18px;
     --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
     --ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -38,6 +71,7 @@
 }
 
 html {
+    color-scheme: var(--scheme);
     scroll-behavior: smooth;
     scroll-padding-top: 90px;
     background-color: var(--night-0);
@@ -48,11 +82,7 @@ body {
     font-weight: 500;
     line-height: 1.7;
     color: var(--text);
-    background:
-        radial-gradient(1200px 700px at 12% -10%, rgba(168, 85, 247, 0.22), transparent 60%),
-        radial-gradient(1000px 800px at 90% 10%, rgba(34, 211, 238, 0.14), transparent 55%),
-        radial-gradient(900px 900px at 50% 120%, rgba(236, 72, 153, 0.16), transparent 60%),
-        linear-gradient(180deg, var(--night-1) 0%, var(--night-0) 100%);
+    background: var(--body-bg);
     background-attachment: fixed;
     min-height: 100vh;
     overflow-x: hidden;
@@ -96,8 +126,8 @@ ul {
     height: 48vw;
     border-radius: 50%;
     filter: blur(90px);
-    opacity: 0.35;
-    mix-blend-mode: screen;
+    opacity: var(--aurora-opacity);
+    mix-blend-mode: var(--aurora-blend);
     animation: drift 26s var(--ease) infinite alternate;
 }
 
@@ -118,7 +148,7 @@ ul {
     transform: translateX(-50%);
     z-index: 2000;
     background: var(--violet);
-    color: #fff;
+    color: var(--btn-primary-ink);
     padding: 10px 18px;
     border-radius: 0 0 12px 12px;
     font-weight: 700;
@@ -128,7 +158,7 @@ ul {
 .skip-link:focus { top: 0; }
 
 :focus-visible {
-    outline: 2px solid var(--cyan);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 3px;
     border-radius: 6px;
 }
@@ -171,8 +201,8 @@ ul {
     z-index: 1000;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    background: rgba(11, 5, 36, 0.55);
-    border-bottom: 1px solid rgba(168, 85, 247, 0.18);
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border-soft);
 }
 
 .site-header .container {
@@ -225,12 +255,12 @@ ul {
     padding: 8px 16px;
     border: 1px solid var(--card-border);
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--surface-soft);
     transition: all 0.25s var(--ease);
 }
 
 .back-home:hover {
-    color: #fff;
+    color: var(--text);
     border-color: var(--cyan);
     transform: translateX(-3px);
 }
@@ -275,10 +305,10 @@ ul {
 }
 
 .btn-primary {
-    color: #fff;
+    color: var(--btn-primary-ink);
     background: var(--spell);
     background-size: 200% auto;
-    box-shadow: 0 10px 30px rgba(168, 85, 247, 0.45);
+    box-shadow: 0 10px 30px var(--accent-glow);
 }
 
 .btn-primary:hover {
@@ -289,7 +319,7 @@ ul {
 
 .btn-ghost {
     color: var(--text);
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--surface-soft);
     border: 1px solid var(--card-border);
     backdrop-filter: blur(6px);
 }
@@ -297,7 +327,7 @@ ul {
 .btn-ghost:hover {
     transform: translateY(-3px);
     border-color: var(--cyan);
-    color: #fff;
+    color: var(--text);
     box-shadow: 0 12px 30px rgba(34, 211, 238, 0.25);
 }
 
@@ -305,8 +335,8 @@ ul {
 .site-footer {
     margin-top: 40px;
     padding: 54px 0 30px;
-    border-top: 1px solid rgba(168, 85, 247, 0.18);
-    background: rgba(6, 3, 15, 0.6);
+    border-top: 1px solid var(--border-soft);
+    background: var(--footer-bg);
     backdrop-filter: blur(10px);
 }
 
@@ -348,7 +378,7 @@ ul {
 .footer-bottom {
     text-align: center;
     padding-top: 24px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--border-hairline);
     color: var(--text-muted);
     font-size: 0.9rem;
 }
@@ -368,7 +398,7 @@ ul {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: rgba(6, 3, 15, 0.92);
+    background: var(--overlay-bg);
     backdrop-filter: blur(14px);
     opacity: 0;
     visibility: hidden;
@@ -438,4 +468,656 @@ ul {
 
     .reveal { opacity: 1; transform: none; }
     .aurora-blob { animation: none; }
+}
+
+/* ==========================================================================
+   Themes
+   --------------------------------------------------------------------------
+   Every theme only redefines tokens — no component rule needs to know which
+   theme is active. `data-theme` is set on <html> by theme.js before paint.
+   Registry of ids/labels lives in theme.js; keep the two in sync.
+   ========================================================================== */
+
+/* ✨ Midnight Arcana — the default, defined in :root above. */
+
+/* ▨ Graphite — professional dark: calm slate, one confident blue accent. */
+[data-theme="graphite"] {
+    --night-0: #0a0c10;
+    --night-1: #12151c;
+    --night-2: #1b2029;
+    --violet: #60a5fa;
+    --pink: #38bdf8;
+    --cyan: #22d3ee;
+    --gold: #94a3b8;
+
+    --text: #e6ebf2;
+    --text-muted: #9aa7b8;
+    --card: rgba(24, 29, 38, 0.82);
+    --card-border: rgba(148, 163, 184, 0.22);
+    --glass-blur: 10px;
+
+    --body-bg:
+        radial-gradient(1100px 640px at 15% -10%, rgba(96, 165, 250, 0.12), transparent 60%),
+        radial-gradient(900px 700px at 88% 6%, rgba(56, 189, 248, 0.08), transparent 55%),
+        linear-gradient(180deg, var(--night-1) 0%, var(--night-0) 100%);
+    --header-bg: rgba(18, 21, 28, 0.82);
+    --footer-bg: rgba(10, 12, 16, 0.8);
+    --overlay-bg: rgba(10, 12, 16, 0.95);
+    --surface-soft: rgba(255, 255, 255, 0.05);
+    --surface-softer: rgba(255, 255, 255, 0.03);
+    --border-soft: rgba(148, 163, 184, 0.18);
+    --border-hairline: rgba(255, 255, 255, 0.07);
+    --chip-bg: rgba(255, 255, 255, 0.05);
+    --chip-border: rgba(255, 255, 255, 0.09);
+    --accent-soft: rgba(96, 165, 250, 0.18);
+    --accent-glow: rgba(96, 165, 250, 0.32);
+    --btn-primary-ink: #08111f;
+    --focus-ring: #60a5fa;
+    --meta-theme-color: #12151c;
+
+    --ink-violet: #93c5fd;
+    --ink-cyan: #7dd3fc;
+    --ink-pink: #a5b4fc;
+    --ink-gold: #cbd5e1;
+    --ink-ash: #cbd5e1;
+
+    --aurora-opacity: 0.14;
+    --star-opacity: 0.55;
+    --star-colors: #ffffff, #93c5fd, #7dd3fc, #cbd5e1;
+    --shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+    --radius: 14px;
+    --spell: linear-gradient(120deg, #60a5fa, #38bdf8 55%, #a5b4fc);
+    --font-display: 'Quicksand', system-ui, -apple-system, sans-serif;
+}
+
+/* ☀ Daylight — professional light: paper-white, ink-blue, zero glare. */
+[data-theme="daylight"] {
+    --night-0: #eef2f7;
+    --night-1: #ffffff;
+    --night-2: #dde5ef;
+    --violet: #2563eb;
+    --pink: #0ea5e9;
+    --cyan: #0891b2;
+    --gold: #b45309;
+
+    --text: #0f172a;
+    --text-muted: #566274;
+    --card: rgba(255, 255, 255, 0.9);
+    --card-border: rgba(15, 23, 42, 0.12);
+    --glass-blur: 8px;
+
+    --body-bg:
+        radial-gradient(1100px 640px at 12% -10%, rgba(37, 99, 235, 0.1), transparent 60%),
+        radial-gradient(900px 700px at 90% 4%, rgba(14, 165, 233, 0.09), transparent 55%),
+        linear-gradient(180deg, #ffffff 0%, #eef2f7 100%);
+    --header-bg: rgba(255, 255, 255, 0.85);
+    --footer-bg: rgba(255, 255, 255, 0.8);
+    --overlay-bg: rgba(255, 255, 255, 0.96);
+    --surface-soft: rgba(15, 23, 42, 0.04);
+    --surface-softer: rgba(15, 23, 42, 0.025);
+    --border-soft: rgba(15, 23, 42, 0.1);
+    --border-hairline: rgba(15, 23, 42, 0.08);
+    --chip-bg: rgba(15, 23, 42, 0.05);
+    --chip-border: rgba(15, 23, 42, 0.1);
+    --accent-soft: rgba(37, 99, 235, 0.14);
+    --accent-glow: rgba(37, 99, 235, 0.22);
+    --focus-ring: #2563eb;
+    --scheme: light;
+    --meta-theme-color: #ffffff;
+
+    --ink-violet: #4338ca;
+    --ink-cyan: #0e7490;
+    --ink-pink: #be185d;
+    --ink-gold: #b45309;
+    --ink-ash: #475569;
+
+    --aurora-opacity: 0.16;
+    --aurora-blend: multiply;
+    --star-opacity: 0.3;
+    --star-colors: #94a3b8, #64748b, #cbd5e1;
+    --shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
+    --radius: 14px;
+    --spell: linear-gradient(120deg, #2563eb, #0ea5e9 55%, #4338ca);
+    --font-display: 'Quicksand', system-ui, -apple-system, sans-serif;
+}
+
+/* ⚡ Neon Circuit — cyberpunk arcade: hot magenta over electric cyan. */
+[data-theme="neon"] {
+    --night-0: #04000d;
+    --night-1: #0a0120;
+    --night-2: #16033a;
+    --violet: #b026ff;
+    --pink: #ff2e88;
+    --cyan: #00fff0;
+    --gold: #f6ff3d;
+
+    --text: #f4f0ff;
+    --text-muted: #9d8fd6;
+    --card: rgba(21, 3, 48, 0.62);
+    --card-border: rgba(0, 255, 240, 0.28);
+
+    --body-bg:
+        radial-gradient(1000px 600px at 8% -10%, rgba(255, 46, 136, 0.24), transparent 60%),
+        radial-gradient(900px 700px at 92% 8%, rgba(0, 255, 240, 0.18), transparent 55%),
+        radial-gradient(900px 900px at 50% 120%, rgba(176, 38, 255, 0.22), transparent 60%),
+        linear-gradient(180deg, #0a0120 0%, #04000d 100%);
+    --header-bg: rgba(10, 1, 32, 0.62);
+    --footer-bg: rgba(4, 0, 13, 0.7);
+    --overlay-bg: rgba(4, 0, 13, 0.94);
+    --border-soft: rgba(0, 255, 240, 0.2);
+    --accent-soft: rgba(255, 46, 136, 0.2);
+    --accent-glow: rgba(255, 46, 136, 0.5);
+    --btn-primary-ink: #0a0120;
+    --focus-ring: #00fff0;
+    --meta-theme-color: #0a0120;
+
+    --ink-violet: #d79bff;
+    --ink-cyan: #6ffff5;
+    --ink-pink: #ff86bb;
+    --ink-gold: #f6ff3d;
+    --ink-ash: #b9b6d6;
+
+    --aurora-opacity: 0.5;
+    --star-colors: #ffffff, #00fff0, #ff2e88, #b026ff, #f6ff3d;
+    --shadow: 0 20px 50px rgba(176, 38, 255, 0.28);
+    --spell: linear-gradient(120deg, #ff2e88, #b026ff 40%, #00fff0 78%, #f6ff3d);
+}
+
+/* 🔥 Ember Forge — molten dark: coal, rust and firelight. */
+[data-theme="ember"] {
+    --night-0: #120705;
+    --night-1: #1e0c07;
+    --night-2: #2c130b;
+    --violet: #f97316;
+    --pink: #ef4444;
+    --cyan: #fbbf24;
+    --gold: #fcd34d;
+
+    --text: #fdece0;
+    --text-muted: #c9a08a;
+    --card: rgba(48, 20, 12, 0.6);
+    --card-border: rgba(249, 115, 22, 0.28);
+
+    --body-bg:
+        radial-gradient(1100px 700px at 12% -10%, rgba(249, 115, 22, 0.26), transparent 60%),
+        radial-gradient(900px 700px at 88% 8%, rgba(239, 68, 68, 0.18), transparent 55%),
+        radial-gradient(900px 900px at 50% 120%, rgba(251, 191, 36, 0.14), transparent 60%),
+        linear-gradient(180deg, #1e0c07 0%, #120705 100%);
+    --header-bg: rgba(30, 12, 7, 0.62);
+    --footer-bg: rgba(18, 7, 5, 0.7);
+    --overlay-bg: rgba(18, 7, 5, 0.94);
+    --border-soft: rgba(249, 115, 22, 0.2);
+    --accent-soft: rgba(249, 115, 22, 0.2);
+    --accent-glow: rgba(249, 115, 22, 0.45);
+    --btn-primary-ink: #24100a;
+    --focus-ring: #fbbf24;
+    --meta-theme-color: #1e0c07;
+
+    --ink-violet: #fdba74;
+    --ink-cyan: #fcd34d;
+    --ink-pink: #fca5a5;
+    --ink-gold: #fde68a;
+    --ink-ash: #d6c2b6;
+
+    --star-colors: #fff7ed, #fdba74, #fca5a5, #fcd34d;
+    --spell: linear-gradient(120deg, #ef4444, #f97316 45%, #fbbf24 80%, #fde68a);
+}
+
+/* 🌿 Deep Grove — enchanted forest: moss, jade and moonlit fern. */
+[data-theme="grove"] {
+    --night-0: #04120c;
+    --night-1: #071d14;
+    --night-2: #0d2c1f;
+    --violet: #34d399;
+    --pink: #a3e635;
+    --cyan: #2dd4bf;
+    --gold: #facc15;
+
+    --text: #e7f6ec;
+    --text-muted: #9dbfa9;
+    --card: rgba(13, 44, 31, 0.6);
+    --card-border: rgba(52, 211, 153, 0.26);
+
+    --body-bg:
+        radial-gradient(1100px 700px at 12% -10%, rgba(52, 211, 153, 0.2), transparent 60%),
+        radial-gradient(900px 700px at 88% 8%, rgba(163, 230, 53, 0.14), transparent 55%),
+        radial-gradient(900px 900px at 50% 120%, rgba(45, 212, 191, 0.16), transparent 60%),
+        linear-gradient(180deg, #071d14 0%, #04120c 100%);
+    --header-bg: rgba(7, 29, 20, 0.62);
+    --footer-bg: rgba(4, 18, 12, 0.7);
+    --overlay-bg: rgba(4, 18, 12, 0.94);
+    --border-soft: rgba(52, 211, 153, 0.18);
+    --accent-soft: rgba(52, 211, 153, 0.18);
+    --accent-glow: rgba(52, 211, 153, 0.35);
+    --btn-primary-ink: #04150e;
+    --focus-ring: #2dd4bf;
+    --meta-theme-color: #071d14;
+
+    --ink-violet: #86efac;
+    --ink-cyan: #5eead4;
+    --ink-pink: #bef264;
+    --ink-gold: #fde047;
+    --ink-ash: #b9cfc2;
+
+    --star-colors: #ecfdf5, #86efac, #5eead4, #fde047;
+    --spell: linear-gradient(120deg, #34d399, #a3e635 45%, #2dd4bf 80%, #facc15);
+}
+
+/* 🖥 Terminal — phosphor green on black, monospace everywhere. */
+[data-theme="terminal"] {
+    --night-0: #000000;
+    --night-1: #030b05;
+    --night-2: #06170c;
+    --violet: #22c55e;
+    --pink: #4ade80;
+    --cyan: #86efac;
+    --gold: #a3e635;
+
+    --text: #b9ffcb;
+    --text-muted: #4f9c63;
+    --card: rgba(4, 20, 10, 0.72);
+    --card-border: rgba(34, 197, 94, 0.35);
+    --glass-blur: 4px;
+
+    --body-bg:
+        radial-gradient(900px 600px at 50% -10%, rgba(34, 197, 94, 0.12), transparent 60%),
+        linear-gradient(180deg, #030b05 0%, #000000 100%);
+    --header-bg: rgba(0, 0, 0, 0.78);
+    --footer-bg: rgba(0, 0, 0, 0.82);
+    --overlay-bg: rgba(0, 0, 0, 0.96);
+    --border-soft: rgba(34, 197, 94, 0.25);
+    --border-hairline: rgba(34, 197, 94, 0.18);
+    --chip-bg: rgba(34, 197, 94, 0.08);
+    --chip-border: rgba(34, 197, 94, 0.25);
+    --accent-soft: rgba(34, 197, 94, 0.18);
+    --accent-glow: rgba(34, 197, 94, 0.35);
+    --btn-primary-ink: #04120a;
+    --focus-ring: #4ade80;
+    --meta-theme-color: #030b05;
+
+    --ink-violet: #86efac;
+    --ink-cyan: #86efac;
+    --ink-pink: #bbf7d0;
+    --ink-gold: #a3e635;
+    --ink-ash: #4f9c63;
+
+    --aurora-opacity: 0.12;
+    --star-colors: #22c55e, #4ade80, #86efac;
+    --radius: 4px;
+    --shadow: 0 0 0 1px rgba(34, 197, 94, 0.12), 0 18px 40px rgba(0, 0, 0, 0.6);
+    --spell: linear-gradient(120deg, #22c55e, #4ade80 50%, #a3e635);
+    --font-display: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', 'Consolas', monospace;
+    --font-body: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', 'Consolas', monospace;
+}
+
+/* 📜 Parchment — candlelit library: aged paper, sepia ink, gold leaf. */
+[data-theme="parchment"] {
+    --night-0: #efe3c8;
+    --night-1: #faf3e2;
+    --night-2: #e5d5b3;
+    --violet: #8a5a2b;
+    --pink: #a63d40;
+    --cyan: #3f6f5e;
+    --gold: #a97400;
+
+    --text: #3a2b17;
+    --text-muted: #7a6448;
+    --card: rgba(255, 250, 238, 0.86);
+    --card-border: rgba(138, 90, 43, 0.26);
+    --glass-blur: 6px;
+
+    --body-bg:
+        radial-gradient(1000px 620px at 12% -10%, rgba(169, 116, 0, 0.16), transparent 60%),
+        radial-gradient(900px 700px at 90% 6%, rgba(166, 61, 64, 0.1), transparent 55%),
+        linear-gradient(180deg, #faf3e2 0%, #efe3c8 100%);
+    --header-bg: rgba(250, 243, 226, 0.88);
+    --footer-bg: rgba(239, 227, 200, 0.9);
+    --overlay-bg: rgba(250, 243, 226, 0.96);
+    --surface-soft: rgba(58, 43, 23, 0.05);
+    --surface-softer: rgba(58, 43, 23, 0.03);
+    --border-soft: rgba(138, 90, 43, 0.22);
+    --border-hairline: rgba(58, 43, 23, 0.12);
+    --chip-bg: rgba(58, 43, 23, 0.06);
+    --chip-border: rgba(138, 90, 43, 0.2);
+    --accent-soft: rgba(169, 116, 0, 0.18);
+    --accent-glow: rgba(169, 116, 0, 0.28);
+    --focus-ring: #8a5a2b;
+    --scheme: light;
+    --meta-theme-color: #faf3e2;
+
+    --ink-violet: #7c4a1e;
+    --ink-cyan: #35604f;
+    --ink-pink: #8f2f32;
+    --ink-gold: #8a5f00;
+    --ink-ash: #6b5842;
+
+    --aurora-opacity: 0.2;
+    --aurora-blend: multiply;
+    --star-opacity: 0.22;
+    --star-colors: #a97400, #8a5a2b, #b9a37a;
+    --shadow: 0 14px 34px rgba(90, 63, 26, 0.16);
+    --spell: linear-gradient(120deg, #8a5a2b, #a97400 50%, #a63d40);
+}
+
+/* 🌸 Cherry Blossom — soft light pastel: petal pink and morning sky. */
+[data-theme="blossom"] {
+    --night-0: #fbeef4;
+    --night-1: #fff8fb;
+    --night-2: #f6dfe9;
+    --violet: #8b5cf6;
+    --pink: #ec4899;
+    --cyan: #0ea5e9;
+    --gold: #f59e0b;
+
+    --text: #3d2233;
+    --text-muted: #7d6273;
+    --card: rgba(255, 255, 255, 0.86);
+    --card-border: rgba(236, 72, 153, 0.22);
+    --glass-blur: 10px;
+
+    --body-bg:
+        radial-gradient(1000px 620px at 10% -10%, rgba(236, 72, 153, 0.18), transparent 60%),
+        radial-gradient(900px 700px at 90% 4%, rgba(139, 92, 246, 0.14), transparent 55%),
+        radial-gradient(900px 900px at 50% 120%, rgba(14, 165, 233, 0.12), transparent 60%),
+        linear-gradient(180deg, #fff8fb 0%, #fbeef4 100%);
+    --header-bg: rgba(255, 248, 251, 0.86);
+    --footer-bg: rgba(251, 238, 244, 0.9);
+    --overlay-bg: rgba(255, 248, 251, 0.96);
+    --surface-soft: rgba(61, 34, 51, 0.05);
+    --surface-softer: rgba(61, 34, 51, 0.03);
+    --border-soft: rgba(236, 72, 153, 0.18);
+    --border-hairline: rgba(61, 34, 51, 0.1);
+    --chip-bg: rgba(61, 34, 51, 0.05);
+    --chip-border: rgba(236, 72, 153, 0.18);
+    --accent-soft: rgba(236, 72, 153, 0.16);
+    --accent-glow: rgba(236, 72, 153, 0.28);
+    --focus-ring: #db2777;
+    --scheme: light;
+    --meta-theme-color: #fff8fb;
+
+    --ink-violet: #6d28d9;
+    --ink-cyan: #0369a1;
+    --ink-pink: #be185d;
+    --ink-gold: #b45309;
+    --ink-ash: #6b5566;
+
+    --aurora-opacity: 0.24;
+    --aurora-blend: multiply;
+    --star-opacity: 0.3;
+    --star-colors: #f9a8d4, #c4b5fd, #a5b4fc;
+    --shadow: 0 16px 38px rgba(190, 24, 93, 0.12);
+    --spell: linear-gradient(120deg, #ec4899, #8b5cf6 45%, #0ea5e9 80%, #f59e0b);
+}
+
+/* 🌊 Abyssal Tide — deep-sea dark: teal currents and bioluminescence. */
+[data-theme="abyss"] {
+    --night-0: #020c14;
+    --night-1: #05192a;
+    --night-2: #0a2a44;
+    --violet: #38bdf8;
+    --pink: #2dd4bf;
+    --cyan: #67e8f9;
+    --gold: #a5f3fc;
+
+    --text: #e0f5ff;
+    --text-muted: #8fb4c9;
+    --card: rgba(10, 42, 68, 0.58);
+    --card-border: rgba(56, 189, 248, 0.26);
+
+    --body-bg:
+        radial-gradient(1100px 700px at 12% -10%, rgba(56, 189, 248, 0.2), transparent 60%),
+        radial-gradient(900px 700px at 88% 8%, rgba(45, 212, 191, 0.16), transparent 55%),
+        radial-gradient(900px 900px at 50% 120%, rgba(103, 232, 249, 0.12), transparent 60%),
+        linear-gradient(180deg, #05192a 0%, #020c14 100%);
+    --header-bg: rgba(5, 25, 42, 0.62);
+    --footer-bg: rgba(2, 12, 20, 0.72);
+    --overlay-bg: rgba(2, 12, 20, 0.94);
+    --border-soft: rgba(56, 189, 248, 0.18);
+    --accent-soft: rgba(56, 189, 248, 0.18);
+    --accent-glow: rgba(56, 189, 248, 0.35);
+    --btn-primary-ink: #021420;
+    --focus-ring: #67e8f9;
+    --meta-theme-color: #05192a;
+
+    --ink-violet: #7dd3fc;
+    --ink-cyan: #a5f3fc;
+    --ink-pink: #5eead4;
+    --ink-gold: #bae6fd;
+    --ink-ash: #a8c3d4;
+
+    --star-colors: #ecfeff, #7dd3fc, #5eead4, #a5f3fc;
+    --spell: linear-gradient(120deg, #38bdf8, #2dd4bf 50%, #67e8f9 80%, #a5f3fc);
+}
+
+/* ◐ High Contrast — maximum legibility: pure black, white and amber. */
+[data-theme="contrast"] {
+    --night-0: #000000;
+    --night-1: #000000;
+    --night-2: #000000;
+    --violet: #ffd400;
+    --pink: #ffffff;
+    --cyan: #00e5ff;
+    --gold: #ffd400;
+
+    --text: #ffffff;
+    --text-muted: #e6e6e6;
+    --card: #000000;
+    --card-border: #ffffff;
+    --glass-blur: 0px;
+
+    --body-bg: #000000;
+    --header-bg: #000000;
+    --footer-bg: #000000;
+    --overlay-bg: #000000;
+    --surface-soft: #000000;
+    --surface-softer: #000000;
+    --border-soft: #ffffff;
+    --border-hairline: #ffffff;
+    --chip-bg: #000000;
+    --chip-border: #ffffff;
+    --accent-soft: #333300;
+    --accent-glow: rgba(255, 212, 0, 0.4);
+    --btn-primary-ink: #000000;
+    --focus-ring: #ffd400;
+    --meta-theme-color: #000000;
+
+    --ink-violet: #ffd400;
+    --ink-cyan: #00e5ff;
+    --ink-pink: #ffffff;
+    --ink-gold: #ffd400;
+    --ink-ash: #ffffff;
+
+    --aurora-opacity: 0;
+    --star-opacity: 0;
+    --star-colors: #ffffff;
+    --shadow: 0 0 0 1px #ffffff;
+    --radius: 8px;
+    --spell: linear-gradient(120deg, #ffd400, #ffffff 60%, #00e5ff);
+}
+
+[data-theme="contrast"] .realm-card,
+[data-theme="contrast"] .btn,
+[data-theme="contrast"] .theme-panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+/* ==========================================================================
+   Theme picker
+   ========================================================================== */
+.theme-fab {
+    position: fixed;
+    right: clamp(14px, 3vw, 26px);
+    bottom: clamp(14px, 3vw, 26px);
+    z-index: 1600;
+    display: grid;
+    place-items: center;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--shadow);
+    color: var(--text);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: transform 0.3s var(--ease), box-shadow 0.3s var(--ease), border-color 0.3s ease;
+}
+
+.theme-fab::before {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: var(--spell);
+    background-size: 200% auto;
+    filter: blur(9px);
+    opacity: 0.55;
+    z-index: -1;
+    animation: shimmer 8s linear infinite;
+}
+
+.theme-fab:hover,
+.theme-fab:focus-visible {
+    transform: translateY(-3px) rotate(-8deg) scale(1.06);
+    border-color: transparent;
+}
+
+.theme-fab[aria-expanded="true"] {
+    transform: rotate(90deg) scale(1.05);
+}
+
+.theme-panel {
+    position: fixed;
+    right: clamp(14px, 3vw, 26px);
+    bottom: calc(clamp(14px, 3vw, 26px) + 66px);
+    z-index: 1600;
+    width: min(94vw, 460px);
+    max-height: min(70vh, 560px);
+    overflow-y: auto;
+    padding: 18px;
+    border-radius: var(--radius);
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    backdrop-filter: blur(calc(var(--glass-blur) + 6px));
+    -webkit-backdrop-filter: blur(calc(var(--glass-blur) + 6px));
+    box-shadow: var(--shadow);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(14px) scale(0.97);
+    transform-origin: bottom right;
+    transition: opacity 0.28s var(--ease), transform 0.28s var(--ease), visibility 0.28s;
+}
+
+.theme-panel.open {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+}
+
+.theme-panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.theme-panel-head h2 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    background: var(--spell);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.theme-panel-head p {
+    font-size: 0.76rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.theme-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+    list-style: none;
+}
+
+.theme-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 12px;
+    border: 1px solid var(--chip-border);
+    background: var(--surface-soft);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.25s var(--ease), border-color 0.25s ease, background 0.25s ease;
+}
+
+.theme-option:hover {
+    transform: translateY(-2px);
+    border-color: var(--focus-ring);
+}
+
+.theme-option[aria-checked="true"] {
+    border-color: var(--focus-ring);
+    background: var(--accent-soft);
+}
+
+.theme-option[aria-checked="true"] .theme-option-name::after {
+    content: ' ✓';
+    color: var(--focus-ring);
+}
+
+.theme-swatch {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 1px solid var(--border-hairline);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.theme-option-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+    min-width: 0;
+}
+
+.theme-option-name {
+    overflow-wrap: anywhere;
+}
+
+.theme-option-note {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.theme-panel-foot {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-hairline);
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+
+@media (max-width: 620px) {
+    .theme-list { grid-template-columns: 1fr 1fr; }
+    .theme-option { flex-direction: column; align-items: flex-start; gap: 8px; }
 }
