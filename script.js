@@ -7,22 +7,30 @@
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* Escape text before it is placed in markup — the registry stores plain text. */
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 /* ---- Realm cards --------------------------------------------------------- */
 function cardMarkup(r) {
     const soon = r.status === 'soon';
-    const tags = (r.tags || []).map(t => `<span>${t}</span>`).join('');
+    const tags = (r.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('');
     const ext = r.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const titleInner = soon ? r.title : `<a href="${r.href}"${ext}>${r.title}</a>`;
+    const titleInner = soon
+        ? escapeHtml(r.title)
+        : `<a href="${escapeHtml(r.href)}"${ext}>${escapeHtml(r.title)}</a>`;
     const enter = soon
         ? `<span class="realm-enter">🔒 ${r.tagline === 'Never drew breath' ? 'Nothing to see' : 'Coming soon'}</span>`
         : `<span class="realm-enter">${r.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
 
     return `
-        <li class="realm-card aura-${r.aura || 'violet'}${soon ? ' is-soon' : ''}${r.external ? ' is-external' : ''} reveal">
-            <div class="realm-glyph" aria-hidden="true">${r.glyph || '✨'}</div>
-            <p class="realm-tagline">${r.tagline || ''}</p>
+        <li class="realm-card aura-${escapeHtml(r.aura || 'violet')}${soon ? ' is-soon' : ''}${r.external ? ' is-external' : ''} reveal">
+            <div class="realm-glyph" aria-hidden="true">${escapeHtml(r.glyph || '✨')}</div>
+            <p class="realm-tagline">${escapeHtml(r.tagline || '')}</p>
             <h3>${titleInner}</h3>
-            <p class="realm-desc">${r.description || ''}</p>
+            <p class="realm-desc">${escapeHtml(r.description || '')}</p>
             <div class="realm-tags">${tags}</div>
             ${enter}
         </li>`;
@@ -118,24 +126,19 @@ function buildSearchIndex() {
     return entries;
 }
 
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
 function resultCardMarkup(e) {
     const it = e.item;
     const soon = !e.url || e.url === '#';
     const ext = e.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const title = soon ? escapeHtml(it.title) : `<a href="${e.url}"${ext}>${escapeHtml(it.title)}</a>`;
+    const title = soon ? escapeHtml(it.title) : `<a href="${escapeHtml(e.url)}"${ext}>${escapeHtml(it.title)}</a>`;
     const tags = (it.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('');
     const enter = soon
         ? `<span class="realm-enter">🔒 Nothing to visit</span>`
         : `<span class="realm-enter">${e.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
     return `
-        <li class="realm-card aura-${it.aura || 'violet'}${soon ? ' is-soon' : ''}${e.external ? ' is-external' : ''} visible">
+        <li class="realm-card aura-${escapeHtml(it.aura || 'violet')}${soon ? ' is-soon' : ''}${e.external ? ' is-external' : ''} visible">
             <span class="status-badge ${e.meta.cls}">${e.meta.icon} ${e.meta.label}</span>
-            <div class="realm-glyph" aria-hidden="true">${it.glyph || '✨'}</div>
+            <div class="realm-glyph" aria-hidden="true">${escapeHtml(it.glyph || '✨')}</div>
             <p class="realm-tagline">${escapeHtml(it.tagline || '')}</p>
             <h3>${title}</h3>
             <p class="realm-desc">${escapeHtml(it.description || '')}</p>
@@ -226,20 +229,29 @@ function startStarfield() {
         rafId = requestAnimationFrame(draw);
     }
 
-    let rafId;
-    resize();
-    window.addEventListener('resize', () => { cancelAnimationFrame(rafId); resize(); if (!reduceMotion) draw(); });
-
-    if (reduceMotion) {
-        // Draw a single static frame.
+    function drawStatic() {
+        ctx.clearRect(0, 0, w, h);
         for (const s of stars) {
-            ctx.globalAlpha = s.a;
+            ctx.globalAlpha = Math.max(0.1, Math.min(1, s.a));
             ctx.fillStyle = s.c;
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.globalAlpha = 1;
+    }
+
+    let rafId;
+    resize();
+    window.addEventListener('resize', () => {
+        cancelAnimationFrame(rafId);
+        resize();
+        if (reduceMotion) drawStatic(); else draw();
+    });
+
+    if (reduceMotion) {
+        // Draw a single static frame.
+        drawStatic();
     } else {
         draw();
     }

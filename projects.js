@@ -54,14 +54,14 @@ window.RAMI_REALMS = [
     {
         category: 'gallery',
         title: 'Phonetic Codex',
-        href: './gallery/militaryalphabet/',
+        href: '#', // real path once the folder is published: './gallery/militaryalphabet/'
         glyph: '🔤',
         tagline: 'Alpha, Bravo, Charlie…',
         description: 'A terminal-styled NATO phonetic alphabet reference and live text-to-phonetic translator — tap any letter to hear it, and it keeps your screen awake while you learn.',
         search: 'NATO phonetic alphabet reference and text to phonetic converter. Learn the Alpha Bravo Charlie military spelling alphabet, click letters to hear the pronunciation with audio, and it keeps the screen awake with a wake lock.',
         tags: ['reference', 'tool'],
         aura: 'cyan',
-        status: 'live',
+        status: 'soon',
     },
     {
         category: 'gallery',
@@ -249,7 +249,7 @@ window.RAMI_WORKSHOP = [
         title: 'Daybook',
         href: './todo/',
         glyph: '🗒️',
-        tagline: 'Notes &amp; tasks, saved',
+        tagline: 'Notes & tasks, saved',
         description: 'A calm, offline notes-and-to-do companion — jot the day down, tick tasks off, then start a fresh page each morning. Everything autosaves to your browser.',
         search: 'A clean minimal notes and todo list app. Write notes and manage a checklist of tasks that autosave to localStorage in the browser, with dark mode, timestamps, a new day reset that archives yesterday and keeps unfinished tasks. A leaner rewrite of the old notes and todo page.',
         tags: ['tool', 'productivity'],
@@ -316,7 +316,7 @@ window.RAMI_WORKSHOP = [
         href: './dnd-forge/',
         glyph: '🐉',
         tagline: 'Forge a whole hero',
-        description: 'A full Dungeons &amp; Dragons character builder across six editions — a nine-step wizard, a live sheet, a dice roller, backstory weaving, a DM’s Charter and a party muster board.',
+        description: 'A full Dungeons & Dragons character builder across six editions — a nine-step wizard, a live sheet, a dice roller, backstory weaving, a DM’s Charter and a party muster board.',
         search: 'A Dungeons and Dragons character creator, builder and generator for 5E 2024, 5E 2014, 3.5, 4E, AD&D 2E and AD&D 1E. Roll or point-buy ability scores, choose race species class subclass background skills feats weapons armour equipment and spells, with automatic calculation of hit points armour class proficiency bonus saving throws spell slots and spell save DC. Includes a random surprise me character generator, a fantasy name generator, a backstory weaver, a floating dice roller with advantage and disadvantage, printable character sheet, JSON export and import, shareable links, a seedable fate seed, a DM charter to lock table rules, a play mode character file with HP damage healing conditions and death saves, and a DM muster page to assemble the party.',
         tags: ['app', 'ttrpg'],
         aura: 'gold',
@@ -358,7 +358,7 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Mail Headers',
-        href: './mailheaders/',
+        href: './mail-ward/analyzer/',
         glyph: '✉️',
         tagline: 'Header diviner',
         description: 'Decode the tangled runes of email headers to trace a message’s journey and unmask delivery curses.',
@@ -524,7 +524,7 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Volume Seer',
-        href: './trace-results/',
+        href: './mail-ward/volume/',
         glyph: '📊',
         tagline: 'Charts of the flow',
         description: 'A Chart.js dashboard visualising email traffic over time.',
