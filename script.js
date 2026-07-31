@@ -82,6 +82,7 @@ const STATUS_META = {
 function resolveWorkshopHref(href, external) {
     if (!href) return null;
     if (external || /^https?:/.test(href) || href.startsWith('//') || href === '#') return href;
+    if (href.startsWith('../')) return './' + href.slice(3);   // already points outside /workshop/
     return './workshop/' + href.replace(/^\.\//, '');
 }
 
@@ -173,7 +174,7 @@ function setupSearch() {
             return;
         }
         results.innerHTML =
-            `<p class="search-count">${matches.length} realm${matches.length === 1 ? '' : 's'} found</p>
+            `<p class="search-count">${matches.length} project${matches.length === 1 ? '' : 's'} found</p>
              <ul class="realm-grid" role="list">${matches.map(resultCardMarkup).join('')}</ul>`;
         setupCardGlow(results);
     };
@@ -181,7 +182,78 @@ function setupSearch() {
     input.addEventListener('input', run);
     input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; run(); } });
     if (clearBtn) clearBtn.addEventListener('click', () => { input.value = ''; run(); input.focus(); });
+
+    document.querySelectorAll('.search-suggest').forEach(btn => {
+        btn.addEventListener('click', () => {
+            input.value = btn.dataset.q || btn.textContent;
+            run();
+            input.focus();
+        });
+    });
 }
+
+/* ---- Workshop filter (workshop/index.html) -------------------------------- */
+function setupWorkshopFilter() {
+    const input = document.getElementById('workshopSearch');
+    const grid = document.getElementById('workshopGrid');
+    if (!input || !grid) return;
+
+    const clearBtn = document.getElementById('workshopSearchClear');
+    const count = document.getElementById('workshopCount');
+    const empty = document.getElementById('workshopEmpty');
+    const plannedSection = document.getElementById('planned');
+
+    const lookup = new Map();
+    (window.RAMI_WORKSHOP || []).forEach(w => {
+        lookup.set(String(w.title).toLowerCase(), [w.title, w.tagline, w.description, w.search, (w.tags || []).join(' ')]
+            .filter(Boolean).join(' ').toLowerCase());
+    });
+
+    const cards = Array.from(grid.querySelectorAll('.realm-card')).map(card => {
+        const title = (card.querySelector('h3')?.textContent || '').trim().toLowerCase();
+        return { card, haystack: lookup.get(title) || card.textContent.toLowerCase() };
+    });
+    if (!cards.length) return;
+
+    const plannedChips = Array.from(document.querySelectorAll('#plannedList .planned-chip'))
+        .map(chip => ({ chip, haystack: chip.textContent.toLowerCase() }));
+
+    const run = () => {
+        const raw = input.value.trim();
+        const tokens = raw.toLowerCase().split(/\s+/).filter(Boolean);
+        if (clearBtn) clearBtn.hidden = !raw;
+
+        let shown = 0;
+        cards.forEach(({ card, haystack }) => {
+            const hit = tokens.every(t => haystack.includes(t));
+            card.hidden = !hit;
+            // A filtered result must never stay stuck in its un-revealed state.
+            if (hit && tokens.length) card.classList.add('visible');
+            if (hit) shown++;
+        });
+
+        let plannedShown = 0;
+        plannedChips.forEach(({ chip, haystack }) => {
+            const hit = tokens.every(t => haystack.includes(t));
+            chip.hidden = !hit;
+            if (hit) plannedShown++;
+        });
+        if (plannedSection) plannedSection.hidden = !!tokens.length && !plannedShown;
+
+        if (count) {
+            count.textContent = tokens.length
+                ? `${shown} of ${cards.length} project${cards.length === 1 ? '' : 's'} match “${raw}”`
+                : `${cards.length} projects on the workbench`;
+        }
+        if (empty) empty.hidden = !(tokens.length && !shown && !plannedShown);
+    };
+
+    input.addEventListener('input', run);
+    input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; run(); } });
+    if (clearBtn) clearBtn.addEventListener('click', () => { input.value = ''; run(); input.focus(); });
+    run();
+}
+window.__ramiWorkshopFilter = setupWorkshopFilter;
 
 
 /* ---- Starfield ----------------------------------------------------------- */
@@ -250,6 +322,7 @@ function setupMobileNav() {
     overlay.setAttribute('aria-label', 'Mobile navigation');
     overlay.innerHTML = `
         <button class="close-btn" aria-label="Close menu">&times;</button>
+        <a href="#guide">How it works</a>
         <a href="#realms">Realms</a>
         <a href="./gallery/lore/">Lore</a>
         <a href="./gallery/prankscreens/">Prank Screens</a>
@@ -314,5 +387,6 @@ document.addEventListener('DOMContentLoaded', () => {
     startStarfield();
     setupMobileNav();
     setupSearch();
+    setupWorkshopFilter();
     observeReveal();
 });

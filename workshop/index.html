@@ -48,6 +48,10 @@
                 <p class="hero-sub">This is where new realms are conjured — half-finished spells,
                     bubbling cauldrons and experiments not yet ready to meet the world. Poke around;
                     some are further along than others, and a few are only names on a wishlist.</p>
+                <p class="hero-plain">In plain words: these are <strong>works in progress</strong>.
+                    They're free and open to try, they run in your browser, and nothing here asks you
+                    to sign up — but expect rough edges. A <span class="legend-chip">🔒</span> card
+                    isn't ready to open yet.</p>
                 <div class="hero-cta">
                     <a href="#brewing" class="btn btn-primary">See what's brewing <span aria-hidden="true">→</span></a>
                     <a href="/#realms" class="btn btn-ghost">Back to the realms</a>
@@ -59,8 +63,18 @@
             <div class="container">
                 <div class="section-head">
                     <h2 id="brewing-title" class="section-title">Currently brewing</h2>
-                    <p class="section-sub">Works in progress — each lives in its own little chamber.</p>
+                    <p class="section-sub">Works in progress — each one is a small, self-contained
+                        page that opens on its own. They work, but they're still changing.</p>
                 </div>
+                <div class="realm-search" role="search">
+                    <span class="realm-search-icon" aria-hidden="true">🔍</span>
+                    <input type="search" id="workshopSearch" class="realm-search-input"
+                        placeholder="Filter the workbench — name, tag, purpose…"
+                        aria-label="Filter workshop projects" autocomplete="off" spellcheck="false" />
+                    <button type="button" id="workshopSearchClear" class="realm-search-clear" aria-label="Clear filter" hidden>✕</button>
+                </div>
+                <p id="workshopCount" class="search-count" aria-live="polite"></p>
+                <p id="workshopEmpty" class="search-empty" hidden>Nothing on the bench matches that. Try another incantation.</p>
                 <ul id="workshopGrid" class="realm-grid" role="list">
                     <li class="realm-fallback">The workbench is loading…</li>
                 </ul>

@@ -62,6 +62,7 @@
 
             <nav class="main-nav" aria-label="Primary">
                 <ul>
+                    <li><a href="#guide">How it works</a></li>
                     <li><a href="#realms">Realms</a></li>
                     <li><a href="./gallery/lore/">Lore</a></li>
                     <li><a href="./gallery/prankscreens/">Prank Screens</a></li>
@@ -85,12 +86,84 @@
                 <p class="hero-sub">A wandering playground where tiny websites are born, tested, and
                     sometimes vanish into the digital aether. Step through a portal below — you never
                     know what you'll conjure.</p>
+                <p class="hero-plain">In plain words: <strong>rami.party is a collection of small,
+                    self-contained websites and tools</strong> — guides, gadgets, toys and pranks.
+                    They're free, none of them ask you to sign up, and each one opens as its own
+                    little page.</p>
                 <div class="hero-cta">
                     <a href="#realms" class="btn btn-primary">Enter the realms <span aria-hidden="true">→</span></a>
-                    <a href="./wasteland/" class="btn btn-ghost">Visit the Wastelands</a>
+                    <a href="#guide" class="btn btn-ghost">How it works</a>
                 </div>
             </div>
-            <a href="#realms" class="scroll-cue" aria-label="Scroll to the realms"><span></span></a>
+            <a href="#guide" class="scroll-cue" aria-label="Scroll down"><span></span></a>
+        </section>
+
+        <section id="guide" class="guide" aria-labelledby="guide-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="guide-title" class="section-title">How this place works</h2>
+                    <p class="section-sub">New here? Everything you need to know, in under a minute.</p>
+                </div>
+
+                <ol class="guide-steps" role="list">
+                    <li class="guide-step reveal">
+                        <span class="guide-step-num" aria-hidden="true">1</span>
+                        <h3>Pick a realm — or just search</h3>
+                        <p>Every project lives in one of three realms below. If you already know what
+                            you're after, type it in the search box: it looks through every project
+                            in all three realms at once, including the ones hidden deeper in the
+                            Workshop.</p>
+                    </li>
+                    <li class="guide-step reveal">
+                        <span class="guide-step-num" aria-hidden="true">2</span>
+                        <h3>Open a card</h3>
+                        <p>Each card is one project. Click anywhere on it to open it. Cards marked
+                            <span class="legend-chip">↗</span> live on another domain and open in a
+                            new tab; cards marked <span class="legend-chip">🔒</span> aren't ready
+                            yet, so they don't go anywhere.</p>
+                    </li>
+                    <li class="guide-step reveal">
+                        <span class="guide-step-num" aria-hidden="true">3</span>
+                        <h3>Play — nothing is asked of you</h3>
+                        <p>No account, no cookie banner, no payment. Almost everything runs entirely
+                            in your browser, and the projects that remember things (notes, lists,
+                            settings) save them on your own device, not on a server.</p>
+                    </li>
+                </ol>
+
+                <div class="guide-realms">
+                    <article class="guide-realm aura-violet reveal">
+                        <h3><span aria-hidden="true">🏛️</span> The Gallery of Wonders</h3>
+                        <p><strong>Finished projects.</strong> Polished, working and safe to
+                            recommend to a friend. Start here if you want something that just works.</p>
+                    </article>
+                    <article class="guide-realm aura-cyan reveal">
+                        <h3><span aria-hidden="true">⚗️</span> The Workshop</h3>
+                        <p><strong>Works in progress.</strong> Usable, but still being built — rough
+                            edges are part of the deal. This is the biggest realm by far, so it has
+                            its own page and its own search.</p>
+                    </article>
+                    <article class="guide-realm aura-ash reveal">
+                        <h3><span aria-hidden="true">☄️</span> The Wastelands</h3>
+                        <p><strong>Retired experiments.</strong> Old versions and abandoned ideas,
+                            kept as they were. Some are broken on purpose — that's the point.</p>
+                    </article>
+                </div>
+
+                <div class="guide-legend reveal">
+                    <h3 class="guide-legend-title">What the labels mean</h3>
+                    <ul role="list">
+                        <li><span class="status-badge st-finished">✅ Finished</span> Done and looked after.</li>
+                        <li><span class="status-badge st-wip">🚧 WIP</span> Works, but still changing.</li>
+                        <li><span class="status-badge st-archived">☄️ Archived</span> Retired to the Wastelands.</li>
+                        <li><span class="status-badge st-planned">🕓 Planned</span> An idea — there's nothing to open yet.</li>
+                    </ul>
+                    <p class="guide-note">These labels appear on search results. The small pills at
+                        the bottom of a card (<span class="legend-chip">tool</span>
+                        <span class="legend-chip">offline</span>) are just keywords — they're
+                        searchable too.</p>
+                </div>
+            </div>
         </section>
 
         <section id="realms" class="realms" aria-labelledby="realms-title">
@@ -103,9 +176,15 @@
                     <span class="realm-search-icon" aria-hidden="true">🔍</span>
                     <input type="search" id="realmSearch" class="realm-search-input"
                         placeholder="Search every realm — name, tag, purpose…"
-                        aria-label="Search projects" autocomplete="off" spellcheck="false" />
+                        aria-label="Search projects" aria-describedby="realmSearchHint"
+                        autocomplete="off" spellcheck="false" />
                     <button type="button" id="realmSearchClear" class="realm-search-clear" aria-label="Clear search" hidden>✕</button>
                 </div>
+                <p id="realmSearchHint" class="search-hint">Searches every project in all three
+                    realms — names, keywords and what each one actually does. Try
+                    <button type="button" class="search-suggest" data-q="offline">offline</button>,
+                    <button type="button" class="search-suggest" data-q="radio">radio</button> or
+                    <button type="button" class="search-suggest" data-q="prank">prank</button>.</p>
                 <div id="realmResults" class="realm-results" hidden aria-live="polite"></div>
                 <div id="realmGroups">
                     <!-- Realm groups injected from projects.js by script.js -->
