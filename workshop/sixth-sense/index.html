@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sixth Sense — Detect the Undetectable</title>
+    <meta name="description"
+        content="A séance for your phone: wake every sensor it has — motion, magnetometer, light, sound, camera, radios — and watch for the tremors, fields and frequencies you can't feel or hear.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#05070d">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/sixth-sense/">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%AE%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <header class="hero">
+            <div class="hero-mark" aria-hidden="true">🔮</div>
+            <h1>Sixth Sense</h1>
+            <p class="lede">Your device is covered in <strong>senses you don't have</strong>. This page wakes
+                every one it can find — accelerometers, magnetometers, light meters, microphones, radios — and
+                turns their whispers into something you can see. Nothing leaves the device.</p>
+            <div class="hero-actions">
+                <button id="awakenBtn" class="btn btn-primary" type="button">
+                    <span class="btn-icon" aria-hidden="true">✦</span>
+                    <span class="btn-label">Awaken the senses</span>
+                </button>
+                <button id="calibrateBtn" class="btn" type="button" disabled>
+                    <span class="btn-icon" aria-hidden="true">⌖</span>
+                    <span class="btn-label">Calibrate baseline</span>
+                </button>
+                <button id="stopBtn" class="btn btn-ghost" type="button" disabled>
+                    <span class="btn-icon" aria-hidden="true">◼</span>
+                    <span class="btn-label">Rest</span>
+                </button>
+            </div>
+            <p id="hint" class="hint">Some senses need a tap and a permission prompt — that's the browser
+                protecting you. Best on a phone, over HTTPS.</p>
+        </header>
+
+        <section class="anomaly" aria-label="Anomaly meter">
+            <div class="anomaly-head">
+                <h2>The unnoticeable</h2>
+                <span id="anomalyState" class="pill pill-idle"><span class="dot"></span><span
+                        id="anomalyStateText">Dormant</span></span>
+            </div>
+            <div class="meter">
+                <div id="meterFill" class="meter-fill"></div>
+            </div>
+            <p id="anomalyNote" class="anomaly-note">Calibrate while the device rests still, then watch what
+                moves when nothing seems to.</p>
+            <ul class="anomaly-grid">
+                <li><span class="k">Micro-tremor</span><span id="aTremor" class="v">—</span></li>
+                <li><span class="k">Field shift</span><span id="aField" class="v">—</span></li>
+                <li><span class="k">Infrasound</span><span id="aInfra" class="v">—</span></li>
+                <li><span class="k">Ultrasound</span><span id="aUltra" class="v">—</span></li>
+                <li><span class="k">Light flicker</span><span id="aFlicker" class="v">—</span></li>
+                <li><span class="k">Tilt drift</span><span id="aTilt" class="v">—</span></li>
+            </ul>
+        </section>
+
+        <section class="board" aria-label="Live sensor readings">
+            <h2 class="section-title">Live senses</h2>
+            <div id="liveGrid" class="cards"></div>
+        </section>
+
+        <section class="board" aria-label="Optional probes">
+            <h2 class="section-title">Deeper probes</h2>
+            <div class="probe-row">
+                <button id="cameraBtn" class="btn" type="button">📷 Watch invisible light</button>
+                <button id="nfcBtn" class="btn" type="button">📡 Listen for NFC</button>
+                <button id="btBtn" class="btn" type="button">🜨 Ask for Bluetooth</button>
+                <button id="buzzBtn" class="btn" type="button">📳 Test the haptics</button>
+            </div>
+            <div class="probe-stage">
+                <video id="cam" class="cam" playsinline muted hidden></video>
+                <canvas id="camCanvas" class="cam-canvas" hidden></canvas>
+                <canvas id="scope" class="scope" aria-label="Sound spectrum"></canvas>
+            </div>
+            <p id="probeNote" class="hint">Point an infrared remote at the camera and press a button — most
+                phone cameras see the beam your eyes cannot.</p>
+        </section>
+
+        <section class="board" aria-label="Sensor inventory">
+            <h2 class="section-title">What this device admits to having</h2>
+            <div id="capGrid" class="caps"></div>
+        </section>
+
+        <footer class="foot">
+            <p>Everything runs locally in your browser. No readings are stored, uploaded or shared.</p>
+            <p><a href="../">⚗️ Back to the Workshop</a> · <a href="/">rami.party</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

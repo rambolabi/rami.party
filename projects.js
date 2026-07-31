@@ -246,6 +246,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Sixth Sense',
+        href: './sixth-sense/',
+        glyph: '🔮',
+        tagline: 'Detect the undetectable',
+        description: 'A séance for your phone: it wakes every sensor the device will admit to — motion, gyroscope, magnetometer, light, microphone, camera, radios — then watches for the tremors, fields and frequencies you can neither feel nor hear.',
+        search: 'A device sensor test and diagnostics page that detects and lists every sensor and hardware API available in the browser: accelerometer, gyroscope, magnetometer and compass, ambient light sensor, proximity sensor, GPS geolocation, microphone, camera, battery status, network information, vibration haptics, Bluetooth, NFC, USB, serial, HID, gamepad, WebXR, WebGPU, screen orientation and display info. Shows live readings, an EMF-meter style magnetic field monitor, a seismograph-like micro vibration and tremor detector, infrasound and ultrasound detection from the microphone, invisible infrared light and mains flicker detection through the camera, and an anomaly meter with baseline calibration. Runs locally in the browser with no data sent anywhere.',
+        tags: ['sensors', 'hardware', 'tool'],
+        aura: 'violet',
+        status: 'live',
+    },
+    {
         title: 'Echo',
         href: './batlistener/',
         glyph: '🦇',
