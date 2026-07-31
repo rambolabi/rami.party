@@ -202,9 +202,30 @@
         return lo;
     }
 
-    function isInsideRange(ranges, index) {
-        for (var r = 0; r < ranges.length; r++) {
-            if (index >= ranges[r][0] && index < ranges[r][1]) return true;
+    /** Sorts and merges ranges so membership can be tested by binary search. */
+    function mergeRanges(ranges) {
+        if (ranges.length < 2) return ranges.slice();
+        var sorted = ranges.slice().sort(function (a, b) { return a[0] - b[0]; });
+        var merged = [sorted[0].slice()];
+        for (var i = 1; i < sorted.length; i++) {
+            var last = merged[merged.length - 1];
+            if (sorted[i][0] <= last[1]) {
+                if (sorted[i][1] > last[1]) last[1] = sorted[i][1];
+            } else {
+                merged.push(sorted[i].slice());
+            }
+        }
+        return merged;
+    }
+
+    /** Membership test over merged ranges — O(log n) per lookup. */
+    function isInsideRange(merged, index) {
+        var lo = 0, hi = merged.length - 1;
+        while (lo <= hi) {
+            var mid = (lo + hi) >> 1;
+            if (index < merged[mid][0]) hi = mid - 1;
+            else if (index >= merged[mid][1]) lo = mid + 1;
+            else return true;
         }
         return false;
     }
@@ -539,8 +560,11 @@
         }
 
         // --- Pass 4: unescaped special characters ---
-        var literalRanges = findLiteralArgumentRanges(code);
-        var definitionRanges = findDefinitionRanges(code);
+        var literalRanges = mergeRanges(findLiteralArgumentRanges(code));
+        var definitionRanges = mergeRanges(findDefinitionRanges(code));
+        var closedMathRanges = mergeRanges(mathRanges);
+        var mergedMathEnvRanges = mergeRanges(mathEnvRanges);
+        var mergedAlignRanges = mergeRanges(alignRanges);
         var specialCharRegex = /[&_#]/g;
         var s;
 
@@ -554,9 +578,9 @@
             while (back >= 0 && code[back] === '\\') { slashes++; back--; }
             if (slashes % 2 === 1) continue;
 
-            if (isInsideRange(mathRanges, idx)) continue;
-            if (isInsideRange(mathEnvRanges, idx)) continue;
-            if (symbol === '&' && isInsideRange(alignRanges, idx)) continue;
+            if (isInsideRange(closedMathRanges, idx)) continue;
+            if (isInsideRange(mergedMathEnvRanges, idx)) continue;
+            if (symbol === '&' && isInsideRange(mergedAlignRanges, idx)) continue;
             if (symbol !== '&' && isInsideRange(literalRanges, idx)) continue;
             if (symbol === '#' && isInsideRange(definitionRanges, idx)) continue;
 
@@ -761,7 +785,9 @@
         texInput.addEventListener('input', function () {
             window.clearTimeout(debounceTimer);
             setStatus('Checking…', 'idle');
-            debounceTimer = window.setTimeout(runDiagnosis, 250);
+            // Wait a little longer on very large documents so typing stays smooth.
+            var delay = texInput.value.length > 200000 ? 700 : 250;
+            debounceTimer = window.setTimeout(runDiagnosis, delay);
         });
 
         texInput.addEventListener('keydown', function (event) {
