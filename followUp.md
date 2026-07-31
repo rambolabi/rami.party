@@ -7,20 +7,17 @@ in [`workshop/todo.md`](workshop/todo.md).
 
 ## 🗺️ Current structure
 ```
-/                     hub (index.html, theme.css, style.css, script.js, projects.js)
-favicon.svg · og-image.png · admin/ · 404.html · robots.txt · sitemap.xml
+/                     hub (index.html, theme.css, theme.js, style.css, script.js, projects.js)
+favicon.svg · og-image.png · admin/ · 404.html · robots.txt · sitemap.xml · security.txt
 gallery/              🏛️ The Gallery of Wonders
-  militaryalphabet/   🔤 Phonetic Codex
   lore/               📜 Lore Gallery
   prankscreens/       🖥️ Prank Screens
 workshop/             ⚗️ The Workshop — a data-driven catalogue of every WIP
-  3d-forge/ batlistener/ bbq/ blur/ character-forge/ clear/ dashboard_v1/
-  demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/ fill/ laser/
-  laser-forge/ laser-forge-v2/ mailheaders/ md/ news/ personality-library/ rami/
-  scoreboard/ subnets/ to-check/ todo/ tools/ trace-results/ webcheck/
-  personality-library/ + its 15 book workshops (DISC, Big Five, MBTI, Enneagram,
-    Attachment, Love Languages, Temperaments, Conflict Styles, EQ, Liars,
-    Vampires, Bad Bosses, Psychopaths, Narcissists, Setbacks)
+  3d-forge/ batlistener/ bbq/ blur/ breachlight/ character-forge/ chronoport/ clear/
+  dashboard_v1/ demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/ fill/
+  frostcaller/ laser/ laser-forge/ laser-forge-v2/ mail-ward/ news/ rami/ scoreboard/
+  subnets/ to-check/ todo/ tools/ trainer-forge/ webcheck/
+  OASIS/ md/ personality-library/   ← redirect stubs; the real sites moved to *.labidi.eu
 wasteland/            ☄️ The Wastelands (index)
   neko/  old-rami.party/  adhd/  notes/  bluetooth/  house/  random-first-player/
 ```
@@ -55,10 +52,27 @@ in `wasteland/` as mementos, each reachable from its card.
   `RAMI_WORKSHOP` once its folder exists and has content.
 - **Then add it to `sitemap.xml`** — the one manual step left. (A generator is on the backlog as
   *Sitemap Scribe*.)
+- **Never point an entry at a folder that doesn't exist.** `status:'soon'` + `href:'#'` renders an
+  honest locked teaser instead of a broken link.
+
+---
+
+## 🌈 Themes
+Eleven palettes + Auto live in `theme.css` as `[data-theme="id"]` token blocks, listed in
+`RAMI_THEMES` inside `theme.js` (keep the two in sync). Two are deliberately sober — **Graphite**
+(professional dark) and **Daylight** (professional light) — and **High Contrast** exists for
+accessibility. A page joins in by linking `/theme.css` and loading `/theme.js` in its `<head>`;
+self-contained project pages that define their own palette are intentionally left alone.
 
 ---
 
 ## ⚖️ Open decisions (need a human)
+
+- [ ] **Three registry entries lost their folders.** `gallery/militaryalphabet/` (Phonetic Codex),
+      `workshop/mailheaders/` (Mail Headers) and `workshop/trace-results/` (Volume Seer) are
+      referenced by `projects.js` but do not exist in the repo, so every card and sitemap entry
+      pointing at them was a 404. They are now `status:'soon'` with `href:'#'` and removed from
+      `sitemap.xml`. Restore the folders (and flip them back to `live`), or delete the entries.
 
 - [ ] **`wasteland/bluetooth/` — keep or delete?** It duplicates `ghosttooth.labidi.eu`. It is now
       noindexed and canonicalised to the live site, so keeping it is harmless. Delete if you'd

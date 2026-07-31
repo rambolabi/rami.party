@@ -35,12 +35,6 @@
 
   <!-- ── The Gallery of Wonders ──────────────────────────────────────────── -->
   <url>
-    <loc>https://rami.party/gallery/militaryalphabet/</loc>
-    <lastmod>2026-07-27</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://rami.party/gallery/lore/</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>monthly</changefreq>
@@ -129,16 +123,16 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://rami.party/workshop/mail-ward/</loc>
+    <loc>https://rami.party/workshop/breachlight/</loc>
     <lastmod>2026-07-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://rami.party/workshop/mailheaders/</loc>
-    <lastmod>2026-07-27</lastmod>
+    <loc>https://rami.party/workshop/mail-ward/</loc>
+    <lastmod>2026-07-31</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://rami.party/workshop/webcheck/</loc>
@@ -201,12 +195,6 @@
     <lastmod>2026-07-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://rami.party/workshop/trace-results/</loc>
-    <lastmod>2026-07-27</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://rami.party/workshop/to-check/</loc>
