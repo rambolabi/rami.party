@@ -10,14 +10,14 @@ in [`workshop/todo.md`](workshop/todo.md).
 /                     hub (index.html, theme.css, style.css, script.js, projects.js)
 favicon.svg · og-image.png · admin/ · 404.html · robots.txt · sitemap.xml
 gallery/              🏛️ The Gallery of Wonders
-  militaryalphabet/   🔤 Phonetic Codex
   lore/               📜 Lore Gallery
   prankscreens/       🖥️ Prank Screens
 workshop/             ⚗️ The Workshop — a data-driven catalogue of every WIP
-  3d-forge/ batlistener/ bbq/ blur/ character-forge/ clear/ dashboard_v1/
-  demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/ fill/ laser/
-  laser-forge/ laser-forge-v2/ mailheaders/ md/ news/ personality-library/ rami/
-  scoreboard/ subnets/ to-check/ todo/ tools/ trace-results/ webcheck/
+  3d-forge/ batlistener/ bbq/ blur/ breachlight/ character-forge/ clear/
+  dashboard_v1/ demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/
+  fill/ frostcaller/ laser/ laser-forge/ laser-forge-v2/ mail-ward/ md/ news/
+  rami/ scoreboard/ spectrum-scryer/ subnets/ to-check/ todo/ tools/
+  trainer-forge/ webcheck/
   personality-library/ + its 15 book workshops (DISC, Big Five, MBTI, Enneagram,
     Attachment, Love Languages, Temperaments, Conflict Styles, EQ, Liars,
     Vampires, Bad Bosses, Psychopaths, Narcissists, Setbacks)
@@ -41,6 +41,8 @@ in `wasteland/` as mementos, each reachable from its card.
 | **`workshop/laser/` photography** | Local SVG placeholders + `status:'soon'`. | Honest, keeps the layout intact, and swapping in real photos is a one-file change. |
 | **lebon.info branding** | User-visible strings rebranded; *source-comment attributions kept*. | `/* Based on lebon.info Terminal Theme */` is accurate history, not a leak. |
 | **External lebon.info links** | **Removed.** `note.lebon.info` → `note.labidi.eu`, `lebon.info/project/` → `labidi.eu/#projects`, the `scan.lebon.info` "Network Scanner" card dropped (no successor). | lebon.info is being retired; links now point at the live rami.party / labidi.eu equivalents. |
+| **Missing project folders** | Catalogue entries for *Phonetic Codex* (`gallery/militaryalphabet/`), *Mail Headers* (`workshop/mailheaders/`) and *Volume Seer* (`workshop/trace-results/`) **removed**, along with their `sitemap.xml` entries and the links to the header analyzer in `workshop/mail-ward/`. | The folders are not in the repository, so every one of those links returned a 404. Re-add the entries the day the folders come back. |
+| **Frostcaller** | Promoted from `status:'soon'` / `href:'#'` to a live card at `./frostcaller/`. | The folder is complete and already listed in `sitemap.xml`; the teaser was stale. |
 | **`BBQ@lebon.info`** | **Open.** Still hardcoded in `workshop/bbq/` (`index.html`, `script.js`). | It is a real mailbox, not a link — needs a working replacement address before it can be swapped. |
 
 ---

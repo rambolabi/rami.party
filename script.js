@@ -211,11 +211,13 @@ function startStarfield() {
         }));
     }
 
-    function draw() {
+    function paint(animate) {
         ctx.clearRect(0, 0, w, h);
         for (const s of stars) {
-            s.a += s.tw * s.dir;
-            if (s.a <= 0.1 || s.a >= 1) s.dir *= -1;
+            if (animate) {
+                s.a += s.tw * s.dir;
+                if (s.a <= 0.1 || s.a >= 1) s.dir *= -1;
+            }
             ctx.globalAlpha = Math.max(0.1, Math.min(1, s.a));
             ctx.fillStyle = s.c;
             ctx.beginPath();
@@ -223,26 +225,18 @@ function startStarfield() {
             ctx.fill();
         }
         ctx.globalAlpha = 1;
+    }
+
+    function draw() {
+        paint(true);
         rafId = requestAnimationFrame(draw);
     }
 
     let rafId;
+    const render = () => reduceMotion ? paint(false) : draw();
     resize();
-    window.addEventListener('resize', () => { cancelAnimationFrame(rafId); resize(); if (!reduceMotion) draw(); });
-
-    if (reduceMotion) {
-        // Draw a single static frame.
-        for (const s of stars) {
-            ctx.globalAlpha = s.a;
-            ctx.fillStyle = s.c;
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            ctx.fill();
-        }
-        ctx.globalAlpha = 1;
-    } else {
-        draw();
-    }
+    window.addEventListener('resize', () => { cancelAnimationFrame(rafId); resize(); render(); });
+    render();
 }
 
 /* ---- Mobile navigation --------------------------------------------------- */
@@ -253,7 +247,7 @@ function setupMobileNav() {
     const overlay = document.createElement('nav');
     overlay.className = 'mobile-nav';
     overlay.id = 'mobileNav';
-    overlay.setAttribute('aria-label', 'Mobile');
+    overlay.setAttribute('aria-label', 'Mobile navigation');
     overlay.innerHTML = `
         <button class="close-btn" aria-label="Close menu">&times;</button>
         <a href="#realms">Realms</a>

@@ -18,11 +18,14 @@ gallery/              🏛️ The Gallery of Wonders — finished realms
   lore/               📜 Lore Gallery — image grimoire
   prankscreens/       🖥️ Prank Screens — fake OS/boot screens (hub is enchanted;
                           individual screens stay pixel-accurate on purpose)
-workshop/             ⚗️ The Workshop — works-in-progress (landing page for now)
+workshop/             ⚗️ The Workshop — one folder per work-in-progress, listed from projects.js
 wasteland/            ☄️ The Wastelands — retired experiments + its own index
   neko/               🐱 Neko Paradise (draggable chibi sprites)
   old-rami.party/     Previous jQuery-era incarnation (preserved)
+  notes/              🗒️ The original notes-and-todo scratchpad (superseded by Daybook)
+  bluetooth/ house/ random-first-player/   Husks of realms that moved to their own domains
   adhd/               An empty husk (kept as a relic)
+robots.txt · sitemap.xml · security.txt · humans.txt · site.webmanifest
 ```
 
 The folder names mirror the three realms: **gallery** (finished), **workshop** (WIP) and

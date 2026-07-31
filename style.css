@@ -213,6 +213,7 @@
 }
 
 .realm-search-clear:hover { background: rgba(236, 72, 153, 0.35); }
+.realm-search-clear[hidden] { display: none; }
 
 .realm-results { margin-top: 4px; }
 
