@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clamor — Sound Level Meter</title>
+    <meta name="description"
+        content="Measure the sound level around you in decibels with your microphone — live meter, peak and average tracking, a history graph and a configurable loudness alarm.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#080c14">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/decibel/">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%8A%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <header class="hero">
+            <div class="hero-mark" aria-hidden="true">🔊</div>
+            <h1>Clamor</h1>
+            <p class="lede">A <strong>sound level meter</strong> for the room you're in. Watch the decibels
+                live, keep an eye on the loudest moment, and set an alarm that goes off when things get
+                too loud. Nothing is recorded and no audio ever leaves your device.</p>
+        </header>
+
+        <section class="stage" aria-label="Live sound level">
+            <div class="gauge">
+                <svg class="gauge-svg" viewBox="0 0 200 124" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="arcGrad" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stop-color="#34d399" />
+                            <stop offset="45%" stop-color="#fbbf24" />
+                            <stop offset="100%" stop-color="#fb7185" />
+                        </linearGradient>
+                    </defs>
+                    <path class="gauge-track" d="M20 110 A80 80 0 0 1 180 110" />
+                    <path id="gaugeArc" class="gauge-arc" d="M20 110 A80 80 0 0 1 180 110" />
+                    <line id="peakMark" class="gauge-peak" x1="100" y1="22" x2="100" y2="38" />
+                    <line id="alarmMark" class="gauge-alarm" x1="100" y1="20" x2="100" y2="40" />
+                </svg>
+
+                <div class="gauge-readout">
+                    <span id="dbNow" class="db-now">—</span>
+                    <span class="db-unit">dB SPL <span id="weightTag">(A)</span> · approx.</span>
+                    <span id="dbLabel" class="db-label">Press start to listen</span>
+                </div>
+            </div>
+
+            <p id="liveAnnounce" class="sr-only" role="status" aria-live="polite"></p>
+
+            <div class="stage-side">
+                <div id="statusPill" class="pill pill-idle">
+                    <span class="dot" aria-hidden="true"></span><span id="statusText">Idle</span>
+                </div>
+
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-label">Peak</span>
+                        <span id="statPeak" class="stat-value">—</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Max (held)</span>
+                        <span id="statMax" class="stat-value">—</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Average</span>
+                        <span id="statAvg" class="stat-value">—</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Min</span>
+                        <span id="statMin" class="stat-value">—</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">L<sub>eq</sub></span>
+                        <span id="statLeq" class="stat-value">—</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Elapsed</span>
+                        <span id="statTime" class="stat-value">0:00</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="graph-card" aria-label="Sound level history">
+            <div class="card-head">
+                <h2>History</h2>
+                <span class="card-note">Last 60 seconds</span>
+            </div>
+            <canvas id="history" class="history" role="img"
+                aria-label="Graph of the sound level over the last minute"></canvas>
+        </section>
+
+        <section class="controls">
+            <div class="control-row primary-row">
+                <button id="listenBtn" class="btn btn-primary" type="button">
+                    <span class="btn-icon" aria-hidden="true">🎙️</span>
+                    <span class="btn-label">Start listening</span>
+                </button>
+                <button id="resetBtn" class="btn btn-ghost" type="button">
+                    <span aria-hidden="true">↺</span> Reset stats
+                </button>
+                <button id="exportBtn" class="btn btn-ghost" type="button">
+                    <span aria-hidden="true">⬇</span> Export CSV
+                </button>
+            </div>
+
+            <p id="notice" class="notice" hidden></p>
+
+            <p class="shortcuts">Shortcuts: <kbd>Space</kbd> start &amp; stop · <kbd>R</kbd> reset the
+                statistics. Your settings are remembered on this device.</p>
+
+            <div class="control-grid">
+                <fieldset class="panel">
+                    <legend>Alarm</legend>
+                    <label class="switch">
+                        <input type="checkbox" id="alarmOn">
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="switch-label">Alarm when it gets too loud</span>
+                    </label>
+
+                    <div class="slider">
+                        <label for="alarmLevel">Trigger at
+                            <output id="alarmLevelVal">85 dB</output>
+                        </label>
+                        <input type="range" id="alarmLevel" min="30" max="120" step="1" value="85">
+                        <span class="hint">85 dB is where long exposure starts to damage hearing.</span>
+                    </div>
+
+                    <div class="slider">
+                        <label for="alarmHold">Must stay above for
+                            <output id="alarmHoldVal">1.0 s</output>
+                        </label>
+                        <input type="range" id="alarmHold" min="0" max="10" step="0.5" value="1">
+                        <span class="hint">Ignores short bangs — raise it to only catch sustained noise.</span>
+                    </div>
+
+                    <label class="switch">
+                        <input type="checkbox" id="alarmSound" checked>
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="switch-label">Beep out loud</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="alarmFlash" checked>
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="switch-label">Flash the screen</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="alarmVibrate">
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="switch-label">Vibrate (phones)</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="alarmNotify">
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="switch-label">Desktop notification</span>
+                    </label>
+                </fieldset>
+
+                <fieldset class="panel">
+                    <legend>Meter</legend>
+
+                    <div class="slider">
+                        <label for="calibration">Calibration
+                            <output id="calibrationVal">0 dB</output>
+                        </label>
+                        <input type="range" id="calibration" min="-30" max="30" step="1" value="0">
+                        <span class="hint">Nudge the readout to match a known meter — every microphone
+                            differs, so treat the numbers as an estimate.</span>
+                    </div>
+
+                    <div class="slider">
+                        <label for="response">Response
+                            <output id="responseVal">Fast (125 ms)</output>
+                        </label>
+                        <input type="range" id="response" min="0" max="2" step="1" value="1">
+                        <span class="hint">Slow steadies the needle, Impulse reacts to sudden bangs.</span>
+                    </div>
+
+                    <label class="switch">
+                        <input type="checkbox" id="weighting" checked>
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="switch-label">A-weighting (match human hearing)</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="keepAwake" checked>
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="switch-label">Keep the screen awake</span>
+                    </label>
+                    <label class="switch">
+                        <input type="checkbox" id="autoStart">
+                        <span class="switch-track" aria-hidden="true"></span>
+                        <span class="switch-label">Start listening on load</span>
+                    </label>
+                </fieldset>
+            </div>
+        </section>
+
+        <section class="scale-card" aria-label="What the numbers mean">
+            <div class="card-head">
+                <h2>What the numbers mean</h2>
+            </div>
+            <ul class="scale-list">
+                <li><span class="chip chip-quiet">0–30 dB</span> Rustling leaves, a quiet bedroom at night.</li>
+                <li><span class="chip chip-calm">30–50 dB</span> Library, soft conversation, a humming fridge.</li>
+                <li><span class="chip chip-normal">50–70 dB</span> Normal talking, an office, background TV.</li>
+                <li><span class="chip chip-loud">70–85 dB</span> Busy street, vacuum cleaner, a lively restaurant.</li>
+                <li><span class="chip chip-harm">85–100 dB</span> Hearing damage after prolonged exposure — power
+                    tools, heavy traffic, a loud bar.</li>
+                <li><span class="chip chip-danger">100 dB+</span> Concerts, chainsaws, sirens. Minutes are enough to
+                    hurt.</li>
+            </ul>
+            <p class="disclaimer">Clamor is an approximate meter built on a browser microphone — it is
+                <strong>not</strong> a calibrated instrument and should never be used for legal, medical or
+                workplace-safety decisions.
+            </p>
+        </section>
+
+        <footer class="foot">
+            <a class="back" href="../">← Back to the workshop</a>
+            <span class="foot-note">Everything is processed in your browser.</span>
+        </footer>
+    </div>
+
+    <div id="flash" class="flash" aria-hidden="true"></div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

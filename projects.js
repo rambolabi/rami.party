@@ -246,6 +246,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Clamor',
+        href: './decibel/',
+        glyph: '🔊',
+        tagline: 'How loud is it here?',
+        description: 'Point your microphone at the room and watch the decibels climb — a live meter with peak, average and Leq readings, a rolling history graph, and an alarm that shouts back when the noise crosses your line.',
+        search: 'A sound level meter, decibel meter and noise meter that uses the device microphone and the Web Audio API to measure how loud the sound around you is in dB SPL. Shows a live A-weighted decibel readout, upper limits with peak, maximum, minimum, average and Leq statistics, a 60 second history graph, calibration and fast slow impulse response settings, and a configurable loudness alarm with a beep, screen flash, vibration and desktop notification when the noise exceeds a chosen decibel threshold. Exports measurements to CSV. Runs locally in the browser.',
+        tags: ['audio', 'tool'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'Echo',
         href: './batlistener/',
         glyph: '🦇',
