@@ -65,12 +65,12 @@
 }
 
 /* --------------------------------------------------------------------------
-   Themes. `data-theme` is written on <html> by theme.js (see THEMES there).
+   Themes. `data-rami-theme` is written on <html> by theme.js (see THEMES there).
    Each theme only has to restate the tokens it changes.
    -------------------------------------------------------------------------- */
 
 /* 🛡️ Professional Dark — calm slate & steel blue, no fairy dust. */
-:root[data-theme="slate"] {
+:root[data-rami-theme="slate"] {
     --night-0: #070b12;
     --night-1: #0d131d;
     --night-2: #161f2c;
@@ -110,7 +110,7 @@
 }
 
 /* 📄 Professional Light — crisp, printable, boardroom-safe. */
-:root[data-theme="daylight"] {
+:root[data-rami-theme="daylight"] {
     --night-0: #eef2f7;
     --night-1: #f8fafc;
     --night-2: #ffffff;
@@ -150,7 +150,7 @@
 }
 
 /* 📜 Grimoire — warm parchment & ink, a light theme with a soul. */
-:root[data-theme="parchment"] {
+:root[data-rami-theme="parchment"] {
     --night-0: #e8dcc0;
     --night-1: #f6eeda;
     --night-2: #fffaf0;
@@ -191,7 +191,7 @@
 }
 
 /* 🖥️ Phosphor — a CRT terminal that wandered in from 1983. */
-:root[data-theme="terminal"] {
+:root[data-rami-theme="terminal"] {
     --night-0: #000000;
     --night-1: #04120a;
     --night-2: #07220f;
@@ -233,7 +233,7 @@
 }
 
 /* ◐ High Contrast — maximum legibility, minimum decoration. */
-:root[data-theme="contrast"] {
+:root[data-rami-theme="contrast"] {
     --night-0: #000000;
     --night-1: #000000;
     --night-2: #000000;
@@ -272,18 +272,18 @@
     --card-glow-default: transparent;
 }
 
-:root[data-theme="contrast"] .btn-primary { color: #000; }
+:root[data-rami-theme="contrast"] .btn-primary { color: #000; }
 
 /* Themes that swap the gradient headline for flat ink. */
-:root[data-theme="slate"] .wordmark-text,
-:root[data-theme="daylight"] .wordmark-text,
-:root[data-theme="contrast"] .wordmark-text,
-:root[data-theme="slate"] .hero-title,
-:root[data-theme="daylight"] .hero-title,
-:root[data-theme="contrast"] .hero-title,
-:root[data-theme="slate"] .group-head h3,
-:root[data-theme="daylight"] .group-head h3,
-:root[data-theme="contrast"] .group-head h3 {
+:root[data-rami-theme="slate"] .wordmark-text,
+:root[data-rami-theme="daylight"] .wordmark-text,
+:root[data-rami-theme="contrast"] .wordmark-text,
+:root[data-rami-theme="slate"] .hero-title,
+:root[data-rami-theme="daylight"] .hero-title,
+:root[data-rami-theme="contrast"] .hero-title,
+:root[data-rami-theme="slate"] .group-head h3,
+:root[data-rami-theme="daylight"] .group-head h3,
+:root[data-rami-theme="contrast"] .group-head h3 {
     background: none;
     -webkit-text-fill-color: currentColor;
     color: var(--text);
@@ -291,15 +291,15 @@
     animation: none;
 }
 
-:root[data-theme="slate"] .dot,
-:root[data-theme="daylight"] .dot,
-:root[data-theme="contrast"] .dot {
+:root[data-rami-theme="slate"] .dot,
+:root[data-rami-theme="daylight"] .dot,
+:root[data-rami-theme="contrast"] .dot {
     color: var(--accent);
     -webkit-text-fill-color: var(--accent);
 }
 
-:root[data-theme="contrast"] .realm-card::before,
-:root[data-theme="contrast"] .realm-card::after {
+:root[data-rami-theme="contrast"] .realm-card::before,
+:root[data-rami-theme="contrast"] .realm-card::after {
     display: none;
 }
 
@@ -444,7 +444,8 @@ ul {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    flex-wrap: wrap;
+    gap: 12px 16px;
     padding: 14px 0;
 }
 
@@ -483,6 +484,7 @@ ul {
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    max-width: 100%;
     font-family: var(--font-body);
     font-weight: 700;
     font-size: 0.9rem;
@@ -812,6 +814,18 @@ ul {
 @media (max-width: 760px) {
     .theme-toggle-label { display: none; }
     .theme-toggle { padding: 8px 12px; }
+
+    /* Anchoring a 290px menu to a small button pushes it off-screen — on
+       phones it becomes a bottom sheet instead. */
+    .theme-menu {
+        position: fixed;
+        top: auto;
+        right: 12px;
+        left: 12px;
+        bottom: 12px;
+        width: auto;
+        transform: translateY(10px);
+    }
 }
 
 @media print {

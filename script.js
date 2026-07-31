@@ -325,10 +325,10 @@ function setupMobileNav() {
     overlay.setAttribute('aria-label', 'Mobile');
     overlay.innerHTML = `
         <button class="close-btn" aria-label="Close menu">&times;</button>
-        <a href="#realms">Realms</a>
-        <a href="./gallery/lore/">Lore</a>
-        <a href="./gallery/prankscreens/">Prank Screens</a>
-        <a href="./wasteland/">The Wastelands</a>
+        <a href="/#realms">Realms</a>
+        <a href="/gallery/">Gallery</a>
+        <a href="/workshop/">Workshop</a>
+        <a href="/wasteland/">Wastelands</a>
     `;
     document.body.appendChild(overlay);
     const closeBtn = overlay.querySelector('.close-btn');

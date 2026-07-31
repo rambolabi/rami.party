@@ -11,7 +11,9 @@
     var STORAGE_KEY = 'rami.theme';
     var AUTO = 'auto';
 
-    /* id must match the :root[data-theme="…"] blocks in theme.css.
+    /* id must match the :root[data-rami-theme="…"] blocks in theme.css.
+   The attribute is namespaced because many sub-realms run their own
+   `data-theme` picker and the two must never collide.
        `scheme` drives <meta name="color-scheme"> and the browser UI colour. */
     var THEMES = [
         { id: 'enchanted', name: 'Enchanted', glyph: '🔮', note: 'Midnight arcane — the house style', scheme: 'dark', color: '#0b0524' },
@@ -73,7 +75,7 @@
         var id = resolve(pref);
         var theme = byId[id];
         var root = document.documentElement;
-        root.setAttribute('data-theme', id);
+        root.setAttribute('data-rami-theme', id);
         root.style.colorScheme = theme.scheme;
         if (persist) write(pref);
         if (document.head) {

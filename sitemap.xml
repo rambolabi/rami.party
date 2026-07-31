@@ -35,6 +35,12 @@
 
   <!-- ── The Gallery of Wonders ──────────────────────────────────────────── -->
   <url>
+    <loc>https://rami.party/gallery/</loc>
+    <lastmod>2026-07-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://rami.party/gallery/lore/</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>monthly</changefreq>

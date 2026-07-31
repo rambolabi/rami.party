@@ -90,6 +90,30 @@ window.RAMI_REALMS = [
         status: 'live',
         external: true,
     },
+    {
+        category: 'gallery',
+        title: 'Lore Gallery',
+        href: './gallery/lore/',
+        glyph: '📜',
+        tagline: 'A grimoire of images',
+        description: 'Leaf through a living grimoire of magical lore, muggle mischief and impossibly cute creatures.',
+        search: 'An image gallery of fantasy and Harry Potter themed artwork, magical creatures, wizards and humorous memes. Browse and view a curated picture collection of magic art and cute animals.',
+        tags: ['gallery', 'magic'],
+        aura: 'violet',
+        status: 'live',
+    },
+    {
+        category: 'gallery',
+        title: 'Prank Screens',
+        href: './gallery/prankscreens/',
+        glyph: '🖥️',
+        tagline: 'Full-screen illusions',
+        description: 'Conjure convincing fake boot screens, BIOS spells and “hacked” terminals to bewitch your friends.',
+        search: 'A collection of full-screen fake operating system boot screens, fake BIOS screens and fake hacked hacker terminal screens to prank and trick friends. Windows, Linux and hacking simulator prank screens.',
+        tags: ['prank', 'fullscreen'],
+        aura: 'cyan',
+        status: 'live',
+    },
 
     /* ---- The Workshop (WIP / playthings) ---- */
     {
@@ -167,28 +191,6 @@ window.RAMI_REALMS = [
       status: 'live' (clickable) · 'soon' (locked teaser).
    ========================================================================== */
 window.RAMI_WORKSHOP = [
-    {
-        title: 'Lore Gallery',
-        href: '../gallery/lore/',
-        glyph: '📜',
-        tagline: 'A grimoire of images',
-        description: 'Leaf through a living grimoire of magical lore, muggle mischief and impossibly cute creatures.',
-        search: 'An image gallery of fantasy and Harry Potter themed artwork, magical creatures, wizards and humorous memes. Browse and view a curated picture collection of magic art and cute animals.',
-        tags: ['gallery', 'magic'],
-        aura: 'violet',
-        status: 'live',
-    },
-    {
-        title: 'Prank Screens',
-        href: '../gallery/prankscreens/',
-        glyph: '🖥️',
-        tagline: 'Full-screen illusions',
-        description: 'Conjure convincing fake boot screens, BIOS spells and “hacked” terminals to bewitch your friends.',
-        search: 'A collection of full-screen fake operating system boot screens, fake BIOS screens and fake hacked hacker terminal screens to prank and trick friends. Windows, Linux and hacking simulator prank screens.',
-        tags: ['prank', 'fullscreen'],
-        aura: 'cyan',
-        status: 'live',
-    },
     {
         title: 'IT Tools Workbench',
         href: './tools/',
