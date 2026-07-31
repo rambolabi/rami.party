@@ -48,7 +48,7 @@ per-project section from §1 onward.
 | [3](#3-3d-forge-workshop3d-forge) | 3D Forge | 16 |
 | [4](#4-dd-forge-workshopdnd-forge) | D&D Forge | 21 |
 | [5](#5-loregate--dm-screen-workshopdm-screen) | Loregate (DM Screen) | 10 + 18 ideas |
-| [6](#6-mail-headers-workshopmailheaders) | Mail Headers | 16 |
+| [6](#6-mail-headers-workshopmail-wardanalyzer) | Mail Headers | 16 |
 | [7](#7-markdown-scribe-workshopmd) | Markdown Scribe | 8 |
 | [8](#8-disk-filler-workshopfill) | Disk Filler | 4 |
 | [9](#9-laser-works-workshoplaser) | Laser Works | 3 |
@@ -143,7 +143,7 @@ during this audit.
 
 ### 0.12 — Add a `README.md` per project folder
 Still open. Only 7 of ~45 project folders have one, so nobody can tell what `dashboard_v1`,
-`rami`, `to-check`, `trace-results` or `clear` are without opening the code.
+`rami`, `to-check`, `mail-ward/volume` or `clear` are without opening the code.
 
 **Fix** — drop a 5-line README in each: what it is, how to run it, current status. Best done
 as part of the §13 audit rather than as a bulk commit of empty stubs.
@@ -444,7 +444,7 @@ alignment · encounter builder with CR/XP budget · weather intensity + wind dir
 
 ---
 
-## 6. Mail Headers — `workshop/mailheaders/`
+## 6. Mail Headers — `workshop/mail-ward/analyzer/`
 
 ### 🐞 Known limitations to verify or fix
 - [ ] **Organizational-domain check** uses a small built-in two-part-TLD list, not the full Public
@@ -614,12 +614,12 @@ a quick review pass (does it work? is it finished? should it be `status:'soon'` 
 | `workshop/to-check/` | Wishlist Scroll | link dump — value? |
 | `workshop/todo/` | Daybook | live, undocumented |
 | `workshop/tools/` | IT Tools Workbench | ✅ CVE sub-page + branding fixed |
-| `workshop/trace-results/` | Volume Seer | live, undocumented |
+| `workshop/mail-ward/volume/` | Volume Seer | live, undocumented |
 | `workshop/webcheck/` | Webcheck | live, undocumented |
 | `wasteland/adhd/` | ADHD experiment | empty husk (intentional) |
 | `wasteland/house/` | The Little House | ✅ now reachable from the Wastelands card |
 | `wasteland/notes/` | Notes & Todo | archived, superseded by Daybook |
-| `gallery/militaryalphabet/` | Phonetic Codex | live, undocumented |
+| `gallery/militaryalphabet/` | Phonetic Codex | folder never published — card is `status:'soon'` |
 
 Also worth noting: `workshop/demoscene-forge/todo.md` and
 `workshop/personality-library/DISC-profile-SurroundedByIdiots/todo.md` are *specification briefs*
