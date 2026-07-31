@@ -54,14 +54,14 @@ window.RAMI_REALMS = [
     {
         category: 'gallery',
         title: 'Phonetic Codex',
-        href: './gallery/militaryalphabet/',
+        href: '#',
         glyph: '🔤',
         tagline: 'Alpha, Bravo, Charlie…',
         description: 'A terminal-styled NATO phonetic alphabet reference and live text-to-phonetic translator — tap any letter to hear it, and it keeps your screen awake while you learn.',
         search: 'NATO phonetic alphabet reference and text to phonetic converter. Learn the Alpha Bravo Charlie military spelling alphabet, click letters to hear the pronunciation with audio, and it keeps the screen awake with a wake lock.',
         tags: ['reference', 'tool'],
         aura: 'cyan',
-        status: 'live',
+        status: 'soon',
     },
     {
         category: 'gallery',
@@ -358,7 +358,7 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Mail Headers',
-        href: './mailheaders/',
+        href: './mail-ward/analyzer/',
         glyph: '✉️',
         tagline: 'Header diviner',
         description: 'Decode the tangled runes of email headers to trace a message’s journey and unmask delivery curses.',
@@ -524,7 +524,7 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Volume Seer',
-        href: './trace-results/',
+        href: './mail-ward/volume/',
         glyph: '📊',
         tagline: 'Charts of the flow',
         description: 'A Chart.js dashboard visualising email traffic over time.',

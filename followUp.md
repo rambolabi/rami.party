@@ -7,17 +7,17 @@ in [`workshop/todo.md`](workshop/todo.md).
 
 ## 🗺️ Current structure
 ```
-/                     hub (index.html, theme.css, style.css, script.js, projects.js)
+/                     hub (index.html, theme.css, theme.js, style.css, script.js, projects.js)
 favicon.svg · og-image.png · admin/ · 404.html · robots.txt · sitemap.xml
 gallery/              🏛️ The Gallery of Wonders
-  militaryalphabet/   🔤 Phonetic Codex
   lore/               📜 Lore Gallery
   prankscreens/       🖥️ Prank Screens
 workshop/             ⚗️ The Workshop — a data-driven catalogue of every WIP
-  3d-forge/ batlistener/ bbq/ blur/ character-forge/ clear/ dashboard_v1/
-  demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/ fill/ laser/
-  laser-forge/ laser-forge-v2/ mailheaders/ md/ news/ personality-library/ rami/
-  scoreboard/ subnets/ to-check/ todo/ tools/ trace-results/ webcheck/
+  3d-forge/ batlistener/ bbq/ blur/ breachlight/ character-forge/ clear/
+  dashboard_v1/ demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/
+  fill/ frostcaller/ laser/ laser-forge/ laser-forge-v2/ mail-ward/ (+ its
+  analyzer/ and volume/ sub-tools) md/ news/ OASIS/ personality-library/ rami/
+  scoreboard/ subnets/ to-check/ todo/ tools/ trainer-forge/ tremorbell/ webcheck/
   personality-library/ + its 15 book workshops (DISC, Big Five, MBTI, Enneagram,
     Attachment, Love Languages, Temperaments, Conflict Styles, EQ, Liars,
     Vampires, Bad Bosses, Psychopaths, Narcissists, Setbacks)

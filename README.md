@@ -7,7 +7,8 @@ Magical on the outside, tidy and maintainable on the inside.
 
 ```
 /                     Enchanted hub (index.html, script.js)
-theme.css             Shared palette, tokens, backdrop & chrome (imported everywhere)
+theme.css             Shared palette, tokens, themes, backdrop & chrome (imported everywhere)
+theme.js              Theme engine — applies the saved theme + header theme switcher
 style.css             Hub-only styles (hero + realm groups)
 projects.js           Realm registry — groups + portals, the single source of truth
 favicon.svg           Sparkle icon (also used by the manifest)
@@ -54,6 +55,25 @@ The hub renders the card in the right realm automatically. Array order = ranking
 Midnight-arcane: deep indigo/violet gradients, a twinkling starfield, drifting aurorae, a glowing
 gradient wordmark (Cinzel Decorative), and glassmorphism portal cards. Fully responsive, keyboard
 accessible, and respects `prefers-reduced-motion`.
+
+## 🌗 Themes
+
+Every hub page carries a theme switcher in the header. The choice is stored in `localStorage`
+(`rami-theme`) and applied as `<html data-theme="…">` by [`theme.js`](theme.js):
+
+| id | Name | Mood |
+| --- | --- | --- |
+| *(none)* | Enchanted | The default midnight-arcane palette |
+| `pro-dark` | Professional dark | Calm slate & blue, no whimsy — safe for demos |
+| `pro-light` | Professional light | Clean, high-contrast light interface |
+| `ember` | Ember | Warm dark forge |
+| `verdant` | Verdant | Deep forest & moss |
+| `parchment` | Parchment | Warm light, old spellbook paper |
+
+A theme only redefines the CSS custom properties at the top of [`theme.css`](theme.css) — never
+layout — so new themes are a single token block. Page styles should therefore use tokens
+(`var(--text-muted)`, `var(--surface-soft)`, `var(--border-soft)`, `var(--ink-violet)`, …) instead
+of hard-coded colours. Add `theme.js` to a page's `<head>` (before the stylesheets) to opt it in.
 
 ## 🔗 Allied realms
 
