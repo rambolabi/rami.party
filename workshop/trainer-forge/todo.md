@@ -184,7 +184,8 @@ no touch target under 32 px.**
 - [ ] **Calendar export** (`.ics`) so sessions land in the user's own calendar app.
 - [ ] **Exercise illustrations** — inline SVG line art; must stay under a sensible page weight.
 - [ ] **A second block suggestion** on completion: same goal, level bumped, new seed.
-- [ ] **Dutch and French copy** — reuse the pattern from `workshop/personality-library`.
+- [ ] **Dutch and French copy** — reuse the pattern from the `library.labidi.eu` repo
+      (`_shared/i18n.js` + per-language `data.<lang>.js` packs).
 - [ ] `og-image` for the social cards (the rest of rami.party has none either).
 
 ---

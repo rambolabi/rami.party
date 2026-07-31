@@ -40,6 +40,19 @@ window.RAMI_REALMS = [
     /* ---- The Gallery of Wonders (finished) ---- */
     {
         category: 'gallery',
+        title: 'O.A.S.I.S.',
+        href: 'https://oasis.labidi.eu/',
+        glyph: '◉',
+        tagline: 'The lights-out library',
+        description: 'An air-gapped survival and field reference that works with no internet at all — 42 before/during/after playbooks, interactive decision guides and 24 calculators. Outgrew the workshop and now lives at oasis.labidi.eu.',
+        search: 'Offline Advanced System for Information and Survival, OASIS. An offline-first air-gapped survival guide, emergency preparedness manual and field reference that works with no internet, no server and no tracking, installable as a PWA app on a phone or computer. Before during and after playbooks for every emergency: long power cut and grid down blackout lasting days weeks or months, water supply failure and contamination, network and internet outage, cyber attack, solar storm EMP and coronal mass ejection, supply chain collapse famine and food shortage, flooding, wildfire, earthquake, volcanic eruption and ashfall, meteor asteroid airburst or impact strike, tsunami, hurricane cyclone typhoon, tornado, blizzard and extreme cold, heatwave and drought, landslide and avalanche, nuclear war detonation and fallout, nuclear power plant incident and iodine tablets, dirty bomb radiological dispersal, toxic gas cloud and chemical release, biological incident and biohazard, pandemic epidemic and widespread sickness or virus, lockdown quarantine curfew and martial law, violent contagion or zombie outbreak, warzone armed conflict shelling bombing and invasion, rebels militia and checkpoints, raiding looting and home invasion, terrorist attack, civil unrest and riots, personal threat attacker robbery and kidnapping, evacuation displacement and refugees, plane crash, marooned on a deserted island, adrift at sea and shipwreck, stranded vehicle and lost in the wilderness, trapped in a collapsed building, house fire, carbon monoxide, car crash, pets and livestock, and long-term societal collapse or apocalypse. Interactive decision guides and triage decision trees for when you do not know what to do. First aid and trauma medicine: MARCH, massive haemorrhage and tourniquets, wound packing, CPR and defibrillation, choking, shock, chest seals, stabbings gunshots arrows and impalement, poisoning and toxic fumes, crush injury and entrapment, amputation, drowning and cold water immersion, electrocution and lightning, bites stings snakebite and rabies, abdominal injury and hernia, eye injuries, burns and the rule of nines, fractures and splinting, hypothermia and heat stroke, oral rehydration salts, sepsis, stroke FAST, anaphylaxis, emergency childbirth and dental emergencies. Water: finding, purification and treatment, boiling times by altitude, bleach and chlorine dioxide dosing, iodine, filters, SODIS solar disinfection, storage and rationing. Shelter fire and food: heat loss, lean-to and debris huts, snow shelters, tinder and fire lays, clothing layering, calorie planning, shelf life, foraging and the universal edibility test, latrines and sanitation. Navigation: how to use a compass and how to make one, navigating by sun stars moon at night and under cloud, WGS84 ETRS89 NAD83 and UTM datums, coordinate conversion between decimal degrees DMS UTM MGRS military grid and Maidenhead, resection without GPS, pace count, dead reckoning, sunrise sunset and solar azimuth. Communications: satellite messengers and phones, 406 MHz PLB and EPIRB distress beacons and how to buy and register one, amateur ham radio HF NVIS VHF UHF, Winlink email over radio, JS8Call FT8 APRS and SSTV, marine VHF channel 16, CB radio on 12 volt or 24 volt batteries, PMR446 FRS GMRS MURS, LoRa mesh and Meshtastic, building a crystal or foxhole radio from scrap, signal mirror whistle smoke and Morse code, BE-Alert NL-Alert and national warning systems. Also RTL-SDR software defined radio, weather satellite images, power and battery watt-hours, solar sizing, generators and carbon monoxide, go bags and preparedness checklists, and how to meet cooperate barter and work with strangers. Every claim attributed to WHO CDC FEMA ICRC IAEA NOAA USGS Sphere ERC ITU and UNHCR.',
+        tags: ['reference', 'offline', 'survival'],
+        aura: 'cyan',
+        status: 'live',
+        external: true,
+    },
+    {
+        category: 'gallery',
         title: 'Phonetic Codex',
         href: './gallery/militaryalphabet/',
         glyph: '🔤',
@@ -166,17 +179,6 @@ window.RAMI_REALMS = [
       status: 'live' (clickable) · 'soon' (locked teaser).
    ========================================================================== */
 window.RAMI_WORKSHOP = [
-    {
-        title: 'O.A.S.I.S.',
-        href: './OASIS/',
-        glyph: '◉',
-        tagline: 'The lights-out library',
-        description: 'An air-gapped survival and field reference — 33 before/during/after playbooks covering everything from a blackout to a nuclear detonation, plus emergency medicine, water, shelter, navigation, radio, power and hazards, with 23 working calculators. Install it once and it never needs the internet again.',
-        search: 'Offline Advanced System for Information and Survival. An offline-first air-gapped survival guide, emergency preparedness manual and field reference that works with no internet, no server and no tracking, installable as a PWA app on a phone or computer. Before during and after playbooks for every emergency scenario: long power cut and grid down blackout lasting days weeks or months, water supply failure and contamination, network and internet outage, cyber attack on infrastructure, solar storm EMP and coronal mass ejection, supply chain collapse famine and food shortage, flooding, wildfire, earthquake, volcanic eruption and ashfall, meteor asteroid airburst or impact strike, tsunami, hurricane cyclone typhoon, tornado, blizzard and extreme cold, heatwave and drought, landslide and avalanche, nuclear war detonation and fallout, dirty bomb radiological dispersal, toxic gas cloud and chemical release, biological incident and biohazard, pandemic epidemic and widespread sickness or virus, lockdown quarantine curfew and martial law, violent contagion or zombie outbreak, warzone armed conflict shelling bombing and invasion, civil unrest riot and looting, personal threat attacker robbery and kidnapping, evacuation displacement and refugee movement, marooned on a deserted island, adrift at sea and shipwreck, stranded vehicle and lost in the wilderness, trapped in a collapsed building, and long-term societal collapse or apocalypse. Emergency first aid and trauma medicine: MARCH, massive haemorrhage and tourniquets, wound packing, CPR and defibrillation, choking, shock, chest seals, burns and the rule of nines, fractures and splinting, hypothermia and heat stroke, oral rehydration salts, sepsis, stroke FAST and anaphylaxis. Water: finding, purification and treatment — boiling times by altitude, household bleach and chlorine dioxide dosing, iodine, filters, SODIS solar disinfection, storage and rationing. Shelter and fire: heat loss, lean-to and debris huts, snow shelters, tinder, feather sticks and fire lays, clothing layering. Food: calorie planning, shelf life, foraging and the universal edibility test, hygiene and latrines. Navigation and positioning: coordinate converter between decimal degrees, degrees and minutes, DMS, UTM, MGRS military grid reference and Maidenhead grid squares; great-circle distance and bearing; magnetic declination; waypoint projection; two-bearing resection to fix your position without GPS; sunrise, sunset, twilight, solar noon and solar azimuth for finding true north; moon phase; pace count and dead reckoning; and a plot board that draws waypoints to scale with a route card. Every way to communicate when the network is down: SMS, satellite messenger and satellite phone, Garmin inReach ZOLEO SPOT and Starlink, 406 MHz PLB and EPIRB emergency beacons, amateur ham radio HF NVIS and VHF UHF repeaters, Winlink email over radio, JS8Call FT8 PSK31 packet APRS and SSTV digital modes, marine VHF channel 16, CB, PMR446 FRS GMRS and MURS, LoRa mesh and Meshtastic, Bluetooth mesh, signal mirror heliograph whistle smoke signal fires ground-to-air panels Morse code runners dead drops and notice boards, plus antenna cutting charts, radio horizon and voice procedure with the NATO phonetic alphabet. Signals and reconnaissance: RTL-SDR software defined radio, scanning and listening plans, receiving NOAA APT and Meteor LRPT weather satellite images. Power: watt-hours, battery chemistry and runtime, solar panel sizing, energy budgeting, generator and carbon monoxide safety. Kit lists for everyday carry, a 72-hour go bag, home preparedness, vehicle kit and documents. Every claim is attributed to named authorities including WHO, CDC, FEMA, ICRC, IAEA, NOAA, USGS, Sphere, the European Resuscitation Council, ITU and UNHCR. Includes a searchable index, a timestamped field log, five themes including a red night-vision mode, printable chapters and a list of sources worth mirroring offline.',
-        tags: ['reference', 'offline', 'survival'],
-        aura: 'cyan',
-        status: 'live',
-    },
     {
         title: 'Lore Gallery',
         href: '../gallery/lore/',
@@ -311,14 +313,15 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'The People Library',
-        href: '#',                                  // real path once live: './personality-library/'
+        href: 'https://library.labidi.eu/',
+        external: true,
         glyph: '🧠',
         tagline: '15 people-reading workshops',
-        description: 'A whole shelf of interactive workshops on personality and behaviour — DISC colours, the Big Five, the 16 types, the Enneagram, attachment styles, manipulation, narcissism and more, each with its own quiz.',
-        search: 'Interactive personality psychology and behaviour workshops with quizzes, self assessments and observer assessments: DISC colour profile from Surrounded by Idiots by Thomas Erikson, the Big Five OCEAN traits, MBTI 16 types Myers-Briggs, the Enneagram nine types, adult attachment styles, the five love languages, the four temperaments and humours, Thomas-Kilmann conflict styles, emotional intelligence EQ, Surrounded by Liars deception and lie detection, Surrounded by Energy Vampires, Surrounded by Bad Bosses leadership, Surrounded by Psychopaths manipulation, Surrounded by Narcissists, and resilience after setbacks.',
+        description: 'A whole shelf of interactive workshops on personality and behaviour — DISC colours, the Big Five, the 16 types, the Enneagram, attachment styles, manipulation, narcissism and more, each with its own quiz. Now lives on its own domain.',
+        search: 'Interactive personality psychology and behaviour workshops with quizzes, self assessments and observer assessments: DISC colour profile from Surrounded by Idiots by Thomas Erikson, the Big Five OCEAN traits, MBTI 16 types Myers-Briggs, the Enneagram nine types, adult attachment styles, the five love languages, the four temperaments and humours, Thomas-Kilmann conflict styles, emotional intelligence EQ, Surrounded by Liars deception and lie detection, Surrounded by Energy Vampires, Surrounded by Bad Bosses leadership, Surrounded by Psychopaths manipulation, Surrounded by Narcissists, and resilience after setbacks. Available in English, Dutch and French at library.labidi.eu.',
         tags: ['workshop', 'psychology'],
         aura: 'pink',
-        status: 'soon',
+        status: 'live',
     },
     {
         title: 'Webcheck',
@@ -329,6 +332,17 @@ window.RAMI_WORKSHOP = [
         search: 'A website audit and SEO checker tool. Scans a website for robots.txt, sitemap.xml, security.txt, favicons and meta tags and reports what is present or missing.',
         tags: ['tool', 'seo'],
         aura: 'cyan',
+        status: 'live',
+    },
+    {
+        title: 'Mail Ward',
+        href: './mail-ward/',
+        glyph: '🛡️',
+        tagline: 'SPF · DKIM · DMARC',
+        description: 'The complete guide to email authentication — what the three records really do, a safe ten-step rollout, every risk spelled out, a record builder and inspector, and a runbook for the morning someone starts sending invoices in your name.',
+        search: 'A complete plain English guide and tutorial to email authentication and anti-spoofing with SPF, DKIM and DMARC. Explains how email really works, the difference between the envelope sender and the header From address, SPF mechanisms and the ten DNS lookup limit, DKIM selectors keys and rotation, DMARC alignment, p=none quarantine and reject, pct ramping, aggregate rua and forensic ruf reports, subdomain policy, plus BIMI, MTA-STS, TLS-RPT, ARC, null MX, reverse DNS and DNSSEC. Includes a step by step setup plan with the risks at every step, a free SPF DMARC and DKIM record generator and builder, a record checker and inspector that explains any record in plain English, an optional DNS lookup, an interactive checklist, and a what if incident runbook for email spoofing, phishing, domain forgery, lookalike and cousin domains, display name spoofing, reply-to hijacking, business email compromise and invoice fraud — how to recognise a fake email, how to read Authentication-Results headers, and exactly what to do first.',
+        tags: ['guide', 'email'],
+        aura: 'violet',
         status: 'live',
     },
     {
@@ -465,14 +479,15 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Markdown Scribe',
-        href: './md/',
+        href: 'https://md.labidi.eu/',
         glyph: '📝',
         tagline: 'Rune scribe',
-        description: 'A split-view Markdown editor with live preview, ten themes, vim mode and diagrams — wholly offline, with not a single third-party script.',
-        search: 'A Markdown editor with live side by side HTML preview. Write, edit and preview markdown text with syntax highlighting, ten themes, a table of contents, slash commands, find and replace, multiple document tabs, lint hints, mermaid style flowchart diagrams, a vim keybinding mode and PWA offline install. Fully offline and dependency free with a hand written parser and HTML sanitiser, no CDN.',
+        description: 'A split-view Markdown editor with live preview, ten themes, vim mode and diagrams — wholly offline, with not a single third-party script. Outgrew the workshop and now lives at md.labidi.eu, in English, Dutch and French.',
+        search: 'A Markdown editor with live side by side HTML preview, hosted at md.labidi.eu. Write, edit and preview markdown text with syntax highlighting, ten themes, a table of contents, slash commands, find and replace, multiple document tabs, lint hints, mermaid style flowchart diagrams, a vim keybinding mode and PWA offline install. Interface in English, Nederlands and Francais. Fully offline and dependency free with a hand written parser and HTML sanitiser, no CDN.',
         tags: ['tool', 'text'],
         aura: 'violet',
         status: 'live',
+        external: true,
     },
     {
         title: 'Document Censor',

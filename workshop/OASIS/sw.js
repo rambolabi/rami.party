@@ -1,99 +1,42 @@
 /* ==========================================================================
-   O.A.S.I.S. — service worker
+   Tombstone service worker.
    --------------------------------------------------------------------------
-   The whole point of this system is that it works with the cable cut, so the
-   strategy is CACHE FIRST for the shell, with a quiet background refresh
-   (stale-while-revalidate). You get an instant, guaranteed-offline load, and
-   the next visit has any update.
+   O.A.S.I.S. moved from /workshop/OASIS/ to https://oasis.labidi.eu/.
 
-   There is nothing to fetch from anywhere else — this worker never talks to a
-   third-party origin, and it deliberately ignores any request that is not to
-   its own scope.
+   The service worker that used to live here was CACHE FIRST. That means every
+   returning visitor — and everyone who installed it as an app — would keep
+   being served the old copy out of their own storage and would never see the
+   redirect page sitting on the server. They would be stranded on a frozen
+   version of a system whose whole purpose is to be correct.
 
-   Bump CACHE whenever SHELL changes.
+   The browser fetches this script directly from the network rather than
+   through the old worker, so replacing it is what actually breaks the loop.
+   This installs, deletes the caches, unregisters itself, and reloads any open
+   window — which then reaches the real redirect page.
+
+   There is deliberately NO fetch handler. With none, requests bypass the
+   worker entirely and go straight to the network.
+
+   Do not delete this file. It has to outlive the caches on other people's
+   devices, and there is no way to know when the last one is gone.
    ========================================================================== */
 
-const CACHE = 'oasis-v3';
-
-const SHELL = [
-    './',
-    './index.html',
-    './style.css',
-    './geo.js',
-    './data-knowledge.js',
-    './data-scenarios.js',
-    './data-trees.js',
-    './data-reference.js',
-    './tools.js',
-    './app.js',
-    './manifest.webmanifest',
-];
-
-/**
- * Add anything missing from the cache.
- *
- * This is deliberately not "cache.addAll" in `install` and nothing else.
- * `install` runs exactly once per worker version, so a first visit on a
- * flaky connection would otherwise leave a half-empty cache forever — and
- * the user would find out about it in the worst possible circumstances.
- * So: re-check on install, on activate, and whenever the page asks.
- */
-async function fillCache() {
-    const cache = await caches.open(CACHE);
-    const base = self.location.href;
-    const have = new Set((await cache.keys()).map(r => new URL(r.url).pathname));
-    const missing = SHELL.filter(u => !have.has(new URL(u, base).pathname));
-    if (!missing.length) return 0;
-    /* One failed file must not sink the whole operation. */
-    await Promise.allSettled(missing.map(u => cache.add(new Request(u, { cache: 'reload' }))));
-    return missing.length;
-}
-
-self.addEventListener('install', event => {
-    event.waitUntil(fillCache().then(() => self.skipWaiting()));
-});
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys()
-            .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-            .then(fillCache)
-            .then(() => self.clients.claim())
-    );
-});
+    event.waitUntil((async () => {
+        try {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+        } catch (e) { /* storage may be unavailable; carry on regardless */ }
 
-self.addEventListener('fetch', event => {
-    const req = event.request;
-    if (req.method !== 'GET') return;
+        try { await self.registration.unregister(); } catch (e) { }
 
-    const url = new URL(req.url);
-    const scope = new URL('./', self.location.href).pathname;
-    if (url.origin !== self.location.origin) return;      // never proxy anything external
-    if (!url.pathname.startsWith(scope)) return;
-
-    event.respondWith(
-        caches.match(req, { ignoreSearch: true }).then(hit => {
-            const network = fetch(req).then(res => {
-                if (res && res.ok && res.type === 'basic') {
-                    const copy = res.clone();
-                    caches.open(CACHE).then(c => c.put(req, copy));
-                }
-                return res;
-            }).catch(() => null);
-
-            /* Cache first: instant, and correct with no connection at all. */
-            if (hit) {
-                try { event.waitUntil(network); } catch (e) { /* lifetime already settled */ }
-                return hit;
-            }
-
-            return network.then(res => res || caches.match('./index.html'));
-        })
-    );
-});
-
-/* The "Cache everything now" button in the app sends this. */
-self.addEventListener('message', event => {
-    if (!event.data || event.data.type !== 'PRECACHE') return;
-    event.waitUntil(fillCache());
+        /* Send any window still showing the stale copy to the redirect page,
+           preserving whatever address it was pointing at. */
+        try {
+            const windows = await self.clients.matchAll({ type: 'window' });
+            windows.forEach(c => { try { c.navigate(c.url); } catch (e) { } });
+        } catch (e) { }
+    })());
 });

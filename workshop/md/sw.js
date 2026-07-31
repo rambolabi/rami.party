@@ -1,38 +1,43 @@
-/* Markdown Studio — service worker for offline / installable use.
-   Only active when served over http(s); no-op on file://. */
-const CACHE = 'md-studio-v1';
-const ASSETS = [
-    './',
-    './index.html',
-    './style.css',
-    './script.js',
-    './manifest.webmanifest',
-    './icon.svg'
-];
+/* ==========================================================================
+   Tombstone service worker.
+   --------------------------------------------------------------------------
+   Markdown Studio moved from /workshop/md/ to https://md.labidi.eu/.
 
-self.addEventListener('install', (e) => {
-    e.waitUntil(
-        caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting())
-    );
-});
+   The service worker that used to live here was CACHE FIRST. That means every
+   returning visitor — and everyone who installed it as an app — would keep
+   being served the old copy out of their own storage and would never see the
+   redirect page sitting on the server.
 
-self.addEventListener('activate', (e) => {
-    e.waitUntil(
-        caches.keys()
-            .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
-            .then(() => self.clients.claim())
-    );
-});
+   The browser fetches this script directly from the network rather than
+   through the old worker, so replacing it is what actually breaks the loop.
+   This installs, deletes the caches, unregisters itself, and reloads any open
+   window — which then reaches the real redirect page.
 
-self.addEventListener('fetch', (e) => {
-    if (e.request.method !== 'GET') return;
-    e.respondWith(
-        caches.match(e.request).then((cached) =>
-            cached || fetch(e.request).then((resp) => {
-                const copy = resp.clone();
-                caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
-                return resp;
-            }).catch(() => caches.match('./index.html'))
-        )
-    );
+   There is deliberately NO fetch handler. With none, requests bypass the
+   worker entirely and go straight to the network.
+
+   Note: this only clears the Cache Storage. Documents live in localStorage
+   and are left alone, so anyone who comes back can still export their work.
+
+   Do not delete this file. It has to outlive the caches on other people's
+   devices, and there is no way to know when the last one is gone.
+   ========================================================================== */
+
+self.addEventListener('install', () => self.skipWaiting());
+
+self.addEventListener('activate', event => {
+    event.waitUntil((async () => {
+        try {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+        } catch (e) { /* storage may be unavailable; carry on regardless */ }
+
+        try { await self.registration.unregister(); } catch (e) { }
+
+        /* Send any window still showing the stale copy to the redirect page. */
+        try {
+            const windows = await self.clients.matchAll({ type: 'window' });
+            windows.forEach(c => { try { c.navigate(c.url); } catch (e) { } });
+        } catch (e) { }
+    })());
 });

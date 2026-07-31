@@ -1,112 +1,131 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="tactical">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>O.A.S.I.S. has moved · oasis.labidi.eu</title>
     <meta name="description"
-        content="O.A.S.I.S. — Offline Advanced System for Information and Survival. An air-gapped field reference: emergency medicine, water, shelter, navigation, radio communications, power and hazard response, with working calculators. Works with no internet, no server and no tracking.">
-    <meta name="theme-color" content="#080a09">
-    <meta name="color-scheme" content="dark light">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://rami.party/workshop/OASIS/">
-    <title>O.A.S.I.S. · Offline Advanced System for Information and Survival</title>
+        content="O.A.S.I.S. — the offline survival and field reference — now lives at oasis.labidi.eu.">
+    <meta name="theme-color" content="#0b0524">
+    <meta name="robots" content="noindex, follow">
 
     <!--
-      AIR-GAP POLICY
-      No fonts, no CDNs, no analytics, no frameworks. Every byte this page needs
-      is in this folder. If it loads for you once, it works forever, offline.
+      O.A.S.I.S. moved out of the workshop and onto its own domain.
+
+      This page keeps every old link working, including deep ones. The system
+      is a single page with hash routes, and a fragment is never sent to the
+      server — so the redirect is done in JavaScript, which CAN see it, and
+      the whole "#/c/medical/bleeding" part is carried across. The canonical
+      tag and the meta refresh cover crawlers and anyone with JavaScript off.
+
+      The old service worker here was cache-first, so returning visitors were
+      being served the old app out of their own storage and never reached this
+      page at all. sw.js in this folder is now a tombstone that clears those
+      caches and unregisters itself; the script below does the same from the
+      page side, for browsers that get here first.
     -->
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="canonical" href="https://oasis.labidi.eu/">
+    <meta http-equiv="refresh" content="0; url=https://oasis.labidi.eu/">
+    <script>
+        (function () {
+            'use strict';
+            var TARGET = 'https://oasis.labidi.eu/';
+
+            /* Tear down anything the old installation left behind, so a
+               returning visitor is not trapped on a cached copy. */
+            try {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function (rs) {
+                        rs.forEach(function (r) { r.unregister(); });
+                    }).catch(function () { });
+                }
+                if (window.caches && caches.keys) {
+                    caches.keys().then(function (keys) {
+                        keys.forEach(function (k) { caches.delete(k); });
+                    }).catch(function () { });
+                }
+            } catch (e) { /* nothing here is worth blocking the redirect for */ }
+
+            /* Carry the hash route across, so a bookmark to a specific card,
+               playbook or tool lands exactly where it did before. */
+            location.replace(TARGET + (location.hash || ''));
+        })();
+    </script>
+
+    <link rel="stylesheet" href="../../theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="icon"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='10' fill='%23080a09'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%2358f5a5' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23f5a524'/%3E%3Cpath d='M32 4v10M32 50v10M4 32h10M50 32h10' stroke='%2358f5a5' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .moved {
+            max-width: 62ch;
+        }
+
+        .moved h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 1.2rem + 2.4vw, 2.6rem);
+            background: var(--spell);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .moved p {
+            color: var(--text-muted);
+            margin-top: 14px;
+        }
+
+        .moved .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 26px;
+        }
+
+        .moved .small {
+            font-size: .88rem;
+            margin-top: 26px;
+            opacity: .85;
+        }
+    </style>
 </head>
 
 <body>
-    <a class="skip" href="#main">Skip to content</a>
-
-    <header class="hdr">
-        <div class="hdr-row">
-            <a class="brand" href="#/home" aria-label="O.A.S.I.S. home">
-                <span class="brand-mark" aria-hidden="true">
-                    <svg viewBox="0 0 64 64" width="30" height="30">
-                        <circle cx="32" cy="32" r="19" fill="none" stroke="currentColor" stroke-width="3" />
-                        <circle cx="32" cy="32" r="4" fill="currentColor" class="mark-dot" />
-                        <path d="M32 4v10M32 50v10M4 32h10M50 32h10" stroke="currentColor" stroke-width="3"
-                            stroke-linecap="round" />
-                    </svg>
-                </span>
-                <span class="brand-text">
-                    <b>O.A.S.I.S.</b>
-                    <small>Offline Advanced System for Information &amp; Survival</small>
-                </span>
-            </a>
-
-            <div class="hdr-search">
-                <label class="sr-only" for="q">Search everything</label>
-                <input id="q" type="search" autocomplete="off" spellcheck="false" enterkeyhint="search"
-                    placeholder="Search — bleeding, water, 121.5, tourniquet…  (press /)">
-                <kbd class="search-kbd" aria-hidden="true">/</kbd>
-            </div>
-
-            <div class="hdr-tools">
-                <label class="field compact">
-                    <span class="sr-only">Theme</span>
-                    <select id="themeSel" aria-label="Colour theme">
-                        <option value="tactical">Tactical</option>
-                        <option value="daylight">Daylight</option>
-                        <option value="military">Field</option>
-                        <option value="survival">Survival</option>
-                        <option value="nightvis">Night vision</option>
-                    </select>
-                </label>
-                <div class="type-scale" role="group" aria-label="Text size">
-                    <button type="button" id="fontDown" title="Smaller text">A<span>−</span></button>
-                    <button type="button" id="fontUp" title="Larger text">A<span>+</span></button>
-                </div>
-                <button type="button" id="wakeBtn" class="icon-btn" aria-pressed="false"
-                    title="Keep the screen awake">☀</button>
-            </div>
-        </div>
-
-        <div class="statusbar" id="statusbar">
-            <span class="chip" id="netChip" title="Connection state">◍ checking…</span>
-            <span class="chip" id="cacheChip" title="Offline package state">⛁ cache…</span>
-            <span class="chip" id="clockChip" title="Local time / UTC">⏱</span>
-            <span class="chip ghost" id="posChip" title="Last known position — click for actions"
-                role="button" tabindex="0">⌖ no fix</span>
-            <button type="button" class="chip act" id="fixBtn" title="Take a GPS fix and store it locally">Get
-                fix</button>
-            <button type="button" class="chip install" id="installBtn" hidden
-                title="Install O.A.S.I.S. as an app on this device">⤓ Install app</button>
-            <a class="chip ghost home-link" href="../../" title="Back to rami.party">↖ rami.party</a>
-        </div>
-    </header>
-
-    <div class="shell">
-        <nav class="rail" id="rail" aria-label="Sections"></nav>
-        <main id="main" tabindex="-1"></main>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
     </div>
 
-    <footer class="ftr">
-        <p><b>O.A.S.I.S.</b> is a reference, not a rescue service. Where emergency services exist,
-            call them first. Nothing here replaces hands-on training.</p>
-        <p class="muted">Something missing, wrong or hard to find? Tell us —
-            <a id="contactLink" href="mailto:oasis@labidi.eu">oasis@labidi.eu</a>.
-            The most useful thing you can send is the word you searched for that found nothing.</p>
-        <p class="muted">Static, air-gapped, no tracking, no network calls. <span id="verLine"></span></p>
-    </footer>
-
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-    <script src="geo.js"></script>
-    <script src="data-knowledge.js"></script>
-    <script src="data-scenarios.js"></script>
-    <script src="data-trees.js"></script>
-    <script src="data-reference.js"></script>
-    <script src="tools.js"></script>
-    <script src="app.js"></script>
+    <main class="moved">
+        <h1>O.A.S.I.S. has moved</h1>
+        <p>The Offline Advanced System for Information and Survival outgrew the workshop.
+            It now lives at its own address, with everything intact.</p>
+        <p>You should be sent there automatically, carrying whichever page you were
+            heading for.</p>
+        <div class="btn-row">
+            <a class="btn btn-primary" href="https://oasis.labidi.eu/">Go to oasis.labidi.eu</a>
+            <a class="btn btn-ghost" href="../">Back to the Workshop</a>
+        </div>
+        <p class="small">If you installed O.A.S.I.S. as an app from this address, install it
+            again from the new one — that copy is frozen and will not receive corrections.</p>
+    </main>
 </body>
 
 </html>

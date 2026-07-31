@@ -1,140 +1,128 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="aurora">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark light">
-    <meta name="description" content="A fast, private, fully-offline Markdown editor with live preview and ten themes. No CDNs, no tracking.">
-    <meta name="theme-color" id="meta-theme" content="#0d0726">
-    <title>Markdown Studio · Live Editor</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="manifest" href="manifest.webmanifest">
-    <link rel="icon" href="icon.svg">
-    <link rel="apple-touch-icon" href="icon.svg">
+    <title>Markdown Studio has moved · md.labidi.eu</title>
+    <meta name="description"
+        content="Markdown Studio — the fully offline Markdown editor — now lives at md.labidi.eu.">
+    <meta name="theme-color" content="#0d0726">
+    <meta name="robots" content="noindex, follow">
+
+    <!--
+      Markdown Scribe / Markdown Studio moved out of the workshop and onto its
+      own domain, where it also gained a Dutch and a French interface.
+
+      The old service worker in this folder was cache-first, so returning
+      visitors were being served the old app out of their own storage and never
+      reached this page at all. sw.js here is now a tombstone that clears those
+      caches and unregisters itself; the script below does the same from the
+      page side, for browsers that get here first.
+
+      Documents were stored in localStorage under this origin and cannot travel
+      with the app — hence the note at the bottom of the page.
+    -->
+    <link rel="canonical" href="https://md.labidi.eu/">
+    <meta http-equiv="refresh" content="0; url=https://md.labidi.eu/">
+    <script>
+        (function () {
+            'use strict';
+            var TARGET = 'https://md.labidi.eu/';
+
+            /* Tear down anything the old installation left behind, so a
+               returning visitor is not trapped on a cached copy. */
+            try {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function (rs) {
+                        rs.forEach(function (r) { r.unregister(); });
+                    }).catch(function () { });
+                }
+                if (window.caches && caches.keys) {
+                    caches.keys().then(function (keys) {
+                        keys.forEach(function (k) { caches.delete(k); });
+                    }).catch(function () { });
+                }
+            } catch (e) { /* nothing here is worth blocking the redirect for */ }
+
+            location.replace(TARGET + (location.hash || ''));
+        })();
+    </script>
+
+    <link rel="stylesheet" href="../../theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230d0726'/%3E%3Cg fill='none' stroke='%23a855f7' stroke-width='5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 45V19l8 12 8-12v26'/%3E%3Cpath d='M40 19v26M40 45l7-8M40 45l-7-8'/%3E%3C/g%3E%3C/svg%3E">
+
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .moved {
+            max-width: 62ch;
+        }
+
+        .moved h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 1.2rem + 2.4vw, 2.6rem);
+            background: var(--spell);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .moved p {
+            color: var(--text-muted);
+            margin-top: 14px;
+        }
+
+        .moved .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 26px;
+        }
+
+        .moved .small {
+            font-size: .88rem;
+            margin-top: 26px;
+            opacity: .85;
+        }
+    </style>
 </head>
+
 <body>
-    <div class="app-bg" aria-hidden="true">
-        <div class="blob b1"></div>
-        <div class="blob b2"></div>
-        <div class="blob b3"></div>
-        <div class="grid-overlay"></div>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
     </div>
 
-    <header class="topbar">
-        <div class="brand">
-            <span class="brand-mark" aria-hidden="true">✍︎</span>
-            <div class="brand-text">
-                <strong>Markdown&nbsp;Studio</strong>
-                <small>local · private · offline</small>
-            </div>
+    <main class="moved">
+        <h1>Markdown Studio has moved</h1>
+        <p>The offline Markdown editor outgrew the workshop. It now lives at its own
+            address — and speaks English, Nederlands and Français.</p>
+        <p>You should be sent there automatically.</p>
+        <div class="btn-row">
+            <a class="btn btn-primary" href="https://md.labidi.eu/">Go to md.labidi.eu</a>
+            <a class="btn btn-ghost" href="../">Back to the Workshop</a>
         </div>
-
-        <div class="toolbar" role="toolbar" aria-label="Formatting">
-            <button type="button" data-action="bold" title="Bold (Ctrl+B)" aria-label="Bold"><b>B</b></button>
-            <button type="button" data-action="italic" title="Italic (Ctrl+I)" aria-label="Italic"><i>I</i></button>
-            <button type="button" data-action="strike" title="Strikethrough" aria-label="Strikethrough"><s>S</s></button>
-            <span class="sep" aria-hidden="true"></span>
-            <button type="button" data-action="h1" title="Heading 1" aria-label="Heading 1">H1</button>
-            <button type="button" data-action="h2" title="Heading 2" aria-label="Heading 2">H2</button>
-            <button type="button" data-action="quote" title="Quote" aria-label="Quote">❝</button>
-            <button type="button" data-action="ul" title="Bullet list" aria-label="Bullet list">•</button>
-            <button type="button" data-action="ol" title="Numbered list" aria-label="Numbered list">1.</button>
-            <button type="button" data-action="task" title="Task list" aria-label="Task list">☑</button>
-            <span class="sep" aria-hidden="true"></span>
-            <button type="button" data-action="code" title="Inline code (Ctrl+`)" aria-label="Inline code">&lt;/&gt;</button>
-            <button type="button" data-action="codeblock" title="Code block" aria-label="Code block">▤</button>
-            <button type="button" data-action="link" title="Link (Ctrl+K)" aria-label="Link">🔗</button>
-            <button type="button" data-action="image" title="Image" aria-label="Image">🖼</button>
-            <button type="button" data-action="table" title="Table" aria-label="Table">▦</button>
-            <button type="button" data-action="hr" title="Divider" aria-label="Divider">―</button>
-        </div>
-
-        <div class="actions">
-            <button type="button" id="toc-btn" title="Table of contents" aria-label="Table of contents">📑</button>
-            <button type="button" id="lint-btn" title="Document hints" aria-label="Document hints">✔</button>
-            <label class="file-open" title="Open a .md file">
-                <input type="file" id="file-input" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
-                <span>📂 Open</span>
-            </label>
-            <div class="menu">
-                <button type="button" id="export-btn" title="Export" aria-haspopup="true" aria-expanded="false">⬇ Export</button>
-                <div class="menu-list" id="export-menu" role="menu" hidden>
-                    <button type="button" role="menuitem" data-export="md">Download .md</button>
-                    <button type="button" role="menuitem" data-export="html">Download .html</button>
-                    <button type="button" role="menuitem" data-export="copy-html">Copy HTML</button>
-                    <button type="button" role="menuitem" data-export="copy-md">Copy Markdown</button>
-                    <button type="button" role="menuitem" data-export="print">Print / PDF</button>
-                </div>
-            </div>
-            <div class="menu">
-                <button type="button" id="theme-btn" title="Theme" aria-haspopup="true" aria-expanded="false">🎨 <span id="theme-name">Aurora</span></button>
-                <div class="menu-list" id="theme-menu" role="menu" hidden></div>
-            </div>
-            <div class="menu">
-                <button type="button" id="view-btn" title="Settings" aria-haspopup="true" aria-expanded="false">⚙</button>
-                <div class="menu-list" id="view-menu" role="menu" hidden>
-                    <button type="button" role="menuitemcheckbox" id="vim-toggle"><span class="check">✓</span> Vim mode</button>
-                    <button type="button" role="menuitemcheckbox" id="hl-toggle"><span class="check">✓</span> Disable syntax highlight</button>
-                </div>
-            </div>
-            <button type="button" id="clear-btn" class="danger" title="Clear document">🗑</button>
-        </div>
-    </header>
-
-    <div class="tabbar" id="tabbar" role="tablist" aria-label="Open documents">
-        <button type="button" id="new-tab" title="New document" aria-label="New document">＋</button>
-    </div>
-
-    <div class="find-bar" id="find-bar" role="search" hidden>
-        <span class="find-ico" aria-hidden="true">🔍</span>
-        <input type="text" id="find-input" placeholder="Find" aria-label="Find" autocomplete="off">
-        <span class="find-count" id="find-count"></span>
-        <button type="button" id="find-prev" title="Previous">▲</button>
-        <button type="button" id="find-next" title="Next">▼</button>
-        <span class="sep" aria-hidden="true"></span>
-        <input type="text" id="replace-input" placeholder="Replace" aria-label="Replace" autocomplete="off">
-        <button type="button" id="find-replace-one" title="Replace">Replace</button>
-        <button type="button" id="find-replace-all" title="Replace all">All</button>
-        <button type="button" id="find-close" class="find-close" title="Close">✕</button>
-    </div>
-
-    <main class="workspace" id="workspace">
-        <section class="pane editor-pane" aria-label="Markdown editor">
-            <textarea id="markdown-input" spellcheck="true" autocomplete="off"
-                autocapitalize="off" placeholder="# Start writing…&#10;&#10;Type Markdown on the left, watch it come alive on the right. Press / for commands."></textarea>
-        </section>
-        <div class="divider" id="divider" role="separator" aria-orientation="vertical" aria-label="Resize panes"></div>
-        <section class="pane preview-pane" aria-label="Preview">
-            <article id="preview-output" class="markdown-body"></article>
-        </section>
-
-        <aside class="drawer" id="toc-drawer" aria-label="Table of contents" hidden>
-            <header class="drawer-head"><strong>📑 Contents</strong><button type="button" class="drawer-close" aria-label="Close">✕</button></header>
-            <nav class="drawer-body" id="toc-list"></nav>
-        </aside>
-        <aside class="drawer" id="lint-drawer" aria-label="Document hints" hidden>
-            <header class="drawer-head"><strong>✔ Hints</strong><button type="button" class="drawer-close" aria-label="Close">✕</button></header>
-            <div class="drawer-body" id="lint-list"></div>
-        </aside>
+        <p class="small">Documents were saved in this browser, under this address. If you
+            still have work here, open the old editor once from your history, export it as
+            <code>.md</code>, and open that file at the new address. Installed the app from
+            here? Install it again from the new address — this copy is frozen.</p>
     </main>
-
-    <div class="slash-menu" id="slash-menu" role="menu" hidden></div>
-
-    <footer class="statusbar">
-        <div class="stats">
-            <span id="stat-words">0 words</span>
-            <span id="stat-chars">0 characters</span>
-            <span id="stat-lines">0 lines</span>
-            <span id="stat-read">0 min read</span>
-            <button type="button" id="lint-count" class="lint-count" title="Show hints">No issues</button>
-        </div>
-        <div class="status-right">
-            <span id="vim-badge" class="vim-badge normal" hidden>-- NORMAL --</span>
-            <span id="save-state" class="save-state">Saved</span>
-            <button type="button" id="toggle-preview" title="Toggle preview">👁 Preview</button>
-        </div>
-    </footer>
-
-    <script src="script.js"></script>
 </body>
+
 </html>

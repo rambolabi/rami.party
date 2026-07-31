@@ -473,22 +473,24 @@ alignment · encounter builder with CR/XP budget · weather intensity + wind dir
 
 ---
 
-## 7. Markdown Scribe — `workshop/md/`
+## 7. Markdown Scribe — moved to `md.labidi.eu`
 
+> 🚚 **Moved 2026-07-30.** Markdown Studio outgrew the workshop and now lives at
+> **<https://md.labidi.eu/>**, with an English, Dutch and French interface. `workshop/md/`
+> is a tombstone: a redirect page plus a service worker that clears the old cache-first
+> installation, exactly like `workshop/OASIS/`. The registry entry is now `external: true`
+> and the sitemap URL is gone.
+>
 > ✅ **Registry drift fixed 2026-07-27.** The `projects.js` entry claimed it was "powered by
 > showdown" long after that CDN dependency was replaced by a hand-written parser. The
 > description and hidden `search` string now say "fully offline and dependency free" and list
 > the real feature set (themes, TOC, slash commands, find & replace, tabs, lint, diagrams, vim,
 > PWA).
 
-- [ ] **Language-specific highlighting grammars** (one generic tokenizer today).
-- [ ] **More diagram types** — sequence, pie, gantt (only `graph TD/LR` renders).
-- [ ] **Slash-command menu** positioned with real caret metrics on wrapped lines.
-- [ ] **Cloud-free sync** between devices via export/import bundles.
-- [ ] **Configurable Vim leader mappings** and `.` repeat.
-- [ ] **Emacs keybinding mode**.
-- [ ] **Outline-based drag-to-reorder** sections.
-- [ ] **Word-count goals** and focus/typewriter mode.
+- [x] ~~Move it out of the workshop and give it its own domain.~~
+- Remaining work now lives in that repository's own `todo.md` — language-specific
+  highlighting grammars, more diagram types, caret-accurate slash menu, export/import
+  bundles, Vim leader mappings, an Emacs mode, drag-to-reorder and word-count goals.
 
 ---
 
@@ -533,7 +535,11 @@ The page referenced `./media/*.jpg` fifteen times with **no `media/` folder at a
 
 ---
 
-## 10. The People Library — `workshop/personality-library/` + 15 book workshops
+## 10. The People Library — **moved to `library.labidi.eu`**
+
+> Migrated out of this repo on 2026-07-30 to its own domain and repo
+> (`Compyra/library.labidi.eu`). `workshop/personality-library/` is now only a
+> redirect stub. The remaining items below moved with it — track them there.
 
 All 15 workshops are **delivered** (shared `index.html`/`style.css`/`app.js` engine + per-book
 `data.js`). Remaining work is wiring and consistency:
