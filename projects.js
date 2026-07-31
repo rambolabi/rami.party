@@ -180,6 +180,17 @@ window.RAMI_REALMS = [
    ========================================================================== */
 window.RAMI_WORKSHOP = [
     {
+        title: 'LaTeX Doctor',
+        href: './latex-doctor/',
+        glyph: '🩺',
+        tagline: 'Diagnose broken LaTeX',
+        description: 'Paste your LaTeX source and get an instant diagnosis — unbalanced braces, broken environments, stray math mode and other common mistakes, explained line by line.',
+        search: 'A LaTeX syntax checker, linter and troubleshooter that runs entirely in the browser. Paste .tex code and find unbalanced or unmatched braces, mismatched or unclosed begin and end environments, unclosed inline or display math mode ($, $$, \\[ \\], \\( \\)), missing documentclass or begin end document, unescaped special characters like %, &, # and underscore, missing usepackage requirements for commands such as includegraphics or textcolor, and common command typos. No server, nothing uploaded, everything checked locally with plain HTML CSS and JavaScript.',
+        tags: ['tool', 'latex'],
+        aura: 'gold',
+        status: 'live',
+    },
+    {
         title: 'Lore Gallery',
         href: '../gallery/lore/',
         glyph: '📜',

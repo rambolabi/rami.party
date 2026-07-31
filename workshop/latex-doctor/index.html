@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LaTeX Doctor // Syntax Troubleshooter</title>
+    <meta name="description" content="Paste your LaTeX and get an instant diagnosis — unbalanced braces, broken environments, stray math mode and other common mistakes, explained.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A9%BA%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div>
+                <p class="eyebrow">⚗️ Workshop experiment</p>
+                <h1>LaTeX Doctor</h1>
+                <p class="sub">Paste your <code>.tex</code> source below. The Doctor reads through it and tells
+                    you exactly which syntax errors, mistakes or bad habits are hiding inside — with a line
+                    number and a plain-English explanation for each one.</p>
+            </div>
+            <a href="../" class="back-link">← Back to the Workshop</a>
+        </header>
+
+        <main class="layout">
+            <section class="editor-pane" aria-labelledby="input-title">
+                <div class="pane-head">
+                    <h2 id="input-title">Your LaTeX</h2>
+                    <div class="pane-actions">
+                        <button id="sampleBtn" class="btn btn-ghost" type="button">Load broken sample</button>
+                        <button id="clearBtn" class="btn btn-ghost" type="button">Clear</button>
+                        <button id="checkBtn" class="btn btn-primary" type="button">Diagnose</button>
+                    </div>
+                </div>
+                <textarea id="texInput" class="tex-input" spellcheck="false" autocapitalize="off"
+                    autocomplete="off" placeholder="\documentclass{article}&#10;\begin{document}&#10;Hello world!&#10;\end{document}"></textarea>
+                <p class="hint">Nothing leaves your browser — everything is checked locally, right here.</p>
+            </section>
+
+            <section class="results-pane" aria-labelledby="results-title">
+                <div class="pane-head">
+                    <h2 id="results-title">Diagnosis</h2>
+                    <span id="statusChip" class="status-chip status-idle">Waiting for input</span>
+                </div>
+                <div id="results" class="results">
+                    <p class="placeholder">Paste some LaTeX and hit <strong>Diagnose</strong> to see what's wrong
+                        with it (if anything).</p>
+                </div>
+            </section>
+        </main>
+
+        <section class="checks-list" aria-labelledby="checks-title">
+            <h2 id="checks-title">What the Doctor checks for</h2>
+            <ul>
+                <li><strong>Unbalanced braces</strong> — every <code>{</code> needs a matching <code>}</code>.</li>
+                <li><strong>Broken environments</strong> — every <code>\begin{...}</code> needs a matching
+                    <code>\end{...}</code> with the same name, in the right order.</li>
+                <li><strong>Math mode mishaps</strong> — unclosed <code>$...$</code>, <code>$$...$$</code> or
+                    <code>\[...\]</code>.</li>
+                <li><strong>Missing document scaffolding</strong> — no <code>\documentclass</code> or no
+                    <code>\begin{document}</code> / <code>\end{document}</code>.</li>
+                <li><strong>Unescaped special characters</strong> — a lone <code>%</code>, <code>&amp;</code>,
+                    <code>#</code>, <code>_</code> or <code>$</code> that LaTeX will choke on outside a table or
+                    math mode.</li>
+                <li><strong>Missing packages</strong> — commands like <code>\includegraphics</code> or
+                    <code>\textcolor</code> used without their <code>\usepackage</code>.</li>
+                <li><strong>Typos in common commands</strong> — near-miss spellings such as
+                    <code>\beign</code> or <code>\emph{</code> left unclosed.</li>
+            </ul>
+        </section>
+
+        <footer class="app-footer">
+            <p>A little spell from the <a href="../">rami.party workshop</a> — built with plain HTML, CSS and
+                JavaScript, no server, no tracking.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
