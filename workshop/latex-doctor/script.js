@@ -98,6 +98,44 @@
                 continue;
             }
 
+            // \[, \], \( and \) are structural math-mode delimiters, so they
+            // must be checked *before* the generic backslash-escape handling
+            // below (otherwise that branch would swallow them as if they were
+            // an escaped character and this code would never run).
+            if (text.substr(i, 2) === '\\[') {
+                mathStack.push({ type: '\\[', index: i });
+                i += 2;
+                continue;
+            }
+
+            if (text.substr(i, 2) === '\\]') {
+                var topDisplay = mathStack[mathStack.length - 1];
+                if (topDisplay && topDisplay.type === '\\[') {
+                    mathStack.pop();
+                } else {
+                    addIssue(i, 'error', 'Found <code>\\]</code> with no matching <code>\\[</code> before it.');
+                }
+                i += 2;
+                continue;
+            }
+
+            if (text.substr(i, 2) === '\\(') {
+                mathStack.push({ type: '\\(', index: i });
+                i += 2;
+                continue;
+            }
+
+            if (text.substr(i, 2) === '\\)') {
+                var topInline = mathStack[mathStack.length - 1];
+                if (topInline && topInline.type === '\\(') {
+                    mathStack.pop();
+                } else {
+                    addIssue(i, 'error', 'Found <code>\\)</code> with no matching <code>\\(</code> before it.');
+                }
+                i += 2;
+                continue;
+            }
+
             if (ch === '\\') {
                 // Escaped character (\%, \&, \#, \_, \$, \{, \}) or a command name.
                 // Either way, skip the next character so it isn't misread as
@@ -141,40 +179,6 @@
                 continue;
             }
 
-            if (text.substr(i, 2) === '\\[') {
-                mathStack.push({ type: '\\[', index: i });
-                i += 2;
-                continue;
-            }
-
-            if (text.substr(i, 2) === '\\]') {
-                var topDisplay = mathStack[mathStack.length - 1];
-                if (topDisplay && topDisplay.type === '\\[') {
-                    mathStack.pop();
-                } else {
-                    addIssue(i, 'error', 'Found <code>\\]</code> with no matching <code>\\[</code> before it.');
-                }
-                i += 2;
-                continue;
-            }
-
-            if (text.substr(i, 2) === '\\(') {
-                mathStack.push({ type: '\\(', index: i });
-                i += 2;
-                continue;
-            }
-
-            if (text.substr(i, 2) === '\\)') {
-                var topInline = mathStack[mathStack.length - 1];
-                if (topInline && topInline.type === '\\(') {
-                    mathStack.pop();
-                } else {
-                    addIssue(i, 'error', 'Found <code>\\)</code> with no matching <code>\\(</code> before it.');
-                }
-                i += 2;
-                continue;
-            }
-
             i++;
         }
 
@@ -188,6 +192,10 @@
 
         // --- Pass 2: \begin{}/\end{} environment matching ---
         var envStack = [];
+        var tabularRanges = []; // [start, end] index ranges where & is expected syntax
+        var TABULAR_ENVS = ['tabular', 'tabular*', 'tabularx', 'array', 'align', 'align*',
+            'alignat', 'alignat*', 'eqnarray', 'eqnarray*', 'matrix', 'pmatrix', 'bmatrix',
+            'vmatrix', 'Vmatrix', 'smallmatrix', 'cases', 'longtable', 'aligned'];
         var envRegex = /\\(begin|end)\{([^{}]*)\}/g;
         var match;
         while ((match = envRegex.exec(text)) !== null) {
@@ -208,6 +216,9 @@
                     var last = envStack[envStack.length - 1];
                     if (last.name === name) {
                         envStack.pop();
+                        if (TABULAR_ENVS.indexOf(name) !== -1) {
+                            tabularRanges.push([last.index, match.index + match[0].length]);
+                        }
                     } else {
                         // Try to find a deeper match to give a friendlier message.
                         var foundIdx = -1;
@@ -231,18 +242,26 @@
         });
 
         // --- Pass 3: document scaffolding ---
+        // Missing/mismatched \begin{document}/\end{document} pairs are already
+        // reported by the generic environment matching above (Pass 2), since
+        // "document" is itself just an environment. Only the documentclass
+        // check is specific to this pass.
         var hasDocumentClass = /\\documentclass(\[[^\]]*\])?\{[^{}]*\}/.test(text);
         var hasBeginDocument = /\\begin\{document\}/.test(text);
-        var hasEndDocument = /\\end\{document\}/.test(text);
 
         if (hasBeginDocument && !hasDocumentClass) {
             addIssue(text.indexOf('\\begin{document}'), 'warning', 'No <code>\\documentclass{...}</code> found before <code>\\begin{document}</code>. Every compilable document needs one.');
         }
-        if (hasBeginDocument && !hasEndDocument) {
-            addIssue(text.indexOf('\\begin{document}'), 'error', '<code>\\begin{document}</code> is never matched by an <code>\\end{document}</code>.');
-        }
-        if (!hasBeginDocument && hasEndDocument) {
-            addIssue(text.indexOf('\\end{document}'), 'error', '<code>\\end{document}</code> found without a matching <code>\\begin{document}</code>.');
+
+        // --- Pass 3b: locate "safe" argument ranges where _ and # are normal
+        // text (file paths, labels, references, URLs) rather than mistakes. ---
+        var safeArgRanges = findSafeArgumentRanges(text);
+
+        function isInsideRange(ranges, index) {
+            for (var r = 0; r < ranges.length; r++) {
+                if (index >= ranges[r][0] && index < ranges[r][1]) return true;
+            }
+            return false;
         }
 
         // --- Pass 4: unescaped special characters ---
@@ -252,6 +271,7 @@
             var line = rawLine;
             var commentSplit = splitAtUnescapedComment(line);
             var code = commentSplit.code;
+            var lineOffset = textOffsetForLine(text, lineIdx);
 
             // Count math delimiters on the line to approximate whether we are
             // "inside" math mode for the underscore/caret check. This is a
@@ -263,9 +283,12 @@
                 var specialCharRegex = /(^|[^\\])([&_#])/g;
                 var m;
                 while ((m = specialCharRegex.exec(code)) !== null) {
-                    var offset = text.indexOf(rawLine, textOffsetForLine(text, lineIdx));
-                    var globalIndex = offset >= 0 ? offset + m.index + m[1].length : 0;
+                    var globalIndex = lineOffset + m.index + m[1].length;
                     var symbol = m[2];
+
+                    if (symbol === '&' && isInsideRange(tabularRanges, globalIndex)) continue;
+                    if ((symbol === '_' || symbol === '#') && isInsideRange(safeArgRanges, globalIndex)) continue;
+
                     var advice = symbol === '&'
                         ? 'A lone <code>&amp;</code> is only valid inside alignment environments like <code>tabular</code> or <code>align</code>. Escape it as <code>\\&amp;</code> otherwise.'
                         : symbol === '_'
