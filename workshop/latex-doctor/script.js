@@ -58,12 +58,26 @@
         { pattern: /\\checkmark\b/, command: '\\checkmark', package: 'amssymb' }
     ];
 
-    function lineAt(text, index) {
-        var line = 1;
-        for (var i = 0; i < index && i < text.length; i++) {
-            if (text[i] === '\n') line++;
+    /**
+     * Builds a sorted array of character offsets where each line begins, so
+     * that a character index can be mapped to a line number in O(log n)
+     * instead of rescanning the whole text for every issue found.
+     */
+    function computeLineStarts(text) {
+        var starts = [0];
+        for (var i = 0; i < text.length; i++) {
+            if (text[i] === '\n') starts.push(i + 1);
         }
-        return line;
+        return starts;
+    }
+
+    function lineAt(lineStarts, index) {
+        var lo = 0, hi = lineStarts.length - 1;
+        while (lo < hi) {
+            var mid = (lo + hi + 1) >> 1;
+            if (lineStarts[mid] <= index) lo = mid; else hi = mid - 1;
+        }
+        return lo + 1;
     }
 
     /**
@@ -72,14 +86,16 @@
      */
     function analyze(text) {
         var issues = [];
+        var lineStarts = computeLineStarts(text);
 
         function addIssue(index, severity, message) {
-            issues.push({ line: lineAt(text, index), severity: severity, message: message });
+            issues.push({ line: lineAt(lineStarts, index), severity: severity, message: message });
         }
 
         // --- Pass 1: character-level scan (comments, escaping, braces, math) ---
         var braceStack = [];
         var mathStack = []; // entries: { type: '$' | '$$' | '\\[' | '\\(', index }
+        var mathRanges = []; // [start, end] index ranges of *closed* math spans
         var inComment = false;
         var i = 0;
         var len = text.length;
@@ -112,6 +128,7 @@
                 var topDisplay = mathStack[mathStack.length - 1];
                 if (topDisplay && topDisplay.type === '\\[') {
                     mathStack.pop();
+                    mathRanges.push([topDisplay.index, i + 2]);
                 } else {
                     addIssue(i, 'error', 'Found <code>\\]</code> with no matching <code>\\[</code> before it.');
                 }
@@ -129,6 +146,7 @@
                 var topInline = mathStack[mathStack.length - 1];
                 if (topInline && topInline.type === '\\(') {
                     mathStack.pop();
+                    mathRanges.push([topInline.index, i + 2]);
                 } else {
                     addIssue(i, 'error', 'Found <code>\\)</code> with no matching <code>\\(</code> before it.');
                 }
@@ -172,6 +190,7 @@
                 var top = mathStack[mathStack.length - 1];
                 if (top && top.type === token) {
                     mathStack.pop();
+                    mathRanges.push([top.index, i + token.length]);
                 } else {
                     mathStack.push({ type: token, index: i });
                 }
@@ -266,36 +285,27 @@
 
         // --- Pass 4: unescaped special characters ---
         var lines = text.split('\n');
-        var mathModeOpenOnLine = false;
         lines.forEach(function (rawLine, lineIdx) {
-            var line = rawLine;
-            var commentSplit = splitAtUnescapedComment(line);
+            var commentSplit = splitAtUnescapedComment(rawLine);
             var code = commentSplit.code;
-            var lineOffset = textOffsetForLine(text, lineIdx);
+            var lineOffset = lineStarts[lineIdx];
 
-            // Count math delimiters on the line to approximate whether we are
-            // "inside" math mode for the underscore/caret check. This is a
-            // heuristic, not a full parser, so it only flags the clearest cases.
-            var dollarCount = (code.match(/(?:^|[^\\])\$/g) || []).length;
-            if (dollarCount % 2 === 1) mathModeOpenOnLine = !mathModeOpenOnLine;
+            var specialCharRegex = /(^|[^\\])([&_#])/g;
+            var m;
+            while ((m = specialCharRegex.exec(code)) !== null) {
+                var globalIndex = lineOffset + m.index + m[1].length;
+                var symbol = m[2];
 
-            if (!mathModeOpenOnLine) {
-                var specialCharRegex = /(^|[^\\])([&_#])/g;
-                var m;
-                while ((m = specialCharRegex.exec(code)) !== null) {
-                    var globalIndex = lineOffset + m.index + m[1].length;
-                    var symbol = m[2];
+                if (isInsideRange(mathRanges, globalIndex)) continue;
+                if (symbol === '&' && isInsideRange(tabularRanges, globalIndex)) continue;
+                if ((symbol === '_' || symbol === '#') && isInsideRange(safeArgRanges, globalIndex)) continue;
 
-                    if (symbol === '&' && isInsideRange(tabularRanges, globalIndex)) continue;
-                    if ((symbol === '_' || symbol === '#') && isInsideRange(safeArgRanges, globalIndex)) continue;
-
-                    var advice = symbol === '&'
-                        ? 'A lone <code>&amp;</code> is only valid inside alignment environments like <code>tabular</code> or <code>align</code>. Escape it as <code>\\&amp;</code> otherwise.'
-                        : symbol === '_'
-                            ? 'A lone <code>_</code> outside math mode will raise "Missing $ inserted". Escape it as <code>\\_</code> or wrap in <code>$...$</code>.'
-                            : 'A lone <code>#</code> outside a macro definition must be escaped as <code>\\#</code>.';
-                    addIssue(globalIndex, 'warning', advice);
-                }
+                var advice = symbol === '&'
+                    ? 'A lone <code>&amp;</code> is only valid inside alignment environments like <code>tabular</code> or <code>align</code>. Escape it as <code>\\&amp;</code> otherwise.'
+                    : symbol === '_'
+                        ? 'A lone <code>_</code> outside math mode will raise "Missing $ inserted". Escape it as <code>\\_</code> or wrap in <code>$...$</code>.'
+                        : 'A lone <code>#</code> outside a macro definition must be escaped as <code>\\#</code>.';
+                addIssue(globalIndex, 'warning', advice);
             }
         });
 
@@ -326,11 +336,32 @@
         return issues;
     }
 
-    function textOffsetForLine(text, lineIdx) {
-        var lines = text.split('\n');
-        var offset = 0;
-        for (var i = 0; i < lineIdx; i++) offset += lines[i].length + 1;
-        return offset;
+    /**
+     * Finds index ranges of brace-delimited arguments to commands where a
+     * literal underscore or hash is normal (file paths, labels, references,
+     * URLs) rather than a likely mistake, so Pass 4 can skip warning there.
+     */
+    function findSafeArgumentRanges(text) {
+        var SAFE_COMMANDS = ['label', 'ref', 'pageref', 'eqref', 'cite', 'citep', 'citet',
+            'nocite', 'includegraphics', 'url', 'href', 'input', 'include',
+            'bibliography', 'texttt', 'path', 'verb', 'lstinline', 'footnote', 'caption'];
+        var ranges = [];
+        var cmdRegex = new RegExp('\\\\(' + SAFE_COMMANDS.join('|') + ')\\*?(\\[[^\\]]*\\])?\\{', 'g');
+        var m;
+        while ((m = cmdRegex.exec(text)) !== null) {
+            var openIdx = m.index + m[0].length - 1; // index of the opening '{'
+            var depth = 1;
+            var j = openIdx + 1;
+            while (j < text.length && depth > 0) {
+                if (text[j] === '\\') { j += 2; continue; }
+                if (text[j] === '{') depth++;
+                else if (text[j] === '}') depth--;
+                j++;
+            }
+            ranges.push([openIdx + 1, j - 1]);
+            cmdRegex.lastIndex = j;
+        }
+        return ranges;
     }
 
     function splitAtUnescapedComment(line) {

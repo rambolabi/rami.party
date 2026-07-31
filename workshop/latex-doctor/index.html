@@ -33,15 +33,17 @@
                 </div>
                 <textarea id="texInput" class="tex-input" spellcheck="false" autocapitalize="off"
                     autocomplete="off" placeholder="\documentclass{article}&#10;\begin{document}&#10;Hello world!&#10;\end{document}"></textarea>
-                <p class="hint">Nothing leaves your browser — everything is checked locally, right here.</p>
+                <p class="hint">Nothing leaves your browser — everything is checked locally, right here.
+                    Press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd> to diagnose without leaving the
+                    keyboard.</p>
             </section>
 
             <section class="results-pane" aria-labelledby="results-title">
                 <div class="pane-head">
                     <h2 id="results-title">Diagnosis</h2>
-                    <span id="statusChip" class="status-chip status-idle">Waiting for input</span>
+                    <span id="statusChip" class="status-chip status-idle" role="status">Waiting for input</span>
                 </div>
-                <div id="results" class="results">
+                <div id="results" class="results" aria-live="polite">
                     <p class="placeholder">Paste some LaTeX and hit <strong>Diagnose</strong> to see what's wrong
                         with it (if anything).</p>
                 </div>
