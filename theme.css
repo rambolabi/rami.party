@@ -12,6 +12,11 @@
     box-sizing: border-box;
 }
 
+/* The `hidden` attribute must always win over a component's own `display`. */
+[hidden] {
+    display: none !important;
+}
+
 :root {
     /* Enchanted palette */
     --night-0: #06030f;

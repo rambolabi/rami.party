@@ -2,6 +2,11 @@
    Echo — bat sound listener
    Dark, focused, spectrogram-first UI.
    ========================================================================== */
+/* The `hidden` attribute must always win over a component's own `display`. */
+[hidden] {
+    display: none !important;
+}
+
 
 :root {
     --bg: #07090f;

@@ -226,20 +226,29 @@ function startStarfield() {
         rafId = requestAnimationFrame(draw);
     }
 
-    let rafId;
-    resize();
-    window.addEventListener('resize', () => { cancelAnimationFrame(rafId); resize(); if (!reduceMotion) draw(); });
-
-    if (reduceMotion) {
-        // Draw a single static frame.
+    function drawStatic() {
+        ctx.clearRect(0, 0, w, h);
         for (const s of stars) {
-            ctx.globalAlpha = s.a;
+            ctx.globalAlpha = Math.max(0.1, Math.min(1, s.a));
             ctx.fillStyle = s.c;
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
             ctx.fill();
         }
         ctx.globalAlpha = 1;
+    }
+
+    let rafId;
+    resize();
+    window.addEventListener('resize', () => {
+        cancelAnimationFrame(rafId);
+        resize();
+        if (reduceMotion) drawStatic(); else draw();
+    });
+
+    if (reduceMotion) {
+        // Draw a single static frame.
+        drawStatic();
     } else {
         draw();
     }

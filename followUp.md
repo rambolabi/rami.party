@@ -10,14 +10,15 @@ in [`workshop/todo.md`](workshop/todo.md).
 /                     hub (index.html, theme.css, style.css, script.js, projects.js)
 favicon.svg · og-image.png · admin/ · 404.html · robots.txt · sitemap.xml
 gallery/              🏛️ The Gallery of Wonders
-  militaryalphabet/   🔤 Phonetic Codex
   lore/               📜 Lore Gallery
   prankscreens/       🖥️ Prank Screens
 workshop/             ⚗️ The Workshop — a data-driven catalogue of every WIP
-  3d-forge/ batlistener/ bbq/ blur/ character-forge/ clear/ dashboard_v1/
-  demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/ fill/ laser/
-  laser-forge/ laser-forge-v2/ mailheaders/ md/ news/ personality-library/ rami/
-  scoreboard/ subnets/ to-check/ todo/ tools/ trace-results/ webcheck/
+  3d-forge/ batlistener/ bbq/ blur/ breachlight/ character-forge/ clear/
+  dashboard_v1/ demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/
+  fill/ frostcaller/ laser/ laser-forge/ laser-forge-v2/ md/ news/ OASIS/
+  personality-library/ rami/ scoreboard/ subnets/ to-check/ todo/ tools/
+  towerwatch/ trainer-forge/ webcheck/
+  mail-ward/          🛡️ Mail Ward + analyzer/ (ex-mailheaders) + volume/ (ex-trace-results)
   personality-library/ + its 15 book workshops (DISC, Big Five, MBTI, Enneagram,
     Attachment, Love Languages, Temperaments, Conflict Styles, EQ, Liars,
     Vampires, Bad Bosses, Psychopaths, Narcissists, Setbacks)
@@ -34,7 +35,7 @@ in `wasteland/` as mementos, each reachable from its card.
 | Decision | Choice | Why |
 |---|---|---|
 | **Indexing** | **Publish.** `noindex` removed from real content pages; canonicals added. | `robots.txt` already invited crawlers and linked a sitemap — the signals contradicted each other. Reverse by putting `content="noindex, nofollow"` back. |
-| Still `noindex` | `404.html`, `admin/`, `dm-screen/player.html`, `dm-screen/characters.html`, `laser-forge-v2/`, `wasteland/bluetooth/` | Error page, private, companion screens, and two duplicate-content pages (v2 canonicals to v1, bluetooth canonicals to ghosttooth.labidi.eu). |
+| Still `noindex` | `404.html`, `admin/`, `dm-screen/player.html`, `dm-screen/characters.html`, `laser-forge-v2/`, `wasteland/bluetooth/`, `workshop/breachlight/` | Error page, private, companion screens, and two duplicate-content pages (v2 canonicals to v1, bluetooth canonicals to ghosttooth.labidi.eu). Breachlight is unfinished — see the open decisions below. |
 | **`D&D Forge` folder name** | Renamed to **`dnd-forge/`** via `git mv`. | A space and `&` in a path must be percent-encoded everywhere — a permanent source of broken links. |
 | **The 15 book workshops** | Surfaced as **one** catalogue entry, *The People Library*. | 15 near-identical cards would drown the Workshop; the library page is already a good hub. |
 | **BBQ Mailer** | Keep local, no backend needed. | It composes a `mailto:` link (`sendEmail()` in `script.js`) — it never needed `submit.php`. The old note was wrong. |
@@ -72,6 +73,11 @@ in `wasteland/` as mementos, each reachable from its card.
       them, or move them to `wasteland/`.
 - [ ] **Chart.js CDN in the DISC workshop** — every other realm is offline-first. Vendor it
       locally, or accept the exception.
+- [ ] **`workshop/breachlight/` is half-shipped.** `index.html` loads `data-plays.js`, `data-trees.js`,
+      `app.js` and `manifest.webmanifest`, none of which exist in the folder, so the page renders an
+      empty shell. It is noindexed and absent from `projects.js`/`sitemap.xml` until those files land.
+- [ ] **`gallery/militaryalphabet/` (Phonetic Codex) has no folder.** The hub card is now a
+      `status:'soon'` teaser and the sitemap entry was removed. Ship the page or drop the card.
 - [ ] **`wasteland/index.html` is hand-written** while everything else renders from
       `projects.js`. Make it data-driven too, or accept the divergence.
 
