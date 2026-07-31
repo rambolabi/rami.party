@@ -62,6 +62,11 @@ in `wasteland/` as mementos, each reachable from its card.
 
 ## ⚖️ Open decisions (need a human)
 
+- [ ] **`workshop/breachlight/` is incomplete — finish or remove?** `index.html` loads `app.js`,
+      `data-plays.js`, `data-trees.js` and `manifest.webmanifest`, none of which are in the
+      repository, so the page cannot run. It is deliberately absent from `projects.js` and
+      `sitemap.xml`, but it still declares `robots: index, follow` and a canonical URL — so a
+      crawler that finds it would index a broken page. Add the missing files, or noindex/remove it.
 - [ ] **`wasteland/bluetooth/` — keep or delete?** It duplicates `ghosttooth.labidi.eu`. It is now
       noindexed and canonicalised to the live site, so keeping it is harmless. Delete if you'd
       rather not maintain two copies.
