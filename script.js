@@ -98,7 +98,9 @@ function buildSearchIndex() {
         const tags = (item.tags || []).join(' ');
         const haystack = [item.title, item.tagline, item.description, item.search, tags, meta.label, statusKey]
             .filter(Boolean).join(' ').toLowerCase();
-        entries.push({ item, meta, url, external: !!external, haystack });
+        const name = String(item.title).toLowerCase();
+        const near = [item.tagline, item.description, tags].filter(Boolean).join(' ').toLowerCase();
+        entries.push({ item, meta, url, external: !!external, haystack, name, near });
     };
 
     (window.RAMI_REALMS || []).forEach(r => {
@@ -145,6 +147,17 @@ function resultCardMarkup(e) {
 }
 
 let SEARCH_INDEX = null;
+
+/* Rank a match so a name hit always beats a mention buried in a description. */
+function scoreEntry(entry, tokens) {
+    return tokens.reduce((score, t) => {
+        if (entry.name.startsWith(t)) return score + 100;
+        if (entry.name.includes(t)) return score + 60;
+        if (entry.near.includes(t)) return score + 20;
+        return score + 1;
+    }, 0);
+}
+
 function setupSearch() {
     const input = document.getElementById('realmSearch');
     const results = document.getElementById('realmResults');
@@ -164,7 +177,11 @@ function setupSearch() {
             return;
         }
         const tokens = q.split(/\s+/);
-        const matches = SEARCH_INDEX.filter(e => tokens.every(t => e.haystack.includes(t)));
+        const matches = SEARCH_INDEX
+            .filter(e => tokens.every(t => e.haystack.includes(t)))
+            .map((e, i) => ({ e, i, score: scoreEntry(e, tokens) }))
+            .sort((a, b) => b.score - a.score || a.i - b.i)
+            .map(m => m.e);
         groups.hidden = true;
         results.hidden = false;
         if (!matches.length) {
@@ -256,10 +273,12 @@ function setupMobileNav() {
     overlay.setAttribute('aria-label', 'Mobile');
     overlay.innerHTML = `
         <button class="close-btn" aria-label="Close menu">&times;</button>
+        <a href="#how">How it works</a>
         <a href="#realms">Realms</a>
+        <a href="./workshop/">Workshop</a>
         <a href="./gallery/lore/">Lore</a>
         <a href="./gallery/prankscreens/">Prank Screens</a>
-        <a href="./wasteland/">The Wastelands</a>
+        <a href="./wasteland/">Wastelands</a>
     `;
     document.body.appendChild(overlay);
     const closeBtn = overlay.querySelector('.close-btn');

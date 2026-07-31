@@ -29,6 +29,17 @@ in `wasteland/` as mementos, each reachable from its card.
 
 ---
 
+## ✅ Decisions taken (2026-07-31)
+
+| Decision | Choice | Why |
+|---|---|---|
+| **Hub explainer** | Added a **“How this playground works”** section (`#how`) to `index.html`, linked from the nav, the mobile menu and the hero scroll cue. | Nothing on the hub explained the three realms, the cross-realm search or what the status badges and ↗/🔒 markers mean. |
+| **`Phonetic Codex` card** | **Removed** from `projects.js` and `sitemap.xml`. | `gallery/militaryalphabet/` does not exist in the repo, so the card and the sitemap entry both led to a 404. Re-add the card if the folder comes back. |
+| **`Mail Headers` / `Volume Seer`** | Re-pointed to `workshop/mail-ward/analyzer/` and `workshop/mail-ward/volume/` (also fixed the four `../mailheaders/` links inside `mail-ward/index.html` and the sitemap). | Both folders were merged into Mail Ward; every link to the old paths 404'd. |
+| **Search ranking** | Results are now scored — a hit in the project name outranks a hit buried in the hidden `search` blurb. | Searching “mail” put O.A.S.I.S. (whose keyword blurb mentions email) above Mail Ward. |
+
+---
+
 ## ✅ Decisions taken (2026-07-27)
 
 | Decision | Choice | Why |
@@ -60,6 +71,9 @@ in `wasteland/` as mementos, each reachable from its card.
 
 ## ⚖️ Open decisions (need a human)
 
+- [ ] **`workshop/breachlight/`** — its `index.html` loads `app.js`, `data-plays.js`, `data-trees.js`
+      and `manifest.webmanifest`, none of which are in the repo, so the page is broken. It is not
+      listed in `projects.js`, so nothing links to it: restore the missing files or delete the folder.
 - [ ] **`wasteland/bluetooth/` — keep or delete?** It duplicates `ghosttooth.labidi.eu`. It is now
       noindexed and canonicalised to the live site, so keeping it is harmless. Delete if you'd
       rather not maintain two copies.

@@ -6,9 +6,10 @@ Magical on the outside, tidy and maintainable on the inside.
 ## 🗺️ Structure
 
 ```
-/                     Enchanted hub (index.html, script.js)
+/                     Enchanted hub (index.html, script.js) — hero, the “How this
+                      playground works” explainer, cross-realm search & realm groups
 theme.css             Shared palette, tokens, backdrop & chrome (imported everywhere)
-style.css             Hub-only styles (hero + realm groups)
+style.css             Hub-only styles (hero + explainer + realm groups)
 projects.js           Realm registry — groups + portals, the single source of truth
 favicon.svg           Sparkle icon (also used by the manifest)
 og-image.png          1200×630 social share banner

@@ -89,6 +89,89 @@
     animation: scrollCue 1.8s ease-in-out infinite;
 }
 
+/* How it works ------------------------------------------------------------- */
+.how {
+    padding: 20px 0 40px;
+}
+
+.how-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+    gap: 22px;
+}
+
+.how-card {
+    padding: 24px 24px 22px;
+    border-radius: var(--radius);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--shadow);
+}
+
+.how-icon {
+    display: block;
+    font-size: 1.8rem;
+    line-height: 1;
+    margin-bottom: 12px;
+}
+
+.how-card h3 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    margin-bottom: 8px;
+}
+
+.how-card p {
+    color: var(--text-muted);
+    font-size: 0.96rem;
+}
+
+.how-card strong {
+    color: var(--text);
+    font-weight: 700;
+}
+
+.how-card kbd {
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 6px;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.how-legend {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.how-legend li {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    line-height: 1.4;
+}
+
+.how-legend .status-badge {
+    position: static;
+    flex: none;
+}
+
+.how-legend .legend-mark {
+    flex: none;
+    min-width: 62px;
+    text-align: center;
+    color: var(--card-ink, var(--cyan));
+    font-weight: 700;
+}
+
 /* Realms ------------------------------------------------------------------- */
 .realms {
     padding: 30px 0 70px;
@@ -213,6 +296,9 @@
 }
 
 .realm-search-clear:hover { background: rgba(236, 72, 153, 0.35); }
+
+/* `hidden` must win over the layout `display` above. */
+.realm-search-clear[hidden] { display: none; }
 
 .realm-results { margin-top: 4px; }
 

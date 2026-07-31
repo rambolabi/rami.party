@@ -62,10 +62,12 @@
 
             <nav class="main-nav" aria-label="Primary">
                 <ul>
+                    <li><a href="#how">How it works</a></li>
                     <li><a href="#realms">Realms</a></li>
+                    <li><a href="./workshop/">Workshop</a></li>
                     <li><a href="./gallery/lore/">Lore</a></li>
                     <li><a href="./gallery/prankscreens/">Prank Screens</a></li>
-                    <li><a href="./wasteland/">The Wastelands</a></li>
+                    <li><a href="./wasteland/">Wastelands</a></li>
                 </ul>
             </nav>
 
@@ -90,7 +92,74 @@
                     <a href="./wasteland/" class="btn btn-ghost">Visit the Wastelands</a>
                 </div>
             </div>
-            <a href="#realms" class="scroll-cue" aria-label="Scroll to the realms"><span></span></a>
+            <a href="#how" class="scroll-cue" aria-label="Scroll to how this place works"><span></span></a>
+        </section>
+
+        <section id="how" class="how" aria-labelledby="how-title">
+            <div class="container">
+                <div class="section-head">
+                    <h2 id="how-title" class="section-title">How this playground works</h2>
+                    <p class="section-sub">Everything here is a small, self-contained website. Here's what
+                        you'll find and how to find it.</p>
+                </div>
+
+                <ul class="how-grid" role="list">
+                    <li class="how-card reveal">
+                        <span class="how-icon" aria-hidden="true">🗺️</span>
+                        <h3>Three realms</h3>
+                        <p>Projects are sorted by how finished they are: the
+                            <strong>Gallery of Wonders</strong> holds the polished ones, the
+                            <strong>Workshop</strong> holds everything still being built, and the
+                            <strong>Wastelands</strong> keeps retired experiments online instead of
+                            deleting them.</p>
+                    </li>
+                    <li class="how-card reveal">
+                        <span class="how-icon" aria-hidden="true">🔍</span>
+                        <h3>One search for everything</h3>
+                        <p>The search box below looks through every realm at once — names, tags and a
+                            plain-language description of what each project actually does. So
+                            “subnet”, “email headers” or “noise meter” find the right tool even if you
+                            don't know its whimsical name. Press <kbd>Esc</kbd> to clear.</p>
+                    </li>
+                    <li class="how-card reveal">
+                        <span class="how-icon" aria-hidden="true">🏷️</span>
+                        <h3>Badges &amp; markers</h3>
+                        <p>Search results are labelled so you know what you're walking into, and cards
+                            tell you where a link leads.</p>
+                        <ul class="how-legend" role="list">
+                            <li><span class="status-badge st-finished">✅ Finished</span> ready to use</li>
+                            <li><span class="status-badge st-wip">🚧 WIP</span> works, but still changing</li>
+                            <li><span class="status-badge st-archived">☄️ Archived</span> retired, kept as a relic</li>
+                            <li><span class="status-badge st-planned">🕓 Planned</span> only an idea so far</li>
+                            <li><span class="legend-mark" aria-hidden="true">↗</span> opens in a new tab</li>
+                            <li><span class="legend-mark" aria-hidden="true">🔒</span> nothing to visit yet</li>
+                        </ul>
+                    </li>
+                    <li class="how-card reveal">
+                        <span class="how-icon" aria-hidden="true">🕯️</span>
+                        <h3>No accounts, no tracking</h3>
+                        <p>Nothing here asks who you are. The projects are plain HTML, CSS and
+                            JavaScript that run entirely in your browser — anything you type or measure
+                            stays on your device. A few tools ask permission for your microphone or
+                            Bluetooth; that's the browser asking, and you can always say no.</p>
+                    </li>
+                    <li class="how-card reveal">
+                        <span class="how-icon" aria-hidden="true">🧭</span>
+                        <h3>Getting around</h3>
+                        <p>Every realm has a “Back to the playground” pill in its header, so you can
+                            always find your way home. The site works on phones, keyboards and screen
+                            readers, and it calms its animations down if your system asks for reduced
+                            motion.</p>
+                    </li>
+                    <li class="how-card reveal">
+                        <span class="how-icon" aria-hidden="true">🌱</span>
+                        <h3>It keeps growing</h3>
+                        <p>New experiments appear in the Workshop first, graduate to the Gallery when
+                            they're done, and drift into the Wastelands when they've had their day.
+                            Things move — that's the point.</p>
+                    </li>
+                </ul>
+            </div>
         </section>
 
         <section id="realms" class="realms" aria-labelledby="realms-title">
