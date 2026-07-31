@@ -7,22 +7,29 @@
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
 /* ---- Realm cards --------------------------------------------------------- */
 function cardMarkup(r) {
     const soon = r.status === 'soon';
-    const tags = (r.tags || []).map(t => `<span>${t}</span>`).join('');
+    const tags = (r.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('');
     const ext = r.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const titleInner = soon ? r.title : `<a href="${r.href}"${ext}>${r.title}</a>`;
+    const titleInner = soon
+        ? escapeHtml(r.title)
+        : `<a href="${escapeHtml(r.href || '#')}"${ext}>${escapeHtml(r.title)}</a>`;
     const enter = soon
         ? `<span class="realm-enter">🔒 ${r.tagline === 'Never drew breath' ? 'Nothing to see' : 'Coming soon'}</span>`
         : `<span class="realm-enter">${r.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
 
     return `
-        <li class="realm-card aura-${r.aura || 'violet'}${soon ? ' is-soon' : ''}${r.external ? ' is-external' : ''} reveal">
-            <div class="realm-glyph" aria-hidden="true">${r.glyph || '✨'}</div>
-            <p class="realm-tagline">${r.tagline || ''}</p>
+        <li class="realm-card aura-${escapeHtml(r.aura || 'violet')}${soon ? ' is-soon' : ''}${r.external ? ' is-external' : ''} reveal">
+            <div class="realm-glyph" aria-hidden="true">${escapeHtml(r.glyph || '✨')}</div>
+            <p class="realm-tagline">${escapeHtml(r.tagline || '')}</p>
             <h3>${titleInner}</h3>
-            <p class="realm-desc">${r.description || ''}</p>
+            <p class="realm-desc">${escapeHtml(r.description || '')}</p>
             <div class="realm-tags">${tags}</div>
             ${enter}
         </li>`;
@@ -118,11 +125,6 @@ function buildSearchIndex() {
     return entries;
 }
 
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
 function resultCardMarkup(e) {
     const it = e.item;
     const soon = !e.url || e.url === '#';
@@ -185,21 +187,31 @@ function setupSearch() {
 
 
 /* ---- Starfield ----------------------------------------------------------- */
+const STAR_FALLBACK = ['#ffffff', '#c99bff', '#7fe6f7', '#ffd77a', '#ff9ecb'];
+
+function starPalette() {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--star-colors');
+    const colors = raw.split(',').map(c => c.trim()).filter(Boolean);
+    return colors.length ? colors : STAR_FALLBACK;
+}
+
 function startStarfield() {
     const canvas = document.getElementById('starfield');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     let stars = [];
-    let w, h, dpr;
+    let w = 0, h = 0, dpr = 1;
+    let rafId = null;
 
-    function resize() {
+    function build() {
         dpr = Math.min(window.devicePixelRatio || 1, 2);
         w = canvas.width = Math.floor(innerWidth * dpr);
         h = canvas.height = Math.floor(innerHeight * dpr);
         canvas.style.width = innerWidth + 'px';
         canvas.style.height = innerHeight + 'px';
         const count = Math.min(160, Math.floor((innerWidth * innerHeight) / 9000));
-        const palette = ['#ffffff', '#c99bff', '#7fe6f7', '#ffd77a', '#ff9ecb'];
+        const palette = starPalette();
         stars = Array.from({ length: count }, () => ({
             x: Math.random() * w,
             y: Math.random() * h,
@@ -211,11 +223,9 @@ function startStarfield() {
         }));
     }
 
-    function draw() {
+    function paint() {
         ctx.clearRect(0, 0, w, h);
         for (const s of stars) {
-            s.a += s.tw * s.dir;
-            if (s.a <= 0.1 || s.a >= 1) s.dir *= -1;
             ctx.globalAlpha = Math.max(0.1, Math.min(1, s.a));
             ctx.fillStyle = s.c;
             ctx.beginPath();
@@ -223,26 +233,45 @@ function startStarfield() {
             ctx.fill();
         }
         ctx.globalAlpha = 1;
+    }
+
+    function draw() {
+        for (const s of stars) {
+            s.a += s.tw * s.dir;
+            if (s.a <= 0.1 || s.a >= 1) s.dir *= -1;
+        }
+        paint();
         rafId = requestAnimationFrame(draw);
     }
 
-    let rafId;
-    resize();
-    window.addEventListener('resize', () => { cancelAnimationFrame(rafId); resize(); if (!reduceMotion) draw(); });
-
-    if (reduceMotion) {
-        // Draw a single static frame.
-        for (const s of stars) {
-            ctx.globalAlpha = s.a;
-            ctx.fillStyle = s.c;
-            ctx.beginPath();
-            ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-            ctx.fill();
+    function render() {
+        if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
         }
-        ctx.globalAlpha = 1;
-    } else {
-        draw();
+        if (reduceMotion) paint();
+        else draw();
     }
+
+    function restart() {
+        build();
+        render();
+    }
+
+    // Recolour the stars whenever the visitor picks another theme.
+    document.addEventListener('rami:themechange', () => {
+        const palette = starPalette();
+        stars.forEach(s => { s.c = palette[(Math.random() * palette.length) | 0]; });
+        if (reduceMotion) paint();
+    });
+
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(restart, 150);
+    });
+
+    restart();
 }
 
 /* ---- Mobile navigation --------------------------------------------------- */
