@@ -202,6 +202,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Towerwatch',
+        href: './towerwatch/',
+        glyph: '📡',
+        tagline: 'Spot the rogue tower',
+        description: 'Your phone trusts whichever mast shouts loudest. Towerwatch watches the mobile connection for the fingerprints of a fake one — sudden 2G downgrades, impossible signal strengths and cell IDs no public map has ever seen.',
+        search: 'A rogue cell tower and fake base station detector that helps spot IMSI catchers and stingrays. Watches the mobile network connection live using the Network Information API for sudden 2G or GSM downgrades, dropped connections and slow network classes, and tracks your location with geolocation. Log or import cell tower data (MCC, MNC, LAC, TAC, cell ID, radio type, signal strength in dBm) from netmonitor apps such as NetMonster, Cellular-Z or CellMapper as CSV or JSON, and it scores each cell for suspicion using heuristics: reserved area codes, lone LAC or TAC, cloned cell identities, impossibly strong signals and cells seen kilometres apart. Optional OpenCelliD cross-check to see whether a cell is known to the public database, plus an exportable JSON report. Runs entirely in the browser, nothing uploaded.',
+        tags: ['security', 'tool'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'IT Tools Workbench',
         href: './tools/',
         glyph: '🧰',

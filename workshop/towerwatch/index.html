@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Towerwatch — Rogue Cell Tower Spotter</title>
+    <meta name="description"
+        content="Watch your phone's mobile connection for the fingerprints of a rogue cell tower (IMSI catcher): sudden 2G downgrades, unknown cell IDs and impossible signal strengths.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#07090f">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/towerwatch/">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%A1%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="wrap">
+        <header class="hero">
+            <div class="hero-mark" aria-hidden="true">📡</div>
+            <h1>Towerwatch</h1>
+            <p class="lede">A rogue cell tower spotter. Browsers can't read your SIM, but they
+                <em>can</em> watch the shape of your mobile connection — and a fake tower
+                (an <strong>IMSI catcher</strong>) leaves fingerprints. Add the cells your phone
+                sees and Towerwatch scores each one for suspicion.</p>
+            <p class="sub">Everything runs in your browser. Nothing is uploaded, ever.</p>
+        </header>
+
+        <!-- ===================================================== reality check -->
+        <section class="panel reality" aria-labelledby="reality-title">
+            <h2 id="reality-title"><span aria-hidden="true">🔍</span> What a web page can &amp; can't see</h2>
+            <div class="reality-grid">
+                <div class="reality-col can">
+                    <h3>Can see</h3>
+                    <ul>
+                        <li><strong>Connection type</strong> — <code>2g / 3g / 4g</code> class, speed and
+                            latency estimates via the Network Information API (Chrome, Edge, Android).</li>
+                        <li><strong>Sudden changes</strong> — a drop from 4G to 2G, or the connection dying
+                            and returning, is the loudest IMSI-catcher tell there is.</li>
+                        <li><strong>Your position</strong> — with permission, so sightings can be pinned
+                            to a place and compared over time.</li>
+                    </ul>
+                </div>
+                <div class="reality-col cant">
+                    <h3>Can't see</h3>
+                    <ul>
+                        <li><strong>Cell ID, LAC/TAC, MCC/MNC</strong> — no browser API exposes the radio
+                            layer. Those come from the phone's own field-test screen or a netmonitor app.</li>
+                        <li><strong>Signal strength in dBm</strong> — same reason.</li>
+                        <li><strong>Neighbour cell lists</strong> — Android and iOS keep these private to the OS.</li>
+                    </ul>
+                </div>
+            </div>
+            <p class="reality-note">So Towerwatch does both halves: it <strong>watches live</strong> what
+                the browser is allowed to know, and lets you <strong>feed in</strong> the cell details from
+                a netmonitor app (NetMonster, Cellular-Z, CellMapper, or Android's
+                <code>*#*#4636#*#*</code> menu). The heuristics do the rest.</p>
+            <details class="how">
+                <summary>How to get your cell data (30 seconds)</summary>
+                <ol>
+                    <li>Install a free netmonitor app — <em>NetMonster</em> or <em>Cellular-Z</em> on Android.</li>
+                    <li>Note the serving cell: <code>MCC</code>, <code>MNC</code>, <code>LAC</code>/<code>TAC</code>,
+                        <code>CID</code>, radio type (GSM/UMTS/LTE/NR) and signal in dBm.</li>
+                    <li>Type it into <em>Log a cell</em> below, or export CSV/JSON from the app and drop
+                        the file in. Repeat whenever you move, or when something feels off.</li>
+                </ol>
+            </details>
+        </section>
+
+        <!-- ======================================================= live watch -->
+        <section class="panel" aria-labelledby="live-title">
+            <div class="panel-head">
+                <h2 id="live-title"><span aria-hidden="true">📶</span> Live connection watch</h2>
+                <button id="watchBtn" class="btn btn-primary" type="button">Start watching</button>
+            </div>
+
+            <div class="live-grid">
+                <div class="stat">
+                    <span class="stat-label">Network class</span>
+                    <span id="statNet" class="stat-value">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Downlink</span>
+                    <span id="statDown" class="stat-value">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Round trip</span>
+                    <span id="statRtt" class="stat-value">—</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Position</span>
+                    <span id="statPos" class="stat-value">—</span>
+                </div>
+            </div>
+
+            <p id="liveStatus" class="notice" role="status">Idle — press <strong>Start watching</strong> to
+                begin logging connection changes.</p>
+
+            <h3 class="sub-head">Event timeline</h3>
+            <ul id="timeline" class="timeline" aria-live="polite">
+                <li class="empty">No events yet.</li>
+            </ul>
+        </section>
+
+        <!-- ======================================================== cell form -->
+        <section class="panel" aria-labelledby="log-title">
+            <div class="panel-head">
+                <h2 id="log-title"><span aria-hidden="true">🗒️</span> Log a cell</h2>
+                <div class="head-actions">
+                    <button id="demoBtn" class="btn btn-ghost" type="button">Load demo data</button>
+                    <button id="importBtn" class="btn btn-ghost" type="button">Import CSV / JSON</button>
+                    <input id="importFile" type="file" accept=".csv,.json,.txt,text/csv,application/json" hidden>
+                </div>
+            </div>
+
+            <form id="cellForm" class="cell-form" novalidate>
+                <div class="field">
+                    <label for="f-mcc">MCC <span class="hint">country</span></label>
+                    <input id="f-mcc" name="mcc" inputmode="numeric" placeholder="206" required>
+                </div>
+                <div class="field">
+                    <label for="f-mnc">MNC <span class="hint">operator</span></label>
+                    <input id="f-mnc" name="mnc" inputmode="numeric" placeholder="1" required>
+                </div>
+                <div class="field">
+                    <label for="f-lac">LAC / TAC</label>
+                    <input id="f-lac" name="lac" inputmode="numeric" placeholder="4501" required>
+                </div>
+                <div class="field">
+                    <label for="f-cid">Cell ID</label>
+                    <input id="f-cid" name="cid" inputmode="numeric" placeholder="12345678" required>
+                </div>
+                <div class="field">
+                    <label for="f-radio">Radio</label>
+                    <select id="f-radio" name="radio">
+                        <option value="LTE">LTE (4G)</option>
+                        <option value="NR">NR (5G)</option>
+                        <option value="UMTS">UMTS (3G)</option>
+                        <option value="GSM">GSM (2G)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label for="f-signal">Signal <span class="hint">dBm</span></label>
+                    <input id="f-signal" name="signal" inputmode="numeric" placeholder="-85">
+                </div>
+                <div class="field">
+                    <label for="f-lat">Latitude <span class="hint">optional</span></label>
+                    <input id="f-lat" name="lat" inputmode="decimal" placeholder="50.8503">
+                </div>
+                <div class="field">
+                    <label for="f-lon">Longitude <span class="hint">optional</span></label>
+                    <input id="f-lon" name="lon" inputmode="decimal" placeholder="4.3517">
+                </div>
+                <div class="form-actions">
+                    <button id="hereBtn" class="btn btn-ghost" type="button">Use my location</button>
+                    <button class="btn btn-primary" type="submit">Add cell</button>
+                </div>
+            </form>
+            <p id="formError" class="form-error" role="alert" hidden></p>
+        </section>
+
+        <!-- ========================================================== verdict -->
+        <section class="panel" aria-labelledby="verdict-title">
+            <div class="panel-head">
+                <h2 id="verdict-title"><span aria-hidden="true">⚖️</span> Verdict</h2>
+                <div class="head-actions">
+                    <button id="exportBtn" class="btn btn-ghost" type="button">Export report</button>
+                    <button id="clearBtn" class="btn btn-ghost btn-danger" type="button">Clear all</button>
+                </div>
+            </div>
+
+            <div id="summary" class="summary">
+                <p class="empty">No cells logged yet — add one above, or press
+                    <strong>Load demo data</strong> to see how a caught IMSI catcher looks.</p>
+            </div>
+
+            <div id="cellList" class="cell-list"></div>
+        </section>
+
+        <!-- ======================================================= opencellid -->
+        <section class="panel" aria-labelledby="ocid-title">
+            <h2 id="ocid-title"><span aria-hidden="true">🌍</span> Cross-check against OpenCelliD <span
+                    class="tag">optional</span></h2>
+            <p class="muted">A cell that no public database has ever seen is the single strongest sign of a
+                fake tower. Towerwatch can ask <a href="https://opencellid.org/" target="_blank"
+                    rel="noopener noreferrer">OpenCelliD</a> whether each logged cell is known. It needs a free
+                API token, which is kept in this browser only and is sent to opencellid.org and nowhere else.
+                Some browsers block the request (no CORS headers) — if so it fails quietly and every other
+                heuristic still works.</p>
+            <div class="ocid-row">
+                <label class="sr-only" for="ocidKey">OpenCelliD API token</label>
+                <input id="ocidKey" type="password" placeholder="OpenCelliD API token" autocomplete="off"
+                    spellcheck="false">
+                <button id="ocidSave" class="btn btn-ghost" type="button">Save token</button>
+                <button id="ocidCheck" class="btn btn-primary" type="button">Check logged cells</button>
+            </div>
+            <p id="ocidStatus" class="notice" role="status" hidden></p>
+        </section>
+
+        <!-- ======================================================== field kit -->
+        <section class="panel" aria-labelledby="kit-title">
+            <h2 id="kit-title"><span aria-hidden="true">🧭</span> If Towerwatch flags something</h2>
+            <ul class="kit">
+                <li><strong>Don't panic.</strong> Dead spots, rural 2G fallback and temporary "cells on
+                    wheels" at festivals or building sites all look suspicious and are entirely innocent.</li>
+                <li><strong>Repeat the measurement.</strong> A real rogue tower follows you or sits in one
+                    place; noise doesn't reproduce.</li>
+                <li><strong>Compare with a second phone</strong> on another operator, standing beside you.</li>
+                <li><strong>Turn off 2G</strong> in your phone's network settings — most catchers need that
+                    downgrade to work.</li>
+                <li><strong>Report it</strong> to your operator or national telecom regulator using the
+                    export button, timestamps and coordinates included.</li>
+            </ul>
+        </section>
+
+        <footer class="foot">
+            <a href="../">← Back to the Workshop</a>
+            <span>Local-only · no tracking · no uploads</span>
+        </footer>
+    </div>
+
+    <template id="cellCardTpl">
+        <article class="cell-card">
+            <header class="cell-card-head">
+                <span class="risk-badge"></span>
+                <div class="cell-id">
+                    <h3 class="cell-title"></h3>
+                    <p class="cell-meta"></p>
+                </div>
+                <button class="btn btn-ghost btn-small cell-remove" type="button">Remove</button>
+            </header>
+            <div class="score-bar"><span class="score-fill"></span></div>
+            <ul class="flags"></ul>
+        </article>
+    </template>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
