@@ -10,6 +10,7 @@ Magical on the outside, tidy and maintainable on the inside.
 theme.css             Shared palette, tokens, backdrop & chrome (imported everywhere)
 style.css             Hub-only styles (hero + realm groups)
 projects.js           Realm registry — groups + portals, the single source of truth
+backlink.js           Drop-in "← rami.party" pill for older realms with no navigation
 favicon.svg           Sparkle icon (also used by the manifest)
 og-image.png          1200×630 social share banner
 admin/                Generic CMS-style login (keeps the classic history-bomb prank JS)
@@ -51,6 +52,22 @@ You (almost) never touch HTML. Open [`projects.js`](projects.js) and append one 
 ```
 
 The hub renders the card in the right realm automatically. Array order = ranking.
+
+A `search:` field (plain, keyword-rich, never displayed) makes the project findable through the
+hub search and the Workshop filter without the whimsical copy getting in the way.
+
+## 🧭 Helping the visitor
+
+- **`index.html#guide` — "How this place works".** A plain-language explainer: what the site is,
+  what each of the three realms means, what the status labels (✅ 🚧 ☄️ 🕓) and the ↗ / 🔒 markers
+  mean. Keep it in sync when the realms or labels change.
+- **Search everywhere.** The hub searches all realms at once; `/workshop/` filters its own 30-odd
+  cards in place.
+- **Nobody gets stranded.** Realms built before the hub existed load
+  [`backlink.js`](backlink.js) — one `<script src="/backlink.js" defer></script>` before `</body>`
+  adds a self-contained "← rami.party" pill. Pages with their own navigation don't need it.
+- **Prank screens have an escape hatch.** `gallery/prankscreens/immersive.js` swallows key presses
+  to protect the illusion, but **Esc pressed three times** returns to the Prank Screens hub.
 
 ## 🎨 Design language
 
