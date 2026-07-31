@@ -352,7 +352,7 @@
         h: function (v) { return 'Acceptable hash algorithms: ' + v + '. sha256 is the modern choice; sha1 is obsolete.'; },
         t: function (v) {
             if (v.indexOf('y') > -1) return 'TEST MODE (t=y): receivers are told to ignore failures of this key. Useful for a week, dangerous to leave behind.';
-            if (v.indexOf('s') > -1) return 'Strict (t=s): this key may not be used by subdomains.';
+            if (v.indexOf('s') > -1) return 'Strict identity (t=s): a signature made with this key must set the optional i= (AUID) tag to exactly the signing domain, not a subdomain of it. Most senders never set i=, so this rarely changes anything.';
             return 'Flags: ' + v;
         },
         s: function (v) { return 'Service type: ' + v + '. “email” or “*”.'; },

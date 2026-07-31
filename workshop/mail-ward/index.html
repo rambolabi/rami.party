@@ -462,7 +462,9 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                         <tr>
                             <td><code>t=s</code></td>
                             <td>DNS</td>
-                            <td>Strict: the key may not be used by subdomains. Optional.</td>
+                            <td>Strict identity: any signature made with this key must set the optional
+                                <code>i=</code> (AUID) tag to exactly the signing domain, never a subdomain of it.
+                                Most senders never set <code>i=</code>, so it rarely changes anything. Optional.</td>
                         </tr>
                         <tr>
                             <td><code>t=y</code></td>

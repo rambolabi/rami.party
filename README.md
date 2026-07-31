@@ -9,7 +9,8 @@ Magical on the outside, tidy and maintainable on the inside.
 /                     Enchanted hub (index.html, script.js)
 theme.css             Shared palette, tokens, backdrop & chrome (imported everywhere)
 style.css             Hub-only styles (hero + realm groups)
-projects.js           Realm registry — groups + portals, the single source of truth
+projects.js           Realm registry — groups, portals, workshop & planned lists;
+                      the single source of truth
 favicon.svg           Sparkle icon (also used by the manifest)
 og-image.png          1200×630 social share banner
 admin/                Generic CMS-style login (keeps the classic history-bomb prank JS)
@@ -18,11 +19,13 @@ gallery/              🏛️ The Gallery of Wonders — finished realms
   lore/               📜 Lore Gallery — image grimoire
   prankscreens/       🖥️ Prank Screens — fake OS/boot screens (hub is enchanted;
                           individual screens stay pixel-accurate on purpose)
-workshop/             ⚗️ The Workshop — works-in-progress (landing page for now)
+workshop/             ⚗️ The Workshop — 30+ works-in-progress, catalogued from
+                          RAMI_WORKSHOP in projects.js
 wasteland/            ☄️ The Wastelands — retired experiments + its own index
   neko/               🐱 Neko Paradise (draggable chibi sprites)
   old-rami.party/     Previous jQuery-era incarnation (preserved)
   adhd/               An empty husk (kept as a relic)
+  notes/ bluetooth/ house/ random-first-player/   further retired realms
 ```
 
 The folder names mirror the three realms: **gallery** (finished), **workshop** (WIP) and
