@@ -32,34 +32,59 @@
         this.varSum = (1 - this.alpha) * (this.varSum + this.alpha * d * d);
     };
     Tracker.prototype.sd = function () { return Math.sqrt(this.varSum); };
+    Tracker.prototype.reset = function () { this.mean = null; this.varSum = 0; };
 
     /* ---------------------------------------------------------------- state */
 
-    const state = {
+    function blankSenses() {
+        return {
+            motion: { x: null, y: null, z: null, gx: null, gy: null, gz: null, hz: 0, count: 0 },
+            orientation: { alpha: null, beta: null, gamma: null, absolute: false, heading: null },
+            magnet: { x: null, y: null, z: null, magnitude: null },
+            light: { lux: null },
+            proximity: { cm: null, near: null },
+            geo: null,
+            audio: { infra: null, ultra: null, level: null, peak: null, db: null },
+            camera: { brightness: null, flicker: null, red: null },
+        };
+    }
+
+    const state = Object.assign({
         running: false,
+        runId: 0,
         baseline: null,
-        motion: { x: null, y: null, z: null, gx: null, gy: null, gz: null, hz: 0, count: 0 },
-        orientation: { alpha: null, beta: null, gamma: null, absolute: false, heading: null },
-        magnet: { x: null, y: null, z: null, magnitude: null },
-        light: { lux: null },
-        proximity: { cm: null, near: null },
-        geo: null,
-        audio: { infra: null, ultra: null, level: null, peak: null },
-        camera: { brightness: null, flicker: null, red: null },
         anomaly: { tremor: 0, field: 0, infra: 0, ultra: 0, flicker: 0, tilt: 0 },
-    };
+    }, blankSenses());
+
+    function resetSenses() {
+        Object.assign(state, blankSenses());
+        state.anomaly = { tremor: 0, field: 0, infra: 0, ultra: 0, flicker: 0, tilt: 0 };
+        Object.keys(trackers).forEach((k) => trackers[k].reset());
+    }
 
     const trackers = {
         tremor: new Tracker(0.05),
         field: new Tracker(0.02),
         infra: new Tracker(0.05),
         ultra: new Tracker(0.05),
-        flicker: new Tracker(0.05),
+        lightFlicker: new Tracker(0.05),
+        camFlicker: new Tracker(0.05),
         tilt: new Tracker(0.02),
     };
 
+    // Whichever light probe is actually feeding samples drives the flicker score.
+    function flickerTracker() {
+        if (Number.isFinite(state.camera.brightness)) return trackers.camFlicker;
+        if (Number.isFinite(state.light.lux)) return trackers.lightFlicker;
+        return null;
+    }
+
     const cleanups = [];
     const onStop = (fn) => cleanups.push(fn);
+
+    // Every awakening gets a token; late-resolving promises check it before
+    // touching anything, so a quick Awaken → Rest can never leave sensors on.
+    const isStale = (token) => token !== state.runId || !state.running;
 
     /* ------------------------------------------------------------ live cards */
 
@@ -193,7 +218,7 @@
 
     /* ------------------------------------------------- passive/static senses */
 
-    function readStaticSenses() {
+    function readStaticSenses(token) {
         const g = navigator;
 
         setRows('device', [
@@ -241,6 +266,8 @@
 
         if (g.getBattery) {
             g.getBattery().then((bat) => {
+                if (isStale(token)) return;
+                const events = ['levelchange', 'chargingchange', 'chargingtimechange', 'dischargingtimechange'];
                 const paint = () => setRows('battery', [
                     ['Level', Math.round(bat.level * 100) + '%'],
                     ['Charging', bat.charging ? 'yes' : 'no'],
@@ -248,8 +275,8 @@
                     ['Time to empty', Number.isFinite(bat.dischargingTime) && bat.dischargingTime !== Infinity ? Math.round(bat.dischargingTime / 60) + ' min' : '—'],
                 ]);
                 paint();
-                ['levelchange', 'chargingchange', 'chargingtimechange', 'dischargingtimechange']
-                    .forEach((ev) => bat.addEventListener(ev, paint));
+                events.forEach((ev) => bat.addEventListener(ev, paint));
+                onStop(() => events.forEach((ev) => bat.removeEventListener(ev, paint)));
                 setStatus('battery', 'live', 'on');
             }).catch(() => setStatus('battery', 'blocked', 'off'));
         } else {
@@ -258,6 +285,7 @@
 
         if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
             const paintDevices = () => navigator.mediaDevices.enumerateDevices().then((list) => {
+                if (isStale(token)) return;
                 const count = (kind) => list.filter((d) => d.kind === kind).length;
                 setRows('media', [
                     ['Cameras', count('videoinput')],
@@ -312,7 +340,6 @@
                 state.motion.z = acc.z;
                 const mag = Math.hypot(acc.x || 0, acc.y || 0, acc.z || 0);
                 trackers.tremor.push(mag);
-                state.motion.jitter = trackers.tremor.sd();
             }
             const rot = e.rotationRate;
             if (rot) {
@@ -397,7 +424,7 @@
     function startLight() {
         startGenericSensor(window.AmbientLightSensor, { frequency: 10 }, (s) => {
             state.light.lux = s.illuminance;
-            trackers.flicker.push(s.illuminance);
+            trackers.lightFlicker.push(s.illuminance);
         }, 'light');
     }
 
@@ -442,9 +469,10 @@
     let audioCtx = null;
     let analyser = null;
     let freqData = null;
+    let timeData = null;
     let micStream = null;
 
-    function startMicrophone() {
+    function startMicrophone(token) {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             setStatus('audio', 'absent', 'off');
             return Promise.resolve();
@@ -457,6 +485,11 @@
                 autoGainControl: false,
             },
         }).then((stream) => {
+            // The user may have pressed Rest while the prompt was open.
+            if (isStale(token)) {
+                stream.getTracks().forEach((t) => t.stop());
+                return;
+            }
             micStream = stream;
             const Ctx = window.AudioContext || window.webkitAudioContext;
             audioCtx = new Ctx();
@@ -467,12 +500,15 @@
             analyser.smoothingTimeConstant = 0.6;
             src.connect(analyser);
             freqData = new Uint8Array(analyser.frequencyBinCount);
+            timeData = new Uint8Array(analyser.fftSize);
             setStatus('audio', 'live', 'on');
             onStop(() => {
                 stream.getTracks().forEach((t) => t.stop());
                 if (audioCtx) audioCtx.close();
                 audioCtx = null;
                 analyser = null;
+                freqData = null;
+                timeData = null;
                 micStream = null;
             });
         }).catch(() => {
@@ -480,34 +516,50 @@
         });
     }
 
+    // Mean magnitude of the FFT bins whose centres fall inside [from, to] Hz.
+    // Returns null when the band lies outside what this sample rate can carry.
     function bandEnergy(from, to, sampleRate, bins) {
         const nyquist = sampleRate / 2;
-        const lo = clamp(Math.floor(from / nyquist * bins.length), 0, bins.length - 1);
-        const hi = clamp(Math.ceil(to / nyquist * bins.length), 0, bins.length - 1);
+        if (!(nyquist > 0) || from >= nyquist || to <= from) return null;
+        const binWidth = nyquist / bins.length;
+        const lo = Math.max(0, Math.ceil(from / binWidth));
+        const hi = Math.min(bins.length - 1, Math.floor(Math.min(to, nyquist) / binWidth));
+        if (hi < lo) return null;
         let sum = 0;
-        let n = 0;
-        for (let i = lo; i <= hi; i += 1) { sum += bins[i]; n += 1; }
-        return n ? sum / n / 255 : 0;
+        for (let i = lo; i <= hi; i += 1) sum += bins[i];
+        return sum / (hi - lo + 1) / 255;
     }
 
     function readAudio() {
-        if (!analyser || !audioCtx) return;
+        if (!analyser || !audioCtx || !freqData) return;
         analyser.getByteFrequencyData(freqData);
         const rate = audioCtx.sampleRate;
         const nyquist = rate / 2;
 
         state.audio.infra = bandEnergy(1, 40, rate, freqData);
-        state.audio.ultra = bandEnergy(15000, Math.min(nyquist - 1, 24000), rate, freqData);
-        state.audio.level = bandEnergy(20, nyquist - 1, rate, freqData);
+        state.audio.ultra = bandEnergy(15000, 24000, rate, freqData);
+        state.audio.level = bandEnergy(20, nyquist, rate, freqData);
 
         let peakIdx = 0;
         for (let i = 1; i < freqData.length; i += 1) {
             if (freqData[i] > freqData[peakIdx]) peakIdx = i;
         }
-        state.audio.peak = peakIdx / freqData.length * nyquist;
+        state.audio.peak = (peakIdx + 0.5) / freqData.length * nyquist;
 
-        trackers.infra.push(state.audio.infra);
-        trackers.ultra.push(state.audio.ultra);
+        // RMS in dBFS from the time domain — a real loudness figure.
+        if (timeData) {
+            analyser.getByteTimeDomainData(timeData);
+            let sq = 0;
+            for (let i = 0; i < timeData.length; i += 1) {
+                const v = (timeData[i] - 128) / 128;
+                sq += v * v;
+            }
+            const rms = Math.sqrt(sq / timeData.length);
+            state.audio.db = rms > 0 ? Math.max(-100, 20 * Math.log10(rms)) : -100;
+        }
+
+        if (state.audio.infra !== null) trackers.infra.push(state.audio.infra);
+        if (state.audio.ultra !== null) trackers.ultra.push(state.audio.ultra);
         drawScope();
     }
 
@@ -548,34 +600,61 @@
 
     let camStream = null;
     let camActive = false;
+    let camPending = false;
+    let camToken = 0;
 
     function toggleCamera() {
         if (camActive) { stopCamera(); return; }
+        if (camPending) return;
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             $('probeNote').textContent = 'This browser exposes no camera.';
             return;
         }
+        camPending = true;
+        camToken += 1;
+        const token = camToken;
+        const btn = $('cameraBtn');
+        btn.disabled = true;
+        btn.textContent = '📷 Asking…';
+
         navigator.mediaDevices.getUserMedia({
             video: { facingMode: 'environment', width: { ideal: 320 }, height: { ideal: 240 } },
         }).then((stream) => {
+            // Rested or toggled again while the prompt was open — drop this stream.
+            if (token !== camToken) {
+                stream.getTracks().forEach((t) => t.stop());
+                return;
+            }
             camStream = stream;
             camActive = true;
             const video = $('cam');
             video.srcObject = stream;
             video.hidden = false;
             $('camCanvas').hidden = false;
-            $('cameraBtn').classList.add('is-on');
-            $('cameraBtn').textContent = '📷 Stop watching light';
+            btn.classList.add('is-on');
+            btn.textContent = '📷 Stop watching light';
             $('probeNote').textContent =
                 'Watching brightness frame by frame: infrared remotes flash bright violet-white here, ' +
                 'and lamps reveal their mains flicker as a rippling average.';
-            return video.play();
+            ensureLoop();
+            return video.play().catch(() => {
+                // Autoplay refused — release the camera rather than hold it open.
+                stopCamera();
+                $('probeNote').textContent = 'The video stream could not start, so the camera was released.';
+            });
         }).catch(() => {
-            $('probeNote').textContent = 'Camera permission refused — nothing was captured.';
+            if (token === camToken) {
+                $('probeNote').textContent = 'Camera permission refused — nothing was captured.';
+            }
+        }).then(() => {
+            camPending = false;
+            btn.disabled = false;
+            if (!camActive) btn.textContent = '📷 Watch invisible light';
         });
     }
 
     function stopCamera() {
+        camToken += 1;
         if (camStream) camStream.getTracks().forEach((t) => t.stop());
         camStream = null;
         camActive = false;
@@ -583,13 +662,14 @@
         video.srcObject = null;
         video.hidden = true;
         $('camCanvas').hidden = true;
-        $('cameraBtn').classList.remove('is-on');
-        $('cameraBtn').textContent = '📷 Watch invisible light';
+        const btn = $('cameraBtn');
+        btn.classList.remove('is-on');
+        if (!camPending) btn.textContent = '📷 Watch invisible light';
         state.camera.brightness = null;
         state.camera.flicker = null;
         state.camera.red = null;
+        trackers.camFlicker.reset();
     }
-    onStop(stopCamera);
 
     function readCamera() {
         if (!camActive) return;
@@ -616,32 +696,53 @@
         const px = data.length / 4;
         state.camera.brightness = sum / px;
         state.camera.red = red / px;
-        trackers.flicker.push(state.camera.brightness);
-        state.camera.flicker = trackers.flicker.sd();
+        trackers.camFlicker.push(state.camera.brightness);
+        state.camera.flicker = trackers.camFlicker.sd();
     }
 
     /* -------------------------------------------------------- optional radios */
 
+    let nfcAbort = null;
+
+    function stopNfc() {
+        if (nfcAbort) { nfcAbort.abort(); nfcAbort = null; }
+        $('nfcBtn').classList.remove('is-on');
+        $('nfcBtn').textContent = '📡 Listen for NFC';
+    }
+
     function probeNfc() {
+        if (nfcAbort) {
+            stopNfc();
+            $('probeNote').textContent = 'NFC antenna released.';
+            return;
+        }
         if (!('NDEFReader' in window)) {
             $('probeNote').textContent = 'Web NFC is not available here (Chrome on Android only).';
             return;
         }
         try {
             const reader = new window.NDEFReader();
-            reader.scan().then(() => {
+            const abort = new AbortController();
+            nfcAbort = abort;
+            reader.scan({ signal: abort.signal }).then(() => {
                 $('nfcBtn').classList.add('is-on');
+                $('nfcBtn').textContent = '📡 Stop NFC scan';
                 $('probeNote').textContent = 'NFC antenna listening — hold a tag or card against the back of the device.';
                 reader.onreading = (e) => {
-                    $('probeNote').textContent = 'NFC tag detected: ' + e.serialNumber + ' (' + e.message.records.length + ' record(s)).';
+                    const records = (e.message && e.message.records) ? e.message.records.length : 0;
+                    $('probeNote').textContent = 'NFC tag detected: ' + e.serialNumber + ' (' + records + ' record(s)).';
+                    logEvent('NFC tag ' + e.serialNumber);
                 };
                 reader.onreadingerror = () => {
                     $('probeNote').textContent = 'A tag came close but could not be read.';
                 };
             }).catch(() => {
+                if (nfcAbort === abort) nfcAbort = null;
+                stopNfc();
                 $('probeNote').textContent = 'NFC scan refused or unsupported on this device.';
             });
         } catch (_) {
+            nfcAbort = null;
             $('probeNote').textContent = 'NFC scan could not be started.';
         }
     }
@@ -671,6 +772,83 @@
             : 'The browser accepted no vibration (often blocked without interaction).';
     }
 
+    /* ------------------------------------------------------------- event log */
+
+    const LOG_LIMIT = 60;
+    const eventLog = [];
+
+    function logEvent(text) {
+        const at = new Date();
+        eventLog.unshift({ at: at.toISOString(), text: text });
+        if (eventLog.length > LOG_LIMIT) eventLog.pop();
+
+        const list = $('logList');
+        const item = document.createElement('li');
+        const time = document.createElement('span');
+        time.className = 'log-time';
+        time.textContent = at.toLocaleTimeString();
+        const body = document.createElement('span');
+        body.className = 'log-text';
+        body.textContent = text;
+        item.append(time, body);
+        list.prepend(item);
+        while (list.children.length > LOG_LIMIT) list.removeChild(list.lastChild);
+        $('logEmpty').hidden = true;
+    }
+
+    function clearLog() {
+        eventLog.length = 0;
+        $('logList').replaceChildren();
+        $('logEmpty').hidden = false;
+    }
+
+    /* ---------------------------------------------------------------- alerts */
+
+    let alertsOn = false;
+    let lastAlert = 0;
+
+    function fireAlert() {
+        const now = performance.now();
+        if (now - lastAlert < 4000) return;
+        lastAlert = now;
+        if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
+        try {
+            const Ctx = window.AudioContext || window.webkitAudioContext;
+            if (!Ctx) return;
+            const ctx = audioCtx || new Ctx();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.frequency.value = 880;
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.25);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.26);
+            if (ctx !== audioCtx) osc.onended = () => ctx.close();
+        } catch (_) { /* audio output is a nicety, never a requirement */ }
+    }
+
+    /* ------------------------------------------------------------- wake lock */
+
+    let wakeLock = null;
+
+    function requestWakeLock() {
+        if (!('wakeLock' in navigator)) return;
+        navigator.wakeLock.request('screen').then((lock) => {
+            if (!state.running) { lock.release().catch(() => undefined); return; }
+            wakeLock = lock;
+            lock.addEventListener('release', () => { wakeLock = null; });
+        }).catch(() => { /* denied or not visible — harmless */ });
+    }
+
+    function releaseWakeLock() {
+        if (wakeLock) {
+            wakeLock.release().catch(() => undefined);
+            wakeLock = null;
+        }
+    }
+
     /* ---------------------------------------------------------- anomaly logic */
 
     function relative(value, base) {
@@ -679,39 +857,51 @@
         return value / base;
     }
 
+    // Ratio-above-baseline mapped onto 0..1, where "6× the quiet noise" is full scale.
+    function ratioScore(value, base) {
+        return clamp(relative(value, base) - 1, 0, 6) / 6;
+    }
+
+    const ANOMALY_LABELS = {
+        tremor: 'Micro-tremor',
+        field: 'Magnetic field shift',
+        infra: 'Infrasound',
+        ultra: 'Ultrasound',
+        flicker: 'Light flicker',
+        tilt: 'Tilt drift',
+    };
+
+    let wasAlerting = false;
+
     function updateAnomaly() {
         const b = state.baseline;
         const a = state.anomaly;
+        const flick = flickerTracker();
 
-        a.tremor = b ? clamp(relative(trackers.tremor.sd(), b.tremor) - 1, 0, 6) / 6 : 0;
-        a.tilt = b ? clamp(relative(trackers.tilt.sd(), b.tilt) - 1, 0, 6) / 6 : 0;
+        a.tremor = b ? ratioScore(trackers.tremor.sd(), b.tremor) : 0;
+        a.tilt = b ? ratioScore(trackers.tilt.sd(), b.tilt) : 0;
 
-        if (Number.isFinite(state.magnet.magnitude) && b && Number.isFinite(b.field)) {
-            a.field = clamp(Math.abs(state.magnet.magnitude - b.field) / 15, 0, 1);
-        } else {
-            a.field = 0;
-        }
+        a.field = (b && Number.isFinite(state.magnet.magnitude) && Number.isFinite(b.field))
+            ? clamp(Math.abs(state.magnet.magnitude - b.field) / 15, 0, 1)
+            : 0;
 
-        if (b && Number.isFinite(state.audio.infra)) {
-            a.infra = clamp((state.audio.infra - b.infra) / 0.25, 0, 1);
-            a.ultra = clamp((state.audio.ultra - b.ultra) / 0.2, 0, 1);
-        } else {
-            a.infra = 0;
-            a.ultra = 0;
-        }
+        a.infra = (b && Number.isFinite(state.audio.infra) && Number.isFinite(b.infra))
+            ? clamp((state.audio.infra - b.infra) / 0.25, 0, 1)
+            : 0;
+        a.ultra = (b && Number.isFinite(state.audio.ultra) && Number.isFinite(b.ultra))
+            ? clamp((state.audio.ultra - b.ultra) / 0.2, 0, 1)
+            : 0;
 
-        if (b && Number.isFinite(b.flicker)) {
-            a.flicker = clamp(relative(trackers.flicker.sd(), b.flicker) - 1, 0, 6) / 6;
-        } else {
-            a.flicker = 0;
-        }
+        a.flicker = (b && flick && Number.isFinite(b.flicker))
+            ? ratioScore(flick.sd(), b.flicker)
+            : 0;
 
         const pairs = [
             ['aTremor', a.tremor, fmt(trackers.tremor.sd() * 1000, 1) + ' mm/s²'],
             ['aField', a.field, Number.isFinite(state.magnet.magnitude) ? fmt(state.magnet.magnitude, 1) + ' µT' : 'no sensor'],
-            ['aInfra', a.infra, Number.isFinite(state.audio.infra) ? fmt(state.audio.infra * 100, 0) + '%' : 'no mic'],
-            ['aUltra', a.ultra, Number.isFinite(state.audio.ultra) ? fmt(state.audio.ultra * 100, 0) + '%' : 'no mic'],
-            ['aFlicker', a.flicker, Number.isFinite(state.camera.flicker) || Number.isFinite(state.light.lux) ? fmt(trackers.flicker.sd(), 2) : 'no light probe'],
+            ['aInfra', a.infra, state.audio.infra === null ? 'no mic' : fmt(state.audio.infra * 100, 0) + '%'],
+            ['aUltra', a.ultra, state.audio.ultra === null ? (audioCtx ? 'out of range' : 'no mic') : fmt(state.audio.ultra * 100, 0) + '%'],
+            ['aFlicker', a.flicker, flick ? fmt(flick.sd(), 2) : 'no light probe'],
             ['aTilt', a.tilt, fmt(trackers.tilt.sd() * 1000, 0) + ' m°'],
         ];
         pairs.forEach(([id, score, text]) => {
@@ -721,18 +911,30 @@
             el.parentElement.classList.toggle('hot', score > 0.5);
         });
 
-        const total = Math.max(a.tremor, a.field, a.infra, a.ultra, a.flicker, a.tilt);
-        $('meterFill').style.width = Math.round(total * 100) + '%';
+        const total = clamp(Math.max(a.tremor, a.field, a.infra, a.ultra, a.flicker, a.tilt), 0, 1);
+        const pct = Math.round(total * 100);
+        $('meterFill').style.width = pct + '%';
+        const meterText = 'Anomaly level ' + pct + '%';
+        if ($('meterText').textContent !== meterText) $('meterText').textContent = meterText;
+
+        const alerting = state.running && !!b && total > 0.5;
+        if (alerting && !wasAlerting) {
+            const worst = Object.keys(ANOMALY_LABELS)
+                .reduce((best, k) => (a[k] > a[best] ? k : best), 'tremor');
+            logEvent(ANOMALY_LABELS[worst] + ' — ' + pct + '% above the quiet baseline');
+            if (alertsOn) fireAlert();
+        }
+        wasAlerting = alerting;
 
         const pill = $('anomalyState');
         const label = $('anomalyStateText');
         if (!state.running) {
             pill.className = 'pill pill-idle';
             label.textContent = 'Dormant';
-        } else if (!state.baseline) {
+        } else if (!b) {
             pill.className = 'pill pill-live';
             label.textContent = 'Awake — calibrate me';
-        } else if (total > 0.5) {
+        } else if (alerting) {
             pill.className = 'pill pill-alert';
             label.textContent = 'Something moved';
         } else {
@@ -742,18 +944,94 @@
     }
 
     function calibrate() {
+        const flick = flickerTracker();
         state.baseline = {
             tremor: Math.max(trackers.tremor.sd(), 1e-4),
             tilt: Math.max(trackers.tilt.sd(), 1e-4),
             field: state.magnet.magnitude,
-            infra: state.audio.infra || 0,
-            ultra: state.audio.ultra || 0,
-            flicker: Math.max(trackers.flicker.sd(), 1e-3),
+            infra: state.audio.infra,
+            ultra: state.audio.ultra,
+            flicker: flick ? Math.max(flick.sd(), 1e-3) : null,
             at: new Date(),
         };
+        wasAlerting = false;
         $('anomalyNote').textContent =
             'Baseline captured at ' + state.baseline.at.toLocaleTimeString() +
             '. Deviations from this "quiet" world are what light the meter up.';
+        logEvent('Baseline calibrated');
+    }
+
+    /* ---------------------------------------------------------------- export */
+
+    function buildReport() {
+        return {
+            generatedAt: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            secureContext: isSecure,
+            capabilities: capabilities().reduce((acc, [label, has]) => {
+                acc[label] = !!has;
+                return acc;
+            }, {}),
+            readings: {
+                motion: state.motion,
+                orientation: state.orientation,
+                magnetometer: state.magnet,
+                light: state.light,
+                proximity: state.proximity,
+                audio: state.audio,
+                camera: state.camera,
+                geolocation: state.geo ? {
+                    latitude: state.geo.latitude,
+                    longitude: state.geo.longitude,
+                    accuracy: state.geo.accuracy,
+                    altitude: state.geo.altitude,
+                    speed: state.geo.speed,
+                    heading: state.geo.heading,
+                } : null,
+            },
+            anomaly: state.anomaly,
+            baseline: state.baseline,
+            events: eventLog,
+        };
+    }
+
+    function exportReport() {
+        let json;
+        try {
+            json = JSON.stringify(buildReport(), null, 2);
+        } catch (_) {
+            $('exportNote').textContent = 'The report could not be assembled.';
+            return;
+        }
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sixth-sense-' + new Date().toISOString().replace(/[:.]/g, '-') + '.json';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        $('exportNote').textContent = 'Report downloaded — it never left your device.';
+    }
+
+    function copyReport() {
+        let json;
+        try {
+            json = JSON.stringify(buildReport(), null, 2);
+        } catch (_) {
+            $('exportNote').textContent = 'The report could not be assembled.';
+            return;
+        }
+        if (!navigator.clipboard || !navigator.clipboard.writeText) {
+            $('exportNote').textContent = 'This browser blocks clipboard writes — use Download instead.';
+            return;
+        }
+        navigator.clipboard.writeText(json).then(() => {
+            $('exportNote').textContent = 'Report copied to the clipboard.';
+        }).catch(() => {
+            $('exportNote').textContent = 'Copying was refused — use Download instead.';
+        });
     }
 
     /* ----------------------------------------------------------- render loop */
@@ -809,8 +1087,9 @@
 
         setRows('audio', [
             ['infrasound <40 Hz', state.audio.infra === null ? '—' : fmt(state.audio.infra * 100, 0) + '%'],
-            ['ultrasound >15 kHz', state.audio.ultra === null ? '—' : fmt(state.audio.ultra * 100, 0) + '%'],
+            ['ultrasound >15 kHz', state.audio.ultra === null ? (audioCtx ? 'out of range' : '—') : fmt(state.audio.ultra * 100, 0) + '%'],
             ['overall level', state.audio.level === null ? '—' : fmt(state.audio.level * 100, 0) + '%'],
+            ['loudness', state.audio.db === null ? '—' : fmt(state.audio.db, 1) + ' dBFS'],
             ['peak', state.audio.peak === null ? '—' : fmt(state.audio.peak / 1000, 2) + ' kHz'],
             ['sample rate', audioCtx ? fmt(audioCtx.sampleRate / 1000, 1) + ' kHz' : '—'],
         ]);
@@ -840,6 +1119,12 @@
     }
 
     function loop(now) {
+        // The loop exists for the senses and for the camera probe; when neither
+        // needs it, let it die rather than burn frames forever.
+        if (!state.running && !camActive) {
+            rafId = null;
+            return;
+        }
         rafId = requestAnimationFrame(loop);
 
         frameCount += 1;
@@ -858,23 +1143,42 @@
         }
     }
 
+    function ensureLoop() {
+        if (rafId === null) {
+            fpsWindow = performance.now();
+            frameCount = 0;
+            rafId = requestAnimationFrame(loop);
+        }
+    }
+
     /* ---------------------------------------------------------- orchestration */
 
-    function requestMotionPermission() {
-        const needs = [];
-        if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-            needs.push(DeviceMotionEvent.requestPermission());
-        }
-        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-            needs.push(DeviceOrientationEvent.requestPermission());
-        }
-        if (!needs.length) return Promise.resolve();
-        return Promise.all(needs).catch(() => undefined);
+    // iOS resolves with 'granted'/'denied' instead of rejecting, so inspect each
+    // family separately and only start the ones we were actually allowed.
+    function requestSensorPermissions() {
+        const ask = (Ctor) => {
+            if (typeof Ctor === 'undefined' || typeof Ctor.requestPermission !== 'function') {
+                return Promise.resolve('granted');
+            }
+            return Ctor.requestPermission().then(
+                (r) => (r === 'granted' ? 'granted' : 'denied'),
+                () => 'denied'
+            );
+        };
+        return Promise.all([
+            ask(typeof DeviceMotionEvent !== 'undefined' ? DeviceMotionEvent : undefined),
+            ask(typeof DeviceOrientationEvent !== 'undefined' ? DeviceOrientationEvent : undefined),
+        ]).then(([motion, orientation]) => ({ motion: motion, orientation: orientation }));
     }
 
     function awaken() {
         if (state.running) return;
         state.running = true;
+        state.runId += 1;
+        const token = state.runId;
+        resetSenses();
+        wasAlerting = false;
+
         $('awakenBtn').disabled = true;
         $('calibrateBtn').disabled = false;
         $('stopBtn').disabled = false;
@@ -884,40 +1188,62 @@
                 'This page is not in a secure context, so most sensors will stay silent. Open it over HTTPS.';
         }
 
-        readStaticSenses();
-        requestMotionPermission().then(() => {
-            startMotion();
-            startOrientation();
+        readStaticSenses(token);
+        requestWakeLock();
+        logEvent('Senses awakened');
+
+        requestSensorPermissions().then((perm) => {
+            if (isStale(token)) return undefined;
+            if (perm.motion === 'granted') {
+                startMotion();
+            } else {
+                setStatus('motion', 'denied', 'off');
+                setStatus('gyro', 'denied', 'off');
+            }
+            if (perm.orientation === 'granted') {
+                startOrientation();
+            } else {
+                setStatus('orient', 'denied', 'off');
+            }
             startMagnetometer();
             startLight();
             startProximity();
             startGeolocation();
-            return startMicrophone();
+            return startMicrophone(token);
         }).then(() => {
+            if (isStale(token)) return;
             // Settle for a moment, then take an automatic first baseline.
-            const t = setTimeout(() => { if (state.running) calibrate(); }, 3000);
+            const t = setTimeout(() => { if (!isStale(token)) calibrate(); }, 3000);
             onStop(() => clearTimeout(t));
         });
 
-        if (!rafId) rafId = requestAnimationFrame(loop);
+        ensureLoop();
     }
 
     function rest() {
+        if (!state.running) return;
         state.running = false;
+        state.runId += 1;
         state.baseline = null;
         while (cleanups.length) {
             const fn = cleanups.pop();
             try { fn(); } catch (_) { /* ignore teardown noise */ }
         }
-        onStop(stopCamera);
-        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        releaseWakeLock();
+        resetSenses();
+        wasAlerting = false;
         $('awakenBtn').disabled = false;
         $('calibrateBtn').disabled = true;
         $('stopBtn').disabled = true;
         $('anomalyNote').textContent = 'Senses at rest. Nothing is being read.';
         CARDS.forEach((c) => setStatus(c.id, 'idle'));
-        updateAnomaly();
+        logEvent('Senses at rest');
+        paint();
         drawScope();
+        if (!camActive && rafId !== null) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+        }
     }
 
     /* ------------------------------------------------------------------ boot */
@@ -935,8 +1261,25 @@
         $('nfcBtn').addEventListener('click', probeNfc);
         $('btBtn').addEventListener('click', probeBluetooth);
         $('buzzBtn').addEventListener('click', probeHaptics);
+        $('exportBtn').addEventListener('click', exportReport);
+        $('copyBtn').addEventListener('click', copyReport);
+        $('clearLogBtn').addEventListener('click', clearLog);
+        $('alertsToggle').addEventListener('change', (e) => {
+            alertsOn = e.target.checked;
+            if (alertsOn) fireAlert();
+        });
 
-        window.addEventListener('pagehide', () => { if (state.running) rest(); });
+        // Screen wake locks are dropped when a tab is hidden; take it back.
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && state.running && !wakeLock) requestWakeLock();
+        });
+
+        const teardown = () => {
+            stopCamera();
+            stopNfc();
+            if (state.running) rest();
+        };
+        window.addEventListener('pagehide', teardown);
     }
 
     if (document.readyState === 'loading') {
