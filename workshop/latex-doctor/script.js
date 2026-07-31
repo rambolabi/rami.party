@@ -8,10 +8,14 @@
     var checkBtn = document.getElementById('checkBtn');
     var clearBtn = document.getElementById('clearBtn');
     var sampleBtn = document.getElementById('sampleBtn');
+    var copyBtn = document.getElementById('copyBtn');
     var results = document.getElementById('results');
     var statusChip = document.getElementById('statusChip');
 
-    var SAMPLE = '\\documentclass{article}\n' +
+    var STORAGE_KEY = 'latex-doctor-draft';
+    var PLACEHOLDER = '<p class="placeholder">Paste some LaTeX on the left — the Doctor checks it as you type.</p>';
+
+    var BROKEN_SAMPLE = '\\documentclass{article}\n' +
         '\\usepackage{amsmath}\n' +
         '\n' +
         '\\begin{document}\n' +
@@ -29,39 +33,157 @@
         '    a &= b + c\n' +
         '\\end{align}\n' +
         '\n' +
-        '\\includegraphics{diagram.png}\n';
+        '\\includegraphics{diagram.png}\n' +
+        '\n' +
+        '\\end{document}\n';
 
+    var HEALTHY_SAMPLE = '\\documentclass[11pt]{article}\n' +
+        '\\usepackage{amsmath}\n' +
+        '\\usepackage{graphicx}\n' +
+        '\n' +
+        '\\newcommand{\\greet}[1]{Hello, #1!}\n' +
+        '\n' +
+        '\\begin{document}\n' +
+        '\n' +
+        '\\section{A healthy document}\n' +
+        '\\greet{world} Inline math such as $a^2 + b^2 = c^2$ is fine, and so is\n' +
+        'display math:\n' +
+        '\n' +
+        '\\begin{equation}\\label{eq:sum}\n' +
+        '    S_n = \\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}\n' +
+        '\\end{equation}\n' +
+        '\n' +
+        'Equation~\\eqref{eq:sum} holds for every $n \\geq 1$, and 50\\% of the\n' +
+        'table below uses \\& an ampersand as ordinary text.\n' +
+        '\n' +
+        '\\begin{tabular}{ll}\n' +
+        '    Left & Right \\\\\n' +
+        '    A    & B     \\\\\n' +
+        '\\end{tabular}\n' +
+        '\n' +
+        '\\includegraphics[width=0.5\\textwidth]{my_diagram.png}\n' +
+        '\n' +
+        '\\end{document}\n';
+
+    /* Misspellings of real LaTeX commands, mapped to the real thing. Only
+       commands that genuinely exist are ever suggested. */
     var COMMAND_TYPOS = {
         '\\beign': '\\begin',
         '\\begign': '\\begin',
+        '\\bein': '\\begin',
         '\\endd': '\\end',
         '\\usepakage': '\\usepackage',
         '\\usepackge': '\\usepackage',
+        '\\usepacakge': '\\usepackage',
         '\\documentclas': '\\documentclass',
         '\\includegraphic': '\\includegraphics',
-        '\\frac{}': '\\frac{}{}',
-        '\\eqution': '\\equation',
-        '\\itmize': '\\itemize',
         '\\centring': '\\centering',
-        '\\textbd': '\\textbf'
+        '\\centerin': '\\centering',
+        '\\textbd': '\\textbf',
+        '\\textcolour': '\\textcolor',
+        '\\sectoin': '\\section',
+        '\\subsecton': '\\subsection',
+        '\\labl': '\\label',
+        '\\itme': '\\item',
+        '\\captoin': '\\caption',
+        '\\fract': '\\frac'
     };
 
+    /* Frequently misspelled environment names (used only inside \begin/\end). */
+    var ENVIRONMENT_TYPOS = {
+        'itemise': 'itemize',
+        'itmize': 'itemize',
+        'enumarate': 'enumerate',
+        'enumrate': 'enumerate',
+        'equasion': 'equation',
+        'eqution': 'equation',
+        'tabluar': 'tabular',
+        'figuer': 'figure',
+        'centre': 'center'
+    };
+
+    /* A command and the package(s) that provide it. Any one of `packages`
+       being loaded is enough — several commands come from more than one. */
     var PACKAGE_REQUIREMENTS = [
-        { pattern: /\\includegraphics\b/, command: '\\includegraphics', package: 'graphicx' },
-        { pattern: /\\textcolor\b/, command: '\\textcolor', package: 'xcolor' },
-        { pattern: /\\colorbox\b/, command: '\\colorbox', package: 'xcolor' },
-        { pattern: /\\href\b/, command: '\\href', package: 'hyperref' },
-        { pattern: /\\url\b/, command: '\\url', package: 'hyperref (or url)' },
-        { pattern: /\\SI\{|\\si\{/, command: '\\SI / \\si', package: 'siunitx' },
-        { pattern: /\\toprule|\\midrule|\\bottomrule/, command: '\\toprule/\\midrule/\\bottomrule', package: 'booktabs' },
-        { pattern: /\\multirow\b/, command: '\\multirow', package: 'multirow' },
-        { pattern: /\\checkmark\b/, command: '\\checkmark', package: 'amssymb' }
+        { pattern: /\\includegraphics\b/, command: '\\includegraphics', packages: ['graphicx', 'graphics'] },
+        { pattern: /\\textcolor\b/, command: '\\textcolor', packages: ['xcolor', 'color'] },
+        { pattern: /\\colorbox\b/, command: '\\colorbox', packages: ['xcolor', 'color'] },
+        { pattern: /\\href\b/, command: '\\href', packages: ['hyperref'] },
+        { pattern: /\\url\b/, command: '\\url', packages: ['hyperref', 'url'] },
+        { pattern: /\\SI\{|\\si\{|\\qty\{|\\num\{/, command: '\\SI / \\si / \\qty / \\num', packages: ['siunitx'] },
+        { pattern: /\\toprule|\\midrule|\\bottomrule/, command: '\\toprule / \\midrule / \\bottomrule', packages: ['booktabs'] },
+        { pattern: /\\multirow\b/, command: '\\multirow', packages: ['multirow'] },
+        { pattern: /\\checkmark\b/, command: '\\checkmark', packages: ['amssymb', 'dingbat', 'bbding'] },
+        { pattern: /\\lstinline|\\begin\{lstlisting\}/, command: '\\lstinline / lstlisting', packages: ['listings'] },
+        { pattern: /\\begin\{align\}|\\begin\{align\*\}|\\begin\{gather\}|\\begin\{multline\}|\\text\{/, command: 'amsmath features (align, gather, \\text)', packages: ['amsmath'] }
     ];
 
+    /* Environments whose body is typeset in math mode: inside them _, ^ and &
+       are ordinary maths syntax rather than mistakes. */
+    var MATH_ENVS = ['equation', 'displaymath', 'math', 'align', 'alignat', 'flalign',
+        'gather', 'multline', 'eqnarray', 'split', 'aligned', 'alignedat', 'gathered',
+        'cases', 'dcases', 'array', 'matrix', 'pmatrix', 'bmatrix', 'Bmatrix', 'vmatrix',
+        'Vmatrix', 'smallmatrix', 'subequations', 'IEEEeqnarray'];
+
+    /* Environments where a bare & separates columns. */
+    var ALIGN_ENVS = ['tabular', 'tabularx', 'tabulary', 'longtable', 'supertabular',
+        'tabu', 'array', 'align', 'alignat', 'flalign', 'eqnarray', 'aligned', 'alignedat',
+        'matrix', 'pmatrix', 'bmatrix', 'Bmatrix', 'vmatrix', 'Vmatrix', 'smallmatrix',
+        'cases', 'dcases', 'IEEEeqnarray'];
+
+    /* Environments reproduced verbatim: nothing inside them is LaTeX syntax,
+       so the Doctor must not look at their contents at all. */
+    var VERBATIM_ENVS = ['verbatim', 'Verbatim', 'BVerbatim', 'LVerbatim', 'lstlisting',
+        'minted', 'alltt', 'comment', 'filecontents'];
+
+    /* Commands that define macros: # is a parameter marker in their body. */
+    var DEFINITION_COMMANDS = ['newcommand', 'renewcommand', 'providecommand',
+        'DeclareRobustCommand', 'newenvironment', 'renewenvironment', 'def',
+        'newcolumntype', 'DeclarePairedDelimiter'];
+
+    /* Commands whose braced argument is a literal string (paths, labels, URLs),
+       where _ and # are perfectly normal characters. */
+    var LITERAL_ARG_COMMANDS = ['label', 'ref', 'pageref', 'eqref', 'autoref', 'cref',
+        'Cref', 'cite', 'citep', 'citet', 'citeauthor', 'citeyear', 'nocite',
+        'includegraphics', 'url', 'input', 'include', 'bibliography', 'bibliographystyle',
+        'texttt', 'path', 'lstinputlisting', 'graphicspath', 'usepackage', 'documentclass',
+        'RequirePackage'];
+
+    function toSet(list) {
+        var set = {};
+        list.forEach(function (item) { set[item] = true; });
+        return set;
+    }
+
+    function withStarVariants(names) {
+        var all = [];
+        names.forEach(function (name) {
+            all.push(name);
+            all.push(name + '*');
+        });
+        return all;
+    }
+
+    var MATH_ENV_SET = toSet(withStarVariants(MATH_ENVS));
+    var ALIGN_ENV_SET = toSet(withStarVariants(ALIGN_ENVS));
+    var VERBATIM_ENV_SET = toSet(withStarVariants(VERBATIM_ENVS));
+
+    function escapeRegExp(str) {
+        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
     /**
-     * Builds a sorted array of character offsets where each line begins, so
-     * that a character index can be mapped to a line number in O(log n)
-     * instead of rescanning the whole text for every issue found.
+     * Builds a sorted array of character offsets where each line begins, so a
+     * character index can be mapped to a line number in O(log n) instead of
+     * rescanning the whole text for every issue found.
      */
     function computeLineStarts(text) {
         var starts = [0];
@@ -71,100 +193,220 @@
         return starts;
     }
 
-    function lineAt(lineStarts, index) {
+    function lineIndexAt(lineStarts, index) {
         var lo = 0, hi = lineStarts.length - 1;
         while (lo < hi) {
             var mid = (lo + hi + 1) >> 1;
             if (lineStarts[mid] <= index) lo = mid; else hi = mid - 1;
         }
-        return lo + 1;
+        return lo;
+    }
+
+    function isInsideRange(ranges, index) {
+        for (var r = 0; r < ranges.length; r++) {
+            if (index >= ranges[r][0] && index < ranges[r][1]) return true;
+        }
+        return false;
+    }
+
+    function blank(chars, start, end) {
+        for (var i = Math.max(0, start); i < end && i < chars.length; i++) {
+            if (chars[i] !== '\n') chars[i] = ' ';
+        }
     }
 
     /**
-     * Walks the source once, tracking comments, escaping, brace nesting and
-     * math-mode delimiters, and returns a list of issues.
+     * Produces a copy of the source in which everything LaTeX does not read as
+     * syntax — comment text and verbatim bodies — is replaced by spaces.
+     * Newlines are kept, so every character index (and therefore every reported
+     * line and column) still matches the original source exactly.
+     */
+    function maskNonCode(text) {
+        var chars = text.split('');
+        var i;
+
+        // 1. Verbatim environments: blank the body, keep \begin / \end.
+        var envRegex = /\\begin\s*\{([^{}]*)\}/g;
+        var m;
+        while ((m = envRegex.exec(text)) !== null) {
+            var name = m[1].trim();
+            if (!VERBATIM_ENV_SET[name]) continue;
+            var closing = '\\end{' + name + '}';
+            var bodyStart = m.index + m[0].length;
+            var closeIdx = text.indexOf(closing, bodyStart);
+            var bodyEnd = closeIdx === -1 ? text.length : closeIdx;
+            blank(chars, bodyStart, bodyEnd);
+            envRegex.lastIndex = bodyEnd;
+        }
+
+        // 2. \verb<delim>...<delim> and \lstinline<delim>...<delim>.
+        var verbRegex = /\\(?:verb|lstinline)\*?(?:\[[^\]]*\])?([^A-Za-z0-9\s])/g;
+        var v;
+        while ((v = verbRegex.exec(text)) !== null) {
+            var start = v.index + v[0].length;
+            var end = text.indexOf(v[1], start);
+            if (end === -1) end = text.indexOf('\n', start);
+            if (end === -1) end = text.length;
+            blank(chars, v.index, end + 1);
+            verbRegex.lastIndex = end + 1;
+        }
+
+        // 3. Comments: from an unescaped % to the end of the line.
+        var inComment = false;
+        for (i = 0; i < chars.length; i++) {
+            if (chars[i] === '\n') { inComment = false; continue; }
+            if (inComment) { chars[i] = ' '; continue; }
+            if (chars[i] === '\\') { i++; continue; }
+            if (chars[i] === '%') { inComment = true; chars[i] = ' '; }
+        }
+
+        return chars.join('');
+    }
+
+    /** Returns the index just past the group that starts with `{` at `open`. */
+    function skipGroup(code, open) {
+        var depth = 0;
+        var i = open;
+        while (i < code.length) {
+            if (code[i] === '\\') { i += 2; continue; }
+            if (code[i] === '{') depth++;
+            else if (code[i] === '}') {
+                depth--;
+                if (depth === 0) return i + 1;
+            }
+            i++;
+        }
+        return code.length;
+    }
+
+    /**
+     * Finds the index ranges of macro definitions, where # introduces a
+     * parameter and must not be flagged as an unescaped special character.
+     */
+    function findDefinitionRanges(code) {
+        var ranges = [];
+        var regex = new RegExp('\\\\(?:' + DEFINITION_COMMANDS.join('|') + ')\\b\\*?', 'g');
+        var m;
+        while ((m = regex.exec(code)) !== null) {
+            var pos = m.index + m[0].length;
+            // \def\foo#1#2{...} — step over the macro name and parameter text.
+            while (pos < code.length && code[pos] !== '{' && code[pos] !== '[' && /[\\A-Za-z0-9#\s]/.test(code[pos])) pos++;
+            var groups = 0;
+            while (pos < code.length && groups < 4) {
+                var ch = code[pos];
+                if (ch === ' ' || ch === '\t' || ch === '\r' || ch === '\n') { pos++; continue; }
+                if (ch === '[') {
+                    var closeBracket = code.indexOf(']', pos);
+                    if (closeBracket === -1) break;
+                    pos = closeBracket + 1;
+                    continue;
+                }
+                if (ch === '{') {
+                    pos = skipGroup(code, pos);
+                    groups++;
+                    continue;
+                }
+                break;
+            }
+            ranges.push([m.index, pos]);
+            regex.lastIndex = Math.max(pos, regex.lastIndex);
+        }
+        return ranges;
+    }
+
+    /**
+     * Finds index ranges of braced arguments where a literal underscore or hash
+     * is normal (file paths, labels, references, URLs) rather than a mistake.
+     */
+    function findLiteralArgumentRanges(code) {
+        var ranges = [];
+        var cmdRegex = new RegExp('\\\\(?:' + LITERAL_ARG_COMMANDS.join('|') + ')\\*?(?:\\[[^\\]]*\\])?\\{', 'g');
+        var m;
+        while ((m = cmdRegex.exec(code)) !== null) {
+            var openIdx = m.index + m[0].length - 1;
+            var end = skipGroup(code, openIdx);
+            ranges.push([openIdx + 1, end - 1]);
+            cmdRegex.lastIndex = end;
+        }
+        // \href{url}{text}: both arguments are typed by hand and often hold _.
+        var hrefRegex = /\\href(?:\[[^\]]*\])?\{/g;
+        var h;
+        while ((h = hrefRegex.exec(code)) !== null) {
+            var firstOpen = h.index + h[0].length - 1;
+            var firstEnd = skipGroup(code, firstOpen);
+            ranges.push([firstOpen + 1, firstEnd - 1]);
+            var next = firstEnd;
+            while (next < code.length && /\s/.test(code[next])) next++;
+            if (code[next] === '{') {
+                var secondEnd = skipGroup(code, next);
+                ranges.push([next + 1, secondEnd - 1]);
+                next = secondEnd;
+            }
+            hrefRegex.lastIndex = Math.max(next, hrefRegex.lastIndex);
+        }
+        return ranges;
+    }
+
+    /**
+     * Walks the source and returns a list of issues, each with a line, a
+     * column, the character index it was found at and a plain-English message.
      */
     function analyze(text) {
         var issues = [];
         var lineStarts = computeLineStarts(text);
+        var code = maskNonCode(text);
 
         function addIssue(index, severity, message) {
-            issues.push({ line: lineAt(lineStarts, index), severity: severity, message: message });
+            var safeIndex = Math.max(0, Math.min(index, text.length));
+            var lineIdx = lineIndexAt(lineStarts, safeIndex);
+            issues.push({
+                index: safeIndex,
+                line: lineIdx + 1,
+                column: safeIndex - lineStarts[lineIdx] + 1,
+                severity: severity,
+                message: message
+            });
         }
 
-        // --- Pass 1: character-level scan (comments, escaping, braces, math) ---
+        // --- Pass 1: character scan for braces and math delimiters ---
         var braceStack = [];
-        var mathStack = []; // entries: { type: '$' | '$$' | '\\[' | '\\(', index }
-        var mathRanges = []; // [start, end] index ranges of *closed* math spans
-        var inComment = false;
+        var mathStack = [];  // entries: { type: '$' | '$$' | '\\[' | '\\(', index }
+        var mathRanges = []; // index ranges of *closed* math spans
         var i = 0;
-        var len = text.length;
+        var len = code.length;
 
         while (i < len) {
-            var ch = text[i];
+            var ch = code[i];
+            var pair = code.substr(i, 2);
 
-            if (ch === '\n') {
-                inComment = false;
-                i++;
-                continue;
-            }
-
-            if (inComment) {
-                i++;
-                continue;
-            }
-
-            // \[, \], \( and \) are structural math-mode delimiters, so they
-            // must be checked *before* the generic backslash-escape handling
-            // below (otherwise that branch would swallow them as if they were
-            // an escaped character and this code would never run).
-            if (text.substr(i, 2) === '\\[') {
-                mathStack.push({ type: '\\[', index: i });
+            // \[, \], \( and \) are structural math delimiters, so they must be
+            // handled before the generic backslash-escape branch below —
+            // otherwise that branch would swallow them.
+            if (pair === '\\[' || pair === '\\(') {
+                mathStack.push({ type: pair, index: i });
                 i += 2;
                 continue;
             }
 
-            if (text.substr(i, 2) === '\\]') {
-                var topDisplay = mathStack[mathStack.length - 1];
-                if (topDisplay && topDisplay.type === '\\[') {
+            if (pair === '\\]' || pair === '\\)') {
+                var wanted = pair === '\\]' ? '\\[' : '\\(';
+                var openTop = mathStack[mathStack.length - 1];
+                if (openTop && openTop.type === wanted) {
                     mathStack.pop();
-                    mathRanges.push([topDisplay.index, i + 2]);
+                    mathRanges.push([openTop.index, i + 2]);
                 } else {
-                    addIssue(i, 'error', 'Found <code>\\]</code> with no matching <code>\\[</code> before it.');
-                }
-                i += 2;
-                continue;
-            }
-
-            if (text.substr(i, 2) === '\\(') {
-                mathStack.push({ type: '\\(', index: i });
-                i += 2;
-                continue;
-            }
-
-            if (text.substr(i, 2) === '\\)') {
-                var topInline = mathStack[mathStack.length - 1];
-                if (topInline && topInline.type === '\\(') {
-                    mathStack.pop();
-                    mathRanges.push([topInline.index, i + 2]);
-                } else {
-                    addIssue(i, 'error', 'Found <code>\\)</code> with no matching <code>\\(</code> before it.');
+                    addIssue(i, 'error', 'Found <code>' + escapeHtml(pair) + '</code> with no matching <code>' +
+                        escapeHtml(wanted) + '</code> before it.');
                 }
                 i += 2;
                 continue;
             }
 
             if (ch === '\\') {
-                // Escaped character (\%, \&, \#, \_, \$, \{, \}) or a command name.
-                // Either way, skip the next character so it isn't misread as
+                // An escaped character (\%, \&, \#, \_, \$, \{, \}) or the start
+                // of a command name — either way the next character is not
                 // structural syntax.
                 i += 2;
-                continue;
-            }
-
-            if (ch === '%') {
-                inComment = true;
-                i++;
                 continue;
             }
 
@@ -185,16 +427,18 @@
             }
 
             if (ch === '$') {
-                var isDisplay = text[i + 1] === '$';
-                var token = isDisplay ? '$$' : '$';
                 var top = mathStack[mathStack.length - 1];
-                if (top && top.type === token) {
+                if (top && (top.type === '$' || top.type === '$$')) {
+                    // A run of $ closes whatever is currently open: in "$a$$b$"
+                    // the second $ ends the first inline formula.
                     mathStack.pop();
-                    mathRanges.push([top.index, i + token.length]);
+                    mathRanges.push([top.index, i + top.type.length]);
+                    i += top.type.length;
                 } else {
+                    var token = code[i + 1] === '$' ? '$$' : '$';
                     mathStack.push({ type: token, index: i });
+                    i += token.length;
                 }
-                i += token.length;
                 continue;
             }
 
@@ -206,199 +450,226 @@
         });
 
         mathStack.forEach(function (entry) {
-            addIssue(entry.index, 'error', 'Math mode started with <code>' + escapeHtml(entry.type) + '</code> is never closed.');
+            addIssue(entry.index, 'error', 'Math mode opened with <code>' + escapeHtml(entry.type) +
+                '</code> is never closed — LaTeX will report “Missing $ inserted”.');
         });
 
         // --- Pass 2: \begin{}/\end{} environment matching ---
         var envStack = [];
-        var tabularRanges = []; // [start, end] index ranges where & is expected syntax
-        var TABULAR_ENVS = ['tabular', 'tabular*', 'tabularx', 'array', 'align', 'align*',
-            'alignat', 'alignat*', 'eqnarray', 'eqnarray*', 'matrix', 'pmatrix', 'bmatrix',
-            'vmatrix', 'Vmatrix', 'smallmatrix', 'cases', 'longtable', 'aligned'];
-        var envRegex = /\\(begin|end)\{([^{}]*)\}/g;
+        var alignRanges = [];   // ranges where a bare & is expected syntax
+        var mathEnvRanges = []; // ranges where _ ^ and & are maths, not mistakes
+        var abandoned = {};     // environments closed out of order
+        var envRegex = /\\(begin|end)\s*\{([^{}]*)\}/g;
         var match;
-        while ((match = envRegex.exec(text)) !== null) {
-            // Skip matches that fall inside a % comment on their line.
-            var lineStart = text.lastIndexOf('\n', match.index) + 1;
-            var lineFragment = text.slice(lineStart, match.index);
-            if (/(^|[^\\])%/.test(lineFragment)) continue;
 
+        function recordEnvRange(name, start, end) {
+            if (ALIGN_ENV_SET[name]) alignRanges.push([start, end]);
+            if (MATH_ENV_SET[name]) mathEnvRanges.push([start, end]);
+        }
+
+        while ((match = envRegex.exec(code)) !== null) {
             var kind = match[1];
             var name = match[2].trim();
 
             if (kind === 'begin') {
                 envStack.push({ name: name, index: match.index });
-            } else {
-                if (envStack.length === 0) {
-                    addIssue(match.index, 'error', '<code>\\end{' + escapeHtml(name) + '}</code> has no matching <code>\\begin{' + escapeHtml(name) + '}</code>.');
+                continue;
+            }
+
+            if (envStack.length === 0) {
+                if (abandoned[name]) {
+                    addIssue(match.index, 'error', '<code>\\end{' + escapeHtml(name) +
+                        '}</code> comes too late — that environment was already forced shut by an <code>\\end{...}</code> above.');
                 } else {
-                    var last = envStack[envStack.length - 1];
-                    if (last.name === name) {
-                        envStack.pop();
-                        if (TABULAR_ENVS.indexOf(name) !== -1) {
-                            tabularRanges.push([last.index, match.index + match[0].length]);
-                        }
-                    } else {
-                        // Try to find a deeper match to give a friendlier message.
-                        var foundIdx = -1;
-                        for (var k = envStack.length - 1; k >= 0; k--) {
-                            if (envStack[k].name === name) { foundIdx = k; break; }
-                        }
-                        if (foundIdx >= 0) {
-                            addIssue(match.index, 'error', '<code>\\end{' + escapeHtml(name) + '}</code> found, but <code>\\begin{' + escapeHtml(last.name) + '}</code> was still open. Close inner environments before this one.');
-                            envStack.length = foundIdx;
-                        } else {
-                            addIssue(match.index, 'error', '<code>\\begin{' + escapeHtml(last.name) + '}</code> is closed with <code>\\end{' + escapeHtml(name) + '}</code> — environment names must match.');
-                            envStack.pop();
-                        }
-                    }
+                    addIssue(match.index, 'error', '<code>\\end{' + escapeHtml(name) +
+                        '}</code> has no matching <code>\\begin{' + escapeHtml(name) + '}</code> before it.');
                 }
+                continue;
+            }
+
+            var last = envStack[envStack.length - 1];
+            if (last.name === name) {
+                envStack.pop();
+                recordEnvRange(name, last.index, match.index + match[0].length);
+                continue;
+            }
+
+            var foundIdx = -1;
+            for (var k = envStack.length - 1; k >= 0; k--) {
+                if (envStack[k].name === name) { foundIdx = k; break; }
+            }
+            if (foundIdx >= 0) {
+                addIssue(match.index, 'error', '<code>\\end{' + escapeHtml(name) + '}</code> found, but <code>\\begin{' +
+                    escapeHtml(last.name) + '}</code> is still open. Close inner environments before this one.');
+                for (var d = envStack.length - 1; d > foundIdx; d--) {
+                    abandoned[envStack[d].name] = true;
+                    recordEnvRange(envStack[d].name, envStack[d].index, match.index);
+                }
+                recordEnvRange(name, envStack[foundIdx].index, match.index + match[0].length);
+                envStack.length = foundIdx;
+            } else {
+                addIssue(match.index, 'error', '<code>\\begin{' + escapeHtml(last.name) + '}</code> is closed with <code>\\end{' +
+                    escapeHtml(name) + '}</code> — the two names must match.');
+                recordEnvRange(last.name, last.index, match.index + match[0].length);
+                envStack.pop();
             }
         }
 
         envStack.forEach(function (entry) {
-            addIssue(entry.index, 'error', '<code>\\begin{' + escapeHtml(entry.name) + '}</code> is never closed with <code>\\end{' + escapeHtml(entry.name) + '}</code>.');
+            addIssue(entry.index, 'error', '<code>\\begin{' + escapeHtml(entry.name) +
+                '}</code> is never closed with <code>\\end{' + escapeHtml(entry.name) + '}</code>.');
+            // Treat it as running to the end of the source, so its contents do
+            // not trigger a second wave of misleading warnings.
+            recordEnvRange(entry.name, entry.index, code.length);
         });
 
         // --- Pass 3: document scaffolding ---
-        // Missing/mismatched \begin{document}/\end{document} pairs are already
-        // reported by the generic environment matching above (Pass 2), since
-        // "document" is itself just an environment. Only the documentclass
-        // check is specific to this pass.
-        var hasDocumentClass = /\\documentclass(\[[^\]]*\])?\{[^{}]*\}/.test(text);
-        var hasBeginDocument = /\\begin\{document\}/.test(text);
+        // A missing \end{document} is already reported by the environment
+        // matching above — "document" is just another environment.
+        var documentClassIdx = code.search(/\\documentclass\s*(\[[^\]]*\])?\s*\{[^{}]*\}/);
+        var beginDocumentIdx = code.search(/\\begin\s*\{document\}/);
 
-        if (hasBeginDocument && !hasDocumentClass) {
-            addIssue(text.indexOf('\\begin{document}'), 'warning', 'No <code>\\documentclass{...}</code> found before <code>\\begin{document}</code>. Every compilable document needs one.');
+        if (beginDocumentIdx !== -1 && documentClassIdx === -1) {
+            addIssue(beginDocumentIdx, 'error',
+                'No <code>\\documentclass{...}</code> found — every complete document must start with one.');
         }
-
-        // --- Pass 3b: locate "safe" argument ranges where _ and # are normal
-        // text (file paths, labels, references, URLs) rather than mistakes. ---
-        var safeArgRanges = findSafeArgumentRanges(text);
-
-        function isInsideRange(ranges, index) {
-            for (var r = 0; r < ranges.length; r++) {
-                if (index >= ranges[r][0] && index < ranges[r][1]) return true;
-            }
-            return false;
+        if (documentClassIdx !== -1 && beginDocumentIdx === -1) {
+            addIssue(documentClassIdx, 'error',
+                'There is a <code>\\documentclass</code> but no <code>\\begin{document}</code>, so nothing would be typeset.');
         }
 
         // --- Pass 4: unescaped special characters ---
-        var lines = text.split('\n');
-        lines.forEach(function (rawLine, lineIdx) {
-            var commentSplit = splitAtUnescapedComment(rawLine);
-            var code = commentSplit.code;
-            var lineOffset = lineStarts[lineIdx];
+        var literalRanges = findLiteralArgumentRanges(code);
+        var definitionRanges = findDefinitionRanges(code);
+        var specialCharRegex = /[&_#]/g;
+        var s;
 
-            var specialCharRegex = /(^|[^\\])([&_#])/g;
-            var m;
-            while ((m = specialCharRegex.exec(code)) !== null) {
-                var globalIndex = lineOffset + m.index + m[1].length;
-                var symbol = m[2];
+        while ((s = specialCharRegex.exec(code)) !== null) {
+            var idx = s.index;
+            var symbol = s[0];
 
-                if (isInsideRange(mathRanges, globalIndex)) continue;
-                if (symbol === '&' && isInsideRange(tabularRanges, globalIndex)) continue;
-                if ((symbol === '_' || symbol === '#') && isInsideRange(safeArgRanges, globalIndex)) continue;
+            // Count the backslashes in front: an odd number means it is escaped.
+            var slashes = 0;
+            var back = idx - 1;
+            while (back >= 0 && code[back] === '\\') { slashes++; back--; }
+            if (slashes % 2 === 1) continue;
 
-                var advice = symbol === '&'
-                    ? 'A lone <code>&amp;</code> is only valid inside alignment environments like <code>tabular</code> or <code>align</code>. Escape it as <code>\\&amp;</code> otherwise.'
-                    : symbol === '_'
-                        ? 'A lone <code>_</code> outside math mode will raise "Missing $ inserted". Escape it as <code>\\_</code> or wrap in <code>$...$</code>.'
-                        : 'A lone <code>#</code> outside a macro definition must be escaped as <code>\\#</code>.';
-                addIssue(globalIndex, 'warning', advice);
-            }
-        });
+            if (isInsideRange(mathRanges, idx)) continue;
+            if (isInsideRange(mathEnvRanges, idx)) continue;
+            if (symbol === '&' && isInsideRange(alignRanges, idx)) continue;
+            if (symbol !== '&' && isInsideRange(literalRanges, idx)) continue;
+            if (symbol === '#' && isInsideRange(definitionRanges, idx)) continue;
+
+            var advice = symbol === '&'
+                ? 'A bare <code>&amp;</code> is only meaningful inside an alignment environment such as <code>tabular</code> or <code>align</code>. Write <code>\\&amp;</code> for a literal ampersand.'
+                : symbol === '_'
+                    ? 'A bare <code>_</code> outside math mode causes “Missing $ inserted”. Write <code>\\_</code> for a literal underscore, or put the expression in <code>$...$</code>.'
+                    : 'A bare <code>#</code> is only a parameter marker inside a macro definition. Write <code>\\#</code> for a literal hash.';
+            addIssue(idx, 'warning', advice);
+        }
 
         // --- Pass 5: typo detection ---
         Object.keys(COMMAND_TYPOS).forEach(function (typo) {
-            var escaped = typo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            var typoRegex = new RegExp(escaped + '(?![a-zA-Z])', 'g');
+            var typoRegex = new RegExp(escapeRegExp(typo) + '(?![a-zA-Z])', 'g');
             var t;
-            while ((t = typoRegex.exec(text)) !== null) {
-                addIssue(t.index, 'warning', 'Possible typo: <code>' + escapeHtml(typo) + '</code> — did you mean <code>' + escapeHtml(COMMAND_TYPOS[typo]) + '</code>?');
+            while ((t = typoRegex.exec(code)) !== null) {
+                addIssue(t.index, 'warning', 'Possible typo: <code>' + escapeHtml(typo) + '</code> — did you mean <code>' +
+                    escapeHtml(COMMAND_TYPOS[typo]) + '</code>?');
             }
         });
+
+        var envNameRegex = /\\(?:begin|end)\s*\{([^{}]*)\}/g;
+        var e;
+        while ((e = envNameRegex.exec(code)) !== null) {
+            var envName = e[1].trim();
+            var base = envName.replace(/\*$/, '');
+            if (ENVIRONMENT_TYPOS[base]) {
+                addIssue(e.index, 'warning', 'Unknown environment <code>' + escapeHtml(envName) + '</code> — did you mean <code>' +
+                    escapeHtml(ENVIRONMENT_TYPOS[base] + (envName.slice(-1) === '*' ? '*' : '')) + '</code>?');
+            }
+        }
 
         // --- Pass 6: missing package suggestions ---
         PACKAGE_REQUIREMENTS.forEach(function (req) {
-            if (req.pattern.test(text)) {
-                var pkgName = req.package.split(' ')[0];
-                var usePkgRegex = new RegExp('\\\\usepackage(\\[[^\\]]*\\])?\\{[^{}]*\\b' + pkgName + '\\b[^{}]*\\}');
-                if (!usePkgRegex.test(text)) {
-                    var firstUse = text.search(req.pattern);
-                    addIssue(firstUse, 'warning', 'Uses <code>' + escapeHtml(req.command) + '</code> but no <code>\\usepackage{' + escapeHtml(req.package) + '}</code> was found.');
-                }
-            }
+            var firstUse = code.search(req.pattern);
+            if (firstUse === -1) return;
+            var loaded = req.packages.some(function (pkg) {
+                var usePkgRegex = new RegExp('\\\\(?:usepackage|RequirePackage)\\s*(?:\\[[^\\]]*\\])?\\s*\\{[^{}]*\\b' +
+                    escapeRegExp(pkg) + '\\b[^{}]*\\}');
+                return usePkgRegex.test(code);
+            });
+            if (loaded) return;
+            var alternatives = req.packages.length > 1
+                ? ' (or <code>' + req.packages.slice(1).map(escapeHtml).join('</code> / <code>') + '</code>)'
+                : '';
+            addIssue(firstUse, 'warning', 'Uses <code>' + escapeHtml(req.command) + '</code> but no <code>\\usepackage{' +
+                escapeHtml(req.packages[0]) + '}</code>' + alternatives + ' was found.');
         });
 
-        // Sort by line number for a readable report.
-        issues.sort(function (a, b) { return a.line - b.line; });
-        return issues;
+        // Sort by position (errors first within a position) and drop duplicates.
+        issues.sort(function (a, b) {
+            if (a.index !== b.index) return a.index - b.index;
+            if (a.severity === b.severity) return 0;
+            return a.severity === 'error' ? -1 : 1;
+        });
+        var seen = {};
+        return issues.filter(function (issue) {
+            var key = issue.index + '|' + issue.message;
+            if (seen[key]) return false;
+            seen[key] = true;
+            return true;
+        });
     }
 
-    /**
-     * Finds index ranges of brace-delimited arguments to commands where a
-     * literal underscore or hash is normal (file paths, labels, references,
-     * URLs) rather than a likely mistake, so Pass 4 can skip warning there.
-     */
-    function findSafeArgumentRanges(text) {
-        var SAFE_COMMANDS = ['label', 'ref', 'pageref', 'eqref', 'cite', 'citep', 'citet',
-            'nocite', 'includegraphics', 'url', 'href', 'input', 'include',
-            'bibliography', 'texttt', 'path', 'verb', 'lstinline', 'footnote', 'caption'];
-        var ranges = [];
-        var cmdRegex = new RegExp('\\\\(' + SAFE_COMMANDS.join('|') + ')\\*?(\\[[^\\]]*\\])?\\{', 'g');
-        var m;
-        while ((m = cmdRegex.exec(text)) !== null) {
-            var openIdx = m.index + m[0].length - 1; // index of the opening '{'
-            var depth = 1;
-            var j = openIdx + 1;
-            while (j < text.length && depth > 0) {
-                if (text[j] === '\\') { j += 2; continue; }
-                if (text[j] === '{') depth++;
-                else if (text[j] === '}') depth--;
-                j++;
-            }
-            ranges.push([openIdx + 1, j - 1]);
-            cmdRegex.lastIndex = j;
-        }
-        return ranges;
+    /* ---------------------------------------------------------------- UI --- */
+
+    var lastIssues = [];
+    var escapePressed = false;
+    var debounceTimer = null;
+
+    function setStatus(label, kind) {
+        statusChip.textContent = label;
+        statusChip.className = 'status-chip status-' + kind;
     }
 
-    function splitAtUnescapedComment(line) {
-        for (var i = 0; i < line.length; i++) {
-            if (line[i] === '\\') { i++; continue; }
-            if (line[i] === '%') return { code: line.slice(0, i), comment: line.slice(i + 1) };
-        }
-        return { code: line, comment: null };
+    function sourceLine(text, lineNumber) {
+        var lines = text.split('\n');
+        return lines[lineNumber - 1] === undefined ? '' : lines[lineNumber - 1];
     }
 
-    function escapeHtml(str) {
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+    function focusLine(issue) {
+        var lines = texInput.value.split('\n');
+        var start = 0;
+        for (var i = 0; i < issue.line - 1 && i < lines.length; i++) start += lines[i].length + 1;
+        var lineText = lines[issue.line - 1] || '';
+        texInput.focus();
+        texInput.setSelectionRange(start, start + lineText.length);
+        var lineHeight = parseFloat(window.getComputedStyle(texInput).lineHeight) || 20;
+        texInput.scrollTop = Math.max(0, (issue.line - 3) * lineHeight);
     }
 
-    function renderResults(issues) {
+    function renderResults(issues, text) {
+        lastIssues = issues;
         results.innerHTML = '';
+        copyBtn.disabled = issues.length === 0;
 
         if (issues.length === 0) {
-            statusChip.textContent = 'Looks healthy';
-            statusChip.className = 'status-chip status-ok';
+            setStatus('Looks healthy', 'ok');
             var banner = document.createElement('div');
             banner.className = 'success-banner';
-            banner.innerHTML = '<span aria-hidden="true">✅</span> No syntax errors or common mistakes found. Ship it!';
+            banner.innerHTML = '<span aria-hidden="true">✅</span> <span>No syntax errors or common mistakes found. ' +
+                'The Doctor only reads your source — it cannot tell whether the packages you use are installed, ' +
+                'so a real compile is still the final word.</span>';
             results.appendChild(banner);
             return;
         }
 
         var errorCount = issues.filter(function (x) { return x.severity === 'error'; }).length;
         var warnCount = issues.length - errorCount;
-
-        statusChip.textContent = errorCount > 0
-            ? errorCount + ' error' + (errorCount === 1 ? '' : 's') + (warnCount ? ', ' + warnCount + ' warning' + (warnCount === 1 ? '' : 's') : '')
-            : warnCount + ' warning' + (warnCount === 1 ? '' : 's');
-        statusChip.className = 'status-chip ' + (errorCount > 0 ? 'status-error' : 'status-warn');
+        var parts = [];
+        if (errorCount) parts.push(errorCount + ' error' + (errorCount === 1 ? '' : 's'));
+        if (warnCount) parts.push(warnCount + ' warning' + (warnCount === 1 ? '' : 's'));
+        setStatus(parts.join(', '), errorCount > 0 ? 'error' : 'warn');
 
         var list = document.createElement('ul');
         list.className = 'issue-list';
@@ -406,51 +677,197 @@
         issues.forEach(function (issue) {
             var li = document.createElement('li');
             li.className = 'issue issue-' + issue.severity;
+
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'issue-jump';
+            button.title = 'Jump to line ' + issue.line + ' in the editor';
+
             var lineLabel = document.createElement('span');
             lineLabel.className = 'issue-line';
-            lineLabel.textContent = (issue.severity === 'error' ? '✗ Error' : '⚠ Warning') + ' · line ' + issue.line;
+            lineLabel.textContent = (issue.severity === 'error' ? '✗ Error' : '⚠ Warning') +
+                ' · line ' + issue.line + ', column ' + issue.column;
+
             var message = document.createElement('span');
             message.className = 'issue-message';
             message.innerHTML = issue.message;
-            li.appendChild(lineLabel);
-            li.appendChild(message);
+
+            button.appendChild(lineLabel);
+            button.appendChild(message);
+
+            var snippetText = sourceLine(text, issue.line).replace(/\t/g, '    ');
+            if (snippetText.trim()) {
+                var snippet = document.createElement('code');
+                snippet.className = 'issue-snippet';
+                snippet.textContent = snippetText.length > 160 ? snippetText.slice(0, 157) + '…' : snippetText;
+                button.appendChild(snippet);
+            }
+
+            button.addEventListener('click', function () { focusLine(issue); });
+            li.appendChild(button);
             list.appendChild(li);
         });
 
         results.appendChild(list);
     }
 
-    function runDiagnosis() {
-        var text = texInput.value;
-        if (!text.trim()) {
-            statusChip.textContent = 'Waiting for input';
-            statusChip.className = 'status-chip status-idle';
-            results.innerHTML = '<p class="placeholder">Paste some LaTeX and hit <strong>Diagnose</strong> to see what\'s wrong with it (if anything).</p>';
-            return;
-        }
-        var issues = analyze(text);
-        renderResults(issues);
+    function showEmptyState() {
+        lastIssues = [];
+        copyBtn.disabled = true;
+        setStatus('Waiting for input', 'idle');
+        results.innerHTML = PLACEHOLDER;
     }
 
-    checkBtn.addEventListener('click', runDiagnosis);
+    function saveDraft(text) {
+        try {
+            if (text) window.localStorage.setItem(STORAGE_KEY, text);
+            else window.localStorage.removeItem(STORAGE_KEY);
+        } catch (err) { /* private mode or storage full — not fatal */ }
+    }
+
+    function loadDraft() {
+        try { return window.localStorage.getItem(STORAGE_KEY) || ''; } catch (err) { return ''; }
+    }
+
+    function runDiagnosis() {
+        var text = texInput.value;
+        saveDraft(text);
+        if (!text.trim()) {
+            showEmptyState();
+            return;
+        }
+        renderResults(analyze(text), text);
+    }
+
+    function reportAsText() {
+        if (!lastIssues.length) return '';
+        return lastIssues.map(function (issue) {
+            var plain = issue.message
+                .replace(/<[^>]+>/g, '')
+                .replace(/&lt;/g, '<')
+                .replace(/&gt;/g, '>')
+                .replace(/&quot;/g, '"')
+                .replace(/&amp;/g, '&');
+            return (issue.severity === 'error' ? 'Error' : 'Warning') + ' · line ' + issue.line +
+                ', column ' + issue.column + ': ' + plain;
+        }).join('\n');
+    }
+
+    function updateSampleButton() {
+        sampleBtn.textContent = texInput.value === BROKEN_SAMPLE ? 'Load healthy sample' : 'Load broken sample';
+    }
+
+    if (texInput) {
+        texInput.addEventListener('input', function () {
+            window.clearTimeout(debounceTimer);
+            setStatus('Checking…', 'idle');
+            debounceTimer = window.setTimeout(runDiagnosis, 250);
+        });
+
+        texInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                escapePressed = true;
+                return;
+            }
+
+            if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+                event.preventDefault();
+                window.clearTimeout(debounceTimer);
+                runDiagnosis();
+                return;
+            }
+
+            // Tab indents instead of leaving the editor. Press Esc first if you
+            // want Tab to move focus onwards (keyboard-accessible escape hatch).
+            if (event.key === 'Tab' && !event.ctrlKey && !event.metaKey && !event.altKey && !escapePressed) {
+                event.preventDefault();
+                var start = texInput.selectionStart;
+                var end = texInput.selectionEnd;
+                texInput.value = texInput.value.slice(0, start) + '\t' + texInput.value.slice(end);
+                texInput.setSelectionRange(start + 1, start + 1);
+                window.clearTimeout(debounceTimer);
+                runDiagnosis();
+                return;
+            }
+
+            if (event.key !== 'Tab') escapePressed = false;
+        });
+
+        texInput.addEventListener('blur', function () { escapePressed = false; });
+    }
+
+    checkBtn.addEventListener('click', function () {
+        window.clearTimeout(debounceTimer);
+        runDiagnosis();
+        texInput.focus();
+    });
 
     clearBtn.addEventListener('click', function () {
         texInput.value = '';
+        saveDraft('');
+        updateSampleButton();
+        showEmptyState();
         texInput.focus();
-        statusChip.textContent = 'Waiting for input';
-        statusChip.className = 'status-chip status-idle';
-        results.innerHTML = '<p class="placeholder">Paste some LaTeX and hit <strong>Diagnose</strong> to see what\'s wrong with it (if anything).</p>';
     });
 
     sampleBtn.addEventListener('click', function () {
-        texInput.value = SAMPLE;
+        texInput.value = texInput.value === BROKEN_SAMPLE ? HEALTHY_SAMPLE : BROKEN_SAMPLE;
+        updateSampleButton();
+        window.clearTimeout(debounceTimer);
         runDiagnosis();
+        texInput.focus();
+        texInput.setSelectionRange(0, 0);
+        texInput.scrollTop = 0;
     });
 
-    texInput.addEventListener('keydown', function (event) {
-        if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
-            event.preventDefault();
-            runDiagnosis();
+    copyBtn.addEventListener('click', function () {
+        var report = reportAsText();
+        if (!report) return;
+
+        var original = copyBtn.getAttribute('data-label') || copyBtn.textContent;
+        copyBtn.setAttribute('data-label', original);
+
+        function done() {
+            copyBtn.textContent = 'Copied ✓';
+            window.setTimeout(function () { copyBtn.textContent = original; }, 1500);
+        }
+
+        function fallbackCopy() {
+            var helper = document.createElement('textarea');
+            helper.value = report;
+            helper.setAttribute('readonly', '');
+            helper.style.position = 'fixed';
+            helper.style.left = '-9999px';
+            document.body.appendChild(helper);
+            helper.select();
+            try {
+                document.execCommand('copy');
+                done();
+            } catch (err) {
+                copyBtn.textContent = 'Copy failed';
+                window.setTimeout(function () { copyBtn.textContent = original; }, 1500);
+            }
+            document.body.removeChild(helper);
+        }
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(report).then(done, fallbackCopy);
+        } else {
+            fallbackCopy();
         }
     });
+
+    // Restore whatever the visitor was working on last time.
+    var draft = loadDraft();
+    if (draft) {
+        texInput.value = draft;
+        runDiagnosis();
+    } else {
+        showEmptyState();
+    }
+    updateSampleButton();
+
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = { analyze: analyze };
+    }
 })();

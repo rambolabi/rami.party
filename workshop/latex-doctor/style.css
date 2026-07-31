@@ -154,6 +154,23 @@ html, body {
     filter: brightness(1.1);
 }
 
+.btn:focus-visible,
+.back-link:focus-visible,
+.app-footer a:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+.btn[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.btn[disabled]:hover {
+    border-color: var(--border);
+    color: var(--text);
+}
+
 .tex-input {
     flex: 1;
     min-height: 320px;
@@ -172,6 +189,11 @@ html, body {
 .tex-input:focus {
     outline: none;
     border-color: var(--cyan);
+    box-shadow: 0 0 0 2px rgba(79, 216, 255, 0.25);
+}
+
+.tex-input::placeholder {
+    color: #6f66a3;
 }
 
 .hint {
@@ -239,7 +261,6 @@ html, body {
     border: 1px solid var(--border);
     border-left-width: 4px;
     border-radius: 8px;
-    padding: 0.6rem 0.8rem;
     background: var(--bg-panel-alt);
 }
 
@@ -251,6 +272,28 @@ html, body {
     border-left-color: var(--gold);
 }
 
+.issue-jump {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    padding: 0.6rem 0.8rem;
+    cursor: pointer;
+}
+
+.issue-jump:hover {
+    background: rgba(79, 216, 255, 0.07);
+}
+
+.issue-jump:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
 .issue-line {
     font-family: var(--mono);
     font-size: 0.78rem;
@@ -260,8 +303,23 @@ html, body {
 }
 
 .issue-message {
+    display: block;
     font-size: 0.9rem;
     line-height: 1.4;
+}
+
+.issue-snippet {
+    display: block;
+    margin-top: 0.45rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 6px;
+    background: #0a0522;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .issue-message code {
@@ -271,9 +329,10 @@ html, body {
 .success-banner {
     display: flex;
     gap: 0.6rem;
-    align-items: center;
+    align-items: flex-start;
     color: var(--green);
     font-size: 0.95rem;
+    line-height: 1.5;
 }
 
 .checks-list {
@@ -300,6 +359,13 @@ html, body {
     color: var(--gold);
 }
 
+.checks-note {
+    margin: 1rem 0 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    line-height: 1.6;
+}
+
 .app-footer {
     text-align: center;
     color: var(--muted);
@@ -309,4 +375,11 @@ html, body {
 
 .app-footer a {
     color: var(--cyan);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * {
+        transition: none !important;
+        animation: none !important;
+    }
 }

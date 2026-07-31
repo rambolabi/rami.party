@@ -141,6 +141,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://rami.party/workshop/latex-doctor/</loc>
+    <lastmod>2026-07-31</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://rami.party/workshop/subnets/</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>yearly</changefreq>
