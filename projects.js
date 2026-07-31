@@ -180,6 +180,17 @@ window.RAMI_REALMS = [
    ========================================================================== */
 window.RAMI_WORKSHOP = [
     {
+        title: 'Chronoport',
+        href: './chronoport/',
+        glyph: '⏳',
+        tagline: 'A gateway from the year 3050',
+        description: 'A time traveller’s console: the world’s clocks at a glance, the Sun and Moon above your exact spot, twilight ledgers, sidereal time and a countdown to the 31st century — all computed on your own device.',
+        search: 'A world clock and time zone dashboard showing the current time across the world in major cities, plus sunrise, sunset, solar noon, day length, civil nautical and astronomical twilight and golden hour times for your own location, and the current sun altitude and azimuth. Also shows the moon phase, moon illumination percentage, moon age, moonrise and moonset, lunar distance and the next full moon and new moon. Includes the Unix epoch timestamp, ISO 8601 time, Julian date and modified Julian date, local sidereal time, day of year, ISO week number, Swatch internet beat time, decimal and hexadecimal time, GPS week, equation of time, true solar sundial time, equinox and solstice dates, Earth orbital speed and distance to the Sun, a relativistic time dilation and Lorentz factor calculator, and a countdown to the year 3050. Works offline with no API, geolocation optional.',
+        tags: ['clock', 'astronomy'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'Lore Gallery',
         href: '../gallery/lore/',
         glyph: '📜',
