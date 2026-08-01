@@ -29,18 +29,26 @@
         (function () {
             'use strict';
             var TARGET = 'https://md.labidi.eu/';
+            var SCOPE = '/workshop/md/';
+            var CACHE_PREFIX = 'md-studio';
 
-            /* Tear down anything the old installation left behind, so a
-               returning visitor is not trapped on a cached copy. */
+            /* Tear down what THIS app left behind, and nothing else. Caches and
+               service worker registrations are shared by the whole rami.party
+               origin, so a blanket wipe would take the offline copies of every
+               other workshop app with it. */
             try {
                 if ('serviceWorker' in navigator) {
                     navigator.serviceWorker.getRegistrations().then(function (rs) {
-                        rs.forEach(function (r) { r.unregister(); });
+                        rs.forEach(function (r) {
+                            if (r.scope.indexOf(SCOPE) !== -1) r.unregister();
+                        });
                     }).catch(function () { });
                 }
                 if (window.caches && caches.keys) {
                     caches.keys().then(function (keys) {
-                        keys.forEach(function (k) { caches.delete(k); });
+                        keys.forEach(function (k) {
+                            if (k.indexOf(CACHE_PREFIX) === 0) caches.delete(k);
+                        });
                     }).catch(function () { });
                 }
             } catch (e) { /* nothing here is worth blocking the redirect for */ }

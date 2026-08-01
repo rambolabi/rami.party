@@ -7,27 +7,47 @@
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* ---- Escaping ------------------------------------------------------------ */
+/* The registry is ours, but every value still goes through here so a stray
+   `&`, `<` or quote in a title can never break (or inject into) the markup. */
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* Only allow hrefs we can vouch for; anything else becomes an inert link. */
+function safeHref(href) {
+    const value = String(href ?? '').trim();
+    if (!value) return '#';
+    if (/^(https?:|mailto:|tel:)/i.test(value)) return escapeHtml(value);
+    if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return '#';   // javascript:, data:, …
+    return escapeHtml(value);
+}
+
 /* ---- Realm cards --------------------------------------------------------- */
 function cardMarkup(r) {
-    const soon = r.status === 'soon';
-    const tags = (r.tags || []).map(t => `<span>${t}</span>`).join('');
+    const soon = r.status === 'soon' || !r.href || r.href === '#';
+    const tags = (r.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('');
     const ext = r.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const titleInner = soon ? r.title : `<a href="${r.href}"${ext}>${r.title}</a>`;
+    const titleInner = soon
+        ? escapeHtml(r.title)
+        : `<a href="${safeHref(r.href)}"${ext}>${escapeHtml(r.title)}</a>`;
     const enter = soon
         ? `<span class="realm-enter">🔒 ${r.tagline === 'Never drew breath' ? 'Nothing to see' : 'Coming soon'}</span>`
         : `<span class="realm-enter">${r.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
 
     return `
-        <li class="realm-card aura-${r.aura || 'violet'}${soon ? ' is-soon' : ''}${r.external ? ' is-external' : ''} reveal">
-            <div class="realm-glyph" aria-hidden="true">${r.glyph || '✨'}</div>
-            <p class="realm-tagline">${r.tagline || ''}</p>
+        <li class="realm-card aura-${escapeHtml(r.aura || 'violet')}${soon ? ' is-soon' : ''}${r.external ? ' is-external' : ''} reveal">
+            <div class="realm-glyph" aria-hidden="true">${escapeHtml(r.glyph || '✨')}</div>
+            <p class="realm-tagline">${escapeHtml(r.tagline || '')}</p>
             <h3>${titleInner}</h3>
-            <p class="realm-desc">${r.description || ''}</p>
+            <p class="realm-desc">${escapeHtml(r.description || '')}</p>
             <div class="realm-tags">${tags}</div>
             ${enter}
         </li>`;
 }
 window.cardMarkup = cardMarkup;
+window.ramiEscapeHtml = escapeHtml;
 
 function renderRealms() {
     const root = document.getElementById('realmGroups');
@@ -43,9 +63,9 @@ function renderRealms() {
         section.className = 'realm-group';
         section.innerHTML = `
             <header class="group-head">
-                <span class="group-emoji" aria-hidden="true">${g.emoji}</span>
-                <h3>${g.title}</h3>
-                <p>${g.blurb}</p>
+                <span class="group-emoji" aria-hidden="true">${escapeHtml(g.emoji)}</span>
+                <h3>${escapeHtml(g.title)}</h3>
+                <p>${escapeHtml(g.blurb)}</p>
             </header>
             <ul class="realm-grid" role="list">
                 ${items.map(cardMarkup).join('')}
@@ -119,24 +139,19 @@ function buildSearchIndex() {
     return entries;
 }
 
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
 function resultCardMarkup(e) {
     const it = e.item;
     const soon = !e.url || e.url === '#';
     const ext = e.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const title = soon ? escapeHtml(it.title) : `<a href="${e.url}"${ext}>${escapeHtml(it.title)}</a>`;
+    const title = soon ? escapeHtml(it.title) : `<a href="${safeHref(e.url)}"${ext}>${escapeHtml(it.title)}</a>`;
     const tags = (it.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('');
     const enter = soon
         ? `<span class="realm-enter">🔒 Nothing to visit</span>`
         : `<span class="realm-enter">${e.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
     return `
-        <li class="realm-card aura-${it.aura || 'violet'}${soon ? ' is-soon' : ''}${e.external ? ' is-external' : ''} visible">
+        <li class="realm-card aura-${escapeHtml(it.aura || 'violet')}${soon ? ' is-soon' : ''}${e.external ? ' is-external' : ''} visible">
             <span class="status-badge ${e.meta.cls}">${e.meta.icon} ${e.meta.label}</span>
-            <div class="realm-glyph" aria-hidden="true">${it.glyph || '✨'}</div>
+            <div class="realm-glyph" aria-hidden="true">${escapeHtml(it.glyph || '✨')}</div>
             <p class="realm-tagline">${escapeHtml(it.tagline || '')}</p>
             <h3>${title}</h3>
             <p class="realm-desc">${escapeHtml(it.description || '')}</p>
@@ -179,17 +194,54 @@ function setupSearch() {
         setupCardGlow(results);
     };
 
-    input.addEventListener('input', run);
-    input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; run(); } });
-    if (clearBtn) clearBtn.addEventListener('click', () => { input.value = ''; run(); input.focus(); });
+    /* Keep the query in the URL so a search can be linked or bookmarked. */
+    const syncUrl = () => {
+        if (!window.history || !window.history.replaceState) return;
+        const url = new URL(window.location.href);
+        const raw = input.value.trim();
+        if (raw) url.searchParams.set('q', raw);
+        else url.searchParams.delete('q');
+        window.history.replaceState(null, '', url);
+    };
+
+    input.addEventListener('input', () => { run(); syncUrl(); });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { input.value = ''; run(); syncUrl(); }
+    });
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        input.value = '';
+        run();
+        syncUrl();
+        input.focus();
+    });
 
     document.querySelectorAll('.search-suggest').forEach(btn => {
         btn.addEventListener('click', () => {
             input.value = btn.dataset.q || btn.textContent;
             run();
+            syncUrl();
             input.focus();
         });
     });
+
+    /* `/` or Ctrl/⌘-K jumps to the search box, as in every good search UI. */
+    document.addEventListener('keydown', e => {
+        if (e.defaultPrevented) return;
+        const el = document.activeElement;
+        const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+        const shortcut = (e.key === '/' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) ||
+            (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey));
+        if (!shortcut) return;
+        e.preventDefault();
+        input.focus();
+        input.select();
+    });
+
+    const initial = new URL(window.location.href).searchParams.get('q');
+    if (initial) {
+        input.value = initial;
+        run();
+    }
 }
 
 /* ---- Workshop filter (workshop/index.html) -------------------------------- */
@@ -305,9 +357,26 @@ function startStarfield() {
     }
 
     let rafId;
+    let resizeTimer;
     const render = () => reduceMotion ? paint(false) : draw();
     resize();
-    window.addEventListener('resize', () => { cancelAnimationFrame(rafId); resize(); render(); });
+
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+            cancelAnimationFrame(rafId);
+            resize();
+            render();
+        }, 150);
+    });
+
+    /* Stop burning frames while the tab is hidden. */
+    document.addEventListener('visibilitychange', () => {
+        if (reduceMotion) return;
+        if (document.hidden) cancelAnimationFrame(rafId);
+        else { cancelAnimationFrame(rafId); draw(); }
+    });
+
     render();
 }
 
@@ -324,9 +393,9 @@ function setupMobileNav() {
         <button class="close-btn" aria-label="Close menu">&times;</button>
         <a href="#guide">How it works</a>
         <a href="#realms">Realms</a>
-        <a href="./gallery/lore/">Lore</a>
-        <a href="./gallery/prankscreens/">Prank Screens</a>
-        <a href="./wasteland/">The Wastelands</a>
+        <a href="./gallery/">Gallery</a>
+        <a href="./workshop/">Workshop</a>
+        <a href="./wasteland/">Wastelands</a>
     `;
     document.body.appendChild(overlay);
     const closeBtn = overlay.querySelector('.close-btn');

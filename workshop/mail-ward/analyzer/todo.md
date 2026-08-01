@@ -4,24 +4,33 @@ Tool that parses raw email headers (or a full `.eml`) and reports
 SPF / DKIM / DMARC / ARC results, sender details, relay path, attachments and
 a safe body preview. Runs 100% client-side. External lookups are strictly opt-in.
 
+**Moved 2026-07-31** from `workshop/mailheaders/` to `workshop/mail-ward/analyzer/` — it is
+now the second page of the Mail Ward suite. The old path is a noindex redirect stub.
+The shared suite bar comes from `../suite.css`; the page's own theme picker was relocated
+into that bar (its original `position: fixed` would have overlapped it).
+
 ## Architecture (modular)
 ```
-mailheaders/
-  index.html
-  css/
-    themes.css              # colour tokens per theme
-    main.css                # layout / components
-  js/
-    data-iana-tlds.js       # bundled ICANN TLD snapshot (Set)
-    data-tlds-twopart.js    # second-level public suffixes
-    data-tlds-risky.js      # abuse-heavy TLDs
-    data-tlds-nonpublic.js  # internal/private pseudo-TLDs
-    data-brands.js          # impersonated global brands
-    data-example.js         # "Load an example" sample
-    lookups.js              # ALL external-lookup intelligence (opt-in)
-    analyzer.js             # core logic / the intelligence
-  data/
-    tlds-alpha-by-domain.txt # verbatim ICANN copy (provenance)
+mail-ward/
+  suite.css                 # shared suite bar, used by every page
+  analyzer/
+    index.html
+    css/
+      themes.css            # colour tokens per theme
+      main.css              # layout / components
+    js/
+      data-iana-tlds.js     # bundled ICANN TLD snapshot (Set)
+      data-tlds-twopart.js  # second-level public suffixes
+      data-tlds-risky.js    # abuse-heavy TLDs
+      data-tlds-nonpublic.js# internal/private pseudo-TLDs
+      data-brands.js        # impersonated global brands
+      data-example.js       # "Load an example" sample
+      lookups.js            # ALL external-lookup intelligence (opt-in)
+      analyzer.js           # core logic / the intelligence
+    data/
+      tlds-alpha-by-domain.txt # verbatim ICANN copy (provenance)
+    script.js               # ⚠ DEAD: the pre-split monolith, loaded by nothing.
+                            #   Safe to delete — kept only so the decision is explicit.
 ```
 
 ## Done ✅

@@ -7,6 +7,8 @@
     <title>The Workshop · rami.party</title>
 
     <link rel="stylesheet" href="../theme.css">
+    <!-- Theme engine: applies the saved theme before first paint -->
+    <script src="../theme.js"></script>
     <link rel="stylesheet" href="../style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -111,8 +113,9 @@
             var plan = document.getElementById('plannedList');
             if (plan && Array.isArray(window.RAMI_PLANNED)) {
                 plan.innerHTML = window.RAMI_PLANNED.map(function (p) {
-                    return '<li class="planned-chip"><span class="planned-name">✦ ' + p.name + '</span>' +
-                        (p.note ? '<span class="planned-note">' + p.note + '</span>' : '') + '</li>';
+                    var esc = window.ramiEscapeHtml || function (v) { return v; };
+                    return '<li class="planned-chip"><span class="planned-name">✦ ' + esc(p.name) + '</span>' +
+                        (p.note ? '<span class="planned-note">' + esc(p.note) + '</span>' : '') + '</li>';
                 }).join('');
             }
             if (typeof window.__ramiReveal === 'function') window.__ramiReveal();

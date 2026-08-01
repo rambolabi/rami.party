@@ -227,7 +227,7 @@ window.BL_TERMS = [
             'It lands in the same thread as real messages from that brand — SMS sender IDs are trivially spoofed, so the thread proves nothing.',
         ],
         eg: '"Your parcel is held at customs. Pay €2.99 to release: bpost-fees.co" — the €2.99 is only there to collect the card number.',
-        keys: 'smishing sms phishing text message scam whatsapp scam fake sms parcel text customs fee text i clicked a text link',
+        keys: 'smishing squishing sms phishing text message scam whatsapp scam fake sms parcel text customs fee text i clicked a text link sms scam texting scam',
     },
     {
         id: 'vishing',
@@ -251,7 +251,7 @@ window.BL_TERMS = [
         id: 'quishing',
         term: 'Quishing',
         say: 'KWISH-ing — QR + phishing',
-        also: ['QR phishing', 'QR code scam'],
+        also: ['squishing', 'QR phishing', 'QR code scam'],
         glyph: '🔳',
         cat: 'delivery',
         aud: 'both',
@@ -263,7 +263,7 @@ window.BL_TERMS = [
             'Always read the URL your camera previews **before** tapping it, and check the domain, not the words around it.',
         ],
         eg: 'A "renew your multi-factor authentication" email containing only a QR code, so the company’s email link scanner has nothing to inspect.',
-        keys: 'quishing qr code scam scanned a qr code malicious qr sticker parking meter qr fake qr i scanned a code',
+        keys: 'quishing squishing qr code scam scanned a qr code malicious qr sticker parking meter qr fake qr i scanned a code qr phishing qr code phishing',
     },
     {
         id: 'angler-phishing',
