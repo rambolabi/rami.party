@@ -40,6 +40,12 @@
        /gallery/militaryalphabet/ is now only a redirect and is deliberately
        not listed here. -->
   <url>
+    <loc>https://rami.party/gallery/</loc>
+    <lastmod>2026-07-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://rami.party/gallery/lore/</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>monthly</changefreq>
@@ -142,8 +148,6 @@
   <url>
     <loc>https://rami.party/workshop/mail-ward/analyzer/</loc>
     <lastmod>2026-07-31</lastmod>
-    <loc>https://rami.party/workshop/mail-ward/analyzer/</loc>
-    <lastmod>2026-07-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -152,12 +156,6 @@
     <lastmod>2026-07-31</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>https://rami.party/workshop/breachlight/</loc>
-    <lastmod>2026-07-31</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://rami.party/workshop/webcheck/</loc>
@@ -226,12 +224,6 @@
     <lastmod>2026-07-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://rami.party/workshop/mail-ward/volume/</loc>
-    <lastmod>2026-07-31</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
   </url>
   <url>
     <loc>https://rami.party/workshop/to-check/</loc>

@@ -216,28 +216,6 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
-        title: 'Lore Gallery',
-        href: '../gallery/lore/',
-        glyph: '📜',
-        tagline: 'A grimoire of images',
-        description: 'Leaf through a living grimoire of magical lore, muggle mischief and impossibly cute creatures.',
-        search: 'An image gallery of fantasy and Harry Potter themed artwork, magical creatures, wizards and humorous memes. Browse and view a curated picture collection of magic art and cute animals.',
-        tags: ['gallery', 'magic'],
-        aura: 'violet',
-        status: 'live',
-    },
-    {
-        title: 'Prank Screens',
-        href: '../gallery/prankscreens/',
-        glyph: '🖥️',
-        tagline: 'Full-screen illusions',
-        description: 'Conjure convincing fake boot screens, BIOS spells and “hacked” terminals to bewitch your friends.',
-        search: 'A collection of full-screen fake operating system boot screens, fake BIOS screens and fake hacked hacker terminal screens to prank and trick friends. Windows, Linux and hacking simulator prank screens.',
-        tags: ['prank', 'fullscreen'],
-        aura: 'cyan',
-        status: 'live',
-    },
-    {
         title: 'IT Tools Workbench',
         href: './tools/',
         glyph: '🧰',
@@ -582,7 +560,6 @@ window.RAMI_PLANNED = [
     { name: 'Sitemap Scribe', note: 'Generate sitemap.xml straight from this very registry.' },
     { name: 'Realm Sentinel', note: 'A link-and-asset checker that walks every realm and reports the rot.' },
     { name: 'Colour Grimoire', note: 'Palette conjurer with contrast checking and export to CSS tokens.' },
-    { name: 'Phonetic Codex', note: 'NATO phonetic alphabet reference and translator — folder never landed in the repo.' },
 ];
 
 /* ==========================================================================
