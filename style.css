@@ -29,7 +29,7 @@
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    filter: drop-shadow(0 6px 30px rgba(168, 85, 247, 0.45));
+    filter: drop-shadow(0 6px 30px color-mix(in srgb, var(--accent) 45%, transparent));
     animation: shimmer 9s linear infinite;
     margin-bottom: 22px;
 }
@@ -73,7 +73,7 @@
     transform: translateX(-50%);
     width: 26px;
     height: 42px;
-    border: 2px solid rgba(236, 233, 255, 0.35);
+    border: 2px solid var(--card-border);
     border-radius: 14px;
 }
 
@@ -85,7 +85,7 @@
     height: 8px;
     margin-left: -2px;
     border-radius: 2px;
-    background: var(--cyan);
+    background: var(--accent-2);
     animation: scrollCue 1.8s ease-in-out infinite;
 }
 
@@ -125,7 +125,7 @@
     gap: 14px;
     margin-bottom: 24px;
     padding-bottom: 14px;
-    border-bottom: 1px solid rgba(168, 85, 247, 0.18);
+    border-bottom: 1px solid var(--hairline);
 }
 
 .group-head .group-emoji {
@@ -192,8 +192,8 @@
 
 .realm-search-input:focus {
     outline: none;
-    border-color: var(--cyan);
-    box-shadow: 0 0 0 3px rgba(34, 211, 238, 0.18), var(--shadow);
+    border-color: var(--accent-2);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent-2) 25%, transparent), var(--shadow);
 }
 
 .realm-search-clear {
@@ -205,14 +205,17 @@
     height: 30px;
     border: 0;
     border-radius: 50%;
-    background: rgba(168, 85, 247, 0.18);
+    background: var(--chip-bg);
+    border: 1px solid var(--chip-border);
     color: var(--text);
     font-size: 0.9rem;
     cursor: pointer;
     transition: background 0.25s ease;
 }
 
-.realm-search-clear:hover { background: rgba(236, 72, 153, 0.35); }
+.realm-search-clear[hidden] { display: none; }
+
+.realm-search-clear:hover { background: color-mix(in srgb, var(--accent) 35%, transparent); }
 
 .realm-results { margin-top: 4px; }
 
@@ -252,10 +255,10 @@
     white-space: nowrap;
 }
 
-.status-badge.st-finished { background: rgba(34, 197, 94, 0.16); color: #4ade80; border-color: rgba(34, 197, 94, 0.4); }
-.status-badge.st-wip { background: rgba(251, 191, 36, 0.16); color: var(--gold); border-color: rgba(251, 191, 36, 0.4); }
-.status-badge.st-archived { background: rgba(148, 163, 184, 0.16); color: #cbd5e1; border-color: rgba(148, 163, 184, 0.38); }
-.status-badge.st-planned { background: rgba(34, 211, 238, 0.14); color: var(--cyan); border-color: rgba(34, 211, 238, 0.38); }
+.status-badge.st-finished { background: rgba(34, 197, 94, 0.16); color: color-mix(in srgb, #22c55e 65%, var(--text)); border-color: rgba(34, 197, 94, 0.4); }
+.status-badge.st-wip { background: rgba(251, 191, 36, 0.16); color: color-mix(in srgb, #f59e0b 65%, var(--text)); border-color: rgba(251, 191, 36, 0.4); }
+.status-badge.st-archived { background: rgba(148, 163, 184, 0.16); color: color-mix(in srgb, #94a3b8 65%, var(--text)); border-color: rgba(148, 163, 184, 0.38); }
+.status-badge.st-planned { background: rgba(34, 211, 238, 0.14); color: color-mix(in srgb, #06b6d4 65%, var(--text)); border-color: rgba(34, 211, 238, 0.38); }
 
 .realm-fallback {
     grid-column: 1 / -1;
@@ -264,7 +267,7 @@
 }
 
 .realm-fallback a {
-    color: var(--cyan);
+    color: var(--accent-2);
     text-decoration: underline;
 }
 
@@ -307,7 +310,7 @@
     inset: 0;
     z-index: -1;
     border-radius: inherit;
-    background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 0%), var(--card-glow, rgba(168, 85, 247, 0.25)), transparent 60%);
+    background: radial-gradient(320px circle at var(--mx, 50%) var(--my, 0%), var(--card-glow, var(--card-glow-default)), transparent 60%);
     opacity: 0;
     transition: opacity 0.4s ease;
 }
@@ -316,7 +319,7 @@
 .realm-card:focus-within {
     transform: translateY(-8px);
     border-color: transparent;
-    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: var(--shadow-hover);
 }
 
 .realm-card:hover::before,
@@ -382,8 +385,8 @@
     padding: 4px 11px;
     border-radius: 999px;
     color: var(--text-muted);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--chip-bg);
+    border: 1px solid var(--chip-border);
 }
 
 .realm-enter {
@@ -392,7 +395,7 @@
     gap: 7px;
     margin-top: 14px;
     font-weight: 700;
-    color: var(--card-ink, var(--cyan));
+    color: var(--card-ink, var(--accent-2));
 }
 
 .realm-enter .arrow {
@@ -426,15 +429,17 @@
 
 .realm-relic a:hover,
 .realm-relic a:focus-visible {
-    color: var(--card-ink, var(--cyan));
+    color: var(--card-ink, var(--accent-2));
 }
 
 /* Aura color variants */
-.aura-violet { --card-aura: linear-gradient(135deg, var(--violet), transparent 70%); --card-glow: rgba(168, 85, 247, 0.3); --card-ink: #c99bff; }
-.aura-cyan   { --card-aura: linear-gradient(135deg, var(--cyan), transparent 70%);   --card-glow: rgba(34, 211, 238, 0.28); --card-ink: #7fe6f7; }
-.aura-pink   { --card-aura: linear-gradient(135deg, var(--pink), transparent 70%);   --card-glow: rgba(236, 72, 153, 0.3); --card-ink: #ff9ecb; }
-.aura-gold   { --card-aura: linear-gradient(135deg, var(--gold), transparent 70%);   --card-glow: rgba(251, 191, 36, 0.3); --card-ink: #ffd77a; }
-.aura-ash    { --card-aura: linear-gradient(135deg, #8a8f98, transparent 70%);       --card-glow: rgba(160, 170, 185, 0.22); --card-ink: #c3c9d6; }
+/* `--card-ink` is mixed towards the current text colour so every aura stays
+   legible on light themes as well as dark ones. */
+.aura-violet { --card-aura: linear-gradient(135deg, var(--violet), transparent 70%); --card-glow: color-mix(in srgb, var(--violet) 30%, transparent); --card-ink: color-mix(in srgb, var(--violet) 62%, var(--text)); }
+.aura-cyan   { --card-aura: linear-gradient(135deg, var(--cyan), transparent 70%);   --card-glow: color-mix(in srgb, var(--cyan) 28%, transparent);   --card-ink: color-mix(in srgb, var(--cyan) 62%, var(--text)); }
+.aura-pink   { --card-aura: linear-gradient(135deg, var(--pink), transparent 70%);   --card-glow: color-mix(in srgb, var(--pink) 30%, transparent);   --card-ink: color-mix(in srgb, var(--pink) 62%, var(--text)); }
+.aura-gold   { --card-aura: linear-gradient(135deg, var(--gold), transparent 70%);   --card-glow: color-mix(in srgb, var(--gold) 30%, transparent);   --card-ink: color-mix(in srgb, var(--gold) 62%, var(--text)); }
+.aura-ash    { --card-aura: linear-gradient(135deg, #8a8f98, transparent 70%);       --card-glow: rgba(160, 170, 185, 0.22);                          --card-ink: color-mix(in srgb, #8a8f98 62%, var(--text)); }
 
 /* Planned spells — chip list on the Workshop page */
 .planned-list {
@@ -452,21 +457,21 @@
     gap: 4px;
     padding: 14px 18px;
     min-width: 200px;
-    border: 1px dashed rgba(201, 155, 255, 0.35);
+    border: 1px dashed var(--card-border);
     border-radius: 14px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--chip-bg);
     transition: border-color 0.25s ease, transform 0.25s ease, background 0.25s ease;
 }
 
 .planned-chip:hover {
-    border-color: rgba(201, 155, 255, 0.6);
-    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--accent);
+    background: var(--chip-bg);
     transform: translateY(-2px);
 }
 
 .planned-name {
     font-weight: 600;
-    color: #c99bff;
+    color: var(--card-ink, var(--accent));
     letter-spacing: 0.02em;
 }
 

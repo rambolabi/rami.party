@@ -143,7 +143,7 @@ during this audit.
 
 ### 0.12 — Add a `README.md` per project folder
 Still open. Only 7 of ~45 project folders have one, so nobody can tell what `dashboard_v1`,
-`rami`, `to-check`, `trace-results` or `clear` are without opening the code.
+`rami`, `to-check` or `clear` are without opening the code.
 
 **Fix** — drop a 5-line README in each: what it is, how to run it, current status. Best done
 as part of the §13 audit rather than as a bulk commit of empty stubs.
