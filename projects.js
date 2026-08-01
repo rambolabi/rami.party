@@ -358,7 +358,7 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Mail Headers',
-        href: './mailheaders/',
+        href: './mail-ward/analyzer/',
         glyph: '✉️',
         tagline: 'Header diviner',
         description: 'Decode the tangled runes of email headers to trace a message’s journey and unmask delivery curses.',
@@ -524,7 +524,7 @@ window.RAMI_WORKSHOP = [
     },
     {
         title: 'Volume Seer',
-        href: './trace-results/',
+        href: './mail-ward/volume/',
         glyph: '📊',
         tagline: 'Charts of the flow',
         description: 'A Chart.js dashboard visualising email traffic over time.',

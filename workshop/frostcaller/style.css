@@ -10,6 +10,12 @@
     --frost: #7fe6f7;
     --frost-line: rgba(127, 230, 247, 0.28);
     --mono: 'JetBrains Mono', 'Courier New', monospace;
+    /* Dedicated (non-shared) token for text drawn on top of --frost.
+       --night-0 is also defined by the shared theme.css site-wide switcher,
+       so relying on it here would silently break contrast whenever a visitor
+       picks a light site-wide theme (Pale / Professional Ivory) while this
+       page keeps its own bright --frost accent. */
+    --frost-text: #06030f;
 }
 
 a {
@@ -294,7 +300,7 @@ a:hover {
 }
 
 .chip[aria-checked="true"] {
-    color: var(--night-0);
+    color: var(--frost-text);
     background: linear-gradient(120deg, var(--frost), var(--violet));
     border-color: transparent;
     font-weight: 700;
@@ -549,7 +555,7 @@ a:hover {
     font-size: 0.62rem;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: var(--night-0);
+    color: var(--frost-text);
     background: var(--frost);
     border-radius: 999px;
     padding: 3px 9px;
@@ -709,7 +715,7 @@ a:hover {
     font-family: var(--mono);
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--night-0);
+    color: var(--frost-text);
     background: linear-gradient(140deg, var(--frost), var(--violet));
     border-radius: 50%;
 }
@@ -820,7 +826,7 @@ a:hover {
 }
 
 .copy-btn:hover {
-    color: var(--night-0);
+    color: var(--frost-text);
     background: var(--frost);
     border-color: transparent;
 }
@@ -891,17 +897,20 @@ a:hover {
 }
 
 .mini-btn {
+    font: inherit;
     font-size: 0.76rem;
     font-weight: 700;
     color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--card-border);
     border-radius: 999px;
     padding: 5px 12px;
+    cursor: pointer;
     transition: all 0.2s var(--ease);
 }
 
 .mini-btn:hover {
-    color: var(--night-0);
+    color: var(--frost-text);
     background: var(--frost);
     border-color: transparent;
     text-decoration: none;
@@ -929,7 +938,7 @@ a:hover {
 }
 
 .chip[aria-pressed="true"] {
-    color: var(--night-0);
+    color: var(--frost-text);
     background: linear-gradient(120deg, var(--frost), var(--violet));
     border-color: transparent;
     font-weight: 700;
@@ -1148,6 +1157,7 @@ a:hover {
     --shadow: 0 10px 26px rgba(60, 40, 110, 0.13);
     --frost: #0e7490;
     --frost-line: rgba(14, 116, 144, 0.3);
+    --frost-text: #f4f2fa;
     --panel: rgba(255, 255, 255, 0.92);
     --panel-border: rgba(109, 40, 217, 0.18);
 }
@@ -1768,7 +1778,7 @@ a:hover {
 
 .journal-step.is-done .journal-tick {
     background: var(--frost);
-    color: var(--night-0);
+    color: var(--frost-text);
     border-color: transparent;
 }
 
@@ -2673,7 +2683,7 @@ button.pin:hover {
     font-family: var(--mono);
     font-size: 0.76rem;
     font-weight: 600;
-    color: var(--night-0);
+    color: var(--frost-text);
     background: linear-gradient(140deg, var(--frost), var(--violet));
     border-radius: 50%;
 }
@@ -2943,7 +2953,7 @@ button.pin:hover {
 
 .to-top:hover {
     background: var(--frost);
-    color: var(--night-0);
+    color: var(--frost-text);
 }
 
 /* Responsive --------------------------------------------------------------- */
