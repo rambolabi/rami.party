@@ -283,17 +283,23 @@ function parseHeaders(headerText) {
     let currentHeader = '';
     let currentValue = '';
 
+    /* Header names are case-insensitive (RFC 5322), so fold every casing into
+       the first key seen. Without this, "Authentication-Results" and
+       "authentication-results" become two separate buckets and the lookup
+       helpers only ever see one of them — which an attacker could use to hide
+       a header, or which could silently drop a legitimate one. */
+    function store(name, value) {
+        const key = Object.keys(headers).find(k => k.toLowerCase() === name.toLowerCase()) || name;
+        if (!headers[key]) headers[key] = [];
+        headers[key].push(value);
+    }
+
     for (let line of lines) {
         // Check if line starts a new header (has a colon and doesn't start with whitespace)
         if (line.match(/^[\w-]+:/) && !line.startsWith(' ') && !line.startsWith('\t')) {
             // Save previous header
-            if (currentHeader) {
-                if (!headers[currentHeader]) {
-                    headers[currentHeader] = [];
-                }
-                headers[currentHeader].push(currentValue.trim());
-            }
-            
+            if (currentHeader) store(currentHeader, currentValue.trim());
+
             // Start new header
             const colonIndex = line.indexOf(':');
             currentHeader = line.substring(0, colonIndex).trim();
@@ -303,14 +309,9 @@ function parseHeaders(headerText) {
             currentValue += ' ' + line.trim();
         }
     }
-    
+
     // Save last header
-    if (currentHeader) {
-        if (!headers[currentHeader]) {
-            headers[currentHeader] = [];
-        }
-        headers[currentHeader].push(currentValue.trim());
-    }
+    if (currentHeader) store(currentHeader, currentValue.trim());
 
     return headers;
 }
@@ -361,8 +362,16 @@ function displaySecurityChecks(headers) {
     securityChecks.innerHTML = '';
 
     const checks = [];
-    // Merge ALL Authentication-Results headers (there can be several, one per hop)
-    const authResults = getAllHeaderValues(headers, 'Authentication-Results').join(' ; ');
+    /* Authentication-Results: ONLY the topmost one may be trusted.
+       Every MTA *prepends* its headers, so index 0 is the header written by the
+       last server to handle the message — normally the recipient's own provider.
+       Anything below it was written by an earlier hop, or simply typed by the
+       attacker, and is free-form text. Merging them all (as this once did) lets a
+       forged header downstream supply a "dkim=pass" that the real one never
+       stated, which would make a spoofed message look authenticated. */
+    const allAuthResults = getAllHeaderValues(headers, 'Authentication-Results');
+    const authResults = allAuthResults.length ? allAuthResults[0] : '';
+    const untrustedAuthResults = allAuthResults.slice(1);
     const from = getHeader(headers, 'From');
     const fromDomain = from ? extractDomain(from) : '';
 
@@ -695,6 +704,28 @@ function displaySecurityChecks(headers) {
 
     // --- Offline domain / DNS heuristics ---
     domainHeuristics(headers, fromDomain).forEach(h => checks.push(h));
+
+    /* --- Extra Authentication-Results headers ---
+       More than one is completely normal (a forwarder, a filtering gateway and
+       the mailbox provider each add their own). It is worth saying out loud that
+       only the top one counted, because a lower one can be pure fiction. */
+    if (untrustedAuthResults.length) {
+        const servers = untrustedAuthResults
+            .map(v => (v.match(/^\s*([^\s;]+)/) || [])[1] || '?')
+            .join(', ');
+        checks.push({
+            label: 'Multiple Auth-Results',
+            value: `${untrustedAuthResults.length + 1} present — only the topmost was trusted. Ignored (earlier hops, forgeable): ${servers}`,
+            status: 'warning'
+        });
+    }
+    if (!allAuthResults.length) {
+        checks.push({
+            label: 'Auth-Results Header',
+            value: 'None — this message was never checked by a receiving server, or you are looking at a copy taken before delivery',
+            status: 'warning'
+        });
+    }
 
     // Render checks
     lastChecks = checks;

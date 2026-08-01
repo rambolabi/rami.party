@@ -1,13 +1,8 @@
 /* ==========================================================================
-   rami.party — theme conjuror
-   --------------------------------------------------------------------------
-   Applies the visitor's chosen theme before first paint (no flash), then
-   builds an accessible theme picker. Load this in <head>, synchronously:
-
-       <script src="/theme.js"></script>
-
-   The palettes themselves live in theme.css as [data-theme="id"] blocks —
-   keep RAMI_THEMES below in sync with them.
+   rami.party — theme engine
+   Applies the saved theme before first paint, then renders an accessible
+   theme picker into the site header. Load this in <head>, render-blocking,
+   BEFORE any other script:  <script src="/theme.js"></script>
    ========================================================================== */
 
 (function () {
@@ -16,179 +11,209 @@
     var STORAGE_KEY = 'rami.theme';
     var AUTO = 'auto';
 
+    /* id must match the :root[data-rami-theme="…"] blocks in theme.css.
+   The attribute is namespaced because many sub-realms run their own
+   `data-theme` picker and the two must never collide.
+       `scheme` drives <meta name="color-scheme"> and the browser UI colour. */
     var THEMES = [
-        { id: 'arcana', name: 'Midnight Arcana', note: 'The house spell', emoji: '✨', mode: 'dark', swatch: ['#a855f7', '#ec4899', '#22d3ee'] },
-        { id: 'graphite', name: 'Graphite', note: 'Professional · dark', emoji: '▨', mode: 'dark', swatch: ['#12151c', '#60a5fa', '#94a3b8'] },
-        { id: 'daylight', name: 'Daylight', note: 'Professional · light', emoji: '☀', mode: 'light', swatch: ['#ffffff', '#2563eb', '#0ea5e9'] },
-        { id: 'neon', name: 'Neon Circuit', note: 'Cyberpunk arcade', emoji: '⚡', mode: 'dark', swatch: ['#ff2e88', '#b026ff', '#00fff0'] },
-        { id: 'ember', name: 'Ember Forge', note: 'Molten firelight', emoji: '🔥', mode: 'dark', swatch: ['#ef4444', '#f97316', '#fbbf24'] },
-        { id: 'grove', name: 'Deep Grove', note: 'Enchanted forest', emoji: '🌿', mode: 'dark', swatch: ['#34d399', '#a3e635', '#2dd4bf'] },
-        { id: 'abyss', name: 'Abyssal Tide', note: 'Bioluminescent deep', emoji: '🌊', mode: 'dark', swatch: ['#05192a', '#38bdf8', '#2dd4bf'] },
-        { id: 'terminal', name: 'Terminal', note: 'Phosphor & monospace', emoji: '🖥', mode: 'dark', swatch: ['#000000', '#22c55e', '#86efac'] },
-        { id: 'parchment', name: 'Parchment', note: 'Candlelit library', emoji: '📜', mode: 'light', swatch: ['#faf3e2', '#8a5a2b', '#a97400'] },
-        { id: 'blossom', name: 'Cherry Blossom', note: 'Soft pastel light', emoji: '🌸', mode: 'light', swatch: ['#fff8fb', '#ec4899', '#8b5cf6'] },
-        { id: 'contrast', name: 'High Contrast', note: 'Maximum legibility', emoji: '◐', mode: 'dark', swatch: ['#000000', '#ffffff', '#ffd400'] },
+        { id: 'enchanted', name: 'Enchanted', glyph: '🔮', note: 'Midnight arcane — the house style', scheme: 'dark', color: '#0b0524' },
+        { id: 'slate', name: 'Professional Dark', glyph: '🛡️', note: 'Calm slate & steel blue', scheme: 'dark', color: '#0d131d' },
+        { id: 'daylight', name: 'Professional Light', glyph: '📄', note: 'Crisp, printable, boardroom-safe', scheme: 'light', color: '#f8fafc' },
+        { id: 'parchment', name: 'Grimoire', glyph: '📜', note: 'Warm parchment & ink', scheme: 'light', color: '#f6eeda' },
+        { id: 'terminal', name: 'Phosphor', glyph: '🖥️', note: 'A CRT that wandered in from 1983', scheme: 'dark', color: '#000000' },
+        { id: 'contrast', name: 'High Contrast', glyph: '◐', note: 'Maximum legibility, no decoration', scheme: 'dark', color: '#000000' }
     ];
 
-    var IDS = THEMES.map(function (t) { return t.id; });
-    var root = document.documentElement;
+    var DEFAULT_THEME = 'enchanted';
+    var byId = {};
+    THEMES.forEach(function (t) { byId[t.id] = t; });
 
-    function prefersLight() {
-        return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
-    }
+    var darkQuery = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
 
-    function stored() {
+    function read() {
         try {
-            var v = localStorage.getItem(STORAGE_KEY);
-            return (v === AUTO || IDS.indexOf(v) !== -1) ? v : null;
+            return localStorage.getItem(STORAGE_KEY);
         } catch (err) {
-            return null;   // private mode / storage disabled
+            return null;
         }
     }
 
-    function resolve(choice) {
-        if (choice === AUTO || !choice) return prefersLight() ? 'daylight' : 'arcana';
-        return choice;
-    }
-
-    var choice = stored() || AUTO;
-
-    function apply(next, persist) {
-        choice = (next === AUTO || IDS.indexOf(next) !== -1) ? next : AUTO;
-        var active = resolve(choice);
-        root.setAttribute('data-theme', active);
-        if (persist) {
-            try { localStorage.setItem(STORAGE_KEY, choice); } catch (err) { /* ignore */ }
+    function write(value) {
+        try {
+            localStorage.setItem(STORAGE_KEY, value);
+        } catch (err) {
+            /* Storage blocked (private mode / disabled cookies) — theme is
+               still applied for this page view, it just will not persist. */
         }
-        syncMeta(active);
-        document.dispatchEvent(new CustomEvent('rami:themechange', { detail: { choice: choice, theme: active } }));
     }
 
-    function syncMeta(active) {
-        if (!document.head) return;
-        var colour = getComputedStyle(root).getPropertyValue('--meta-theme-color').trim();
-        if (!colour) return;
-        var meta = document.querySelector('meta[name="theme-color"]');
-        if (!meta) {
-            meta = document.createElement('meta');
-            meta.setAttribute('name', 'theme-color');
-            document.head.appendChild(meta);
+    /* The stored choice: a theme id, 'auto', or null when never chosen. */
+    function preference() {
+        var stored = read();
+        if (stored === AUTO || byId[stored]) return stored;
+        return DEFAULT_THEME;
+    }
+
+    /* The theme actually painted right now. */
+    function resolve(pref) {
+        if (pref !== AUTO) return byId[pref] ? pref : DEFAULT_THEME;
+        return darkQuery && !darkQuery.matches ? 'daylight' : DEFAULT_THEME;
+    }
+
+    function setMeta(name, content, attr) {
+        var key = attr || 'name';
+        var el = document.querySelector('meta[' + key + '="' + name + '"]');
+        if (!el) {
+            el = document.createElement('meta');
+            el.setAttribute(key, name);
+            (document.head || document.documentElement).appendChild(el);
         }
-        meta.setAttribute('content', colour);
-        void active;
+        el.setAttribute('content', content);
     }
 
-    /* Apply immediately so the first paint is already themed. */
-    root.setAttribute('data-theme', resolve(choice));
-
-    /* Follow the system when the visitor never picked a theme. */
-    if (window.matchMedia) {
-        var mq = window.matchMedia('(prefers-color-scheme: light)');
-        var onSystemChange = function () { if (choice === AUTO) apply(AUTO, false); };
-        if (mq.addEventListener) mq.addEventListener('change', onSystemChange);
-        else if (mq.addListener) mq.addListener(onSystemChange);
+    function apply(pref, persist) {
+        var id = resolve(pref);
+        var theme = byId[id];
+        var root = document.documentElement;
+        root.setAttribute('data-rami-theme', id);
+        root.style.colorScheme = theme.scheme;
+        if (persist) write(pref);
+        if (document.head) {
+            setMeta('theme-color', theme.color);
+            setMeta('color-scheme', theme.scheme);
+        }
+        try {
+            document.dispatchEvent(new CustomEvent('rami:themechange', {
+                detail: { preference: pref, theme: id, scheme: theme.scheme }
+            }));
+        } catch (err) { /* CustomEvent unsupported — nothing depends on it */ }
+        return id;
     }
 
-    /* ---- Picker ---------------------------------------------------------- */
-    function swatchStyle(colours) {
-        return 'background: linear-gradient(135deg, ' + colours[0] + ' 0 33%, ' +
-            colours[1] + ' 33% 66%, ' + colours[2] + ' 66% 100%);';
+    /* ---- Boot (runs before first paint, so there is no flash) ------------- */
+    var current = preference();
+    apply(current, false);
+
+    if (darkQuery) {
+        var onSchemeChange = function () { if (current === AUTO) apply(AUTO, false); };
+        if (darkQuery.addEventListener) darkQuery.addEventListener('change', onSchemeChange);
+        else if (darkQuery.addListener) darkQuery.addListener(onSchemeChange);
+    }
+
+    /* Keep every open tab in sync. */
+    window.addEventListener('storage', function (e) {
+        if (e.key !== STORAGE_KEY) return;
+        current = preference();
+        apply(current, false);
+        syncUI();
+    });
+
+    /* ---- Picker UI -------------------------------------------------------- */
+    var menu = null;
+    var toggle = null;
+
+    function syncUI() {
+        if (!menu || !toggle) return;
+        var active = byId[resolve(current)];
+        toggle.querySelector('.theme-toggle-glyph').textContent = active.glyph;
+        toggle.setAttribute('title', 'Theme: ' + active.name);
+        toggle.setAttribute('aria-label', 'Change theme (current: ' + active.name + ')');
+        menu.querySelectorAll('[role="menuitemradio"]').forEach(function (btn) {
+            btn.setAttribute('aria-checked', btn.dataset.theme === current ? 'true' : 'false');
+        });
+    }
+
+    function closeMenu(focusToggle) {
+        if (!menu || !menu.classList.contains('open')) return;
+        menu.classList.remove('open');
+        toggle.setAttribute('aria-expanded', 'false');
+        if (focusToggle) toggle.focus();
+    }
+
+    function openMenu() {
+        if (!menu) return;
+        menu.classList.add('open');
+        toggle.setAttribute('aria-expanded', 'true');
+        var checked = menu.querySelector('[aria-checked="true"]') || menu.querySelector('[role="menuitemradio"]');
+        if (checked) checked.focus();
     }
 
     function buildPicker() {
-        if (document.querySelector('.theme-fab')) return;
+        var header = document.querySelector('.site-header .container');
+        if (!header || document.querySelector('.theme-picker')) return;
 
-        var fab = document.createElement('button');
-        fab.type = 'button';
-        fab.className = 'theme-fab';
-        fab.id = 'themeFab';
-        fab.setAttribute('aria-label', 'Change the theme');
-        fab.setAttribute('aria-expanded', 'false');
-        fab.setAttribute('aria-controls', 'themePanel');
-        fab.innerHTML = '<span aria-hidden="true">🎨</span>';
+        var wrap = document.createElement('div');
+        wrap.className = 'theme-picker';
 
-        var panel = document.createElement('div');
-        panel.className = 'theme-panel';
-        panel.id = 'themePanel';
-        panel.hidden = true;
+        toggle = document.createElement('button');
+        toggle.type = 'button';
+        toggle.className = 'theme-toggle';
+        toggle.setAttribute('aria-haspopup', 'true');
+        toggle.setAttribute('aria-expanded', 'false');
+        toggle.innerHTML = '<span class="theme-toggle-glyph" aria-hidden="true">🔮</span>' +
+            '<span class="theme-toggle-label">Theme</span>';
 
-        var options = THEMES.map(function (t) {
-            return '<li>' +
-                '<button type="button" class="theme-option" role="radio" data-theme-id="' + t.id + '" aria-checked="false">' +
-                '<span class="theme-swatch" aria-hidden="true" style="' + swatchStyle(t.swatch) + '"></span>' +
-                '<span class="theme-option-text">' +
-                '<span class="theme-option-name">' + t.emoji + ' ' + t.name + '</span>' +
-                '<span class="theme-option-note">' + t.note + '</span>' +
-                '</span></button></li>';
-        }).join('');
+        menu = document.createElement('div');
+        menu.className = 'theme-menu';
+        menu.setAttribute('role', 'menu');
+        menu.setAttribute('aria-label', 'Choose a theme');
 
-        panel.innerHTML =
-            '<div class="theme-panel-head"><h2 id="themePanelTitle">Choose your enchantment</h2>' +
-            '<p>' + THEMES.length + ' + auto</p></div>' +
-            '<ul class="theme-list" role="radiogroup" aria-labelledby="themePanelTitle">' +
-            '<li><button type="button" class="theme-option" role="radio" data-theme-id="' + AUTO + '" aria-checked="false">' +
-            '<span class="theme-swatch" aria-hidden="true" style="' + swatchStyle(['#0b0524', '#a855f7', '#ffffff']) + '"></span>' +
-            '<span class="theme-option-text"><span class="theme-option-name">🪄 Auto</span>' +
-            '<span class="theme-option-note">Follow my system</span></span></button></li>' +
-            options +
-            '</ul>' +
-            '<p class="theme-panel-foot">Your choice is remembered on this device.</p>';
+        var options = THEMES.concat([{
+            id: AUTO, name: 'Match system', glyph: '🌗', note: 'Follow your device’s light/dark setting'
+        }]);
 
-        document.body.appendChild(fab);
-        document.body.appendChild(panel);
-
-        var buttons = Array.prototype.slice.call(panel.querySelectorAll('.theme-option'));
-
-        function mark() {
-            buttons.forEach(function (b) {
-                b.setAttribute('aria-checked', b.dataset.themeId === choice ? 'true' : 'false');
+        options.forEach(function (t) {
+            var item = document.createElement('button');
+            item.type = 'button';
+            item.className = 'theme-option';
+            item.setAttribute('role', 'menuitemradio');
+            item.setAttribute('aria-checked', 'false');
+            item.dataset.theme = t.id;
+            item.innerHTML = '<span class="theme-option-glyph" aria-hidden="true"></span>' +
+                '<span class="theme-option-text"><strong></strong><small></small></span>';
+            item.querySelector('.theme-option-glyph').textContent = t.glyph;
+            item.querySelector('strong').textContent = t.name;
+            item.querySelector('small').textContent = t.note;
+            item.addEventListener('click', function () {
+                current = t.id;
+                apply(current, true);
+                syncUI();
+                closeMenu(true);
             });
-        }
-
-        var open = false;
-        function setOpen(next) {
-            open = next;
-            fab.setAttribute('aria-expanded', String(next));
-            if (next) {
-                panel.hidden = false;
-                requestAnimationFrame(function () { panel.classList.add('open'); });
-                mark();
-                var checked = panel.querySelector('[aria-checked="true"]') || buttons[0];
-                if (checked) checked.focus();
-            } else {
-                panel.classList.remove('open');
-                window.setTimeout(function () { if (!open) panel.hidden = true; }, 300);
-            }
-        }
-
-        fab.addEventListener('click', function () { setOpen(!open); });
-
-        buttons.forEach(function (b, i) {
-            b.addEventListener('click', function () {
-                apply(b.dataset.themeId, true);
-                mark();
-            });
-            b.addEventListener('keydown', function (e) {
-                var step = e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1
-                    : e.key === 'ArrowUp' || e.key === 'ArrowLeft' ? -1 : 0;
-                if (!step) return;
-                e.preventDefault();
-                var next = buttons[(i + step + buttons.length) % buttons.length];
-                next.focus();
-                apply(next.dataset.themeId, true);
-                mark();
-            });
+            menu.appendChild(item);
         });
 
-        document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && open) { setOpen(false); fab.focus(); }
+        toggle.addEventListener('click', function () {
+            if (menu.classList.contains('open')) closeMenu(false);
+            else openMenu();
         });
+
+        wrap.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { closeMenu(true); return; }
+            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+            var items = Array.prototype.slice.call(menu.querySelectorAll('[role="menuitemradio"]'));
+            if (!items.length) return;
+            e.preventDefault();
+            if (!menu.classList.contains('open')) { openMenu(); return; }
+            var i = items.indexOf(document.activeElement);
+            var next = e.key === 'ArrowDown' ? i + 1 : i - 1;
+            if (next < 0) next = items.length - 1;
+            if (next >= items.length) next = 0;
+            items[next].focus();
+        });
+
         document.addEventListener('click', function (e) {
-            if (open && !panel.contains(e.target) && !fab.contains(e.target)) setOpen(false);
+            if (!wrap.contains(e.target)) closeMenu(false);
         });
 
-        mark();
-        syncMeta(resolve(choice));
+        wrap.appendChild(toggle);
+        wrap.appendChild(menu);
+
+        var burger = header.querySelector('.burger');
+        if (burger) header.insertBefore(wrap, burger);
+        else header.appendChild(wrap);
+
+        syncUI();
     }
 
     if (document.readyState === 'loading') {
@@ -197,9 +222,17 @@
         buildPicker();
     }
 
+    /* Small public surface, handy for sub-realms with their own chrome. */
     window.RamiTheme = {
         themes: THEMES,
-        get: function () { return { choice: choice, theme: resolve(choice) }; },
-        set: function (id) { apply(id, true); },
+        get: function () { return current; },
+        resolved: function () { return resolve(current); },
+        set: function (id) {
+            if (id !== AUTO && !byId[id]) return false;
+            current = id;
+            apply(current, true);
+            syncUI();
+            return true;
+        }
     };
 })();

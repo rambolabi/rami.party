@@ -7,6 +7,23 @@
 
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/* ---- Escaping ------------------------------------------------------------ */
+/* The registry is ours, but every value still goes through here so a stray
+   `&`, `<` or quote in a title can never break (or inject into) the markup. */
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+/* Only allow hrefs we can vouch for; anything else becomes an inert link. */
+function safeHref(href) {
+    const value = String(href ?? '').trim();
+    if (!value) return '#';
+    if (/^(https?:|mailto:|tel:)/i.test(value)) return escapeHtml(value);
+    if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return '#';   // javascript:, data:, …
+    return escapeHtml(value);
+}
+
 /* ---- Realm cards --------------------------------------------------------- */
 function cardMarkup(r) {
     const soon = r.status === 'soon' || !r.href || r.href === '#';
@@ -14,7 +31,7 @@ function cardMarkup(r) {
     const ext = r.external ? ' target="_blank" rel="noopener noreferrer"' : '';
     const titleInner = soon
         ? escapeHtml(r.title)
-        : `<a href="${escapeHtml(r.href)}"${ext}>${escapeHtml(r.title)}</a>`;
+        : `<a href="${safeHref(r.href)}"${ext}>${escapeHtml(r.title)}</a>`;
     const enter = soon
         ? `<span class="realm-enter">🔒 ${r.tagline === 'Never drew breath' ? 'Nothing to see' : 'Coming soon'}</span>`
         : `<span class="realm-enter">${r.external ? 'Visit' : 'Enter'} <span class="arrow" aria-hidden="true">→</span></span>`;
@@ -30,6 +47,7 @@ function cardMarkup(r) {
         </li>`;
 }
 window.cardMarkup = cardMarkup;
+window.ramiEscapeHtml = escapeHtml;
 
 function renderRealms() {
     const root = document.getElementById('realmGroups');
@@ -45,9 +63,9 @@ function renderRealms() {
         section.className = 'realm-group';
         section.innerHTML = `
             <header class="group-head">
-                <span class="group-emoji" aria-hidden="true">${escapeHtml(g.emoji || '')}</span>
-                <h3>${escapeHtml(g.title || '')}</h3>
-                <p>${escapeHtml(g.blurb || '')}</p>
+                <span class="group-emoji" aria-hidden="true">${escapeHtml(g.emoji)}</span>
+                <h3>${escapeHtml(g.title)}</h3>
+                <p>${escapeHtml(g.blurb)}</p>
             </header>
             <ul class="realm-grid" role="list">
                 ${items.map(cardMarkup).join('')}
@@ -84,6 +102,7 @@ const STATUS_META = {
 function resolveWorkshopHref(href, external) {
     if (!href) return null;
     if (external || /^https?:/.test(href) || href.startsWith('//') || href === '#') return href;
+    if (href.startsWith('../')) return './' + href.slice(3);   // already points outside /workshop/
     return './workshop/' + href.replace(/^\.\//, '');
 }
 
@@ -120,16 +139,11 @@ function buildSearchIndex() {
     return entries;
 }
 
-function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c =>
-        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
 function resultCardMarkup(e) {
     const it = e.item;
     const soon = !e.url || e.url === '#';
     const ext = e.external ? ' target="_blank" rel="noopener noreferrer"' : '';
-    const title = soon ? escapeHtml(it.title) : `<a href="${escapeHtml(e.url)}"${ext}>${escapeHtml(it.title)}</a>`;
+    const title = soon ? escapeHtml(it.title) : `<a href="${safeHref(e.url)}"${ext}>${escapeHtml(it.title)}</a>`;
     const tags = (it.tags || []).map(t => `<span>${escapeHtml(t)}</span>`).join('');
     const enter = soon
         ? `<span class="realm-enter">🔒 Nothing to visit</span>`
@@ -175,15 +189,123 @@ function setupSearch() {
             return;
         }
         results.innerHTML =
-            `<p class="search-count">${matches.length} realm${matches.length === 1 ? '' : 's'} found</p>
+            `<p class="search-count">${matches.length} project${matches.length === 1 ? '' : 's'} found</p>
              <ul class="realm-grid" role="list">${matches.map(resultCardMarkup).join('')}</ul>`;
         setupCardGlow(results);
+    };
+
+    /* Keep the query in the URL so a search can be linked or bookmarked. */
+    const syncUrl = () => {
+        if (!window.history || !window.history.replaceState) return;
+        const url = new URL(window.location.href);
+        const raw = input.value.trim();
+        if (raw) url.searchParams.set('q', raw);
+        else url.searchParams.delete('q');
+        window.history.replaceState(null, '', url);
+    };
+
+    input.addEventListener('input', () => { run(); syncUrl(); });
+    input.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { input.value = ''; run(); syncUrl(); }
+    });
+    if (clearBtn) clearBtn.addEventListener('click', () => {
+        input.value = '';
+        run();
+        syncUrl();
+        input.focus();
+    });
+
+    document.querySelectorAll('.search-suggest').forEach(btn => {
+        btn.addEventListener('click', () => {
+            input.value = btn.dataset.q || btn.textContent;
+            run();
+            syncUrl();
+            input.focus();
+        });
+    });
+
+    /* `/` or Ctrl/⌘-K jumps to the search box, as in every good search UI. */
+    document.addEventListener('keydown', e => {
+        if (e.defaultPrevented) return;
+        const el = document.activeElement;
+        const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+        const shortcut = (e.key === '/' && !typing && !e.metaKey && !e.ctrlKey && !e.altKey) ||
+            (e.key.toLowerCase() === 'k' && (e.metaKey || e.ctrlKey));
+        if (!shortcut) return;
+        e.preventDefault();
+        input.focus();
+        input.select();
+    });
+
+    const initial = new URL(window.location.href).searchParams.get('q');
+    if (initial) {
+        input.value = initial;
+        run();
+    }
+}
+
+/* ---- Workshop filter (workshop/index.html) -------------------------------- */
+function setupWorkshopFilter() {
+    const input = document.getElementById('workshopSearch');
+    const grid = document.getElementById('workshopGrid');
+    if (!input || !grid) return;
+
+    const clearBtn = document.getElementById('workshopSearchClear');
+    const count = document.getElementById('workshopCount');
+    const empty = document.getElementById('workshopEmpty');
+    const plannedSection = document.getElementById('planned');
+
+    const lookup = new Map();
+    (window.RAMI_WORKSHOP || []).forEach(w => {
+        lookup.set(String(w.title).toLowerCase(), [w.title, w.tagline, w.description, w.search, (w.tags || []).join(' ')]
+            .filter(Boolean).join(' ').toLowerCase());
+    });
+
+    const cards = Array.from(grid.querySelectorAll('.realm-card')).map(card => {
+        const title = (card.querySelector('h3')?.textContent || '').trim().toLowerCase();
+        return { card, haystack: lookup.get(title) || card.textContent.toLowerCase() };
+    });
+    if (!cards.length) return;
+
+    const plannedChips = Array.from(document.querySelectorAll('#plannedList .planned-chip'))
+        .map(chip => ({ chip, haystack: chip.textContent.toLowerCase() }));
+
+    const run = () => {
+        const raw = input.value.trim();
+        const tokens = raw.toLowerCase().split(/\s+/).filter(Boolean);
+        if (clearBtn) clearBtn.hidden = !raw;
+
+        let shown = 0;
+        cards.forEach(({ card, haystack }) => {
+            const hit = tokens.every(t => haystack.includes(t));
+            card.hidden = !hit;
+            // A filtered result must never stay stuck in its un-revealed state.
+            if (hit && tokens.length) card.classList.add('visible');
+            if (hit) shown++;
+        });
+
+        let plannedShown = 0;
+        plannedChips.forEach(({ chip, haystack }) => {
+            const hit = tokens.every(t => haystack.includes(t));
+            chip.hidden = !hit;
+            if (hit) plannedShown++;
+        });
+        if (plannedSection) plannedSection.hidden = !!tokens.length && !plannedShown;
+
+        if (count) {
+            count.textContent = tokens.length
+                ? `${shown} of ${cards.length} project${cards.length === 1 ? '' : 's'} match “${raw}”`
+                : `${cards.length} projects on the workbench`;
+        }
+        if (empty) empty.hidden = !(tokens.length && !shown && !plannedShown);
     };
 
     input.addEventListener('input', run);
     input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; run(); } });
     if (clearBtn) clearBtn.addEventListener('click', () => { input.value = ''; run(); input.focus(); });
+    run();
 }
+window.__ramiWorkshopFilter = setupWorkshopFilter;
 
 
 /* ---- Starfield ----------------------------------------------------------- */
@@ -236,7 +358,7 @@ function startStarfield() {
                 s.a += s.tw * s.dir;
                 if (s.a <= 0.1 || s.a >= 1) s.dir *= -1;
             }
-            ctx.globalAlpha = Math.max(0.1, Math.min(1, s.a)) * style.opacity;
+            ctx.globalAlpha = Math.max(0.1, Math.min(1, s.a));
             ctx.fillStyle = s.c;
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
@@ -245,33 +367,33 @@ function startStarfield() {
         ctx.globalAlpha = 1;
     }
 
-    function loop() {
+    function draw() {
         paint(true);
-        rafId = requestAnimationFrame(loop);
+        rafId = requestAnimationFrame(draw);
     }
 
-    function render() {
-        if (rafId !== null) cancelAnimationFrame(rafId);
-        rafId = null;
-        if (reduceMotion) paint(false);
-        else loop();
-    }
-
-    function recolor() {
-        style = themeStarStyle();
-        for (const s of stars) s.c = style.colors[(Math.random() * style.colors.length) | 0];
-        if (reduceMotion) paint(false);
-    }
-
+    let rafId;
+    let resizeTimer;
+    const render = () => reduceMotion ? paint(false) : draw();
     resize();
-    render();
 
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => { resize(); render(); }, 120);
+        resizeTimer = setTimeout(() => {
+            cancelAnimationFrame(rafId);
+            resize();
+            render();
+        }, 150);
     });
 
-    document.addEventListener('rami:themechange', recolor);
+    /* Stop burning frames while the tab is hidden. */
+    document.addEventListener('visibilitychange', () => {
+        if (reduceMotion) return;
+        if (document.hidden) cancelAnimationFrame(rafId);
+        else { cancelAnimationFrame(rafId); draw(); }
+    });
+
+    render();
 }
 
 /* ---- Mobile navigation --------------------------------------------------- */
@@ -282,13 +404,14 @@ function setupMobileNav() {
     const overlay = document.createElement('nav');
     overlay.className = 'mobile-nav';
     overlay.id = 'mobileNav';
-    overlay.setAttribute('aria-label', 'Mobile');
+    overlay.setAttribute('aria-label', 'Mobile navigation');
     overlay.innerHTML = `
         <button class="close-btn" aria-label="Close menu">&times;</button>
+        <a href="#guide">How it works</a>
         <a href="#realms">Realms</a>
-        <a href="./gallery/lore/">Lore</a>
-        <a href="./gallery/prankscreens/">Prank Screens</a>
-        <a href="./wasteland/">The Wastelands</a>
+        <a href="./gallery/">Gallery</a>
+        <a href="./workshop/">Workshop</a>
+        <a href="./wasteland/">Wastelands</a>
     `;
     document.body.appendChild(overlay);
     const closeBtn = overlay.querySelector('.close-btn');
@@ -349,5 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
     startStarfield();
     setupMobileNav();
     setupSearch();
+    setupWorkshopFilter();
     observeReveal();
 });

@@ -99,7 +99,10 @@
 }
 
 /* --- Base ----------------------------------------------------------------- */
-html { scroll-behavior: smooth; scroll-padding-top: 118px; }
+/* --topbar-h / --stick are measured and written by app.js on load and resize.
+   The literals here are only a sane fallback before the script runs. */
+:root { --topbar-h: 62px; --stick: 110px; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--stick) + 16px); }
 * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 ::-webkit-scrollbar { width: 11px; height: 11px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -145,6 +148,8 @@ body {
 a { color: var(--accent-2); text-decoration-color: color-mix(in srgb, var(--accent-2) 45%, transparent); }
 a:hover { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; border-radius: 6px; }
+/* Sections receive programmatic focus after an in-page jump — no visible ring. */
+[tabindex="-1"]:focus { outline: none; }
 
 /* --- Header --------------------------------------------------------------- */
 .topbar {
@@ -190,7 +195,7 @@ a:hover { color: var(--accent); }
 
 /* --- Section nav ---------------------------------------------------------- */
 .tocbar {
-    position: sticky; top: 62px; z-index: 25;
+    position: sticky; top: var(--topbar-h); z-index: 25;
     background: color-mix(in srgb, var(--bg-1) 82%, transparent);
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -225,7 +230,7 @@ main { width: min(94%, 980px); margin: 0 auto; padding: clamp(22px, 4vw, 44px) 0
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     box-shadow: 0 18px 44px rgba(0,0,0,.24); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     padding: clamp(18px, 3.6vw, 32px); margin-bottom: 26px;
-    scroll-margin-top: 120px;
+    scroll-margin-top: calc(var(--stick) + 16px);
 }
 .card > h2 { font-size: clamp(1.25rem, 3.2vw, 1.5rem); margin-bottom: 8px; display: flex; align-items: center; gap: 10px; line-height: 1.25; }
 .card > h2 .ic { font-size: 1.05em; }
@@ -329,6 +334,25 @@ tbody tr:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); 
 .mini-card h3 { margin: 0 0 6px; font-size: 1rem; color: var(--accent); }
 .mini-card p { font-size: .89rem; }
 .mini-meta { margin-top: 8px; font-size: .8rem !important; color: var(--text-muted); font-style: italic; }
+
+/* --- Tool cards ----------------------------------------------------------- */
+.tool-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); margin: 16px 0; }
+.tool-card {
+    display: flex; flex-direction: column; gap: 8px; min-width: 0;
+    background: var(--surface-2); border: 1px solid var(--border); border-left: 4px solid var(--accent);
+    border-radius: var(--radius-sm); padding: 16px;
+    transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease), border-color var(--speed) var(--ease);
+}
+.tool-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px var(--glow); border-color: var(--border-strong); border-left-color: var(--accent-2); }
+.tool-ic { font-size: 1.7rem; line-height: 1; }
+.tool-card h3 { margin: 0; font-size: 1.05rem; }
+.tool-card h3 a { color: var(--accent); text-decoration: none; }
+.tool-card h3 a:hover { text-decoration: underline; }
+.tool-card p { font-size: .9rem; color: var(--text-muted); }
+.tool-card .tool-when { color: var(--text); }
+.tool-card .tool-go { margin-top: auto; padding-top: 6px; font-size: .88rem; font-weight: 600; }
+.tool-card .tool-go a { color: var(--accent-2); text-decoration: none; }
+.tool-card .tool-go a:hover { text-decoration: underline; }
 
 /* --- Steps ---------------------------------------------------------------- */
 .steps { list-style: none; padding-left: 0; margin-top: 18px; counter-reset: none; }
@@ -510,5 +534,4 @@ input[type="text"]:focus, textarea:focus { border-color: var(--border-strong); o
 @media (max-width: 560px) {
     .topbar { gap: 8px; }
     .ghost-link span { display: none; }
-    .tocbar { top: 58px; }
 }

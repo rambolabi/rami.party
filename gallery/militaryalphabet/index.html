@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Phonetic Codex has moved · alphabet.labidi.eu</title>
+    <meta name="description"
+        content="The Phonetic Alphabet Studio — spelling alphabets, translator, Morse and drills — now lives at alphabet.labidi.eu.">
+    <meta name="theme-color" content="#0b0524">
+    <meta name="robots" content="noindex, follow">
+
+    <!--
+      The Phonetic Codex moved out of the gallery and onto its own domain.
+
+      This page keeps every old link working. The studio carried its whole state
+      in the query string (?a=, ?t=, ?lang=, ?text=, ?wake=), and a redirect that
+      dropped it would land people on a default, empty studio — so the search is
+      carried across verbatim, along with any hash. The canonical tag and the
+      meta refresh cover crawlers and anyone with JavaScript off; they lose the
+      parameters, which is the correct trade for a no-JS fallback.
+
+      The old service worker here cached the whole shell, so returning visitors
+      and anyone who installed the app were being served the old copy out of
+      their own storage and never reached this page at all. sw.js in this folder
+      is now a tombstone that clears those caches and unregisters itself; the
+      script below does the same from the page side, for browsers that get here
+      first.
+    -->
+    <link rel="canonical" href="https://alphabet.labidi.eu/">
+    <meta http-equiv="refresh" content="0; url=https://alphabet.labidi.eu/">
+    <script>
+        (function () {
+            'use strict';
+            var TARGET = 'https://alphabet.labidi.eu/';
+
+            /* Tear down what this app left behind, so a returning visitor is
+               not trapped on a cached copy. Both the registration and the
+               caches are filtered: `caches` and the worker registry are shared
+               by the whole origin, and rami.party has other offline pages on
+               it. This tool only ever registered a worker at this path and
+               only ever opened caches named `pas-v<n>`. */
+            try {
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function (rs) {
+                        rs.forEach(function (r) {
+                            if (r.scope.indexOf('/gallery/militaryalphabet/') !== -1) { r.unregister(); }
+                        });
+                    }).catch(function () { });
+                }
+                if (window.caches && caches.keys) {
+                    caches.keys().then(function (keys) {
+                        keys.forEach(function (k) { if (/^pas-/.test(k)) { caches.delete(k); } });
+                    }).catch(function () { });
+                }
+            } catch (e) { /* nothing here is worth blocking the redirect for */ }
+
+            /* Carry the deep link across: ?a= alphabet, ?t= theme, ?lang=,
+               ?text= and ?wake= are the whole state of a shared link. */
+            location.replace(TARGET + (location.search || '') + (location.hash || ''));
+        })();
+    </script>
+
+    <link rel="stylesheet" href="../../theme.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23041209'/%3E%3Ctext x='8' y='12' font-size='11' text-anchor='middle' fill='%2339ff9e' font-family='monospace' font-weight='bold'%3EA%3C/text%3E%3C/svg%3E">
+
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .moved {
+            max-width: 62ch;
+        }
+
+        .moved h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 1.2rem + 2.4vw, 2.6rem);
+            background: var(--spell);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .moved p {
+            color: var(--text-muted);
+            margin-top: 14px;
+        }
+
+        .moved .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 26px;
+        }
+
+        .moved .small {
+            font-size: .88rem;
+            margin-top: 26px;
+            opacity: .85;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
+    </div>
+
+    <main class="moved">
+        <h1>The Phonetic Codex has moved</h1>
+        <p>The Phonetic Alphabet Studio outgrew the gallery. It now lives at its own
+            address, with all 28 alphabets, the translator, Morse, the drills and the
+            wake-lock timer intact.</p>
+        <p>You should be sent there automatically, carrying whichever alphabet, theme,
+            language or text your link was pointing at.</p>
+        <div class="btn-row">
+            <a class="btn btn-primary" href="https://alphabet.labidi.eu/">Go to alphabet.labidi.eu</a>
+            <a class="btn btn-ghost" href="../../">Back to the hub</a>
+        </div>
+        <p class="small">If you installed the Codex as an app from this address, install it
+            again from the new one — that copy is frozen and will not receive corrections.
+            Saved settings live per address, so the new one starts fresh.</p>
+    </main>
+</body>
+
+</html>

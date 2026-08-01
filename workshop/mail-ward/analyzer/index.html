@@ -3,38 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Analyze email headers for SPF, DKIM, DMARC authentication, sender details and relay path. Runs entirely in your browser — nothing is uploaded.">
+    <meta name="description" content="Paste raw email headers or an .eml file and see the SPF, DKIM, DMARC and ARC results, the sender details, the relay path and the attachments. Runs entirely in your browser — nothing is uploaded. Part of Mail Ward.">
     <meta name="color-scheme" content="light dark">
     <meta name="theme-color" content="#3b82f6">
-    <title>Email Header Analyzer</title>
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <title>Email Header Analyzer — read SPF, DKIM &amp; DMARC results | Mail Ward</title>
+    <link rel="canonical" href="https://rami.party/workshop/mail-ward/analyzer/">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📧</text></svg>">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="../suite.css">
 </head>
 <body>
+    <nav class="mw-bar" aria-label="Mail Ward">
+        <a class="mw-brand" href="../"><span class="mw-mark" aria-hidden="true">🛡️</span> Mail&nbsp;Ward</a>
+        <span class="mw-sep" aria-hidden="true"></span>
+        <a href="../">Guide</a>
+        <a href="./" aria-current="page">Header analyzer</a>
+        <a href="../volume/">Volume dashboard</a>
+        <span class="mw-right">
+            <div class="theme-picker">
+                <svg class="theme-picker-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
+                    <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
+                    <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
+                    <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996C18.928 16.267 22 13.267 22 9.5 22 5.281 17.5 2 12 2z"/>
+                </svg>
+                <label class="visually-hidden" for="themeSelect">Colour theme</label>
+                <select id="themeSelect" title="Choose colour theme">
+                    <option value="light">Light · Slate</option>
+                    <option value="dark">Dark · Graphite</option>
+                    <option value="midnight">Midnight · Indigo</option>
+                    <option value="nord">Nord · Arctic</option>
+                    <option value="solarized">Solarized</option>
+                    <option value="matrix">Matrix · Terminal</option>
+                </select>
+            </div>
+            <a href="/workshop/">← Workshop</a>
+        </span>
+    </nav>
+
     <div class="container">
-        <div class="theme-picker">
-            <svg class="theme-picker-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
-                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
-                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
-                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
-                <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996C18.928 16.267 22 13.267 22 9.5 22 5.281 17.5 2 12 2z"/>
-            </svg>
-            <label class="visually-hidden" for="themeSelect">Colour theme</label>
-            <select id="themeSelect" title="Choose colour theme">
-                <option value="light">Light · Slate</option>
-                <option value="dark">Dark · Graphite</option>
-                <option value="midnight">Midnight · Indigo</option>
-                <option value="nord">Nord · Arctic</option>
-                <option value="solarized">Solarized</option>
-                <option value="matrix">Matrix · Terminal</option>
-            </select>
-        </div>
 
         <header>
             <h1>Email Header Analyzer</h1>
             <p class="subtitle">Analyze email headers for security and authenticity — 100% in your browser</p>
+            <p class="subtitle">
+                Not sure what <a href="../#spf">SPF</a>, <a href="../#dkim">DKIM</a> or
+                <a href="../#dmarc">DMARC</a> mean? The <a href="../">Mail Ward guide</a> explains all three,
+                and the <a href="../#spoof">what-if runbook</a> covers what to do when a result says
+                <code>fail</code>.
+            </p>
         </header>
 
         <div id="dropZone" class="input-section">
@@ -132,6 +152,12 @@
 
         <footer class="page-footer">
             <p>Everything runs locally in your browser — no headers ever leave this page.</p>
+            <p>Part of <a href="../">Mail Ward</a> — the SPF, DKIM &amp; DMARC guide ·
+                <a href="../#plan">Set the records up</a> ·
+                <a href="../#inspector">Inspect a DNS record</a> ·
+                <a href="../#spoof">Someone is spoofing us</a> ·
+                <a href="../volume/">Volume dashboard</a>
+            </p>
         </footer>
     </div>
 

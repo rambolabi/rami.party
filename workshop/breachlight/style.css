@@ -571,6 +571,84 @@ a.card h3 {
     background: rgba(124, 196, 255, .1);
 }
 
+.tag.medium {
+    color: var(--info);
+    border-color: color-mix(in srgb, var(--info) 40%, transparent);
+    background: rgba(124, 196, 255, .08);
+}
+
+/* Collapsible catalogue entries — audit operations and log sources. */
+.op {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--line);
+    border-radius: var(--radius-s);
+    padding: .7rem .95rem;
+    margin-bottom: .5rem;
+}
+
+.op>summary {
+    cursor: pointer;
+    display: flex;
+    gap: .5rem;
+    align-items: center;
+    flex-wrap: wrap;
+    font-size: .95rem;
+}
+
+.op>summary::-webkit-details-marker {
+    color: var(--ink-3);
+}
+
+.op .op-name {
+    background: var(--panel-2);
+    color: var(--accent);
+    font-size: .86rem;
+}
+
+.op .op-src {
+    font-size: .7rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-left: auto;
+}
+
+.op .op-means {
+    margin: .7rem 0 0;
+    color: var(--ink-2);
+    font-size: .92rem;
+}
+
+.op[open] {
+    border-left-color: var(--accent);
+}
+
+.op .spot {
+    margin: .25rem 0 0;
+    padding-left: 1.2rem;
+    font-size: .9rem;
+    color: var(--ink-2);
+}
+
+.op .spot li {
+    margin-bottom: .28rem;
+}
+
+.op.logsrc>summary b {
+    color: var(--ink);
+}
+
+.rail a.rail-tool {
+    color: var(--ok);
+    border-color: color-mix(in srgb, var(--ok) 40%, transparent);
+}
+
+.rail a.rail-tool:hover {
+    background: var(--ok-soft);
+    color: var(--ok);
+}
+
 .tag.accent {
     color: var(--accent);
     border-color: color-mix(in srgb, var(--accent) 45%, transparent);

@@ -69,7 +69,7 @@
         {
           "@type": "Question",
           "name": "Why does my SPF record fail with a permanent error?",
-          "acceptedAnswer": { "@type": "Answer", "text": "The two usual causes are more than ten DNS lookups (every include, a, mx, ptr, exists and redirect counts, recursively) and having two separate SPF TXT records on the same name. Both make SPF evaluate to permerror, which most receivers treat as no SPF at all." }
+          "acceptedAnswer": { "@type": "Answer", "text": "The two usual causes are more than ten DNS lookups (every include, a, mx, ptr, exists and redirect counts, recursively) and having two separate SPF TXT records on the same name. Both make SPF evaluate to permerror, which is never a pass, so SPF contributes nothing and DMARC has to rely entirely on DKIM." }
         },
         {
           "@type": "Question",
@@ -100,7 +100,8 @@
             </span>
         </a>
         <div class="actions">
-            <a class="ghost-link" href="../mailheaders/" title="Paste a raw email and see its authentication results">✉️ <span>Header analyzer</span></a>
+            <a class="ghost-link" href="./analyzer/" title="Paste a raw email and see its authentication results">✉️ <span>Header analyzer</span></a>
+            <a class="ghost-link" href="./volume/" title="Chart a message-trace export to find your senders">📊 <span>Volume dashboard</span></a>
             <div class="menu">
                 <button type="button" id="theme-btn" aria-haspopup="true" aria-expanded="false">🎨 <span id="theme-name">Aurora</span></button>
                 <div class="menu-list" id="theme-menu" role="menu" hidden></div>
@@ -119,6 +120,7 @@
             <a href="#plan">Step-by-step plan</a>
             <a href="#builder">Record builder</a>
             <a href="#inspector">Inspector</a>
+            <a href="#tools">The two tools</a>
             <a href="#risks">Risks</a>
             <a href="#spoof">What if… spoofing</a>
             <a href="#recognise">Recognising fakes</a>
@@ -255,9 +257,9 @@
 
             <h3>Headers worth knowing by name</h3>
             <ul class="deflist">
-                <li><code>Authentication-Results:</code> — the receiving server's verdict. Read this first, always. It
-                    is written by the <em>last</em> trusted server, so only trust the copy added by your own provider.
-                </li>
+                <li><code>Authentication-Results:</code> — the receiving server's verdict. Read this first, always.
+                    A message can carry several: only the <strong>topmost one, added by your own provider</strong>, is
+                    trustworthy — an attacker is free to invent the rest.</li>
                 <li><code>Received:</code> — one per hop, newest at the top. The bottom-most is where the message was
                     born (and is trivially forgeable; the top ones are not).</li>
                 <li><code>Return-Path:</code> — the envelope sender as recorded on delivery. Compare it with
@@ -277,7 +279,8 @@
                     for bulk senders since 2024; one-click unsubscribe.</li>
             </ul>
             <p class="tip">Want to read a real message? Paste it into the
-                <a href="../mailheaders/">Email Header Analyzer</a> next door — it decodes all of this for you.
+                <a href="./analyzer/">Email Header Analyzer</a> — the second page of Mail Ward decodes all of
+                this for you.
             </p>
         </section>
 
@@ -368,8 +371,10 @@
                     domain is a permanent error and SPF stops working entirely. Merge them into one.</li>
                 <li><strong>Ten DNS lookups, maximum.</strong> Counted recursively across every
                     <code>include</code>, <code>a</code>, <code>mx</code>, <code>ptr</code>, <code>exists</code> and
-                    <code>redirect</code>. Exceed it and the result is <code>permerror</code> — which most receivers
-                    treat as “no SPF”. Flattening tools help but freeze provider IPs; prefer removing unused providers.
+                    <code>redirect</code> (<code>ip4</code>, <code>ip6</code> and <code>all</code> are free). Exceed it
+                    and the result is <code>permerror</code> — never a pass, so SPF contributes nothing and DMARC has
+                    to fall back entirely on DKIM. Flattening tools help but freeze provider IPs; prefer removing
+                    unused providers.
                 </li>
                 <li><strong>Do not put SPF in a <code>SPF</code>-type record.</strong> DNS record type 99 was retired in
                     2014. It is a <code>TXT</code> record.</li>
@@ -383,6 +388,11 @@
             <p class="callout callout-info"><strong>Void lookups:</strong> there is a second, less-known limit — at most
                 2 mechanisms may resolve to nothing (NXDOMAIN/empty). Stale <code>include:</code> lines for a provider
                 you left behind are the usual culprit.</p>
+            <p class="callout callout-info"><strong>Bounces have no envelope sender.</strong> When <code>MAIL FROM</code>
+                is empty — as it is for every bounce message — SPF is evaluated against the <code>HELO</code>/
+                <code>EHLO</code> hostname the sending server announced instead. That is why your mail server's HELO
+                name should be a real hostname that you also cover with SPF.
+            </p>
         </section>
 
         <!-- ================================================================= -->
@@ -582,7 +592,9 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                             <td><code>pct</code></td>
                             <td><code>1</code>–<code>100</code></td>
                             <td>Apply the policy to only this share of failing mail — your safety valve when ramping up.
-                                Ignored at <code>p=none</code>.</td>
+                                It has no effect at <code>p=none</code>, and the forthcoming revision of the DMARC
+                                specification drops it altogether, so treat it as a temporary ramp tool rather than a
+                                permanent setting.</td>
                         </tr>
                         <tr>
                             <td><code>adkim</code> / <code>aspf</code></td>
@@ -635,8 +647,9 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                 <article class="mini-card">
                     <h3>BIMI</h3>
                     <p>Puts your logo next to your mail in supporting clients. Requires DMARC at
-                        <code>quarantine</code> or <code>reject</code> first, an SVG Tiny PS logo, and for Gmail/Apple a
-                        paid Verified Mark Certificate.
+                        <code>quarantine</code> or <code>reject</code> first — in practice full enforcement, with
+                        <code>pct=100</code> — an SVG Tiny PS logo, and for Gmail and Apple a paid Verified Mark
+                        Certificate.
                     </p>
                     <p class="mini-meta">Marketing reward for doing DMARC properly. Not a security control.</p>
                 </article>
@@ -703,9 +716,18 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                 to make the next one safe. A small organisation can do this in a month; a large one should budget a
                 quarter. Nobody should do it in an afternoon.</p>
 
+            <h3>Which step are you actually on?</h3>
+            <p>Most people arrive here half-configured. Four questions at most, and you get the one step to do next —
+                doing them out of order is what breaks mail.</p>
+            <div id="setup" class="triage">
+                <div class="triage-q" id="setup-q"></div>
+                <div class="triage-out" id="setup-out" aria-live="polite"></div>
+                <button type="button" class="btn btn-ghost" id="setup-reset" hidden>Start over</button>
+            </div>
+
             <ol class="steps">
 
-                <li class="step">
+                <li class="step" id="step-0">
                     <h3><span class="step-n">0</span> Take stock before you touch anything</h3>
                     <p class="step-goal">Goal — know every system on earth that sends mail using your domain.</p>
                     <p><strong>Do:</strong> Get administrative access to your DNS zone and to every mail platform. Then
@@ -721,7 +743,7 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                         day you switch to enforcement, and the thing that stops working will be payroll or invoices.</p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-1">
                     <h3><span class="step-n">1</span> Publish SPF — gently</h3>
                     <p class="step-goal">Goal — one correct SPF record that fails <em>soft</em>.</p>
                     <p><strong>Do:</strong> create a single TXT record on the domain apex listing every provider from
@@ -741,7 +763,7 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                     </p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-2">
                     <h3><span class="step-n">2</span> Turn on DKIM on every platform</h3>
                     <p class="step-goal">Goal — every legitimate message carries a signature with
                         <code>d=yourdomain</code>.
@@ -760,7 +782,7 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                         available; forgetting one platform, which then becomes the thing that breaks at step 6.</p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-3">
                     <h3><span class="step-n">3</span> Publish DMARC in monitor mode — today</h3>
                     <p class="step-goal">Goal — start collecting evidence. Nothing changes for anyone.</p>
                     <p><strong>Do:</strong> add a TXT record at <code>_dmarc.yourdomain.com</code>:</p>
@@ -773,7 +795,7 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                         the reports never arrive at all.</p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-4">
                     <h3><span class="step-n">4</span> Read reports for two to four weeks</h3>
                     <p class="step-goal">Goal — a complete inventory of who sends as you, from the data rather than from
                         memory.</p>
@@ -788,7 +810,7 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                         invisible in a two-week window, and you will block your own invoices in step 7.</p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-5">
                     <h3><span class="step-n">5</span> Fix alignment for everything legitimate</h3>
                     <p class="step-goal">Goal — every source in bucket 2 either aligns or is retired.</p>
                     <p><strong>Do:</strong> for each failing-but-legitimate source, one of:</p>
@@ -808,7 +830,7 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                         owner per sender with a date, or nothing will move.</p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-6">
                     <h3><span class="step-n">6</span> Ramp to quarantine</h3>
                     <p class="step-goal">Goal — failing mail goes to junk instead of the inbox, gradually.</p>
                     <p><strong>Do:</strong> tighten SPF from <code>~all</code> to <code>-all</code> first, then step the
@@ -824,7 +846,7 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                         that rewrite subjects breaking DKIM. <code>pct</code> is your dimmer switch — use it.</p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-7">
                     <h3><span class="step-n">7</span> Go to reject</h3>
                     <p class="step-goal">Goal — nobody can send mail as your domain. This is the actual protection.</p>
                     <pre class="code-block"><code>v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdomain.com; fo=1;</code></pre>
@@ -842,7 +864,7 @@ DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.com; s=selector1
                         edit plus a TTL. Keep the TTL low during the ramp.</p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-8">
                     <h3><span class="step-n">8</span> Lock down every domain that does <em>not</em> send mail</h3>
                     <p class="step-goal">Goal — parked, legacy and typo-defence domains cannot be abused either.</p>
                     <p><strong>Do:</strong> on each non-sending domain publish:</p>
@@ -857,7 +879,7 @@ _dmarc            TXT  "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdoma
                         bought defensively and never configured.</p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-9">
                     <h3><span class="step-n">9</span> Harden the transport and the brand</h3>
                     <p class="step-goal">Goal — the surrounding controls, now that identity is solved.</p>
                     <p><strong>Do:</strong> enable DNSSEC at the registrar; publish MTA-STS in
@@ -870,7 +892,7 @@ _dmarc            TXT  "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdoma
                         TLS reports.</p>
                 </li>
 
-                <li class="step">
+                <li class="step" id="step-10">
                     <h3><span class="step-n">10</span> Keep it alive</h3>
                     <p class="step-goal">Goal — the configuration decays without maintenance.</p>
                     <ul>
@@ -949,7 +971,7 @@ _dmarc            TXT  "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdoma
                     mail at all (parked / defensive)</label>
             </fieldset>
 
-            <div id="b-output" class="output"></div>
+            <div id="b-output" class="output" aria-live="polite"></div>
             <div id="b-warnings" class="warn-list" role="status" aria-live="polite"></div>
         </section>
 
@@ -996,6 +1018,39 @@ _dmarc            TXT  "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdoma
         </section>
 
         <!-- ================================================================= -->
+        <section id="tools" class="card" aria-labelledby="tools-t">
+            <h2 id="tools-t"><span class="ic">🧰</span> The two tools that come with this guide</h2>
+            <p class="section-lede">The guide tells you what to publish. These two pages tell you what is actually
+                happening — one message at a time, and across your whole mail flow.</p>
+            <div class="tool-grid">
+                <div class="tool-card">
+                    <span class="tool-ic" aria-hidden="true">✉️</span>
+                    <h3><a href="./analyzer/">Email Header Analyzer</a></h3>
+                    <p>Paste raw headers or drop a whole <code>.eml</code> file and read the verdict: SPF, DKIM,
+                        DMARC and ARC results, whether they <em>aligned</em>, the sender details, the full relay
+                        timeline, attachment hashes and a script-free body preview. It also flags lookalike domains,
+                        impersonated brands and unknown top-level domains.</p>
+                    <p class="tool-when"><strong>Use it when</strong> someone forwards you a suspicious message, or
+                        when you want to prove a test message really is signed as your own domain.</p>
+                    <p class="tool-go"><a href="./analyzer/">Open the analyzer →</a></p>
+                </div>
+                <div class="tool-card">
+                    <span class="tool-ic" aria-hidden="true">📊</span>
+                    <h3><a href="./volume/">Email Volume Dashboard</a></h3>
+                    <p>Upload a message-trace export (CSV or Excel) from your own mail platform and chart who is
+                        sending as your domain, how much, and when. The inside view that complements what DMARC
+                        aggregate reports show you from the outside.</p>
+                    <p class="tool-when"><strong>Use it when</strong> you are working through
+                        <a href="#step-0">step 0</a> and <a href="#step-4">step 4</a> — building the list of every
+                        system that sends mail as you, before you dare enforce anything.</p>
+                    <p class="tool-go"><a href="./volume/">Open the dashboard →</a></p>
+                </div>
+            </div>
+            <p class="tip">Both tools run entirely in your browser, like this page — no accounts, no uploads and
+                no third-party code anywhere in the suite. The whole thing works offline.</p>
+        </section>
+
+        <!-- ================================================================= -->
         <section id="risks" class="card" aria-labelledby="risks-t">
             <h2 id="risks-t"><span class="ic">⚠️</span> What can go wrong — and what it looks like</h2>
             <p class="section-lede">Almost every email authentication outage in the world is one of these. The symptom
@@ -1017,7 +1072,7 @@ _dmarc            TXT  "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdoma
                             <td>Revert to <code>~all</code> immediately, fix the list, re-test, re-tighten</td>
                         </tr>
                         <tr>
-                            <td>SPF reported as <code>permerror</code>; receivers behave as if you have no SPF</td>
+                            <td>SPF reported as <code>permerror</code>; DMARC has only DKIM left to work with</td>
                             <td>More than 10 DNS lookups, or two <code>v=spf1</code> records on one name</td>
                             <td>Merge records; drop unused includes; replace <code>mx</code>/<code>a</code> with
                                 <code>ip4:</code>; last resort, flatten</td>
@@ -1189,7 +1244,7 @@ _dmarc            TXT  "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdoma
                     </li>
                     <li><strong>Read <code>Authentication-Results</code> and the <code>From</code>, <code>Return-Path</code>
                             and <code>Reply-To</code> fields.</strong> That determines which of the five types you have.
-                        Paste it into the <a href="../mailheaders/">header analyzer</a> if you want it decoded.</li>
+                        Paste it into the <a href="./analyzer/">header analyzer</a> if you want it decoded.</li>
                     <li><strong>Rule out a compromised account first.</strong> Check sign-in logs for impossible travel
                         and for legacy protocols, look in Sent Items and Deleted Items, and — critically — <strong>look
                             for mailbox rules you did not create</strong>. Auto-forwarding to an external address and
@@ -1200,6 +1255,10 @@ _dmarc            TXT  "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdoma
                         whether any other accounts share that password.</li>
                     <li><strong>Preserve evidence</strong> before deleting anything: export the message with full
                         headers, take copies of the mailbox rules and sign-in logs, note timestamps in UTC.</li>
+                    <li><strong>Do not discuss the incident in the affected mailbox.</strong> If an attacker still has
+                        access they are reading it, and they will see you coming — people have had funds moved during
+                        the response because the plan was emailed around. Move the conversation to phone, chat or a
+                        different mailbox until you are certain the account is clean.</li>
                     <li><strong>If money has moved</strong>, call the bank immediately — the first hours decide whether
                         a recall is possible.</li>
                 </ol>
@@ -1378,8 +1437,8 @@ _dmarc            TXT  "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdoma
                     <dt>MTA</dt>
                     <dd>Mail Transfer Agent — the server software that moves mail between organisations.</dd>
                     <dt>Permerror</dt>
-                    <dd>An SPF record that cannot be evaluated (too many lookups, syntax error, duplicate record). Most
-                        receivers treat it as no SPF at all.</dd>
+                    <dd>An SPF record that cannot be evaluated (too many lookups, syntax error, duplicate record). It is
+                        never a pass, so SPF stops contributing anything to DMARC.</dd>
                     <dt>Return-Path</dt>
                     <dd>The envelope sender as recorded in the delivered message.</dd>
                     <dt>Selector</dt>
@@ -1476,7 +1535,8 @@ _dmarc            TXT  "v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdoma
 
     <footer class="site-foot">
         <p>Part of <a href="/">rami.party</a> · <a href="../">the Workshop</a> ·
-            <a href="../mailheaders/">Email Header Analyzer</a> · <a href="../subnets/">Subnet Calculator</a>
+            <a href="./analyzer/">Header analyzer</a> · <a href="./volume/">Volume dashboard</a> ·
+            <a href="../subnets/">Subnet Calculator</a>
         </p>
         <p class="muted">Everything runs locally in your browser. No tracking, no accounts, no uploads.
             This page is guidance, not legal or regulatory advice.</p>
