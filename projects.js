@@ -216,6 +216,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Interview Forge',
+        href: './interview-forge/',
+        glyph: '🎙️',
+        tagline: 'Run a better interview',
+        description: 'A calm, professional companion for job interviews: a guided setup or a one-click quick start, a searchable bank of hundreds of questions with the model answer one click away, a DISC list, split-screen note taking, a Markdown or PDF report and a side-by-side comparison of every candidate. Dutch, English and French, six themes, entirely offline.',
+        search: 'An interview tool, interview guide and question bank for interviewers, hiring managers, recruiters and HR during a job application or solicitation. Guided setup wizard or quick start: fill in the candidate details, attach the CV or PDF you got from HR, pick a position or job profile such as IT service desk agent, second line support engineer, field technician, digital workplace consultant, Microsoft Office application support, service desk team lead, network and firewall engineer, networking and switching junior, firewall expert, Windows system engineer, Linux system engineer, virtualisation engineer, Microsoft Azure engineer, Microsoft 365 engineer, cloud architect, basic IT troubleshooting, security engineer, SOC analyst, pentester or ethical hacker, GRC and compliance officer, software developer, front-end developer, back-end developer, DevOps engineer, data analyst, AI and machine learning engineer, database administrator, project and delivery manager, scrum master, customer success manager, account manager, marketing assistant, marketing manager, HR officer, recruiter, IT consultant, team lead, office manager or intern. Selecting a position automatically ticks the matching subjects and skill areas, which you can change yourself and save as a template or share with a link. Starter templates keep the list short for beginners. Hundreds of trilingual interview questions with the correct answer hidden behind a button so the interviewer can check it: what is the difference between TCP and UDP, what happens if DNS does not reply, what happens if a device has no default gateway, what does BGP stand for and what does it do, what is DHCP, what are SPF DKIM and DMARC, what is a NAT rule, have you updated a SonicWall, which hypervisors have you used, VLANs, spanning tree, subnetting, TLS certificates, IPsec and SSL VPN, zero trust, conditional access, Intune, Active Directory, Kerberos, PowerShell, Linux permissions, backup and RAID, containers, CI/CD, SQL, OWASP, phishing and ransomware response, ITIL incident problem and change, plus behavioural and personality questions such as can you work in a team and have you been a team leader before, and a full DISC question list to estimate the red, yellow, green and blue colours. Take notes underneath every question while the candidate talks, rate each answer, use tabs or a split book view with the questions on one side and your notes on the other, then export a Markdown or PDF report of only the fields you filled in, only the questions you annotated, or everything. Compare all interviewed candidates side by side per subject. Available in Dutch, English and French with multiple themes; everything stays in the browser.',
+        tags: ['tool', 'hr', 'interview', 'guide'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'IT Tools Workbench',
         href: './tools/',
         glyph: '🧰',

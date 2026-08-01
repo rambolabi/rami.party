@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" id="meta-theme" content="#0b1020">
+
+    <title>Interview Forge — interview guide, question bank & scoring tool | rami.party</title>
+    <meta name="description" content="A professional, offline interview companion for hiring managers: guided setup, hundreds of interview questions with model answers, DISC list, note-taking, Markdown/PDF reports and candidate comparison. English, Dutch and French.">
+    <meta name="keywords" content="interview tool, interview questions, hiring, recruitment, sollicitatie, entretien d'embauche, DISC, IT interview questions, scorecard">
+    <meta name="author" content="rami.party">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://rami.party/workshop/interview-forge/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Interview Forge — interview guide, question bank & scoring tool">
+    <meta property="og:description" content="Prepare, run and document job interviews. Hundreds of questions with model answers, DISC, notes, reports and candidate comparison. Runs entirely in your browser.">
+    <meta property="og:url" content="https://rami.party/workshop/interview-forge/">
+    <meta property="og:site_name" content="rami.party">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230b1020'/%3E%3Cg fill='none' stroke='%236c8cff' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M28 26h44M28 46h30M28 66h38'/%3E%3C/g%3E%3C/svg%3E">
+
+    <script>
+        /* Apply the saved theme and language before first paint. */
+        (function () {
+            try {
+                var t = localStorage.getItem('if.theme');
+                if (t) { document.documentElement.setAttribute('data-theme', t); }
+                var l = localStorage.getItem('if.lang');
+                if (l) { document.documentElement.setAttribute('lang', l); }
+            } catch (e) { /* private mode */ }
+        })();
+    </script>
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand"><span class="glyph" aria-hidden="true">🎙️</span> <span data-i18n="app.name">Interview Forge</span></div>
+
+        <nav class="topnav" aria-label="Sections">
+            <button class="btn btn-sm" data-route="home" data-i18n="nav.home">Home</button>
+            <button class="btn btn-sm" data-route="setup" data-i18n="nav.setup">Setup</button>
+            <button class="btn btn-sm" data-route="workspace" data-i18n="nav.workspace">Interview</button>
+            <button class="btn btn-sm" data-route="compare" data-i18n="nav.compare">Compare</button>
+        </nav>
+
+        <div class="spacer"></div>
+
+        <label class="sr-only" for="lang-select" data-i18n="nav.language">Language</label>
+        <select id="lang-select" title="Language"></select>
+
+        <label class="sr-only" for="theme-select" data-i18n="nav.theme">Theme</label>
+        <select id="theme-select" title="Theme"></select>
+
+        <button class="btn btn-sm" id="library-btn" aria-expanded="false" aria-controls="library">
+            <span aria-hidden="true">☰</span> <span data-i18n="nav.library">Question library</span>
+        </button>
+    </header>
+
+    <main id="view" tabindex="-1"></main>
+
+    <div class="drawer-backdrop hidden" id="drawer-backdrop"></div>
+    <aside class="drawer hidden" id="library" role="dialog" aria-modal="true" aria-labelledby="library-title">
+        <header>
+            <h2 id="library-title" style="margin:0;font-size:1.05rem" data-i18n="lib.title">Question library</h2>
+            <div class="spacer"></div>
+            <button class="btn btn-sm" id="library-close" data-i18n="btn.close">Close</button>
+        </header>
+        <div class="filters">
+            <input type="search" id="lib-search" autocomplete="off">
+            <div class="row">
+                <select id="lib-cat"></select>
+                <select id="lib-role"></select>
+                <select id="lib-level"></select>
+            </div>
+            <div class="row" style="align-items:center">
+                <span class="faint" id="lib-count"></span>
+                <button class="btn btn-sm" id="lib-add-all" data-i18n="lib.addAll">Add all results</button>
+            </div>
+        </div>
+        <div class="results" id="lib-results"></div>
+    </aside>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="i18n.js"></script>
+    <script src="data/taxonomy.js"></script>
+    <script src="data/questions-tech.js"></script>
+    <script src="data/questions-soft.js"></script>
+    <script src="data/questions-business.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
