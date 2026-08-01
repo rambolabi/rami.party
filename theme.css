@@ -28,6 +28,39 @@
     --card-border: rgba(168, 85, 247, 0.28);
     --glass-blur: 16px;
 
+    /* Themed surfaces & chrome ------------------------------------------- */
+    --body-bg:
+        radial-gradient(1200px 700px at 12% -10%, rgba(168, 85, 247, 0.22), transparent 60%),
+        radial-gradient(1000px 800px at 90% 10%, rgba(34, 211, 238, 0.14), transparent 55%),
+        radial-gradient(900px 900px at 50% 120%, rgba(236, 72, 153, 0.16), transparent 60%),
+        linear-gradient(180deg, var(--night-1) 0%, var(--night-0) 100%);
+    --header-bg: rgba(11, 5, 36, 0.55);
+    --footer-bg: rgba(6, 3, 15, 0.6);
+    --overlay-bg: rgba(6, 3, 15, 0.92);
+    --surface-soft: rgba(255, 255, 255, 0.05);
+    --surface-softer: rgba(255, 255, 255, 0.03);
+    --border-soft: rgba(168, 85, 247, 0.18);
+    --border-hairline: rgba(255, 255, 255, 0.08);
+    --chip-bg: rgba(255, 255, 255, 0.05);
+    --chip-border: rgba(255, 255, 255, 0.08);
+    --accent-soft: rgba(168, 85, 247, 0.18);
+    --accent-glow: rgba(168, 85, 247, 0.45);
+    --ink-violet: #c99bff;
+    --ink-cyan: #7fe6f7;
+    --ink-pink: #ff9ecb;
+    --ink-gold: #ffd77a;
+    --ink-ash: #c3c9d6;
+    --btn-primary-ink: #fff;
+    --focus-ring: var(--cyan);
+    --scheme: dark;
+    --meta-theme-color: #0b0524;
+
+    /* Backdrop ------------------------------------------------------------ */
+    --aurora-opacity: 0.35;
+    --aurora-blend: screen;
+    --star-opacity: 1;
+    --star-colors: #ffffff, #c99bff, #7fe6f7, #ffd77a, #ff9ecb;
+
     --radius: 18px;
     --shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
     --shadow-hover: 0 30px 60px rgba(0, 0, 0, 0.5);
@@ -304,6 +337,7 @@
 }
 
 html {
+    color-scheme: var(--scheme);
     scroll-behavior: smooth;
     scroll-padding-top: 90px;
     background-color: var(--night-0);

@@ -309,12 +309,29 @@ window.__ramiWorkshopFilter = setupWorkshopFilter;
 
 
 /* ---- Starfield ----------------------------------------------------------- */
+const DEFAULT_STARS = ['#ffffff', '#c99bff', '#7fe6f7', '#ffd77a', '#ff9ecb'];
+
+function themeStarStyle() {
+    const cs = getComputedStyle(document.documentElement);
+    const raw = cs.getPropertyValue('--star-colors').trim();
+    const colors = raw ? raw.split(',').map(c => c.trim()).filter(Boolean) : [];
+    const opacity = parseFloat(cs.getPropertyValue('--star-opacity'));
+    return {
+        colors: colors.length ? colors : DEFAULT_STARS,
+        opacity: Number.isFinite(opacity) ? opacity : 1,
+    };
+}
+
 function startStarfield() {
     const canvas = document.getElementById('starfield');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     let stars = [];
-    let w, h, dpr;
+    let style = themeStarStyle();
+    let w = 0, h = 0, dpr = 1;
+    let rafId = null;
+    let resizeTimer = null;
 
     function resize() {
         dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -323,7 +340,6 @@ function startStarfield() {
         canvas.style.width = innerWidth + 'px';
         canvas.style.height = innerHeight + 'px';
         const count = Math.min(160, Math.floor((innerWidth * innerHeight) / 9000));
-        const palette = ['#ffffff', '#c99bff', '#7fe6f7', '#ffd77a', '#ff9ecb'];
         stars = Array.from({ length: count }, () => ({
             x: Math.random() * w,
             y: Math.random() * h,
@@ -331,7 +347,7 @@ function startStarfield() {
             a: Math.random(),
             tw: Math.random() * 0.02 + 0.004,
             dir: Math.random() > 0.5 ? 1 : -1,
-            c: palette[(Math.random() * palette.length) | 0],
+            c: style.colors[(Math.random() * style.colors.length) | 0],
         }));
     }
 

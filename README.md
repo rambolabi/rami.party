@@ -13,7 +13,8 @@ style.css             Hub-only styles (hero + realm groups + portal cards)
 projects.js           Realm registry — groups + portals, the single source of truth
 backlink.js           Drop-in "← rami.party" pill for older realms with no navigation
 favicon.svg           Sparkle icon (also used by the manifest)
-og-image.png          1200×630 social share banner
+og-image.png          1200×630 social share banner (og-image.html is its source)
+sitemap.xml           Crawlable list of every public realm
 admin/                Generic CMS-style login (keeps the classic history-bomb prank JS)
 404.html              "Lost in the aether" error page
 gallery/              🏛️ The Gallery of Wonders — finished realms (+ its own index)
@@ -45,6 +46,7 @@ You (almost) never touch HTML. Open [`projects.js`](projects.js) and append one 
     glyph: '🌟',
     tagline: 'A short hook',
     description: 'One or two sentences of enchantment.',
+    search: 'Plain, boring, keyword-rich text — used by the search box only.',
     tags: ['demo', 'wip'],
     aura: 'violet',        // violet | cyan | pink | gold | ash
     status: 'live',        // 'soon' renders a locked teaser card

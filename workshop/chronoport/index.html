@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>CHRONOPORT · Temporal Gateway of the Year 3050</title>
+
+    <meta name="description"
+        content="Chronoport — a time traveller's portal from the year 3050. Live world clocks, the state of the Sun and Moon above your exact position, twilight windows, lunar phase, sidereal time, Julian date and a countdown to the 31st century.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#04060f">
+    <meta name="color-scheme" content="dark">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/chronoport/">
+
+    <!--
+      OFFLINE POLICY
+      No fonts, no CDNs, no analytics, no frameworks, no trackers, no APIs.
+      Every reading on this page — sunrise, moon phase, sidereal time — is
+      computed locally in astro.js from the clock and your coordinates.
+    -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2304060f'/%3E%3Ccircle cx='32' cy='32' r='19' fill='none' stroke='%2340f0ff' stroke-width='3'/%3E%3Ccircle cx='32' cy='32' r='9' fill='none' stroke='%23b070ff' stroke-width='2.5'/%3E%3Cpath d='M32 18v14l10 6' stroke='%2340f0ff' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3C/svg%3E">
+</head>
+
+<body>
+    <canvas id="warpfield" aria-hidden="true"></canvas>
+    <div class="grid-floor" aria-hidden="true"></div>
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="vignette" aria-hidden="true"></div>
+
+    <a class="skip-link" href="#main">Skip to the console</a>
+
+    <header class="topbar">
+        <div class="topbar-in">
+            <a class="mark" href="/" aria-label="rami.party — home">
+                <span class="mark-ring" aria-hidden="true"></span>
+                <span class="mark-text">CHRONO<b>PORT</b></span>
+            </a>
+            <p class="topbar-meta">
+                <span class="tag">GATEWAY&nbsp;3050</span>
+                <span class="tag tag-live"><i class="dot" aria-hidden="true"></i> LINK <span
+                        id="linkState">SYNCING</span></span>
+                <span class="tag" id="topbarUtc">UTC ——:——</span>
+            </p>
+            <a class="back" href="/workshop/"><span aria-hidden="true">←</span> Workshop</a>
+        </div>
+    </header>
+
+    <main id="main">
+
+        <!-- ══ PRIME CHRONOMETER ══════════════════════════════════════════ -->
+        <section class="hero" aria-labelledby="hero-title">
+            <p class="eyebrow" id="heroEyebrow">Temporal anchor · establishing…</p>
+            <h1 id="hero-title" class="visually-hidden">Chronoport — temporal gateway of the year 3050</h1>
+            <div class="prime" role="timer" aria-live="off">
+                <span id="primeTime" class="prime-time">--:--:--</span>
+                <span id="primeFrac" class="prime-frac">.000</span>
+            </div>
+            <p class="prime-sub">
+                <span id="primeDate">—</span>
+                <span class="sep" aria-hidden="true">◆</span>
+                <span id="primeZone">—</span>
+                <span class="sep" aria-hidden="true">◆</span>
+                <span id="primeOffset">—</span>
+            </p>
+
+            <div class="beacon" id="beacon">
+                <div class="beacon-row">
+                    <button type="button" class="btn btn-primary" id="btnLocate">
+                        <span aria-hidden="true">◎</span> Lock onto my position
+                    </button>
+                    <button type="button" class="btn" id="btnManual" aria-expanded="false" aria-controls="manualForm">
+                        <span aria-hidden="true">✎</span> Enter coordinates
+                    </button>
+                    <button type="button" class="btn" id="btnAnchor" title="Freeze or resume the flow of time">
+                        <span aria-hidden="true">❚❚</span> <span id="btnAnchorLabel">Freeze time</span>
+                    </button>
+                </div>
+                <form class="manual" id="manualForm" hidden>
+                    <label>Latitude
+                        <input type="number" id="inLat" step="0.0001" min="-90" max="90" placeholder="50.8503"
+                            required>
+                    </label>
+                    <label>Longitude
+                        <input type="number" id="inLng" step="0.0001" min="-180" max="180" placeholder="4.3517"
+                            required>
+                    </label>
+                    <label>Or pick a waypoint
+                        <select id="inCity">
+                            <option value="">— choose —</option>
+                        </select>
+                    </label>
+                    <button class="btn btn-primary" type="submit">Set anchor</button>
+                </form>
+                <p class="beacon-state" id="beaconState" role="status">
+                    Position unknown — the portal is guessing from your device time zone.
+                </p>
+            </div>
+        </section>
+
+        <!-- ══ SUN ════════════════════════════════════════════════════════ -->
+        <section class="panel panel-sun" aria-labelledby="sun-title">
+            <header class="panel-head">
+                <h2 id="sun-title"><span class="glyph" aria-hidden="true">☀</span> Solar state</h2>
+                <p class="panel-sub" id="sunHeadline">Reading the star…</p>
+            </header>
+
+            <div class="sun-body">
+                <div class="sky-wrap">
+                    <canvas id="skyArc" width="720" height="360" role="img"
+                        aria-label="Diagram of the Sun's arc across the sky for your location today"></canvas>
+                    <p class="sky-caption" id="skyCaption">—</p>
+                </div>
+
+                <ul class="stat-grid" id="sunStats"></ul>
+            </div>
+
+            <div class="twilight">
+                <h3 class="mini-title">Twilight ledger</h3>
+                <ul class="twilight-list" id="twilightList"></ul>
+            </div>
+        </section>
+
+        <!-- ══ MOON ═══════════════════════════════════════════════════════ -->
+        <section class="panel panel-moon" aria-labelledby="moon-title">
+            <header class="panel-head">
+                <h2 id="moon-title"><span class="glyph" aria-hidden="true">☾</span> Lunar state</h2>
+                <p class="panel-sub" id="moonHeadline">Reading the satellite…</p>
+            </header>
+
+            <div class="moon-body">
+                <div class="moon-wrap">
+                    <canvas id="moonDisc" width="360" height="360" role="img"
+                        aria-label="The Moon as currently lit above your location"></canvas>
+                    <p class="moon-phase" id="moonPhaseName">—</p>
+                    <div class="moon-track" id="moonTrack" aria-hidden="true"></div>
+                </div>
+                <ul class="stat-grid" id="moonStats"></ul>
+            </div>
+        </section>
+
+        <!-- ══ WORLD CLOCKS ═══════════════════════════════════════════════ -->
+        <section class="panel panel-world" aria-labelledby="world-title">
+            <header class="panel-head">
+                <h2 id="world-title"><span class="glyph" aria-hidden="true">🜨</span> World chronoscope</h2>
+                <p class="panel-sub">Every waypoint shows its own local time, its offset from you and whether
+                    its sky is currently lit.</p>
+            </header>
+            <div class="world-tools">
+                <label class="field">
+                    <span class="visually-hidden">Filter waypoints</span>
+                    <input type="search" id="worldFilter" placeholder="Filter waypoints — city, country, zone…"
+                        autocomplete="off">
+                </label>
+                <div class="segmented" role="group" aria-label="Sort waypoints">
+                    <button type="button" class="seg is-on" data-sort="offset">By offset</button>
+                    <button type="button" class="seg" data-sort="name">By name</button>
+                    <button type="button" class="seg" data-sort="sun">By daylight</button>
+                </div>
+            </div>
+            <ul class="world-grid" id="worldGrid"></ul>
+            <p class="terminator-note" id="terminatorNote">—</p>
+        </section>
+
+        <!-- ══ CHRONOMETRICS ══════════════════════════════════════════════ -->
+        <section class="panel panel-metrics" aria-labelledby="metrics-title">
+            <header class="panel-head">
+                <h2 id="metrics-title"><span class="glyph" aria-hidden="true">⏣</span> Chronometrics</h2>
+                <p class="panel-sub">Every way this instant can be written down, measured or bragged about.</p>
+            </header>
+            <ul class="stat-grid stat-grid-wide" id="metricStats"></ul>
+
+            <div class="bars" id="cycleBars"></div>
+        </section>
+
+        <!-- ══ RELATIVITY ═════════════════════════════════════════════════ -->
+        <section class="panel panel-warp" aria-labelledby="warp-title">
+            <header class="panel-head">
+                <h2 id="warp-title"><span class="glyph" aria-hidden="true">⧗</span> Drive calibration</h2>
+                <p class="panel-sub">Set a cruising velocity and the gateway reports how badly your clock will
+                    disagree with the rest of the universe.</p>
+            </header>
+            <div class="warp-body">
+                <label class="warp-slider">
+                    <span>Velocity <output id="warpOut">0.500 c</output></span>
+                    <input type="range" id="warpRange" min="0" max="0.999999" step="0.000001" value="0.5">
+                </label>
+                <ul class="stat-grid" id="warpStats"></ul>
+            </div>
+            <p class="warp-note">At this speed, one year aboard would land you
+                <b id="warpYears">—</b> further down the timeline. The year 3050 is
+                <b id="warpEta">—</b> of shipboard travel away.
+            </p>
+        </section>
+
+        <!-- ══ ALMANAC ════════════════════════════════════════════════════ -->
+        <section class="panel panel-almanac" aria-labelledby="almanac-title">
+            <header class="panel-head">
+                <h2 id="almanac-title"><span class="glyph" aria-hidden="true">✦</span> Deep almanac</h2>
+                <p class="panel-sub">Longer rhythms — seasons, orbits and the slow machinery behind the clock.</p>
+            </header>
+            <ul class="stat-grid stat-grid-wide" id="almanacStats"></ul>
+        </section>
+
+        <p class="disclaimer">
+            All astronomy is computed on this device with standard low-precision algorithms — expect
+            roughly a minute of slack on rise and set times, and a little more near the poles. Nothing
+            here is transmitted anywhere; your coordinates never leave the browser.
+        </p>
+    </main>
+
+    <footer class="foot">
+        <p>&copy; <span id="year">2026</span> rami.party · CHRONOPORT · <span class="muted">“Time is a
+                direction, not a river.”</span></p>
+    </footer>
+
+    <script src="astro.js"></script>
+    <script src="cities.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>

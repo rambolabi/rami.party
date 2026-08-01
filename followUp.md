@@ -67,6 +67,17 @@ blanket wipe would destroy the other workshop apps' offline copies.
   `RAMI_WORKSHOP` once its folder exists and has content.
 - **Then add it to `sitemap.xml`** — the one manual step left. (A generator is on the backlog as
   *Sitemap Scribe*.)
+- **Never point an entry at a folder that doesn't exist.** `status:'soon'` + `href:'#'` renders an
+  honest locked teaser instead of a broken link.
+
+---
+
+## 🌈 Themes
+Eleven palettes + Auto live in `theme.css` as `[data-theme="id"]` token blocks, listed in
+`RAMI_THEMES` inside `theme.js` (keep the two in sync). Two are deliberately sober — **Graphite**
+(professional dark) and **Daylight** (professional light) — and **High Contrast** exists for
+accessibility. A page joins in by linking `/theme.css` and loading `/theme.js` in its `<head>`;
+self-contained project pages that define their own palette are intentionally left alone.
 
 ---
 
