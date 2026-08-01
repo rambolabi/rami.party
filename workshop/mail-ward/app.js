@@ -77,38 +77,147 @@
             e.stopPropagation();
             menu.hidden = !menu.hidden;
             btn.setAttribute('aria-expanded', String(!menu.hidden));
+            if (!menu.hidden) {
+                var checked = menu.querySelector('button[aria-checked="true"]') || menu.querySelector('button');
+                if (checked) checked.focus();
+            }
+        });
+        // Arrow keys are expected inside a role="menu"; Tab alone is not enough.
+        menu.addEventListener('keydown', function (e) {
+            var items = $$('button', menu);
+            var i = items.indexOf(document.activeElement);
+            if (i < 0) return;
+            var next = null;
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = (i + 1) % items.length;
+            else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = (i - 1 + items.length) % items.length;
+            else if (e.key === 'Home') next = 0;
+            else if (e.key === 'End') next = items.length - 1;
+            if (next === null) return;
+            e.preventDefault();
+            items[next].focus();
         });
         document.addEventListener('click', function () { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); });
-        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') menu.hidden = true; });
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 'Escape' || menu.hidden) return;
+            menu.hidden = true;
+            btn.setAttribute('aria-expanded', 'false');
+            btn.focus();                       // never strand focus in a hidden menu
+        });
         applyTheme(store(K_THEME) || 'aurora');
     }
 
     /* ====================================================================== *
-     * 2. Section nav + back to top
+     * 2. Sticky offsets, section nav, back to top
+     *    The topbar wraps to two rows on narrow screens, so its height cannot
+     *    be hard-coded: measure it and drive --topbar-h / --stick from CSS.
      * ====================================================================== */
+    var stickH = 110;
+
+    function measureSticky() {
+        var topbar = $('.topbar'), tocbar = $('.tocbar');
+        if (!topbar || !tocbar) return stickH;
+        var th = Math.round(topbar.getBoundingClientRect().height);
+        // Read the tocbar's own height without its sticky offset interfering.
+        var ch = Math.round(tocbar.getBoundingClientRect().height);
+        stickH = th + ch;
+        var root = document.documentElement;
+        root.style.setProperty('--topbar-h', th + 'px');
+        root.style.setProperty('--stick', stickH + 'px');
+        return stickH;
+    }
+
     function initNav() {
-        var links = $$('.toc-scroll a');
-        var targets = links.map(function (a) { return document.querySelector(a.getAttribute('href')); }).filter(Boolean);
-        if ('IntersectionObserver' in window && targets.length) {
-            var io = new IntersectionObserver(function (entries) {
-                entries.forEach(function (en) {
-                    if (!en.isIntersecting) return;
-                    links.forEach(function (a) {
-                        a.classList.toggle('active', a.getAttribute('href') === '#' + en.target.id);
-                    });
-                    var act = document.querySelector('.toc-scroll a.active');
-                    if (act && act.parentNode.scrollWidth > act.parentNode.clientWidth) {
-                        act.scrollIntoView({ block: 'nearest', inline: 'center' });
-                    }
-                });
-            }, { rootMargin: '-130px 0px -65% 0px', threshold: 0 });
-            targets.forEach(function (t) { io.observe(t); });
+        measureSticky();
+
+        var resizeT = null;
+        function onResize() {
+            clearTimeout(resizeT);
+            resizeT = setTimeout(function () { measureSticky(); updateActive(); }, 100);
         }
+        window.addEventListener('resize', onResize);
+        window.addEventListener('orientationchange', onResize);
+        if (document.fonts && document.fonts.ready && document.fonts.ready.then) {
+            document.fonts.ready.then(function () { measureSticky(); updateActive(); });
+        }
+
+        var links = $$('.toc-scroll a');
+        var pairs = links.map(function (a) {
+            return { link: a, target: document.querySelector(a.getAttribute('href')) };
+        }).filter(function (p) { return p.target; });
+        var strip = $('.toc-scroll');
+
+        function centre(link) {
+            if (!strip || strip.scrollWidth <= strip.clientWidth) return;
+            // Scroll the strip horizontally only — scrollIntoView would fight
+            // the page's own smooth scroll during an anchor jump.
+            var want = link.offsetLeft - (strip.clientWidth - link.offsetWidth) / 2;
+            var max = strip.scrollWidth - strip.clientWidth;
+            strip.scrollLeft = Math.max(0, Math.min(max, want));
+        }
+
+        var active = null;
+        function updateActive() {
+            if (!pairs.length) return;
+            var line = stickH + 28;
+            var current = pairs[0];
+            for (var i = 0; i < pairs.length; i++) {
+                if (pairs[i].target.getBoundingClientRect().top <= line) current = pairs[i];
+            }
+            // At the very bottom of the page the last section wins, even if its
+            // top never crosses the line on a tall screen.
+            if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) {
+                current = pairs[pairs.length - 1];
+            }
+            if (current === active) return;
+            active = current;
+            pairs.forEach(function (p) { p.link.classList.toggle('active', p === current); });
+            centre(current.link);
+        }
+
+        // Throttle on the clock, not on requestAnimationFrame: rAF never fires
+        // while the tab is hidden or occluded, which would latch this off forever.
+        var lastRun = 0, pending = null;
+        function onScroll() {
+            var now = Date.now();
+            if (now - lastRun > 80) { lastRun = now; updateActive(); return; }
+            if (pending) return;
+            pending = setTimeout(function () {
+                pending = null; lastRun = Date.now(); updateActive();
+            }, 80);
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        updateActive();
+
+        // Clicking the chip for the section you are already on must still jump.
+        links.forEach(function (a) {
+            a.addEventListener('click', function (e) {
+                var t = document.querySelector(a.getAttribute('href'));
+                if (!t) return;
+                e.preventDefault();
+                jumpTo(t, a.getAttribute('href'));
+            });
+        });
+
         var top = $('#to-top');
         if (top) {
-            top.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+            top.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: scrollBehavior() }); });
             window.addEventListener('scroll', function () { top.hidden = window.scrollY < 600; }, { passive: true });
         }
+    }
+
+    function scrollBehavior() {
+        // window.scrollTo({behavior:'smooth'}) ignores the CSS media query, so
+        // honour the user's motion preference explicitly.
+        return (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'auto' : 'smooth';
+    }
+
+    function jumpTo(target, hash) {
+        var y = target.getBoundingClientRect().top + window.scrollY - stickH - 16;
+        window.scrollTo({ top: Math.max(0, y), behavior: scrollBehavior() });
+        if (hash && history.replaceState) history.replaceState(null, '', hash);
+        // Keep keyboard focus with the reader without a second scroll jump.
+        if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
     }
 
     /* ====================================================================== *
@@ -119,15 +228,15 @@
     var PROVIDERS = [
         { id: 'm365', name: 'Microsoft 365 / Exchange Online', spf: 'spf.protection.outlook.com', lk: 1, sel: 'selector1, selector2 (CNAMEs)' },
         { id: 'gws', name: 'Google Workspace', spf: '_spf.google.com', lk: 4, sel: 'google' },
-        { id: 'zoho', name: 'Zoho Mail', spf: 'zoho.eu', lk: 2, sel: 'zoho / zmail' },
+        { id: 'zoho', name: 'Zoho Mail (EU data centre)', spf: 'zoho.eu', lk: 2, sel: 'zoho — other regions use zoho.com' },
         { id: 'proton', name: 'Proton Mail', spf: '_spf.protonmail.ch', lk: 1, sel: 'protonmail, protonmail2, protonmail3' },
         { id: 'fastmail', name: 'Fastmail', spf: 'spf.messagingengine.com', lk: 1, sel: 'fm1, fm2, fm3 (CNAMEs)' },
         { id: 'sendgrid', name: 'SendGrid', spf: 'sendgrid.net', lk: 1, sel: 's1, s2 (CNAMEs)' },
-        { id: 'mailgun', name: 'Mailgun', spf: 'mailgun.org', lk: 1, sel: 'mx or smtp' },
+        { id: 'mailgun', name: 'Mailgun', spf: 'mailgun.org', lk: 1, sel: 'the selector shown in the dashboard (often mx)' },
         { id: 'ses', name: 'Amazon SES', spf: 'amazonses.com', lk: 1, sel: 'three token CNAMEs' },
         { id: 'postmark', name: 'Postmark', spf: 'spf.mtasv.net', lk: 1, sel: 'shown in the dashboard' },
         { id: 'brevo', name: 'Brevo (ex-Sendinblue)', spf: 'spf.brevo.com', lk: 1, sel: 'mail' },
-        { id: 'mailchimp', name: 'Mailchimp / Mandrill', spf: 'servers.mcsv.net', lk: 1, sel: 'k1, k2 (CNAMEs)' },
+        { id: 'mailchimp', name: 'Mailchimp / Mandrill', spf: 'servers.mcsv.net', lk: 1, sel: 'k1 (CNAME)' },
         { id: 'salesforce', name: 'Salesforce', spf: '_spf.salesforce.com', lk: 2, sel: 'per-org, from Setup' }
     ];
 
@@ -338,7 +447,7 @@
         pct: function (v) {
             var n = parseInt(v, 10);
             if (isNaN(n) || n < 1 || n > 100) return 'Invalid percentage “' + v + '” — must be 1–100.';
-            return 'Apply the policy to ' + n + '% of failing mail. The remaining ' + (100 - n) + '% is treated one step softer. Your ramp-up dimmer switch.';
+            return 'Apply the policy to ' + n + '% of failing mail; the rest is treated one step softer. A ramp-up tool — the forthcoming DMARC revision removes it, so do not leave it below 100 permanently.';
         },
         adkim: function (v) { return v === 's' ? 'DKIM alignment is STRICT: the signing domain must equal the From domain exactly.' : 'DKIM alignment is relaxed: a subdomain counts as a match. This is the default and usually correct.'; },
         aspf: function (v) { return v === 's' ? 'SPF alignment is STRICT: the envelope domain must equal the From domain exactly.' : 'SPF alignment is relaxed: a subdomain counts as a match. This is the default and usually correct.'; },
@@ -359,10 +468,14 @@
         n: function (v) { return 'Human-readable note: ' + v; },
         p: function (v) {
             if (!v) return 'REVOKED — an empty public key means this selector is deliberately dead. Correct after rotating a key away, alarming otherwise.';
-            var size = v.length < 250 ? 'about 1024-bit' : (v.length < 500 ? 'about 2048-bit' : 'large (3072-bit or more)');
+            if (v.length < 150) return 'Only ' + v.length + ' base64 characters — far too short for a real key. This value is almost certainly truncated or was pasted incompletely.';
+            if (v.length < 250) return 'The public key, and it is only about 1024-bit — below what is considered safe today. Regenerate at 2048-bit.';
+            var size = v.length < 500 ? 'about 2048-bit' : '3072-bit or larger';
             return 'The public key (' + v.length + ' base64 characters — ' + size + '). 2048-bit is the modern minimum for new keys.';
         }
     };
+
+    function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
 
     function explainRow(token, text) {
         var li = el('li');
@@ -376,11 +489,26 @@
         clear(out);
         var value = (raw || '').trim().replace(/\s+/g, ' ');
         // Tolerate a full DNS answer line: name TTL IN TXT "…"
+        var droppedUnquoted = '';
         var quoted = value.match(/"([^"]*)"/g);
-        if (quoted && quoted.length) value = quoted.map(function (q) { return q.slice(1, -1); }).join('');
+        if (quoted && quoted.length) {
+            // A long TXT value is published as several quoted chunks that the
+            // resolver concatenates, so joining them is right — but anything
+            // OUTSIDE the quotes would be silently thrown away, and that is
+            // usually a half-copied record. Say so rather than explaining a
+            // record the user does not actually have.
+            droppedUnquoted = value.replace(/"[^"]*"/g, ' ')
+                .replace(/^\s*[\w.@-]*\s+(\d+\s+)?(IN\s+)?TXT\s*/i, ' ')
+                .replace(/\s+/g, ' ').trim();
+            value = quoted.map(function (q) { return q.slice(1, -1); }).join('');
+        }
         value = value.trim();
 
         if (!value) { out.appendChild(msg('info', 'ℹ️', 'Paste a record first.')); return; }
+        if (droppedUnquoted) {
+            out.appendChild(msg('warn', '⚠️', 'Only the quoted part was read; “' + droppedUnquoted +
+                '” sat outside the quotes and was ignored. If that was part of the record, re-copy the whole value.'));
+        }
 
         var lower = value.toLowerCase();
         if (lower.indexOf('v=spf1') === 0) return inspectSPF(value, out);
@@ -422,11 +550,14 @@
             }
             if (SPF_LOOKUP_MECH.indexOf(name) > -1) lookups += 1;
             if (name === 'ptr') hasPtr = true;
-            if (name === 'all') { sawAll = true; allQual = qual; }
+            // RFC 7208: evaluation stops at the FIRST mechanism that matches, and
+            // "all" always matches. So in a malformed "v=spf1 -all ~all" it is the
+            // first one that decides the policy — never overwrite it with a later one.
+            if (name === 'all' && !sawAll) { sawAll = true; allQual = qual; }
 
             var desc = SPF_MECH[name];
             if (!desc) {
-                list.appendChild(explainRow(t, 'Unrecognised term. Anything SPF cannot parse makes the whole record a permanent error, which most receivers treat as having no SPF at all.'));
+                list.appendChild(explainRow(t, 'Unrecognised term. Anything SPF cannot parse makes the whole record a permanent error — never a pass, so SPF stops contributing anything to DMARC.'));
                 return;
             }
             var q = SPF_QUAL[qual] || '';
@@ -436,7 +567,7 @@
         var card = el('div', 'rec');
         var head = el('div', 'rec-head');
         head.appendChild(el('strong', null, 'SPF record'));
-        head.appendChild(el('span', 'meta', terms.length - 1 + ' terms · ' + lookups + ' DNS lookups (not counting nesting)'));
+        head.appendChild(el('span', 'meta', plural(terms.length - 1, 'term') + ' · ' + plural(lookups, 'DNS lookup') + ' (not counting nesting)'));
         card.appendChild(head);
         card.appendChild(list);
         out.appendChild(card);
@@ -446,11 +577,11 @@
         if (allQual === '~') out.appendChild(msg('info', 'ℹ️', '~all (softfail) is the right place to start, but it is a waypoint. Once your DMARC reports are clean, move to -all.'));
         if (allQual === '-') out.appendChild(msg('ok', '✅', '-all is the goal: anything not listed is declared forged.'));
         if (!sawAll) out.appendChild(msg('warn', '⚠️', 'There is no “all” term. Evaluation ends in Neutral, so the record constrains nothing. Add ~all or -all at the end.'));
-        if (afterAll) out.appendChild(msg('warn', '⚠️', afterAll + ' term(s) appear after “all” and are silently ignored. Everything you want to authorise must come before it.'));
+        if (afterAll) out.appendChild(msg('warn', '⚠️', plural(afterAll, 'term') + ' after “all” ' + (afterAll === 1 ? 'is' : 'are') + ' silently ignored. Everything you want to authorise must come before it.'));
         if (hasPtr) out.appendChild(msg('warn', '⚠️', 'The ptr mechanism is deprecated: it is slow, some receivers ignore it, and it can even cause the record to be skipped. Replace it with ip4:/ip6: or include:.'));
         if (lookups > 10) out.appendChild(msg('bad', '⛔', lookups + ' direct DNS lookups — already over the limit of 10 before counting anything nested inside those includes. This record almost certainly evaluates to permerror.'));
         else if (lookups >= 8) out.appendChild(msg('warn', '⚠️', lookups + ' direct DNS lookups. Each include: also drags in whatever it nests, so the real total is higher. Verify with a lookup-count checker.'));
-        else out.appendChild(msg('info', 'ℹ️', lookups + ' direct DNS lookups here. Remember the true count is recursive — a single include: can cost four or five on its own.'));
+        else out.appendChild(msg('info', 'ℹ️', plural(lookups, 'direct DNS lookup') + ' here. Remember the true count is recursive — a single include: can cost four or five on its own.'));
         out.appendChild(msg('info', '💡', 'SPF only validates the hidden envelope sender. On its own it protects nothing your readers can see — it needs DMARC to mean anything.'));
     }
 
@@ -472,7 +603,7 @@
         var card = el('div', 'rec');
         var head = el('div', 'rec-head');
         head.appendChild(el('strong', null, kind + ' record'));
-        head.appendChild(el('span', 'meta', parts.length + ' tags'));
+        head.appendChild(el('span', 'meta', plural(parts.length, 'tag')));
         card.appendChild(head);
         card.appendChild(list);
         out.appendChild(card);
@@ -486,13 +617,18 @@
             if (seen.sp === 'none' && seen.p !== 'none') out.appendChild(msg('bad', '⛔', 'sp=none while p=' + seen.p + ' leaves every subdomain wide open. Attackers will simply use billing.yourdomain.com.'));
             if (seen.pct && parseInt(seen.pct, 10) < 100) out.appendChild(msg('info', 'ℹ️', 'pct=' + seen.pct + ' means most failing mail is still let through. Correct during a ramp; make sure someone owns the date it reaches 100.'));
             if (seen.ruf) out.appendChild(msg('warn', '⚠️', 'ruf= is enabled. Failure reports can contain message content and recipient addresses — treat that as a privacy/GDPR decision, not a technical one.'));
-            var order = value.replace(/\s/g, '').toLowerCase();
-            if (order.indexOf('v=dmarc1;p=') !== 0) out.appendChild(msg('warn', '⚠️', 'Strictly, v= must be the first tag and p= the second. Some parsers are forgiving; do not rely on it.'));
+            // Check tag order from the parsed list, not from string matching:
+            // a record without a trailing semicolon must not trip this.
+            var first = (parts[0] || '').trim().toLowerCase();
+            var second = (parts[1] || '').trim().toLowerCase();
+            if (first.indexOf('v=') !== 0) out.appendChild(msg('bad', '⛔', 'The v=DMARC1 tag must come first, or this is not a DMARC record at all.'));
+            else if (parts.length > 1 && second.indexOf('p=') !== 0) out.appendChild(msg('info', 'ℹ️', 'Several widely used implementations expect p= as the second tag. It is not worth relying on a parser being forgiving — put it straight after v=.'));
         }
         if (kind === 'DKIM') {
             if (seen.p === '') out.appendChild(msg('warn', '⚠️', 'The key is revoked (empty p=). If you did not just rotate this selector away, something is wrong.'));
             if (seen.t && seen.t.indexOf('y') > -1) out.appendChild(msg('warn', '⚠️', 't=y is test mode — receivers are asked to ignore failures. Remove it once you are confident, or the signature is decorative.'));
-            if (seen.p && seen.p.length && seen.p.length < 250) out.appendChild(msg('warn', '⚠️', 'This looks like a 1024-bit key. Regenerate at 2048-bit if your platform allows it.'));
+            if (seen.p && seen.p.length >= 150 && seen.p.length < 250) out.appendChild(msg('warn', '⚠️', 'This is a 1024-bit key. It is below the modern minimum and some receivers already discount it — regenerate at 2048-bit and retire this selector.'));
+            if (seen.p && seen.p.length && seen.p.length < 150) out.appendChild(msg('bad', '⛔', 'This key is too short to be valid — it was probably cut off. Long TXT values must be split into quoted chunks of 255 characters or fewer, and some DNS panels do that badly.'));
             if (seen.p && /[^A-Za-z0-9+/=]/.test(seen.p)) out.appendChild(msg('bad', '⛔', 'The key contains characters that are not valid base64 — the record was probably truncated or mangled by the DNS panel. Long TXT values must be split into quoted chunks of 255 characters or fewer.'));
             out.appendChild(msg('info', '💡', 'A DKIM record in DNS says nothing about whether mail is actually being signed. Send a test message and check that the header shows dkim=pass with header.d= your own domain.'));
         }
@@ -602,8 +738,312 @@
     }
 
     /* ====================================================================== *
-     * 7. Spoofing triage wizard
+     * 7. Wizard engine (shared by the setup tree and the spoofing triage)
      * ====================================================================== */
+    function makeWizard(cfg) {
+        var qBox = $(cfg.q), oBox = $(cfg.out), reset = $(cfg.reset);
+        if (!qBox || !oBox || !reset) return;
+        var trail = [];
+
+        var started = false;
+
+        function focusNew(node) {
+            // The clicked button has just been removed from the DOM, so focus is
+            // about to fall back to <body>. Move it into the new content instead,
+            // but not on first paint — that would yank the page on load.
+            if (!started || !node) return;
+            if (!node.hasAttribute('tabindex')) node.setAttribute('tabindex', '-1');
+            node.focus({ preventScroll: true });
+        }
+
+        function showQuestion(key) {
+            clear(qBox); clear(oBox);
+            var node = cfg.tree[key];
+            if (!node) return;
+            if (trail.length) qBox.appendChild(el('p', 'triage-crumbs', 'Question ' + (trail.length + 1)));
+            var heading = el('h4', null, node.q);
+            qBox.appendChild(heading);
+            var opts = el('div', 'triage-opts');
+            node.opts.forEach(function (o) {
+                var b = el('button', null, o.t);
+                b.type = 'button';
+                b.addEventListener('click', function () {
+                    trail.push(key);
+                    if (cfg.tree[o.go]) showQuestion(o.go); else showOutcome(o.go);
+                });
+                opts.appendChild(b);
+            });
+            qBox.appendChild(opts);
+            reset.hidden = trail.length === 0;
+            focusNew(heading);
+        }
+
+        function showOutcome(key) {
+            var o = cfg.outcomes[key];
+            clear(qBox); clear(oBox);
+            if (!o) return;
+            var v = el('div', 'verdict ' + o.cls);
+            v.appendChild(el('strong', null, o.title));
+            oBox.appendChild(v);
+            oBox.appendChild(el('p', null, o.lead));
+            if (o.record) {
+                var pre = el('pre', 'code-block');
+                pre.appendChild(el('code', null, o.record));
+                oBox.appendChild(pre);
+            }
+            var ul = el('ul');
+            o.steps.forEach(function (s) { ul.appendChild(el('li', null, s)); });
+            oBox.appendChild(ul);
+            if (o.link) {
+                var p = el('p', 'tip');
+                var a = el('a', null, o.link.label);
+                a.href = o.link.href;
+                a.addEventListener('click', function (e) {
+                    var t = document.querySelector(o.link.href);
+                    if (!t) return;
+                    e.preventDefault();
+                    jumpTo(t, o.link.href);
+                });
+                p.appendChild(document.createTextNode('→ '));
+                p.appendChild(a);
+                oBox.appendChild(p);
+            }
+            if (cfg.footer) oBox.appendChild(el('p', 'tip', cfg.footer));
+            reset.hidden = false;
+            focusNew(v);
+        }
+
+        reset.addEventListener('click', function () { trail = []; showQuestion('start'); });
+        showQuestion('start');
+        started = true;
+    }
+
+    /* ---- 7a. Setup decision tree ---------------------------------------- */
+    var SETUP_TREE = {
+        start: {
+            q: 'Does this domain send email at all?',
+            opts: [
+                { t: 'Yes — people or systems send mail using this domain', go: 'dmarc' },
+                { t: 'No — it is parked, a legacy brand, or bought defensively', go: 'park' }
+            ]
+        },
+        dmarc: {
+            q: 'What does the TXT record at _dmarc.<yourdomain> say today? (Use the lookup in the Inspector if you are not sure.)',
+            opts: [
+                { t: 'There is no DMARC record, or I do not know', go: 'spf' },
+                { t: 'p=none', go: 'reports' },
+                { t: 'p=quarantine', go: 'ramp' },
+                { t: 'p=reject', go: 'maintain' }
+            ]
+        },
+        spf: {
+            q: 'And SPF — the TXT record on the domain itself, starting with v=spf1?',
+            opts: [
+                { t: 'There is no SPF record at all', go: 'spfNone' },
+                { t: 'There is one, but I am not certain it lists every sender', go: 'spfUnsure' },
+                { t: 'Exactly one record, and I am confident it is complete', go: 'dkim' }
+            ]
+        },
+        dkim: {
+            q: 'Is DKIM signing switched on for every platform you send from, with d= your own domain (not the vendor’s)?',
+            opts: [
+                { t: 'No, or only on some of them', go: 'dkimTodo' },
+                { t: 'Yes, everywhere — I have checked a test message', go: 'dmarcPublish' }
+            ]
+        },
+        reports: {
+            q: 'You are at p=none. Are aggregate reports actually arriving, and is someone reading them?',
+            opts: [
+                { t: 'No, or I have never seen one', go: 'reportsBroken' },
+                { t: 'Yes, they arrive and we look at them', go: 'clean' }
+            ]
+        },
+        clean: {
+            q: 'In those reports, does all of your own legitimate mail pass DMARC (that is, aligned)?',
+            opts: [
+                { t: 'No — some of our own mail still fails', go: 'align' },
+                { t: 'We have less than a full business cycle of data, or unknown sources remain', go: 'watch' },
+                { t: 'Yes — everything of ours is aligned', go: 'toQuarantine' }
+            ]
+        },
+        ramp: {
+            q: 'You are at p=quarantine. Is pct at 100, and was the last full reporting cycle free of your own failures?',
+            opts: [
+                { t: 'Not yet — pct is still below 100, or we still see our own mail failing', go: 'keepRamping' },
+                { t: 'Yes — pct=100 and clean', go: 'toReject' }
+            ]
+        }
+    };
+
+    var SETUP_OUT = {
+        park: {
+            title: 'Step 8 — lock the domain down. You are finished in four records.',
+            cls: 'good',
+            lead: 'A domain that never sends mail is the easiest one to protect, and the one attackers love most because nobody looks at it. Publish all four and you are done — there is nothing to monitor.',
+            record: '@             TXT  "v=spf1 -all"\n_dmarc        TXT  "v=DMARC1; p=reject; sp=reject;"\n*._domainkey  TXT  "v=DKIM1; p="\n@             MX   0 .',
+            steps: [
+                'Publish these on the domain apex; “@” means the domain itself.',
+                'Do it for every domain you own and do not send from, including the ones bought years ago to stop typo-squatters.',
+                'Verify by sending a test message to the domain — it should be refused immediately rather than queued.',
+                'No reports, no ramp, no risk: this domain has no legitimate mail to break.'
+            ],
+            link: { href: '#step-8', label: 'Read step 8 in full' }
+        },
+        spfNone: {
+            title: 'Start at step 1 — publish SPF, softly. Then step 3 the same day.',
+            cls: 'warn',
+            lead: 'With no SPF record you have no baseline at all. Build the sender list first, publish it ending in ~all (never -all on the first day), and publish DMARC p=none at the same time — it costs nothing and starts the evidence flowing.',
+            record: 'v=spf1 include:<your mail provider> ~all',
+            steps: [
+                'Work through step 0 first: list every system that sends as you, including the ones Finance and Marketing signed up for.',
+                'Use the Record builder above with the “Monitoring” stage selected.',
+                'Publish exactly one SPF TXT record on the apex. Two records is a permanent error.',
+                'Keep the estimated DNS lookup count at 10 or below.',
+                'Publish _dmarc with p=none and a rua address on the same day — it changes nothing about delivery and it is how you will discover the senders you forgot.'
+            ],
+            link: { href: '#step-1', label: 'Read step 1 in full' }
+        },
+        spfUnsure: {
+            title: 'Do not touch SPF yet — publish DMARC p=none first and let the data tell you.',
+            cls: 'warn',
+            lead: 'This is the most common situation, and guessing at the sender list is exactly how people break their own invoicing. DMARC reports turn the guess into a list. Publishing p=none affects no delivery whatsoever.',
+            record: 'v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com; fo=1;',
+            steps: [
+                'Publish that record today. Nothing about your mail flow changes.',
+                'Leave SPF exactly as it is, ending in ~all. Tightening an incomplete record is the one move that bounces real mail.',
+                'Wait two to four weeks — long enough to catch monthly runs such as payroll, invoicing and renewals.',
+                'Then reconcile: every source in the reports either belongs in SPF, needs DKIM fixing, or should be switched off.',
+                'Only once that list is complete do you tighten SPF to -all.'
+            ],
+            link: { href: '#step-3', label: 'Read step 3 in full' }
+        },
+        dkimTodo: {
+            title: 'Step 2 — get DKIM on every platform before anything else.',
+            cls: 'warn',
+            lead: 'SPF alone cannot survive forwarding, so a DMARC policy built on SPF only will hurt. DKIM is what makes enforcement safe — and the d= value has to be your domain, or DMARC will not align no matter how well the signature verifies.',
+            steps: [
+                'In each platform, look for “authenticate your domain”, “branded sending”, “custom DKIM” or similar.',
+                'Publish the TXT or CNAME records it gives you, wait for propagation, then press its Verify button, then enable signing. That order matters — signing before DNS resolves makes every message fail.',
+                'Send a test to a Gmail and a Microsoft 365 address and confirm the header shows dkim=pass with header.d= your own domain.',
+                'If d= shows the vendor’s domain, you have their shared signing, not yours. Find the custom-domain setting.',
+                'Ask for 2048-bit keys where the platform offers a choice, and remove any t=y test flag afterwards.',
+                'Publish DMARC p=none in parallel — it is free and it will catch the platform you forget.'
+            ],
+            link: { href: '#step-2', label: 'Read step 2 in full' }
+        },
+        dmarcPublish: {
+            title: 'Step 3 — publish DMARC in monitor mode today. Zero risk.',
+            cls: 'good',
+            lead: 'SPF and DKIM are in place, so the only thing missing is the record that ties them to the address your readers see, and that asks the world to report back. p=none changes no delivery decision anywhere.',
+            record: 'v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com; fo=1;',
+            steps: [
+                'Create the TXT record at _dmarc.yourdomain.com.',
+                'Make sure the rua mailbox exists and that a named person will read it.',
+                'If rua points at another domain (an analyser, for example), that domain must publish yourdomain.com._report._dmarc.<their-domain> TXT "v=DMARC1" or you will never receive a single report.',
+                'Expect the first reports within 24 to 72 hours.',
+                'Then wait — do not tighten anything until you have a full business cycle of data.'
+            ],
+            link: { href: '#step-3', label: 'Read step 3 in full' }
+        },
+        reportsBroken: {
+            title: 'Your policy is publishing into the void — fix reporting before anything else.',
+            cls: 'bad',
+            lead: 'p=none with no reports is the worst of both worlds: no protection and no information. Almost always it is one of three causes.',
+            steps: [
+                'The rua tag is missing or malformed. It must be a full mailto: URI, e.g. rua=mailto:dmarc@yourdomain.com.',
+                'The mailbox does not exist or rejects the mail. Send yourself a test message to it.',
+                'The reporting address is on a different domain and lacks authorisation. The receiving domain must publish yourdomain.com._report._dmarc.<their-domain> TXT "v=DMARC1". This is the single most common cause and it fails completely silently.',
+                'Reports are gzipped XML attachments arriving daily from large receivers — check the junk folder and any attachment-stripping rule.',
+                'Once they flow, restart this wizard: you will be on the “reading reports” branch.'
+            ],
+            link: { href: '#dmarc', label: 'How to read an aggregate report' }
+        },
+        watch: {
+            title: 'Step 4 — keep watching. Do not tighten yet.',
+            cls: 'warn',
+            lead: 'The reports are working, which means the hard part is running by itself. The only mistake available to you now is impatience: a sender that fires monthly is invisible in a two-week window, and it will be payroll or invoicing.',
+            steps: [
+                'Collect at least one full business cycle — four weeks minimum, longer if you have quarterly processes.',
+                'Sort every source IP into four buckets: mine and aligned, mine but failing, forwarders and mailing lists, and not mine at all.',
+                'Chase every unknown source until you can put a name to it. Ask Finance, Marketing and HR — they will each name a tool the others forgot.',
+                'Aim to account for more than 98% of your volume before moving on.',
+                'Nothing you do in this phase can break mail, so take the time.'
+            ],
+            link: { href: '#step-4', label: 'Read step 4 in full' }
+        },
+        align: {
+            title: 'Step 5 — fix alignment. This is the real work, and where projects stall.',
+            cls: 'warn',
+            lead: 'Your own mail is failing DMARC, which means enforcing now would junk or bounce it. Every failing-but-legitimate source needs one of four treatments.',
+            steps: [
+                'Enable the vendor’s custom DKIM domain so d= becomes yours — usually the single fix that solves it.',
+                'Configure a custom return-path / bounce subdomain (e.g. bounce.yourdomain.com) so SPF aligns as well.',
+                'Move bulk or transactional streams to their own subdomain (news., billing.) to isolate reputation and simplify reasoning.',
+                'Or switch the sender off: the trial account from three years ago should be removed from SPF, not authorised.',
+                'Assign an owner and a date per sender. Without that, this step quietly takes a year.',
+                'Confirm the fix in the next aggregate report before moving on.'
+            ],
+            link: { href: '#step-5', label: 'Read step 5 in full' }
+        },
+        toQuarantine: {
+            title: 'Step 6 — ramp to quarantine. Use pct as a dimmer switch.',
+            cls: 'good',
+            lead: 'Everything legitimate is aligned, so it is safe to start enforcing — gradually. Tighten SPF to -all first, then step the DMARC policy up over two to four weeks.',
+            record: 'v=DMARC1; p=quarantine; pct=25; rua=mailto:dmarc@yourdomain.com; fo=1;\n… then pct=50 … then pct=100',
+            steps: [
+                'Change SPF from ~all to -all now that the sender list is proven.',
+                'Publish p=quarantine with pct=25. Failing mail goes to junk, where a user can still retrieve it.',
+                'Warn IT support and department heads first, and give them one place to report problems.',
+                'Wait two to three days at each level and read the reports before raising pct.',
+                'Keep DNS TTLs low throughout so a rollback takes minutes, not a day.'
+            ],
+            link: { href: '#step-6', label: 'Read step 6 in full' }
+        },
+        keepRamping: {
+            title: 'Stay at quarantine and finish the ramp.',
+            cls: 'warn',
+            lead: 'Quarantine is recoverable — a junked message can still be found. Reject is not. Do not step up until pct is 100 and a full cycle is clean.',
+            steps: [
+                'Raise pct one level at a time (25 → 50 → 100), waiting two to three days and reading the reports between each.',
+                'Any of your own mail still failing is a step 5 job: fix its alignment, do not lower the policy to accommodate it.',
+                'Forwarded mail failing SPF but passing DKIM is normal and acceptable collateral — do not chase it.',
+                'Mailing lists that rewrite subjects or append footers will break DKIM; ask them to enable From-rewriting or ARC.',
+                'Once pct=100 has been clean for a full cycle, come back and answer again.'
+            ],
+            link: { href: '#step-6', label: 'Read step 6 in full' }
+        },
+        toReject: {
+            title: 'Step 7 — go to reject. This is the point of the whole exercise.',
+            cls: 'good',
+            lead: 'A clean cycle at quarantine pct=100 is the green light. From here, nobody can forge your exact domain to any serious mail provider.',
+            record: 'v=DMARC1; p=reject; sp=reject; rua=mailto:dmarc@yourdomain.com; fo=1;',
+            steps: [
+                'Set sp=reject explicitly rather than relying on inheritance — an attacker’s next move is billing.yourdomain.com.',
+                'Consider adkim=s; aspf=s only if every stream signs with the exact domain. It is a final polish, not a starting point.',
+                'Keep the TTL low for a week and have the rollback to p=quarantine agreed in advance.',
+                'Watch the first few days of reports closely: failing mail is now bounced, not junked, and that is unrecoverable.',
+                'Then continue to steps 8, 9 and 10 — your other domains, transport hardening, and keeping it alive.'
+            ],
+            link: { href: '#step-7', label: 'Read step 7 in full' }
+        },
+        maintain: {
+            title: 'You are done — now stop it from decaying.',
+            cls: 'good',
+            lead: 'p=reject is the finish line for this domain, but the configuration rots quietly. The classic failure is a vendor added months later pushing SPF past ten lookups, killing it silently while the record still reads p=reject.',
+            steps: [
+                'Every domain you own that does not send mail needs step 8 — parked, legacy and defensive names included.',
+                'Quarterly: re-count SPF lookups and remove includes for vendors you have left.',
+                'Every 6 to 12 months: rotate DKIM keys (publish selector2, switch signing, then blank selector1’s p=).',
+                'On every new vendor: SPF include, DKIM and a test message before the first campaign, not after.',
+                'Alert on a sudden spike in DMARC failures — it is either your own change or an active phishing campaign, and you want to know which within hours.',
+                'Then move on to step 9: DNSSEC, MTA-STS with TLS-RPT, reverse DNS, and BIMI if the marketing value justifies a VMC.',
+                'Remember what reject still cannot stop: lookalike domains, display-name spoofs and compromised mailboxes. Those need the process controls in the what-if section.'
+            ],
+            link: { href: '#step-10', label: 'Read step 10 in full' }
+        }
+    };
+
+    /* ---- 7b. Spoofing triage -------------------------------------------- */
     var TRIAGE = {
         start: {
             q: 'Look at the From line of the suspicious message. What is actually there?',
@@ -682,6 +1122,7 @@
             lead: 'If the mail genuinely came from your tenant, the attacker has a session or credentials. This is an incident, not an email configuration question, and the clock matters.',
             steps: [
                 'Reset the password AND revoke all active sessions and refresh tokens — a password reset alone does not log the attacker out.',
+                'Do not discuss the incident in the affected mailbox — if the attacker still has access, they are reading it. Move to phone or a different account until you are sure it is clean.',
                 'Delete any inbox rules or forwarders you did not create. Look especially for rules moving mail to RSS Feeds, Notes or Deleted Items, and for external auto-forwarding.',
                 'Review connected OAuth applications and app passwords; remove anything unfamiliar.',
                 'Re-register MFA for that user and check whether the same password was reused elsewhere.',
@@ -728,50 +1169,17 @@
         }
     };
 
-    function initTriage() {
-        var qBox = $('#triage-q'), oBox = $('#triage-out'), reset = $('#triage-reset');
-        if (!qBox) return;
-        var trail = [];
-
-        function showQuestion(key) {
-            clear(qBox); clear(oBox);
-            var node = TRIAGE[key];
-            if (trail.length) {
-                qBox.appendChild(el('p', 'triage-crumbs', 'Question ' + (trail.length + 1)));
-            }
-            qBox.appendChild(el('h4', null, node.q));
-            var opts = el('div', 'triage-opts');
-            node.opts.forEach(function (o) {
-                var b = el('button', null, o.t);
-                b.type = 'button';
-                b.addEventListener('click', function () {
-                    trail.push(key);
-                    if (TRIAGE[o.go]) showQuestion(o.go); else showOutcome(o.go);
-                });
-                opts.appendChild(b);
-            });
-            qBox.appendChild(opts);
-            reset.hidden = trail.length === 0;
-        }
-
-        function showOutcome(key) {
-            var o = OUTCOMES[key];
-            clear(qBox); clear(oBox);
-            if (!o) return;
-            var v = el('div', 'verdict ' + o.cls);
-            v.appendChild(el('strong', null, o.title));
-            oBox.appendChild(v);
-            oBox.appendChild(el('p', null, o.lead));
-            var ul = el('ul');
-            o.steps.forEach(function (s) { ul.appendChild(el('li', null, s)); });
-            oBox.appendChild(ul);
-            var foot = el('p', 'tip', 'Then work through the runbook below — the phases apply to every type. If money has already moved, call the bank before anything else.');
-            oBox.appendChild(foot);
-            reset.hidden = false;
-        }
-
-        reset.addEventListener('click', function () { trail = []; showQuestion('start'); });
-        showQuestion('start');
+    function initWizards() {
+        makeWizard({
+            q: '#setup-q', out: '#setup-out', reset: '#setup-reset',
+            tree: SETUP_TREE, outcomes: SETUP_OUT,
+            footer: 'Do this one step, verify it, then come back and answer again. Skipping ahead is what breaks mail.'
+        });
+        makeWizard({
+            q: '#triage-q', out: '#triage-out', reset: '#triage-reset',
+            tree: TRIAGE, outcomes: OUTCOMES,
+            footer: 'Then work through the runbook below — the phases apply to every type. If money has already moved, call the bank before anything else.'
+        });
     }
 
     /* ====================================================================== *
@@ -849,8 +1257,10 @@
         });
 
         function update() {
-            var done = 0;
-            Object.keys(state).forEach(function (k) { if (state[k]) done++; });
+            // Count the boxes, not the stored keys: a key left over from an older
+            // version of the list would otherwise push the total past 100%.
+            var boxes = $$('#ck-list input');
+            var done = boxes.filter(function (c) { return c.checked; }).length;
             var bar = $('#ck-bar'), cnt = $('#ck-count');
             if (bar) bar.style.width = (total ? (done / total * 100) : 0).toFixed(1) + '%';
             if (cnt) cnt.textContent = done + ' / ' + total;
@@ -874,7 +1284,7 @@
         initBuilder();
         initInspector();
         initLookup();
-        initTriage();
+        initWizards();
         initChecklist();
     }
 

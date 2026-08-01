@@ -10,13 +10,14 @@ in [`workshop/todo.md`](workshop/todo.md).
 /                     hub (index.html, theme.css, style.css, script.js, projects.js)
 favicon.svg · og-image.png · admin/ · 404.html · robots.txt · sitemap.xml
 gallery/              🏛️ The Gallery of Wonders
-  militaryalphabet/   🔤 Phonetic Codex
+  militaryalphabet/   🔤 Phonetic Codex — moved to alphabet.labidi.eu (redirect + tombstone sw)
   lore/               📜 Lore Gallery
   prankscreens/       🖥️ Prank Screens
 workshop/             ⚗️ The Workshop — a data-driven catalogue of every WIP
+  md/                 📝 Markdown Studio — moved to md.labidi.eu (redirect + tombstone sw)
   3d-forge/ batlistener/ bbq/ blur/ character-forge/ clear/ dashboard_v1/
   demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/ fill/ laser/
-  laser-forge/ laser-forge-v2/ mailheaders/ md/ news/ personality-library/ rami/
+  laser-forge/ laser-forge-v2/ mailheaders/ news/ personality-library/ rami/
   scoreboard/ subnets/ to-check/ todo/ tools/ trace-results/ webcheck/
   personality-library/ + its 15 book workshops (DISC, Big Five, MBTI, Enneagram,
     Attachment, Love Languages, Temperaments, Conflict Styles, EQ, Liars,
@@ -24,8 +25,15 @@ workshop/             ⚗️ The Workshop — a data-driven catalogue of every W
 wasteland/            ☄️ The Wastelands (index)
   neko/  old-rami.party/  adhd/  notes/  bluetooth/  house/  random-first-player/
 ```
-Realms that graduated to their own domains: GhostTooth, Huiskeuring, TapFate — the husks stay
-in `wasteland/` as mementos, each reachable from its card.
+Realms that graduated to their own domains: O.A.S.I.S. (`oasis.labidi.eu`), Phonetic Codex
+(`alphabet.labidi.eu`), Markdown Studio (`md.labidi.eu`), GhostTooth, Huiskeuring, TapFate.
+GhostTooth, Huiskeuring and TapFate left husks in `wasteland/` as mementos, each reachable
+from its card; O.A.S.I.S., the Phonetic Codex and Markdown Studio left a redirect page plus a
+**tombstone `sw.js`** in place, because all three were installable PWAs whose old service
+worker would otherwise keep serving a frozen copy from the visitor's own storage. Those three
+folders must not be deleted. Each tombstone scopes its teardown to its own cache prefix and
+scope path — `caches` and the service worker registry are shared by the whole origin, so a
+blanket wipe would destroy the other workshop apps' offline copies.
 
 ---
 

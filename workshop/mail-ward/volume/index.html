@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Email Volume Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <meta name="description" content="Upload a message-trace export (CSV or Excel) and chart who is sending mail as your domain, how much and when. Part of Mail Ward.">
+    <meta name="robots" content="index, follow">
+    <title>Email Volume Dashboard — chart a message-trace export | Mail Ward</title>
+    <link rel="canonical" href="https://rami.party/workshop/mail-ward/volume/">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link rel="stylesheet" href="../suite.css">
     <style>
         * {
             margin: 0;
@@ -156,8 +160,11 @@
 
         .chart-wrapper {
             position: relative;
-            height: 350px;
+            min-height: 260px;
         }
+
+        .chart-wrapper > div { width: 100%; }
+        .chart-wrapper svg { display: block; width: 100%; overflow: visible; }
 
         .table-container {
             background: rgba(255, 255, 255, 0.95);
@@ -281,28 +288,51 @@
             }
 
             .chart-wrapper {
-                height: 300px;
+                min-height: 220px;
             }
         }
     </style>
 </head>
 <body>
+    <nav class="mw-bar" aria-label="Mail Ward">
+        <a class="mw-brand" href="../"><span class="mw-mark" aria-hidden="true">🛡️</span> Mail&nbsp;Ward</a>
+        <span class="mw-sep" aria-hidden="true"></span>
+        <a href="../">Guide</a>
+        <a href="../analyzer/">Header analyzer</a>
+        <a href="./" aria-current="page">Volume dashboard</a>
+        <span class="mw-right"><a href="/workshop/">← Workshop</a></span>
+    </nav>
+
     <div class="container">
         <div class="header">
             <h1>📧 Email Volume Analysis Dashboard</h1>
-            <p class="subtitle">Visualize email sending patterns by account from Trace Results</p>
+            <p class="subtitle">Chart who is sending mail as your domain, from a message-trace export</p>
+        </div>
+
+        <div class="mw-note">
+            <p><strong>What this is for.</strong> Before you enforce a DMARC policy you have to know every
+                system that sends mail as you. DMARC aggregate reports tell you that from the outside;
+                a message trace from your own mail platform tells you from the inside. Export one
+                (Microsoft 365: <em>Exchange admin centre → Mail flow → Message trace</em>) and chart it here to
+                spot the senders you forgot — see <a href="../#step-0">step 0</a> and
+                <a href="../#step-4">step 4</a> of the guide.</p>
+            <p><strong>Your file never leaves this page</strong> — it is read, parsed and charted entirely
+                in your browser. Like the rest of Mail Ward, this page loads no third-party code at all:
+                the charts and the <code>.xlsx</code> reader are hand-written and served from here, so it
+                works offline. Accepts <code>.csv</code> and <code>.xlsx</code>; the legacy binary
+                <code>.xls</code> format is not supported — re-save it as either of those.</p>
         </div>
 
         <div class="controls">
             <div class="control-group" style="flex: 1; min-width: 200px;">
-                <label for="fileInput">Upload Excel/CSV File:</label>
-                <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+                <label for="fileInput">Upload CSV or Excel (.xlsx) file:</label>
+                <input type="file" id="fileInput" accept=".xlsx,.csv,.txt">
             </div>
             <div class="control-group">
                 <label for="senderColumn">Sender Column:</label>
                 <input type="text" id="senderColumn" placeholder="e.g., SenderAddress" value="SenderAddress">
             </div>
-            <button onclick="loadFile()">📊 Load &amp; Analyze</button>
+            <button type="button" id="loadBtn">📊 Load &amp; Analyze</button>
         </div>
 
         <div id="messages"></div>
@@ -330,13 +360,13 @@
                 <div class="chart-container">
                     <div class="chart-title">Top 10 Senders</div>
                     <div class="chart-wrapper">
-                        <canvas id="barChart"></canvas>
+                        <div id="barChart"></div>
                     </div>
                 </div>
                 <div class="chart-container">
                     <div class="chart-title">Email Distribution</div>
                     <div class="chart-wrapper">
-                        <canvas id="pieChart"></canvas>
+                        <div id="pieChart"></div>
                     </div>
                 </div>
             </div>
@@ -360,239 +390,211 @@
         </div>
     </div>
 
+    <script src="charts.js"></script>
+    <script src="xlsx.js"></script>
     <script>
-        let barChart = null;
-        let pieChart = null;
+        'use strict';
+
+        var lastTop10 = null;
+
+        function message(kind, text) {
+            var box = document.getElementById('messages');
+            box.textContent = '';
+            var d = document.createElement('div');
+            d.className = kind === 'error' ? 'error-message' : 'info-message';
+            d.textContent = text;
+            box.appendChild(d);
+        }
 
         async function loadFile() {
-            const file = document.getElementById('fileInput').files[0];
-            const senderColumn = document.getElementById('senderColumn').value || 'SenderAddress';
-            const messagesDiv = document.getElementById('messages');
+            var file = document.getElementById('fileInput').files[0];
+            var senderColumn = document.getElementById('senderColumn').value.trim() || 'SenderAddress';
+            document.getElementById('messages').textContent = '';
 
-            messagesDiv.innerHTML = '';
+            if (!file) { message('error', '⚠️ Please select a file first.'); return; }
 
-            if (!file) {
-                messagesDiv.innerHTML = '<div class="error-message">⚠️ Please select a file first</div>';
-                return;
-            }
-
+            var name = file.name.toLowerCase();
             try {
-                let data = [];
-
-                if (file.name.endsWith('.csv')) {
+                var data;
+                if (name.endsWith('.csv') || name.endsWith('.txt')) {
                     data = await parseCSV(file, senderColumn);
-                } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-                    data = await parseExcel(file, senderColumn);
+                } else if (name.endsWith('.xlsx')) {
+                    message('info', '⏳ Unzipping and reading the workbook…');
+                    data = await parseXlsx(file, senderColumn);
+                } else if (name.endsWith('.xls')) {
+                    throw new Error('The legacy binary .xls format is not supported. Open it in Excel and save as .xlsx or .csv.');
                 } else {
-                    throw new Error('Unsupported file format. Please use CSV or Excel files.');
+                    throw new Error('Unsupported file type. Use a .csv or .xlsx export.');
                 }
 
-                if (data.length === 0) {
-                    messagesDiv.innerHTML = '<div class="error-message">❌ No data found. Check your column name.</div>';
+                if (!data.length) {
+                    message('error', '❌ No values found in column "' + senderColumn + '". Check the column name against the first row of your file.');
                     return;
                 }
 
                 displayDashboard(data);
-                messagesDiv.innerHTML = '<div class="info-message">✅ Data loaded successfully. Displaying analytics below.</div>';
-
+                message('info', '✅ ' + data.length.toLocaleString() + ' rows read from "' + senderColumn + '". Nothing was uploaded.');
             } catch (error) {
-                messagesDiv.innerHTML = `<div class="error-message">❌ Error: ${error.message}</div>`;
+                message('error', '❌ ' + error.message);
             }
         }
 
-        async function parseCSV(file, senderColumn) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const text = e.target.result;
-                        const lines = text.split('\n');
-                        const headers = lines[0].split(',').map(h => h.trim());
-                        const senderIndex = headers.findIndex(h => h.toLowerCase() === senderColumn.toLowerCase());
+        /* ---- CSV -----------------------------------------------------------
+           A real RFC 4180 reader: message-trace exports routinely contain
+           quoted fields with commas and newlines in them (subject lines), and
+           a naive split(',') silently shifts every later column. */
+        function parseCsvText(text) {
+            if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);   // strip BOM
+            var rows = [], row = [], field = '', inQuotes = false;
 
-                        if (senderIndex === -1) {
-                            reject(new Error(`Column "${senderColumn}" not found in CSV`));
-                            return;
-                        }
+            for (var i = 0; i < text.length; i++) {
+                var ch = text[i];
+                if (inQuotes) {
+                    if (ch === '"') {
+                        if (text[i + 1] === '"') { field += '"'; i++; }
+                        else inQuotes = false;
+                    } else field += ch;
+                    continue;
+                }
+                if (ch === '"') { inQuotes = true; continue; }
+                if (ch === ',') { row.push(field); field = ''; continue; }
+                if (ch === '\r') { if (text[i + 1] === '\n') i++; rows.push(row.concat(field)); row = []; field = ''; continue; }
+                if (ch === '\n') { rows.push(row.concat(field)); row = []; field = ''; continue; }
+                field += ch;
+            }
+            if (field !== '' || row.length) rows.push(row.concat(field));
+            return rows.filter(function (r) { return r.some(function (v) { return v.trim(); }); });
+        }
 
-                        const data = [];
-                        for (let i = 1; i < lines.length; i++) {
-                            if (lines[i].trim()) {
-                                const parts = lines[i].split(',');
-                                if (parts[senderIndex]) {
-                                    data.push(parts[senderIndex].trim());
-                                }
-                            }
-                        }
-                        resolve(data);
-                    } catch (error) {
-                        reject(error);
-                    }
-                };
-                reader.readAsText(file);
+        function parseCSV(file, senderColumn) {
+            return file.text().then(function (text) {
+                var rows = parseCsvText(text);
+                if (!rows.length) throw new Error('That file is empty.');
+
+                var headers = rows[0].map(function (h) { return h.trim(); });
+                var idx = headers.findIndex(function (h) { return h.toLowerCase() === senderColumn.toLowerCase(); });
+                if (idx === -1) {
+                    throw new Error('Column "' + senderColumn + '" not found. The file has: ' +
+                        headers.filter(Boolean).slice(0, 12).join(', ') + (headers.length > 12 ? '…' : ''));
+                }
+
+                var out = [];
+                for (var i = 1; i < rows.length; i++) {
+                    var v = (rows[i][idx] || '').trim();
+                    if (v) out.push(v);
+                }
+                return out;
             });
         }
 
-        async function parseExcel(file, senderColumn) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const script = document.createElement('script');
-                        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
-                        script.onload = () => {
-                            const data = new Uint8Array(e.target.result);
-                            const workbook = XLSX.read(data, { type: 'array' });
-                            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                            const rows = XLSX.utils.sheet_to_json(sheet);
+        /* ---- XLSX (read locally, see xlsx.js) ------------------------------ */
+        function parseXlsx(file, senderColumn) {
+            return MWXlsx.readFirstSheet(file).then(function (rows) {
+                if (!rows.length) throw new Error('The first worksheet is empty.');
 
-                            const senderIndex = Object.keys(rows[0] || {}).findIndex(
-                                h => h.toLowerCase() === senderColumn.toLowerCase()
-                            );
+                var headers = Object.keys(rows[0]);
+                var key = headers.find(function (h) { return h.toLowerCase() === senderColumn.toLowerCase(); });
+                if (!key) {
+                    throw new Error('Column "' + senderColumn + '" not found. The sheet has: ' +
+                        headers.slice(0, 12).join(', ') + (headers.length > 12 ? '…' : ''));
+                }
 
-                            if (senderIndex === -1) {
-                                reject(new Error(`Column "${senderColumn}" not found in Excel`));
-                                return;
-                            }
-
-                            const senderKey = Object.keys(rows[0])[senderIndex];
-                            const senders = rows.map(row => row[senderKey]).filter(Boolean);
-                            resolve(senders);
-                        };
-                        document.head.appendChild(script);
-                    } catch (error) {
-                        reject(error);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
+                return rows.map(function (r) { return r[key] == null ? '' : String(r[key]).trim(); })
+                    .filter(Boolean);
             });
         }
 
+        /* ---- Render -------------------------------------------------------- */
         function displayDashboard(senderData) {
-            const counted = {};
-            senderData.forEach(sender => {
+            var counted = Object.create(null);
+            senderData.forEach(function (sender) {
                 counted[sender] = (counted[sender] || 0) + 1;
             });
 
-            const sorted = Object.entries(counted)
-                .map(([sender, count]) => ({ sender, count }))
-                .sort((a, b) => b.count - a.count);
+            var sorted = Object.keys(counted)
+                .map(function (sender) { return { sender: sender, count: counted[sender] }; })
+                .sort(function (a, b) { return b.count - a.count; });
 
-            const total = senderData.length;
-            const unique = sorted.length;
+            var total = senderData.length;
+            var unique = sorted.length;
 
-            document.getElementById('uniqueAccounts').textContent = unique;
+            document.getElementById('uniqueAccounts').textContent = unique.toLocaleString();
             document.getElementById('totalEmails').textContent = total.toLocaleString();
             document.getElementById('avgPerAccount').textContent = (total / unique).toFixed(1);
-            document.getElementById('maxVolume').textContent = sorted[0].count;
+            document.getElementById('maxVolume').textContent = sorted[0].count.toLocaleString();
 
-            // Bar Chart - Top 10
-            const top10 = sorted.slice(0, 10);
-            const barCtx = document.getElementById('barChart').getContext('2d');
-            if (barChart) barChart.destroy();
-            barChart = new Chart(barCtx, {
-                type: 'bar',
-                data: {
-                    labels: top10.map(item => item.sender.substring(0, 30) + (item.sender.length > 30 ? '...' : '')),
-                    datasets: [{
-                        label: 'Emails Sent',
-                        data: top10.map(item => item.count),
-                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
-                        borderColor: 'rgba(102, 126, 234, 1)',
-                        borderWidth: 1,
-                        borderRadius: 6,
-                    }]
-                },
-                options: {
-                    indexAxis: 'y',
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        x: {
-                            beginAtZero: true,
-                            grid: { color: 'rgba(0, 0, 0, 0.05)' }
-                        }
-                    }
-                }
+            lastTop10 = sorted.slice(0, 10);
+            var colors = generateColors(lastTop10.length);
+
+            var barBox = document.getElementById('barChart');
+            MWCharts.responsive(barBox, function () {
+                MWCharts.bar(barBox, lastTop10, { label: 'Top senders by number of messages' });
             });
 
-            // Pie Chart - Distribution
-            const pieCtx = document.getElementById('pieChart').getContext('2d');
-            if (pieChart) pieChart.destroy();
-            const colors = generateColors(top10.length);
-            pieChart = new Chart(pieCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: top10.map(item => item.sender.substring(0, 20) + (item.sender.length > 20 ? '...' : '')),
-                    datasets: [{
-                        data: top10.map(item => item.count),
-                        backgroundColor: colors,
-                        borderColor: 'white',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: { font: { size: 11 } }
-                        }
-                    }
-                }
+            var pieBox = document.getElementById('pieChart');
+            MWCharts.responsive(pieBox, function () {
+                MWCharts.doughnut(pieBox, lastTop10, {
+                    colors: colors,
+                    label: 'Share of messages across the top senders'
+                });
             });
 
-            // Table
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            sorted.forEach((item, index) => {
-                const percentage = ((item.count / total) * 100).toFixed(2);
-                const barWidth = (item.count / sorted[0].count) * 100;
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="rank-cell">${index + 1}</td>
-                    <td class="email-cell">${escapeHtml(item.sender)}</td>
-                    <td class="count-cell">${item.count.toLocaleString()}</td>
-                    <td class="percentage-cell">${percentage}%</td>
-                    <td>
-                        <div class="progress-bar">
-                            <div class="progress-fill" style="width: ${barWidth}%"></div>
-                        </div>
-                    </td>
-                `;
+            var tbody = document.getElementById('tableBody');
+            tbody.textContent = '';
+            sorted.forEach(function (item, index) {
+                var percentage = ((item.count / total) * 100).toFixed(2);
+                var barWidth = (item.count / sorted[0].count) * 100;
+                var row = document.createElement('tr');
+
+                row.appendChild(cell('rank-cell', String(index + 1)));
+                row.appendChild(cell('email-cell', item.sender));
+                row.appendChild(cell('count-cell', item.count.toLocaleString()));
+                row.appendChild(cell('percentage-cell', percentage + '%'));
+
+                var td = document.createElement('td');
+                var track = document.createElement('div');
+                track.className = 'progress-bar';
+                var fill = document.createElement('div');
+                fill.className = 'progress-fill';
+                fill.style.width = barWidth + '%';
+                track.appendChild(fill);
+                td.appendChild(track);
+                row.appendChild(td);
+
                 tbody.appendChild(row);
             });
 
             document.getElementById('statsSection').style.display = 'block';
         }
 
+        function cell(cls, text) {
+            var td = document.createElement('td');
+            td.className = cls;
+            td.textContent = text;
+            return td;
+        }
+
         function generateColors(count) {
-            const colors = [
+            var colors = [
                 '#667eea', '#764ba2', '#f093fb', '#4facfe',
                 '#43e97b', '#fa709a', '#30cfd0', '#330867',
                 '#a8edea', '#fed6e3'
             ];
-            const result = [];
-            for (let i = 0; i < count; i++) {
-                result.push(colors[i % colors.length]);
-            }
+            var result = [];
+            for (var i = 0; i < count; i++) result.push(colors[i % colors.length]);
             return result;
         }
 
-        function escapeHtml(text) {
-            const map = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#039;'
-            };
-            return text.replace(/[&<>"']/g, m => map[m]);
-        }
+        document.getElementById('loadBtn').addEventListener('click', loadFile);
+        document.getElementById('fileInput').addEventListener('change', function () {
+            if (this.files[0]) message('info', 'Ready: ' + this.files[0].name + ' — press Load & Analyze.');
+        });
     </script>
+
+    <footer class="mw-foot">
+        <p>Part of <a href="../">Mail Ward</a> — the SPF, DKIM &amp; DMARC guide ·
+            <a href="../analyzer/">Header analyzer</a> ·
+            <a href="../#plan">The step-by-step plan</a></p>
+    </footer>
 </body>
 </html>

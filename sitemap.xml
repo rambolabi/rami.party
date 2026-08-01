@@ -8,6 +8,8 @@
     • external:true realms live on their own domains and are not listed here.
     • /admin/, /404.html, the DM companion screens and /workshop/laser-forge-v2/ are noindex
       on purpose, so they are absent by design.
+    • /workshop/mailheaders/ and /workshop/trace-results/ are now noindex redirect stubs —
+      both tools moved under /workshop/mail-ward/ and are listed at their new URLs.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
@@ -34,12 +36,9 @@
   </url>
 
   <!-- ── The Gallery of Wonders ──────────────────────────────────────────── -->
-  <url>
-    <loc>https://rami.party/gallery/militaryalphabet/</loc>
-    <lastmod>2026-07-27</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.7</priority>
-  </url>
+  <!-- The Phonetic Codex moved to its own domain (alphabet.labidi.eu);
+       /gallery/militaryalphabet/ is now only a redirect and is deliberately
+       not listed here. -->
   <url>
     <loc>https://rami.party/gallery/lore/</loc>
     <lastmod>2026-07-27</lastmod>
@@ -56,6 +55,18 @@
   <!-- ── The Workshop — live projects ────────────────────────────────────── -->
   <!-- O.A.S.I.S. moved to its own domain (oasis.labidi.eu); /workshop/OASIS/
        is now only a redirect and is deliberately not listed here. -->
+  <url>
+    <loc>https://rami.party/workshop/breachlight/</loc>
+    <lastmod>2026-07-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/breachlight/logscope/</loc>
+    <lastmod>2026-07-31</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
   <url>
     <loc>https://rami.party/workshop/tools/</loc>
     <lastmod>2026-07-27</lastmod>
@@ -129,8 +140,8 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://rami.party/workshop/mailheaders/</loc>
-    <lastmod>2026-07-27</lastmod>
+    <loc>https://rami.party/workshop/mail-ward/analyzer/</loc>
+    <lastmod>2026-07-31</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -197,8 +208,8 @@
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://rami.party/workshop/trace-results/</loc>
-    <lastmod>2026-07-27</lastmod>
+    <loc>https://rami.party/workshop/mail-ward/volume/</loc>
+    <lastmod>2026-07-31</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
