@@ -6,7 +6,7 @@ a safe body preview. Runs 100% client-side. External lookups are strictly opt-in
 
 ## Architecture (modular)
 ```
-mailheaders/
+mail-ward/analyzer/
   index.html
   css/
     themes.css              # colour tokens per theme

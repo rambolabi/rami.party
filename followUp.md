@@ -7,17 +7,18 @@ in [`workshop/todo.md`](workshop/todo.md).
 
 ## 🗺️ Current structure
 ```
-/                     hub (index.html, theme.css, style.css, script.js, projects.js)
+/                     hub (index.html, theme.css, theme.js, style.css, script.js, projects.js)
 favicon.svg · og-image.png · admin/ · 404.html · robots.txt · sitemap.xml
-gallery/              🏛️ The Gallery of Wonders
-  militaryalphabet/   🔤 Phonetic Codex
+gallery/              🏛️ The Gallery of Wonders (index)
   lore/               📜 Lore Gallery
   prankscreens/       🖥️ Prank Screens
 workshop/             ⚗️ The Workshop — a data-driven catalogue of every WIP
-  3d-forge/ batlistener/ bbq/ blur/ character-forge/ clear/ dashboard_v1/
-  demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/ fill/ laser/
-  laser-forge/ laser-forge-v2/ mailheaders/ md/ news/ personality-library/ rami/
-  scoreboard/ subnets/ to-check/ todo/ tools/ trace-results/ webcheck/
+  3d-forge/ batlistener/ bbq/ blur/ breachlight/ character-forge/ clear/
+  dashboard_v1/ demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/
+  fill/ frostcaller/ laser/ laser-forge/ laser-forge-v2/ mail-ward/ md/ news/
+  OASIS/ personality-library/ rami/ scoreboard/ sixth-sense/ subnets/ to-check/
+  todo/ tools/ trainer-forge/ webcheck/
+  mail-ward/analyzer/  ✉️ Mail Headers   ·  mail-ward/volume/  📊 Volume Seer
   personality-library/ + its 15 book workshops (DISC, Big Five, MBTI, Enneagram,
     Attachment, Love Languages, Temperaments, Conflict Styles, EQ, Liars,
     Vampires, Bad Bosses, Psychopaths, Narcissists, Setbacks)
@@ -58,8 +59,28 @@ in `wasteland/` as mementos, each reachable from its card.
 
 ---
 
+## ✅ Decisions taken (2026-07-31)
+
+| Decision | Choice | Why |
+|---|---|---|
+| **Theming** | Six themes + "Match system", chosen from a header picker, stored in `localStorage` (`rami.theme`). | Two professional themes (`slate` dark, `daylight` light) were requested; `parchment`, `terminal` and `contrast` came free once every colour became a token. `theme.js` is render-blocking in `<head>` so there is no flash of the wrong theme. |
+| **Theme scope** | Applied to the shared chrome only: hub, `/gallery/`, `/workshop/`, `/wasteland/`, lore, prank screens, 404. | Sub-realms with their own hand-written CSS (frostcaller, mail-ward, OASIS, md, …) still hardcode dark colours, so they keep the default palette until each one is tokenised. That is the next theming chore. |
+| **`gallery/militaryalphabet/`** | Card and sitemap entry **removed**; the idea moved to `RAMI_PLANNED`. | The folder does not exist in the repo — the hub was advertising a 404. |
+| **Mail Headers & Volume Seer** | Repointed at `workshop/mail-ward/analyzer/` and `workshop/mail-ward/volume/`. | Both moved inside Mail Ward; the registry, the sitemap and four links inside `mail-ward/index.html` still pointed at the old `workshop/mailheaders/` and `workshop/trace-results/` folders. |
+| **Frostcaller** | `status: 'live'`, `href: './frostcaller/'`. | The folder is finished and on disk; the card still said "coming soon" with `href: '#'`. |
+| **Breachlight** | Added to `RAMI_WORKSHOP` and to the sitemap. | It was on disk, indexable and canonicalised to itself, but no page linked to it. |
+| **Lore Gallery & Prank Screens** | Moved from `RAMI_WORKSHOP` to `RAMI_REALMS` (`category: 'gallery'`) and given a `/gallery/` landing page. | They are finished realms, not works in progress, and `/gallery/` used to 404. |
+| **Hub navigation** | Now the three realms: Realms · Gallery · Workshop · Wastelands. | The Workshop had no nav entry at all; two gallery wings had one each. |
+| **`/security.txt`** | Replaced with a copy of `/.well-known/security.txt`. | The root copy was missing the `Expires` field, which RFC 9116 requires. |
+
+---
+
 ## ⚖️ Open decisions (need a human)
 
+- [ ] **Tokenise the sub-realms' own CSS** so the theme picker reaches frostcaller, mail-ward,
+      breachlight, OASIS, md and friends too. Each one currently ships its own dark palette.
+- [ ] **Phonetic Codex** — rebuild it under `gallery/militaryalphabet/`, or drop the idea from
+      `RAMI_PLANNED`. It is currently listed as planned, not live.
 - [ ] **`wasteland/bluetooth/` — keep or delete?** It duplicates `ghosttooth.labidi.eu`. It is now
       noindexed and canonicalised to the live site, so keeping it is harmless. Delete if you'd
       rather not maintain two copies.
