@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectrum Scryer — See every Wi-Fi around you</title>
+    <meta name="description"
+        content="Reveal every Wi-Fi access point around you — hidden ones included — map the 2.4, 5 and 6 GHz channels, sniff nearby Bluetooth devices and walk yourself to a network with the signal locator.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#060910">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/spectrum-scryer/">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%A1%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="wrap">
+
+        <header class="hero">
+            <div class="hero-mark" aria-hidden="true">📡</div>
+            <h1>Spectrum Scryer</h1>
+            <p class="lede">See <strong>every Wi-Fi access point</strong> in your neighbourhood — the hidden ones
+                too — laid out across the 2.4, 5 and 6 GHz bands, with a <strong>locator</strong> that walks you
+                to any of them. Everything happens in your browser; nothing is uploaded anywhere.</p>
+        </header>
+
+        <!-- ---------- Step 1: get a scan ---------- -->
+        <section class="card" id="step-scan" aria-labelledby="scan-title">
+            <div class="card-head">
+                <span class="step-badge">1</span>
+                <div>
+                    <h2 id="scan-title">Ask your device for the airwaves</h2>
+                    <p class="card-sub">Browsers are not allowed to scan Wi-Fi on their own, so we borrow your
+                        computer&rsquo;s own scanner. Copy the one-line command below, run it, and paste what comes
+                        back — the Scryer does the rest.</p>
+                </div>
+            </div>
+
+            <div class="os-tabs" role="tablist" aria-label="Choose your operating system">
+                <button class="os-tab is-active" role="tab" type="button" data-os="windows" aria-selected="true"
+                    id="tab-windows" aria-controls="panel-os">Windows</button>
+                <button class="os-tab" role="tab" type="button" data-os="mac" aria-selected="false" id="tab-mac"
+                    aria-controls="panel-os">macOS</button>
+                <button class="os-tab" role="tab" type="button" data-os="linux" aria-selected="false" id="tab-linux"
+                    aria-controls="panel-os">Linux</button>
+                <button class="os-tab" role="tab" type="button" data-os="phone" aria-selected="false"
+                    id="tab-phone" aria-controls="panel-os">Phone</button>
+            </div>
+
+            <div class="os-panel" id="panel-os" role="tabpanel" aria-labelledby="tab-windows">
+                <p class="os-where" id="osWhere">Open <strong>Command Prompt</strong> or PowerShell.</p>
+                <div class="cmd-row">
+                    <code id="osCmd" class="cmd">netsh wlan show networks mode=bssid</code>
+                    <button id="copyCmd" class="btn btn-ghost btn-sm" type="button">Copy</button>
+                </div>
+                <p class="os-note" id="osNote">Windows only lists networks it can hear right now, so give it a few
+                    seconds after switching Wi-Fi on.</p>
+            </div>
+
+            <label class="field-label" for="scanInput">Paste the scan output here</label>
+            <textarea id="scanInput" class="scan-input" spellcheck="false" autocomplete="off"
+                placeholder="Paste the whole output — messy is fine. The Scryer recognises netsh, nmcli, iw, iwlist, airport and its own JSON exports."></textarea>
+
+            <div class="btn-row">
+                <button id="readBtn" class="btn btn-primary" type="button">
+                    <span aria-hidden="true">🔮</span> Reveal the networks
+                </button>
+                <button id="demoBtn" class="btn btn-ghost" type="button">Try a demo neighbourhood</button>
+                <button id="clearBtn" class="btn btn-ghost" type="button">Clear everything</button>
+            </div>
+
+            <p id="parseMsg" class="parse-msg" role="status" aria-live="polite"></p>
+        </section>
+
+        <!-- ---------- Results ---------- -->
+        <section class="card" id="step-results" aria-labelledby="results-title" hidden>
+            <div class="card-head">
+                <span class="step-badge">2</span>
+                <div>
+                    <h2 id="results-title">Your neighbourhood</h2>
+                    <p class="card-sub">Every access point your device could hear, strongest first. Hidden networks
+                        broadcast no name — they still show up here.</p>
+                </div>
+            </div>
+
+            <ul class="stat-strip" role="list">
+                <li><span class="stat-num" id="statNetworks">0</span><span class="stat-label">networks</span></li>
+                <li><span class="stat-num" id="statAps">0</span><span class="stat-label">access points</span></li>
+                <li><span class="stat-num" id="statHidden">0</span><span class="stat-label">hidden</span></li>
+                <li><span class="stat-num" id="statOpen">0</span><span class="stat-label">unsecured</span></li>
+                <li><span class="stat-num" id="statBands">—</span><span class="stat-label">bands in use</span></li>
+            </ul>
+
+            <div class="filters">
+                <label class="search-box">
+                    <span class="sr-only">Search networks</span>
+                    <input id="searchInput" type="search" placeholder="Search a name, vendor or MAC…"
+                        autocomplete="off">
+                </label>
+                <div class="chip-row" role="group" aria-label="Filter by band">
+                    <button class="chip is-active" type="button" data-band="all">All bands</button>
+                    <button class="chip" type="button" data-band="2.4">2.4 GHz</button>
+                    <button class="chip" type="button" data-band="5">5 GHz</button>
+                    <button class="chip" type="button" data-band="6">6 GHz</button>
+                </div>
+                <div class="chip-row" role="group" aria-label="Extra filters">
+                    <button class="chip" type="button" data-flag="hidden">Hidden only</button>
+                    <button class="chip" type="button" data-flag="open">Unsecured only</button>
+                </div>
+            </div>
+
+            <div id="apList" class="ap-list"></div>
+            <p id="emptyMsg" class="empty-msg" hidden>Nothing matches those filters.</p>
+
+            <div class="btn-row">
+                <button id="exportJson" class="btn btn-ghost btn-sm" type="button">Export JSON</button>
+                <button id="exportCsv" class="btn btn-ghost btn-sm" type="button">Export CSV</button>
+            </div>
+        </section>
+
+        <!-- ---------- Channel map ---------- -->
+        <section class="card" id="step-map" aria-labelledby="map-title" hidden>
+            <div class="card-head">
+                <span class="step-badge">3</span>
+                <div>
+                    <h2 id="map-title">The channel map</h2>
+                    <p class="card-sub">Where everyone is sitting on the dial. Overlapping humps fight each other —
+                        a quieter channel usually means faster Wi-Fi.</p>
+                </div>
+            </div>
+            <div class="band-switch" role="group" aria-label="Choose a band to chart">
+                <button class="chip is-active" type="button" data-chart="2.4">2.4 GHz</button>
+                <button class="chip" type="button" data-chart="5">5 GHz</button>
+                <button class="chip" type="button" data-chart="6">6 GHz</button>
+            </div>
+            <div class="chart-shell">
+                <canvas id="chart" width="1200" height="420" role="img"
+                    aria-label="Chart of access points across the selected Wi-Fi band"></canvas>
+            </div>
+            <p id="chartEmpty" class="empty-msg" hidden>No access points heard on this band.</p>
+            <div class="advice" id="advice"></div>
+        </section>
+
+        <!-- ---------- Locator ---------- -->
+        <section class="card" id="step-locate" aria-labelledby="locate-title" hidden>
+            <div class="card-head">
+                <span class="step-badge">4</span>
+                <div>
+                    <h2 id="locate-title">The locator</h2>
+                    <p class="card-sub">Pick an access point, then walk around and paste a fresh scan every few
+                        steps. The dial tells you whether you are getting warmer.</p>
+                </div>
+            </div>
+
+            <label class="field-label" for="targetSelect">Hunt for</label>
+            <select id="targetSelect" class="select"></select>
+
+            <div class="locator">
+                <div class="dial-shell">
+                    <canvas id="dial" width="440" height="440" role="img"
+                        aria-label="Signal strength dial for the selected access point"></canvas>
+                    <div class="dial-centre">
+                        <span id="dialRssi" class="dial-rssi">—</span>
+                        <span class="dial-unit">dBm</span>
+                    </div>
+                </div>
+                <div class="locator-side">
+                    <p class="verdict" id="verdict">Pick a target to begin the hunt.</p>
+                    <dl class="readouts">
+                        <div>
+                            <dt>Rough distance</dt>
+                            <dd id="readDist">—</dd>
+                        </div>
+                        <div>
+                            <dt>Trend</dt>
+                            <dd id="readTrend">—</dd>
+                        </div>
+                        <div>
+                            <dt>Samples</dt>
+                            <dd id="readSamples">0</dd>
+                        </div>
+                        <div>
+                            <dt>Best seen</dt>
+                            <dd id="readBest">—</dd>
+                        </div>
+                    </dl>
+                    <label class="slider">
+                        <span>Surroundings <output id="envVal">indoors, normal walls</output></span>
+                        <input id="envSlider" type="range" min="20" max="40" step="1" value="30">
+                    </label>
+                    <div class="spark-shell">
+                        <canvas id="spark" width="600" height="120" role="img"
+                            aria-label="History of signal strength samples"></canvas>
+                    </div>
+                    <button id="resetHunt" class="btn btn-ghost btn-sm" type="button">Reset the hunt</button>
+                </div>
+            </div>
+            <p class="fineprint">Distance is estimated from signal strength with a log-distance path-loss model. It
+                is a hint, not a tape measure — walls, water and people all lie to it.</p>
+        </section>
+
+        <!-- ---------- Live radio sensing ---------- -->
+        <section class="card" id="step-live" aria-labelledby="live-title">
+            <div class="card-head">
+                <span class="step-badge">5</span>
+                <div>
+                    <h2 id="live-title">Other things on the air</h2>
+                    <p class="card-sub">Wi-Fi is not alone up there. These readings come straight from the browser —
+                        no commands, no pasting.</p>
+                </div>
+            </div>
+
+            <div class="live-grid">
+                <div class="live-box">
+                    <h3><span aria-hidden="true">🔵</span> Bluetooth &amp; BLE <span class="tag">2.4 GHz</span></h3>
+                    <p class="live-sub">Headphones, watches, trackers, sensors and beacons share the 2.4 GHz band
+                        with Wi-Fi. Scanning asks for your permission every time.</p>
+                    <button id="bleBtn" class="btn btn-primary btn-sm" type="button">Scan for devices</button>
+                    <p id="bleMsg" class="live-msg" role="status" aria-live="polite"></p>
+                    <ul id="bleList" class="ble-list" role="list"></ul>
+                </div>
+
+                <div class="live-box">
+                    <h3><span aria-hidden="true">🌐</span> This connection</h3>
+                    <p class="live-sub">What the browser knows about the link you are riding right now.</p>
+                    <dl class="readouts">
+                        <div>
+                            <dt>Type</dt>
+                            <dd id="netType">—</dd>
+                        </div>
+                        <div>
+                            <dt>Class</dt>
+                            <dd id="netClass">—</dd>
+                        </div>
+                        <div>
+                            <dt>Downlink</dt>
+                            <dd id="netDown">—</dd>
+                        </div>
+                        <div>
+                            <dt>Round trip</dt>
+                            <dd id="netRtt">—</dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------- Explainer ---------- -->
+        <section class="card" aria-labelledby="how-title">
+            <div class="card-head">
+                <span class="step-badge" aria-hidden="true">?</span>
+                <div>
+                    <h2 id="how-title">Honest small print</h2>
+                </div>
+            </div>
+            <div class="faq">
+                <details>
+                    <summary>Why can&rsquo;t the page just scan by itself?</summary>
+                    <p>No browser exposes a Wi-Fi scanning API — that would let any website work out exactly where
+                        you live. Your operating system will happily tell <em>you</em>, though, which is why the
+                        Scryer asks you to paste its answer. The parsing, charting and locating all happen locally
+                        in your browser, and nothing ever leaves the page.</p>
+                </details>
+                <details>
+                    <summary>How are hidden networks found?</summary>
+                    <p>A &ldquo;hidden&rdquo; network only stops broadcasting its <em>name</em>. It still announces
+                        its MAC address (BSSID), channel and signal every few seconds, so every scanner sees it. The
+                        Scryer flags those nameless entries and shows their vendor and channel instead. Hiding a
+                        network is not a security feature — treat these like any other neighbour.</p>
+                </details>
+                <details>
+                    <summary>What about microwaves, drones and other 2.4/5/6 GHz noise?</summary>
+                    <p>Anything that is not Wi-Fi or Bluetooth needs real radio hardware — a spectrum analyser or an
+                        SDR dongle. What a laptop <em>can</em> tell you is where the interference bites: an
+                        overcrowded channel in the map above, or a 2.4 GHz link that mysteriously stalls around
+                        dinner time, is usually a neighbour, a microwave or a cordless doorbell.</p>
+                </details>
+                <details>
+                    <summary>Is any of this legal and polite?</summary>
+                    <p>Listening to the beacons that networks broadcast is normal and passive — your phone does it
+                        constantly. Connecting to a network you have no permission to use is not. Scry responsibly.
+                    </p>
+                </details>
+            </div>
+        </section>
+
+        <footer class="foot">
+            <a href="../">← Back to the Workshop</a>
+            <span>Everything runs locally · no scan ever leaves your device</span>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>

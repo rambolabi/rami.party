@@ -260,6 +260,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Spectrum Scryer',
+        href: './spectrum-scryer/',
+        glyph: '📡',
+        tagline: 'Every Wi-Fi around you',
+        description: 'Reveal every access point in the neighbourhood — hidden ones included — chart the 2.4, 5 and 6 GHz bands, listen for Bluetooth neighbours and let the locator walk you to any signal.',
+        search: 'A WiFi scanner, wireless network analyser and channel map that shows all wifi access points and networks in the neighbourhood, including hidden SSID networks that broadcast no name. Paste the output of netsh wlan show networks, nmcli device wifi list, iw scan, iwlist scan or the macOS airport command and it parses every BSSID, MAC address, vendor, channel, frequency, band, channel width, encryption and signal strength in dBm or percent. Shows 2.4 GHz, 5 GHz and 6 GHz band usage with an overlap chart and best channel advice for reducing interference, plus a signal locator and direction finder that estimates distance from RSSI to help you find a router, rogue access point or hidden network. Also scans nearby Bluetooth and BLE devices on 2.4 GHz and reports the current connection type and speed. Exports scans as JSON or CSV, runs entirely offline in the browser.',
+        tags: ['network', 'tool'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'Sixth Sense',
         href: './sixth-sense/',
         glyph: '🔮',
@@ -564,7 +575,7 @@ window.RAMI_PLANNED = [
 
 /* ==========================================================================
    Auto-count — keep the Workshop realm’s tagline in sync with the number of
-   live projects in RAMI_WORKSHOP. Add a project above and the count updates
+   projects in RAMI_WORKSHOP. Add a project above and the count updates
    itself; nothing else to touch.
    ========================================================================== */
 (function () {
