@@ -44,7 +44,7 @@ app.js                    state, routing, rendering, storage, Markdown export
 data/taxonomy.js          IF_CATEGORIES, IF_ROLES, IF_POSITIONS, IF_TEMPLATES, IF_DISC
 data/questions-tech.js    technical question bank
 data/questions-soft.js    behaviour, personality and DISC question bank
-data/questions-business.js  business, service and consulting question bank
+data/questions-business.js  business, service desk, project, HR and consulting bank
 ```
 
 There is no build step: open `index.html` and it runs.
