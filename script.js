@@ -372,8 +372,6 @@ function startStarfield() {
         rafId = requestAnimationFrame(draw);
     }
 
-    let rafId;
-    let resizeTimer;
     const render = () => reduceMotion ? paint(false) : draw();
     resize();
 
