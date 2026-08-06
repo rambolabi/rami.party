@@ -1,5 +1,5 @@
 /* ==========================================================================
-   rami.party — Realm registry
+   rami.party: Realm registry
    --------------------------------------------------------------------------
    The single source of truth for every realm shown on the hub.
 
@@ -11,7 +11,7 @@
       status: 'live' (clickable) · 'soon' (locked teaser)
       external: true opens in a new tab and shows an ↗ marker.
       search: a plain, keyword-rich description used ONLY by the on-site search
-              (never displayed) — write the real, boring explanation here so
+              (never displayed): write the real, boring explanation here so
               projects are findable without knowing the whimsical copy.
    ========================================================================== */
 
@@ -19,19 +19,19 @@ window.RAMI_GROUPS = [
     {
         id: 'gallery',
         emoji: '🏛️',
-        title: 'The Gallery of Wonders',
+        title: 'The Gallery of Wonders (Completed projects)',
         blurb: 'Finished realms, polished and ready to explore.',
     },
     {
         id: 'workshop',
         emoji: '⚗️',
-        title: 'The Workshop',
-        blurb: 'Spells still being brewed — works in progress & playthings.',
+        title: 'The Workshop (Work in progress)',
+        blurb: 'Spells still being brewed: works in progress & playthings.',
     },
     {
         id: 'wastes',
         emoji: '☄️',
-        title: 'The Wastelands',
+        title: 'The Wastelands (Abandoned or old projects)',
         blurb: 'Fallen, forgotten and abandoned experiments. Enter the ruins.',
     },
 ];
@@ -44,7 +44,7 @@ window.RAMI_REALMS = [
         href: 'https://oasis.labidi.eu/',
         glyph: '◉',
         tagline: 'The lights-out library',
-        description: 'An air-gapped survival and field reference that works with no internet at all — 42 before/during/after playbooks, interactive decision guides and 24 calculators. Outgrew the workshop and now lives at oasis.labidi.eu.',
+        description: 'An air-gapped survival and field reference that works with no internet at all: 42 before/during/after playbooks, interactive decision guides and 24 calculators. Outgrew the workshop and now lives at oasis.labidi.eu.',
         search: 'Offline Advanced System for Information and Survival, OASIS. An offline-first air-gapped survival guide, emergency preparedness manual and field reference that works with no internet, no server and no tracking, installable as a PWA app on a phone or computer. Before during and after playbooks for every emergency: long power cut and grid down blackout lasting days weeks or months, water supply failure and contamination, network and internet outage, cyber attack, solar storm EMP and coronal mass ejection, supply chain collapse famine and food shortage, flooding, wildfire, earthquake, volcanic eruption and ashfall, meteor asteroid airburst or impact strike, tsunami, hurricane cyclone typhoon, tornado, blizzard and extreme cold, heatwave and drought, landslide and avalanche, nuclear war detonation and fallout, nuclear power plant incident and iodine tablets, dirty bomb radiological dispersal, toxic gas cloud and chemical release, biological incident and biohazard, pandemic epidemic and widespread sickness or virus, lockdown quarantine curfew and martial law, violent contagion or zombie outbreak, warzone armed conflict shelling bombing and invasion, rebels militia and checkpoints, raiding looting and home invasion, terrorist attack, civil unrest and riots, personal threat attacker robbery and kidnapping, evacuation displacement and refugees, plane crash, marooned on a deserted island, adrift at sea and shipwreck, stranded vehicle and lost in the wilderness, trapped in a collapsed building, house fire, carbon monoxide, car crash, pets and livestock, and long-term societal collapse or apocalypse. Interactive decision guides and triage decision trees for when you do not know what to do. First aid and trauma medicine: MARCH, massive haemorrhage and tourniquets, wound packing, CPR and defibrillation, choking, shock, chest seals, stabbings gunshots arrows and impalement, poisoning and toxic fumes, crush injury and entrapment, amputation, drowning and cold water immersion, electrocution and lightning, bites stings snakebite and rabies, abdominal injury and hernia, eye injuries, burns and the rule of nines, fractures and splinting, hypothermia and heat stroke, oral rehydration salts, sepsis, stroke FAST, anaphylaxis, emergency childbirth and dental emergencies. Water: finding, purification and treatment, boiling times by altitude, bleach and chlorine dioxide dosing, iodine, filters, SODIS solar disinfection, storage and rationing. Shelter fire and food: heat loss, lean-to and debris huts, snow shelters, tinder and fire lays, clothing layering, calorie planning, shelf life, foraging and the universal edibility test, latrines and sanitation. Navigation: how to use a compass and how to make one, navigating by sun stars moon at night and under cloud, WGS84 ETRS89 NAD83 and UTM datums, coordinate conversion between decimal degrees DMS UTM MGRS military grid and Maidenhead, resection without GPS, pace count, dead reckoning, sunrise sunset and solar azimuth. Communications: satellite messengers and phones, 406 MHz PLB and EPIRB distress beacons and how to buy and register one, amateur ham radio HF NVIS VHF UHF, Winlink email over radio, JS8Call FT8 APRS and SSTV, marine VHF channel 16, CB radio on 12 volt or 24 volt batteries, PMR446 FRS GMRS MURS, LoRa mesh and Meshtastic, building a crystal or foxhole radio from scrap, signal mirror whistle smoke and Morse code, BE-Alert NL-Alert and national warning systems. Also RTL-SDR software defined radio, weather satellite images, power and battery watt-hours, solar sizing, generators and carbon monoxide, go bags and preparedness checklists, and how to meet cooperate barter and work with strangers. Every claim attributed to WHO CDC FEMA ICRC IAEA NOAA USGS Sphere ERC ITU and UNHCR.',
         tags: ['reference', 'offline', 'survival'],
         aura: 'cyan',
@@ -57,7 +57,7 @@ window.RAMI_REALMS = [
         href: 'https://alphabet.labidi.eu/',
         glyph: '🔤',
         tagline: 'Alpha, Bravo, Charlie…',
-        description: 'A terminal-styled spelling-alphabet studio — 28 alphabets, a two-way translator, Morse, practice drills and a screen wake lock. Outgrew the gallery and now lives at alphabet.labidi.eu.',
+        description: 'A terminal-styled spelling-alphabet studio: 28 alphabets, a two-way translator, Morse, practice drills and a screen wake lock. Outgrew the gallery and now lives at alphabet.labidi.eu.',
         search: 'NATO phonetic alphabet reference and text to phonetic converter, formerly at rami.party/gallery/militaryalphabet. Learn the Alpha Bravo Charlie military spelling alphabet, click letters to hear the pronunciation with audio, Morse code chart, practice quiz, printable cheat sheet, and it keeps the screen awake with a wake lock. The finished version running at alphabet.labidi.eu.',
         tags: ['reference', 'tool'],
         aura: 'cyan',
@@ -70,7 +70,7 @@ window.RAMI_REALMS = [
         href: 'https://ghosttooth.labidi.eu/',
         glyph: '📡',
         tagline: 'Bluetooth ghost radar',
-        description: 'Scan the air for nearby Bluetooth devices, AirTags and trackers — the finished radar, now living at ghosttooth.labidi.eu.',
+        description: 'Scan the air for nearby Bluetooth devices, AirTags and trackers, the finished radar, now living at ghosttooth.labidi.eu.',
         search: 'A Bluetooth surveillance and tracker detector using the Web Bluetooth API to scan for nearby Bluetooth Low Energy BLE devices, AirTags and trackers. The finished version running at ghosttooth.labidi.eu.',
         tags: ['tool', 'bluetooth'],
         aura: 'cyan',
@@ -83,7 +83,7 @@ window.RAMI_REALMS = [
         href: 'https://huiskeuring.be/',
         glyph: '🏠',
         tagline: 'Home-inspection service',
-        description: 'A polished home-inspection service — the little house grew up and now lives at huiskeuring.be.',
+        description: 'A polished home-inspection service. The little house grew up and now lives at huiskeuring.be.',
         search: 'A home inspection website and service. The finished version running at huiskeuring.be, a Dutch home inspection and huiskeuring service in Belgium.',
         tags: ['site', 'home'],
         aura: 'gold',
@@ -96,7 +96,7 @@ window.RAMI_REALMS = [
         href: 'https://tapfate.labidi.eu/',
         glyph: '🎲',
         tagline: 'Who goes first?',
-        description: 'Tap to decide who goes first — the finished fate roller, now in production as TapFate at tapfate.labidi.eu.',
+        description: 'Tap to decide who goes first. The finished fate roller, now in production as TapFate at tapfate.labidi.eu.',
         search: 'A random first player picker and turn order randomizer for board games and tabletop games, with team modes and colour-blind friendly options. The finished production version, TapFate at tapfate.labidi.eu. Decide who goes first.',
         tags: ['toy', 'games'],
         aura: 'violet',
@@ -128,20 +128,6 @@ window.RAMI_REALMS = [
         status: 'live',
     },
 
-    /* ---- The Workshop (WIP / playthings) ---- */
-    {
-        category: 'workshop',
-        title: 'Enter the Workshop',
-        href: './workshop/',
-        glyph: '⚗️',
-        tagline: 'spells brewing',
-        description: 'A whole cauldron of half-finished spells — tools, toys and curiosities still being brewed. Step inside to browse the full workbench.',
-        search: 'The workshop index page listing all work in progress tools, toys, utilities and experiments hosted on rami.party.',
-        tags: ['wip', 'tools'],
-        aura: 'pink',
-        status: 'live',
-    },
-
     /* ---- The Wastelands (archived / fallen) ---- */
     {
         category: 'wastes',
@@ -149,7 +135,7 @@ window.RAMI_REALMS = [
         href: './wasteland/neko/',
         glyph: '🐱',
         tagline: 'A clowder of sprites',
-        description: 'A mischievous clowder of chibi neko familiars — retired to the ruins, but still purring.',
+        description: 'A mischievous clowder of chibi neko familiars, retired to the ruins, but still purring.',
         search: 'An interactive toy with draggable chibi cat sprites (neko). A cute cats animation playground. Archived and retired.',
         tags: ['toy', 'cats'],
         aura: 'ash',
@@ -161,7 +147,7 @@ window.RAMI_REALMS = [
         href: './wasteland/old-rami.party/',
         glyph: '🏚️',
         tagline: 'The jQuery era',
-        description: 'The previous incarnation of this domain — a paws-and-cats relic, preserved as it was found.',
+        description: 'The previous incarnation of this domain, a paws-and-cats relic, preserved as it was found.',
         search: 'The previous old version of the rami.party website, built with jQuery and cat themed. Archived legacy website preserved as it was.',
         tags: ['legacy', 'jquery'],
         aura: 'ash',
@@ -173,7 +159,7 @@ window.RAMI_REALMS = [
         href: '#',
         glyph: '🌀',
         tagline: 'Never drew breath',
-        description: 'An empty husk — a project that was conjured but never filled. A reminder that not every spell takes.',
+        description: 'An empty husk, a project that was conjured but never filled. A reminder that not every spell takes.',
         search: 'An empty, abandoned and dropped project folder that was never built or finished. Placeholder that never drew breath.',
         tags: ['empty'],
         aura: 'ash',
@@ -185,7 +171,7 @@ window.RAMI_REALMS = [
         href: './wasteland/notes/',
         glyph: '🗒️',
         tagline: 'Reborn as Daybook',
-        description: 'The original plain notes-and-todo scratchpad. Its cleaner, faster descendant now lives in the workshop as Daybook — this first draft rests here in the ruins.',
+        description: 'The original plain notes-and-todo scratchpad. Its cleaner, faster descendant now lives in the workshop as Daybook. This first draft rests here in the ruins.',
         search: 'The original simple notes and todo list page with autosaving notes, a checklist, dark mode and a new day reset. Archived and replaced by the cleaner Daybook version in the workshop.',
         tags: ['tool', 'legacy'],
         aura: 'ash',
@@ -197,7 +183,7 @@ window.RAMI_REALMS = [
    The Workshop catalogue
    --------------------------------------------------------------------------
    Rendered on /workshop/ (see workshop/index.html). These are the works in
-   progress — each lives in its own folder under /workshop/<name>/.
+   progress; each lives in its own folder under /workshop/<name>/.
 
    ➕ To add a workshop project: drop its folder in /workshop/ and append an
       object here. Order within the array = ranking (top shows first).
@@ -209,7 +195,7 @@ window.RAMI_WORKSHOP = [
         href: './chronoport/',
         glyph: '⏳',
         tagline: 'A gateway from the year 3050',
-        description: 'A time traveller’s console: the world’s clocks at a glance, the Sun and Moon above your exact spot, twilight ledgers, sidereal time and a countdown to the 31st century — all computed on your own device.',
+        description: 'A time traveller’s console: the world’s clocks at a glance, the Sun and Moon above your exact spot, twilight ledgers, sidereal time and a countdown to the 31st century, all computed on your own device.',
         search: 'A world clock and time zone dashboard showing the current time across the world in major cities, plus sunrise, sunset, solar noon, day length, civil nautical and astronomical twilight and golden hour times for your own location, and the current sun altitude and azimuth. Also shows the moon phase, moon illumination percentage, moon age, moonrise and moonset, lunar distance and the next full moon and new moon. Includes the Unix epoch timestamp, ISO 8601 time, Julian date and modified Julian date, local sidereal time, day of year, ISO week number, Swatch internet beat time, decimal and hexadecimal time, GPS week, equation of time, true solar sundial time, equinox and solstice dates, Earth orbital speed and distance to the Sun, a relativistic time dilation and Lorentz factor calculator, and a countdown to the year 3050. Works offline with no API, geolocation optional.',
         tags: ['clock', 'astronomy'],
         aura: 'cyan',
@@ -239,8 +225,8 @@ window.RAMI_WORKSHOP = [
         href: './breachlight/',
         glyph: '🔦',
         tagline: 'The moment after you clicked',
-        description: 'You clicked the link, typed the password, scanned the code — or watched the money leave. Now what? Interactive triage trees that ask a few questions and hand you an actual instruction, 58 playbooks, a 112-term glossary and a defence bench. Two modes: one for the person it happened to, one for the responder — with a deep Active Directory and Entra ID layer, and **Logscope**, an offline log reader that turns an exported Entra or Purview log into a timeline and prioritised findings without uploading anything.',
-        search: 'Cyber security incident response triage decision trees for ordinary people and for security professionals. What to do if you have been phished, clicked a phishing link, typed your password into a fake login page, logged into a suspicious website, read out or typed a one time code, approved an MFA push prompt you did not request, opened a malicious attachment or enabled macros, pasted a command from a fake CAPTCHA (ClickFix), scanned a malicious QR code, let someone connect to your computer with AnyDesk or TeamViewer, noticed your emails were opened or marked as read when you did not open them, found a mail forwarding rule you did not create, been locked out of your account, had your Instagram Facebook or WhatsApp hijacked, suddenly lost all mobile signal from a SIM swap, seen money disappear from your bank or card, been tricked into transferring money to a safe account, bought something from a fake webshop that never arrived, paid an invoice with fraudulent bank details, lost money to a romance or crypto investment scam or pig butchering, been blackmailed with intimate images by sextortion, had your files encrypted by ransomware, lost a phone or laptop, received a data breach notification, or discovered accounts opened in your name through identity theft. Explains in plain language what social engineering, phishing, spear phishing, whaling, smishing, vishing, quishing or squishing, angler phishing, pharming, pretexting, baiting, tailgating, business email compromise BEC, CEO fraud, invoice and mandate fraud, typosquatting, homograph and punycode attacks, open redirects, malvertising, SEO poisoning, adversary in the middle AiTM, session hijacking and cookie or token theft, MFA fatigue and push bombing, SIM swapping, credential stuffing, password spraying, infostealers, remote access trojans, keyloggers, stalkerware, ransomware, deepfakes and voice cloning, caller ID spoofing, SPF DKIM and DMARC, juice jacking and evil twin Wi-Fi actually mean. Protection advice: how to check whether a website is real before using it, whether you should ever click a link in an email or always go to the site yourself, how to verify a caller or sender, how to use a virtual one time use disposable burner card number for online shopping, passkeys and phishing resistant multi factor authentication, password managers, credit freezes, backups and a family code word against AI voice scams. The responder mode covers what a SOC or IT team should do after a user gets phished or an account signs in from three different continents: revoking sessions and refresh tokens, hunting malicious inbox rules and OAuth consent grants, impossible travel triage, infostealer and ransomware containment, evidence preservation, blast radius scoping and GDPR 72 hour breach notification, with starting KQL hunting queries. It also carries a deep Active Directory and Microsoft Entra ID layer for corporate environments: Tier 0 and domain admin compromise, the enterprise access model and privileged access workstations, DCSync and NTDS.dit theft, Golden Ticket and Silver Ticket forgery and how to reset krbtgt twice correctly, Kerberoasting and AS-REP roasting, NTLM relay and coercion with PetitPotam PrinterBug and DFSCoerce, AD CS certificate template abuse ESC1 to ESC13 and KB5014754 strong certificate mapping, GPO tampering, ACL abuse and shadow admins, SIDHistory injection, shadow credentials, resource based constrained delegation and MachineAccountQuota, LAPS, gMSA and the Protected Users group, plus a full Active Directory persistence sweep and a rebuild-or-clean-in-place forest recovery decision tree. On the cloud side: Global Administrator and privileged Entra role compromise, malicious app registrations and service principal credentials, OAuth consent phishing, Golden SAML and federation or domain tampering, Conditional Access policy tampering, PIM eligible assignments, administrative units, break glass emergency access accounts, guest B2B and cross tenant access, GDAP partner access, Primary Refresh Token theft, and hybrid pivots through Entra Connect, the AZUREADSSOACC seamless SSO account, ADFS token signing certificates, pass-through authentication agents and Intune script deployment — each with detection signals, containment ordering, KQL and Microsoft Graph PowerShell queries, and the hardening that stops it recurring. Covers the phishing vectors that need different responses: adversary in the middle token theft, device code flow phishing where the victim enters a code on the real Microsoft page, OAuth consent phishing, MFA fatigue push bombing, service desk social engineering and account recovery abuse including Temporary Access Pass issuance, attacker device registration and primary refresh token theft, QR code lures, and callback phishing leading to remote access. Includes a full guide to which logs to pull after a phish and how to read them — Entra interactive and non-interactive and service principal sign-in logs, Entra audit logs, Microsoft Purview unified audit log, MailItemsAccessed, Microsoft Graph activity logs, Defender advanced hunting, Exchange message trace — with retention limits and export instructions, plus a lookup of what each audit log operation means and what to do when you see it, such as an enterprise application or service principal being created, credentials added to an app registration, consent granted, a directory role or PIM eligibility assigned, a domain federation change, a conditional access policy edit, a mailbox rule created or an eDiscovery search exported. Ships with Logscope, a browser based offline log viewer and triage tool: drag in an exported JSON or CSV sign-in log, audit log, unified audit log or message trace and it detects the format, unpacks the Purview AuditData column, builds a timeline, pivots by address account and operation, and raises prioritised findings with the actions to take — all client side with no upload and no network calls. Works offline, installable, no tracking.',
+        description: 'You clicked the link, typed the password, scanned the code, or watched the money leave. Now what? Interactive triage trees that ask a few questions and hand you an actual instruction, 58 playbooks, a 112-term glossary and a defence bench. Two modes: one for the person it happened to, one for the responder, with a deep Active Directory and Entra ID layer, and **Logscope**, an offline log reader that turns an exported Entra or Purview log into a timeline and prioritised findings without uploading anything.',
+        search: 'Cyber security incident response triage decision trees for ordinary people and for security professionals. What to do if you have been phished, clicked a phishing link, typed your password into a fake login page, logged into a suspicious website, read out or typed a one time code, approved an MFA push prompt you did not request, opened a malicious attachment or enabled macros, pasted a command from a fake CAPTCHA (ClickFix), scanned a malicious QR code, let someone connect to your computer with AnyDesk or TeamViewer, noticed your emails were opened or marked as read when you did not open them, found a mail forwarding rule you did not create, been locked out of your account, had your Instagram Facebook or WhatsApp hijacked, suddenly lost all mobile signal from a SIM swap, seen money disappear from your bank or card, been tricked into transferring money to a safe account, bought something from a fake webshop that never arrived, paid an invoice with fraudulent bank details, lost money to a romance or crypto investment scam or pig butchering, been blackmailed with intimate images by sextortion, had your files encrypted by ransomware, lost a phone or laptop, received a data breach notification, or discovered accounts opened in your name through identity theft. Explains in plain language what social engineering, phishing, spear phishing, whaling, smishing, vishing, quishing or squishing, angler phishing, pharming, pretexting, baiting, tailgating, business email compromise BEC, CEO fraud, invoice and mandate fraud, typosquatting, homograph and punycode attacks, open redirects, malvertising, SEO poisoning, adversary in the middle AiTM, session hijacking and cookie or token theft, MFA fatigue and push bombing, SIM swapping, credential stuffing, password spraying, infostealers, remote access trojans, keyloggers, stalkerware, ransomware, deepfakes and voice cloning, caller ID spoofing, SPF DKIM and DMARC, juice jacking and evil twin Wi-Fi actually mean. Protection advice: how to check whether a website is real before using it, whether you should ever click a link in an email or always go to the site yourself, how to verify a caller or sender, how to use a virtual one time use disposable burner card number for online shopping, passkeys and phishing resistant multi factor authentication, password managers, credit freezes, backups and a family code word against AI voice scams. The responder mode covers what a SOC or IT team should do after a user gets phished or an account signs in from three different continents: revoking sessions and refresh tokens, hunting malicious inbox rules and OAuth consent grants, impossible travel triage, infostealer and ransomware containment, evidence preservation, blast radius scoping and GDPR 72 hour breach notification, with starting KQL hunting queries. It also carries a deep Active Directory and Microsoft Entra ID layer for corporate environments: Tier 0 and domain admin compromise, the enterprise access model and privileged access workstations, DCSync and NTDS.dit theft, Golden Ticket and Silver Ticket forgery and how to reset krbtgt twice correctly, Kerberoasting and AS-REP roasting, NTLM relay and coercion with PetitPotam PrinterBug and DFSCoerce, AD CS certificate template abuse ESC1 to ESC13 and KB5014754 strong certificate mapping, GPO tampering, ACL abuse and shadow admins, SIDHistory injection, shadow credentials, resource based constrained delegation and MachineAccountQuota, LAPS, gMSA and the Protected Users group, plus a full Active Directory persistence sweep and a rebuild-or-clean-in-place forest recovery decision tree. On the cloud side: Global Administrator and privileged Entra role compromise, malicious app registrations and service principal credentials, OAuth consent phishing, Golden SAML and federation or domain tampering, Conditional Access policy tampering, PIM eligible assignments, administrative units, break glass emergency access accounts, guest B2B and cross tenant access, GDAP partner access, Primary Refresh Token theft, and hybrid pivots through Entra Connect, the AZUREADSSOACC seamless SSO account, ADFS token signing certificates, pass-through authentication agents and Intune script deployment, each with detection signals, containment ordering, KQL and Microsoft Graph PowerShell queries, and the hardening that stops it recurring. Covers the phishing vectors that need different responses: adversary in the middle token theft, device code flow phishing where the victim enters a code on the real Microsoft page, OAuth consent phishing, MFA fatigue push bombing, service desk social engineering and account recovery abuse including Temporary Access Pass issuance, attacker device registration and primary refresh token theft, QR code lures, and callback phishing leading to remote access. Includes a full guide to which logs to pull after a phish and how to read them: Entra interactive and non-interactive and service principal sign-in logs, Entra audit logs, Microsoft Purview unified audit log, MailItemsAccessed, Microsoft Graph activity logs, Defender advanced hunting, Exchange message trace, with retention limits and export instructions, plus a lookup of what each audit log operation means and what to do when you see it, such as an enterprise application or service principal being created, credentials added to an app registration, consent granted, a directory role or PIM eligibility assigned, a domain federation change, a conditional access policy edit, a mailbox rule created or an eDiscovery search exported. Ships with Logscope, a browser based offline log viewer and triage tool: drag in an exported JSON or CSV sign-in log, audit log, unified audit log or message trace and it detects the format, unpacks the Purview AuditData column, builds a timeline, pivots by address account and operation, and raises prioritised findings with the actions to take, all client side with no upload and no network calls. Works offline, installable, no tracking.',
         tags: ['security', 'reference', 'guide', 'active directory'],
         aura: 'gold',
         status: 'live',
@@ -250,7 +236,7 @@ window.RAMI_WORKSHOP = [
         href: './tools/',
         glyph: '🧰',
         tagline: 'A curated bench of IT tools',
-        description: 'A sprawling, hand-curated toolkit of IT resources — network, security, development and system utilities, plus a few tools hosted right here.',
+        description: 'A sprawling, hand-curated toolkit of IT resources: network, security, development and system utilities, plus a few tools hosted right here.',
         search: 'An IT toolkit and curated collection of information technology tools and resources: network, security, development, system utilities, forensics, self-hosting, Microsoft portals, DNS and hosting and more. Includes locally hosted tools such as a weekly CVE checker and CyberChef.',
         tags: ['tool', 'reference'],
         aura: 'gold',
@@ -261,8 +247,8 @@ window.RAMI_WORKSHOP = [
         href: './frostcaller/',
         glyph: '❄️',
         tagline: 'Bewitch the air conditioner',
-        description: 'A beginner’s guide to building your own infrared blaster so Home Assistant can switch the air conditioning on and off — no soldering, from about €5. Tick the parts you own, follow the path that fits, then talk to the board straight from your browser.',
-        search: 'A beginner friendly DIY guide and tutorial for building a cheap Wi-Fi infrared IR blaster or IR remote to control an air conditioner, air conditioning unit or heat pump from Home Assistant, with no soldering required. Interactive what parts do you have inventory picker: tick the components you already own and it shows which build paths are ready, what is still missing and what it costs, saved between visits and shareable as a permalink. Six paths — ESPHome with an ESP32, ESP8266, Wemos D1 mini, M5Stack Atom Lite or M5StickC and a KY-005 IR transmitter LED module wired with dupont jumper wires; a ready made Athom blaster with ESPHome pre-installed; re-flashing a cheap Tuya or Moes Wi-Fi IR blaster with tuya-cloudcutter, ltchiptool and LibreTiny; the Broadlink RM4 Mini with the native Home Assistant integration and SmartIR; and a UFO-R11 Zigbee IR blaster with Zigbee2MQTT. Includes an ESPHome YAML config generator and builder that writes the finished configuration file for your board, pin and air conditioner brand and lets you download it. Fully built buy and forget options compared: Athom, Broadlink, SwitchBot Hub 2, Xiaomi Mi smart remote, Sensibo, Tado and Nature Remo, rated local versus cloud. Software bench with download links and guides for Home Assistant, ESPHome Builder, ESPHome Web, the Arduino IDE, the IRremoteESP8266 library, PlatformIO, Tasmota and its web installer, esptool, HACS, SmartIR and Zigbee2MQTT, plus six different ways to flash or write the firmware including a complete Arduino sketch. Includes the ESPHome climate_ir brand table (coolix, daikin, LG, midea, mitsubishi, gree, toshiba, tcl112, fujitsu, whirlpool, heatpumpir), remote_transmitter and remote_receiver YAML, how to capture and replay raw IR codes from your own remote, infrared line of sight and range advice, and extras such as room temperature sensors, knowing whether the AC is really running, presence and window automations, sleep ramps, controlling the TV, Alexa Google and Siri, notifications, running costs, troubleshooting and safety. Full text search across the guide, a printable version, a copyable shopping list with price search links, live currency conversion and four colour themes including a light and a high contrast one. Also includes a side by side comparison of every path, a what went wrong troubleshooting wizard, a pin map showing which GPIO pins are safe on the ESP32, ESP8266 and ESP32-C3, a log reader that explains ESPHome and Tasmota log lines, a raw infrared code toolbox that converts captured timings into ESPHome buttons and Pronto codes, a running cost estimator, a QR code and Markdown export, keyboard shortcuts and offline support. A companion Web Serial page called The Scribe connects to the board over USB from the browser to identify the chip, watch the live serial log, capture infrared codes from your remote and send Tasmota IRHVAC commands, with no drivers or serial monitor to install.',
+        description: 'A beginner’s guide to building your own infrared blaster so Home Assistant can switch the air conditioning on and off, no soldering, from about €5. Tick the parts you own, follow the path that fits, then talk to the board straight from your browser.',
+        search: 'A beginner friendly DIY guide and tutorial for building a cheap Wi-Fi infrared IR blaster or IR remote to control an air conditioner, air conditioning unit or heat pump from Home Assistant, with no soldering required. Interactive what parts do you have inventory picker: tick the components you already own and it shows which build paths are ready, what is still missing and what it costs, saved between visits and shareable as a permalink. Six paths: ESPHome with an ESP32, ESP8266, Wemos D1 mini, M5Stack Atom Lite or M5StickC and a KY-005 IR transmitter LED module wired with dupont jumper wires; a ready made Athom blaster with ESPHome pre-installed; re-flashing a cheap Tuya or Moes Wi-Fi IR blaster with tuya-cloudcutter, ltchiptool and LibreTiny; the Broadlink RM4 Mini with the native Home Assistant integration and SmartIR; and a UFO-R11 Zigbee IR blaster with Zigbee2MQTT. Includes an ESPHome YAML config generator and builder that writes the finished configuration file for your board, pin and air conditioner brand and lets you download it. Fully built buy and forget options compared: Athom, Broadlink, SwitchBot Hub 2, Xiaomi Mi smart remote, Sensibo, Tado and Nature Remo, rated local versus cloud. Software bench with download links and guides for Home Assistant, ESPHome Builder, ESPHome Web, the Arduino IDE, the IRremoteESP8266 library, PlatformIO, Tasmota and its web installer, esptool, HACS, SmartIR and Zigbee2MQTT, plus six different ways to flash or write the firmware including a complete Arduino sketch. Includes the ESPHome climate_ir brand table (coolix, daikin, LG, midea, mitsubishi, gree, toshiba, tcl112, fujitsu, whirlpool, heatpumpir), remote_transmitter and remote_receiver YAML, how to capture and replay raw IR codes from your own remote, infrared line of sight and range advice, and extras such as room temperature sensors, knowing whether the AC is really running, presence and window automations, sleep ramps, controlling the TV, Alexa Google and Siri, notifications, running costs, troubleshooting and safety. Full text search across the guide, a printable version, a copyable shopping list with price search links, live currency conversion and four colour themes including a light and a high contrast one. Also includes a side by side comparison of every path, a what went wrong troubleshooting wizard, a pin map showing which GPIO pins are safe on the ESP32, ESP8266 and ESP32-C3, a log reader that explains ESPHome and Tasmota log lines, a raw infrared code toolbox that converts captured timings into ESPHome buttons and Pronto codes, a running cost estimator, a QR code and Markdown export, keyboard shortcuts and offline support. A companion Web Serial page called The Scribe connects to the board over USB from the browser to identify the chip, watch the live serial log, capture infrared codes from your remote and send Tasmota IRHVAC commands, with no drivers or serial monitor to install.',
         tags: ['guide', 'smart home'],
         aura: 'cyan',
         status: 'live',
@@ -272,7 +258,7 @@ window.RAMI_WORKSHOP = [
         href: './dm-screen/',
         glyph: '🐉',
         tagline: 'Dual-screen DM table',
-        description: 'A Dungeon Master\u2019s command table for tabletop RPGs — build battlemaps with painted terrain, props and pre-made locations, move tokens, sculpt fog of war, run initiative and the big bad, all mirrored live onto a second screen for your players.',
+        description: 'A Dungeon Master\u2019s command table for tabletop RPGs: build battlemaps with painted terrain, props and pre-made locations, move tokens, sculpt fog of war, run initiative and the big bad, all mirrored live onto a second screen for your players.',
         search: 'A Dungeon Master screen and virtual tabletop for Dungeons and Dragons and other tabletop RPGs. Two screens: a DM control page and a separate player map page for an external monitor or TV. Build multiple saved locations, paint realistic terrain (grass, stone, water, lava, snow) cell by cell, place and drag props and items like chests doors traps torches and mimics, choose which items and creatures are visible to players, move player and monster tokens on a battlemap grid, paint fog of war and dynamic light to reveal the map, track hit points armour class conditions and initiative turn order, resize the big bad boss, keep a bestiary and a party inventory, roll dice, use pre-generated maps (tavern, fields, cavern, traps and treasure, mimic hall), a party HP sidebar for players, weather and animation effects, and export or import the whole campaign. Live synced between both screens, runs locally in the browser.',
         tags: ['app', 'ttrpg'],
         aura: 'gold',
@@ -283,7 +269,7 @@ window.RAMI_WORKSHOP = [
         href: './todo/',
         glyph: '🗒️',
         tagline: 'Notes & tasks, saved',
-        description: 'A calm, offline notes-and-to-do companion — jot the day down, tick tasks off, then start a fresh page each morning. Everything autosaves to your browser.',
+        description: 'A calm, offline notes-and-to-do companion: jot the day down, tick tasks off, then start a fresh page each morning. Everything autosaves to your browser.',
         search: 'A clean minimal notes and todo list app. Write notes and manage a checklist of tasks that autosave to localStorage in the browser, with dark mode, timestamps, a new day reset that archives yesterday and keeps unfinished tasks. A leaner rewrite of the old notes and todo page.',
         tags: ['tool', 'productivity'],
         aura: 'violet',
@@ -294,7 +280,7 @@ window.RAMI_WORKSHOP = [
         href: './spectrum-scryer/',
         glyph: '📡',
         tagline: 'Every Wi-Fi around you',
-        description: 'Reveal every access point in the neighbourhood — hidden ones included — chart the 2.4, 5 and 6 GHz bands, listen for Bluetooth neighbours and let the locator walk you to any signal.',
+        description: 'Reveal every access point in the neighbourhood, hidden ones included, chart the 2.4, 5 and 6 GHz bands, listen for Bluetooth neighbours and let the locator walk you to any signal.',
         search: 'A WiFi scanner, wireless network analyser and channel map that shows all wifi access points and networks in the neighbourhood, including hidden SSID networks that broadcast no name. Paste the output of netsh wlan show networks, nmcli device wifi list, iw scan, iwlist scan or the macOS airport command and it parses every BSSID, MAC address, vendor, channel, frequency, band, channel width, encryption and signal strength in dBm or percent. Shows 2.4 GHz, 5 GHz and 6 GHz band usage with an overlap chart and best channel advice for reducing interference, plus a signal locator and direction finder that estimates distance from RSSI to help you find a router, rogue access point or hidden network. Also scans nearby Bluetooth and BLE devices on 2.4 GHz and reports the current connection type and speed. Exports scans as JSON or CSV, runs entirely offline in the browser.',
         tags: ['network', 'tool'],
         aura: 'cyan',
@@ -305,7 +291,7 @@ window.RAMI_WORKSHOP = [
         href: './sixth-sense/',
         glyph: '🔮',
         tagline: 'Detect the undetectable',
-        description: 'A séance for your phone: it wakes every sensor the device will admit to — motion, gyroscope, magnetometer, light, microphone, camera, radios — then watches for the tremors, fields and frequencies you can neither feel nor hear.',
+        description: 'A séance for your phone: it wakes every sensor the device will admit to: motion, gyroscope, magnetometer, light, microphone, camera, radios, then watches for the tremors, fields and frequencies you can neither feel nor hear.',
         search: 'A device sensor test and diagnostics page that detects and lists every sensor and hardware API available in the browser: accelerometer, gyroscope, magnetometer and compass, ambient light sensor, proximity sensor, GPS geolocation, microphone, camera, battery status, network information, vibration haptics, Bluetooth, NFC, USB, serial, HID, gamepad, WebXR, WebGPU, screen orientation and display info. Shows live readings, an EMF-meter style magnetic field monitor, a seismograph-like micro vibration and tremor detector, infrasound and ultrasound detection from the microphone, invisible infrared light and mains flicker detection through the camera, and an anomaly meter with baseline calibration. Also a timestamped event log, beep and vibration alerts, sound level in dBFS, a screen wake lock so the phone stays awake while monitoring, and a downloadable or copyable JSON diagnostics report. Runs locally in the browser with no data sent anywhere.',
         tags: ['sensors', 'hardware', 'tool'],
         aura: 'violet',
@@ -316,7 +302,7 @@ window.RAMI_WORKSHOP = [
         href: './batlistener/',
         glyph: '🦇',
         tagline: 'Bat-sound listener',
-        description: 'Point your microphone at the night and Echo watches the top of the audible band for bat-like clicks and chirps — capturing calls, replaying them aloud, or letting you study the waveforms in silence.',
+        description: 'Point your microphone at the night and Echo watches the top of the audible band for bat-like clicks and chirps: capturing calls, replaying them aloud, or letting you study the waveforms in silence.',
         search: 'A bat sound detector and listener that uses the device microphone and the Web Audio API to watch for high-frequency ultrasonic bat calls, clicks and chirps. Shows a live spectrogram, captures and records detected calls, plays them out loud, and lets you view the soundwaves and waveforms without playing the sound. Runs locally in the browser.',
         tags: ['audio', 'tool'],
         aura: 'cyan',
@@ -327,8 +313,8 @@ window.RAMI_WORKSHOP = [
         href: './trainer-forge/',
         glyph: '💪',
         tagline: 'A plan that knows the date',
-        description: 'Answer six questions and walk away with a real training block — rest days, weekly progression and deload weeks included. From five minutes a day to a full gym session, and every day is yours to change.',
-        search: 'A free custom workout plan generator and training program builder. Choose a goal — strength without getting bulky with calisthenics, hypertrophy for bigger arms and back, running further and building stamina and endurance, fat loss and conditioning, mobility and posture, all-round health, or short 5, 10 and 15 minute movement snacks and micro workouts for people with no time — then set your days per week, session length in minutes, available equipment (bodyweight, pull-up bar, resistance bands, dumbbells or a full gym) and the muscles you want to focus on. Generates a day by day workout schedule with warm-ups, sets, reps, rest times, RPE, rest days, progressive overload and deload weeks. Swap any single exercise you do not like, turn any training day into a rest day, or drop a quick 10 minute session in instead. Includes a 140 exercise library with coaching cues and easier or harder variations, day-aware today view with days remaining, session logging, shareable links, JSON export and import, and printable PDF plans. Push pull legs, upper lower and full body splits, desk reset and morning mobility routines, couch to 5k style run walk progressions and interval, tempo and long run sessions.',
+        description: 'Answer six questions and walk away with a real training block: rest days, weekly progression and deload weeks included. From five minutes a day to a full gym session, and every day is yours to change.',
+        search: 'A free custom workout plan generator and training program builder. Choose a goal: strength without getting bulky with calisthenics, hypertrophy for bigger arms and back, running further and building stamina and endurance, fat loss and conditioning, mobility and posture, all-round health, or short 5, 10 and 15 minute movement snacks and micro workouts for people with no time, then set your days per week, session length in minutes, available equipment (bodyweight, pull-up bar, resistance bands, dumbbells or a full gym) and the muscles you want to focus on. Generates a day by day workout schedule with warm-ups, sets, reps, rest times, RPE, rest days, progressive overload and deload weeks. Swap any single exercise you do not like, turn any training day into a rest day, or drop a quick 10 minute session in instead. Includes a 140 exercise library with coaching cues and easier or harder variations, day-aware today view with days remaining, session logging, shareable links, JSON export and import, and printable PDF plans. Push pull legs, upper lower and full body splits, desk reset and morning mobility routines, couch to 5k style run walk progressions and interval, tempo and long run sessions.',
         tags: ['app', 'fitness'],
         aura: 'cyan',
         status: 'live',
@@ -338,7 +324,7 @@ window.RAMI_WORKSHOP = [
         href: './character-forge/',
         glyph: '🎲',
         tagline: 'Roll a whole hero',
-        description: 'A one-tap character and background roller for other-world stories — how they got dragged in, who they used to be, the power they woke up with and the world that caught them. Reroll one line or shuffle an entire destiny.',
+        description: 'A one-tap character and background roller for other-world stories: how they got dragged in, who they used to be, the power they woke up with and the world that caught them. Reroll one line or shuffle an entire destiny.',
         search: 'A random character generator and creator for isekai and reincarnation stories. Shuffles and randomizes a background and character: how they were transported or isekaid, their past life, the being they were reborn as, the ability or power they gained, and the world they landed in. Reroll each part individually or shuffle everything at once.',
         tags: ['toy', 'generator'],
         aura: 'pink',
@@ -349,7 +335,7 @@ window.RAMI_WORKSHOP = [
         href: './demoscene-forge/',
         glyph: '🌈',
         tagline: 'Conjure video & music',
-        description: 'A retro-futuristic forge for short demoscene visuals and chiptune music — shapes, plasma, kaleidoscopes and a WebAudio synth, exportable to video & audio.',
+        description: 'A retro-futuristic forge for short demoscene visuals and chiptune music: shapes, plasma, kaleidoscopes and a WebAudio synth, exportable to video & audio.',
         search: 'A browser based demoscene video and music generator. Create animated visuals with shapes, plasma, kaleidoscope, glow, scanlines and CRT effects plus a chiptune music synthesizer, then export to video and audio. Built with Canvas, WebAudio and MediaRecorder.',
         tags: ['demoscene', 'canvas', 'audio'],
         aura: 'violet',
@@ -360,7 +346,7 @@ window.RAMI_WORKSHOP = [
         href: './3d-forge/',
         glyph: '🧊',
         tagline: 'Text & pics → 3D prints',
-        description: 'Turn text, emoji, shapes, QR codes and photos into watertight, 3D-printable models — export as STL, 3MF, OBJ, PLY or AMF.',
+        description: 'Turn text, emoji, shapes, QR codes and photos into watertight, 3D-printable models. Export as STL, 3MF, OBJ, PLY or AMF.',
         search: 'A 3D model generator that converts text, emoji, shapes, QR codes and photos into watertight 3D printable models and meshes, exportable as STL, 3MF, OBJ, PLY and AMF files for 3D printing.',
         tags: ['tool', '3d'],
         aura: 'cyan',
@@ -371,7 +357,7 @@ window.RAMI_WORKSHOP = [
         href: './dnd-forge/',
         glyph: '🐉',
         tagline: 'Forge a whole hero',
-        description: 'A full Dungeons &amp; Dragons character builder across six editions — a nine-step wizard, a live sheet, a dice roller, backstory weaving, a DM’s Charter and a party muster board.',
+        description: 'A full Dungeons &amp; Dragons character builder across six editions: a nine-step wizard, a live sheet, a dice roller, backstory weaving, a DM’s Charter and a party muster board.',
         search: 'A Dungeons and Dragons character creator, builder and generator for 5E 2024, 5E 2014, 3.5, 4E, AD&D 2E and AD&D 1E. Roll or point-buy ability scores, choose race species class subclass background skills feats weapons armour equipment and spells, with automatic calculation of hit points armour class proficiency bonus saving throws spell slots and spell save DC. Includes a random surprise me character generator, a fantasy name generator, a backstory weaver, a floating dice roller with advantage and disadvantage, printable character sheet, JSON export and import, shareable links, a seedable fate seed, a DM charter to lock table rules, a play mode character file with HP damage healing conditions and death saves, and a DM muster page to assemble the party.',
         tags: ['app', 'ttrpg'],
         aura: 'gold',
@@ -383,7 +369,7 @@ window.RAMI_WORKSHOP = [
         external: true,
         glyph: '🧠',
         tagline: '15 people-reading workshops',
-        description: 'A whole shelf of interactive workshops on personality and behaviour — DISC colours, the Big Five, the 16 types, the Enneagram, attachment styles, manipulation, narcissism and more, each with its own quiz. Now lives on its own domain.',
+        description: 'A whole shelf of interactive workshops on personality and behaviour: DISC colours, the Big Five, the 16 types, the Enneagram, attachment styles, manipulation, narcissism and more, each with its own quiz. Now lives on its own domain.',
         search: 'Interactive personality psychology and behaviour workshops with quizzes, self assessments and observer assessments: DISC colour profile from Surrounded by Idiots by Thomas Erikson, the Big Five OCEAN traits, MBTI 16 types Myers-Briggs, the Enneagram nine types, adult attachment styles, the five love languages, the four temperaments and humours, Thomas-Kilmann conflict styles, emotional intelligence EQ, Surrounded by Liars deception and lie detection, Surrounded by Energy Vampires, Surrounded by Bad Bosses leadership, Surrounded by Psychopaths manipulation, Surrounded by Narcissists, and resilience after setbacks. Available in English, Dutch and French at library.labidi.eu.',
         tags: ['workshop', 'psychology'],
         aura: 'pink',
@@ -394,7 +380,7 @@ window.RAMI_WORKSHOP = [
         href: './webcheck/',
         glyph: '🔍',
         tagline: 'Website audit oracle',
-        description: 'Scry any site for robots.txt, sitemaps, security.txt, favicons and meta-runes — then reveal what is missing.',
+        description: 'Scry any site for robots.txt, sitemaps, security.txt, favicons and meta-runes, then reveal what is missing.',
         search: 'A website audit and SEO checker tool. Scans a website for robots.txt, sitemap.xml, security.txt, favicons and meta tags and reports what is present or missing.',
         tags: ['tool', 'seo'],
         aura: 'cyan',
@@ -405,7 +391,7 @@ window.RAMI_WORKSHOP = [
         href: './breachlight/',
         glyph: '🚨',
         tagline: 'The moment after you clicked',
-        description: 'Incident triage for the worst five minutes of your day — interactive decision trees for phishing, stolen passwords, missing money, malicious QR codes, hijacked accounts and ransomware, in one mode for people and one for responders.',
+        description: 'Incident triage for the worst five minutes of your day: interactive decision trees for phishing, stolen passwords, missing money, malicious QR codes, hijacked accounts and ransomware, in one mode for people and one for responders.',
         search: 'A cyber security incident response and triage guide for the moment after you clicked a bad link. Interactive decision trees and step by step first aid for phishing emails, stolen or leaked passwords and credentials, missing money and bank fraud, malicious QR codes and quishing, hacked or hijacked accounts, malware and ransomware infections, identity theft and account recovery. Includes a plain language glossary and a defence bench of protective measures, with two modes: one for ordinary people and one for incident responders. Works fully offline with no fonts, CDNs, analytics or trackers.',
         tags: ['guide', 'security'],
         aura: 'pink',
@@ -416,8 +402,8 @@ window.RAMI_WORKSHOP = [
         href: './mail-ward/',
         glyph: '🛡️',
         tagline: 'SPF · DKIM · DMARC',
-        description: 'Everything about email authentication in one place — the guide, a safe ten-step rollout with every risk spelled out, a record builder and inspector, a header analyzer that reads any message, a volume dashboard that finds your forgotten senders, and a runbook for the morning someone starts sending invoices in your name.',
-        search: 'A complete plain English guide and tutorial to email authentication and anti-spoofing with SPF, DKIM and DMARC. Explains how email really works, the difference between the envelope sender and the header From address, SPF mechanisms and the ten DNS lookup limit, DKIM selectors keys and rotation, DMARC alignment, p=none quarantine and reject, pct ramping, aggregate rua and forensic ruf reports, subdomain policy, plus BIMI, MTA-STS, TLS-RPT, ARC, null MX, reverse DNS and DNSSEC. Includes a step by step setup plan with the risks at every step, an interactive decision tree that tells you which step you are on, a free SPF DMARC and DKIM record generator and builder, a record checker and inspector that explains any record in plain English, an optional DNS lookup, an interactive checklist, and a what if incident runbook for email spoofing, phishing, domain forgery, lookalike and cousin domains, display name spoofing, reply-to hijacking, business email compromise and invoice fraud — how to recognise a fake email, how to read Authentication-Results headers, and exactly what to do first. Also bundles two tools: an email header analyzer and parser that decodes raw headers or a whole .eml message to show the SPF DKIM DMARC and ARC results and alignment, the sender details, the relay path and hops, attachment hashes, a safe script free body preview, lookalike domain and impersonated brand detection and unknown TLD warnings, for diagnosing spam and email delivery problems; and an email volume dashboard that charts a message trace export in CSV or Excel to reveal every account and system sending mail as your domain.',
+        description: 'Everything about email authentication in one place: the guide, a safe ten-step rollout with every risk spelled out, a record builder and inspector, a header analyzer that reads any message, a volume dashboard that finds your forgotten senders, and a runbook for the morning someone starts sending invoices in your name.',
+        search: 'A complete plain English guide and tutorial to email authentication and anti-spoofing with SPF, DKIM and DMARC. Explains how email really works, the difference between the envelope sender and the header From address, SPF mechanisms and the ten DNS lookup limit, DKIM selectors keys and rotation, DMARC alignment, p=none quarantine and reject, pct ramping, aggregate rua and forensic ruf reports, subdomain policy, plus BIMI, MTA-STS, TLS-RPT, ARC, null MX, reverse DNS and DNSSEC. Includes a step by step setup plan with the risks at every step, an interactive decision tree that tells you which step you are on, a free SPF DMARC and DKIM record generator and builder, a record checker and inspector that explains any record in plain English, an optional DNS lookup, an interactive checklist, and a what if incident runbook for email spoofing, phishing, domain forgery, lookalike and cousin domains, display name spoofing, reply-to hijacking, business email compromise and invoice fraud: how to recognise a fake email, how to read Authentication-Results headers, and exactly what to do first. Also bundles two tools: an email header analyzer and parser that decodes raw headers or a whole .eml message to show the SPF DKIM DMARC and ARC results and alignment, the sender details, the relay path and hops, attachment hashes, a safe script free body preview, lookalike domain and impersonated brand detection and unknown TLD warnings, for diagnosing spam and email delivery problems; and an email volume dashboard that charts a message trace export in CSV or Excel to reveal every account and system sending mail as your domain.',
         tags: ['guide', 'email'],
         aura: 'violet',
         status: 'live',
@@ -471,7 +457,7 @@ window.RAMI_WORKSHOP = [
         href: './laser/',
         glyph: '🔦',
         tagline: 'Precision atelier',
-        description: 'A full storefront for a laser-cutting workshop — hero, services and all — still finding its words (and its photographs).',
+        description: 'A full storefront for a laser-cutting workshop: hero, services and all, still finding its words (and its photographs).',
         search: 'A business website and storefront for a laser cutting and engraving workshop, with hero section and services. Work in progress company site.',
         tags: ['site', 'laser'],
         aura: 'cyan',
@@ -492,8 +478,8 @@ window.RAMI_WORKSHOP = [
         title: 'Laser Forge · Direct Control',
         href: './laser-forge-v2/',
         glyph: '🎛️',
-        tagline: 'Driving the laser live — soon',
-        description: 'The next Laser Forge: everything v1 can do, plus multi-select, boolean shapes and — the headline spell — Web Serial control to drive a connected engraver straight from the browser. Still on the workbench.',
+        tagline: 'Driving the laser live, soon',
+        description: 'The next Laser Forge: everything v1 can do, plus multi-select, boolean shapes and the headline spell: Web Serial control to drive a connected engraver straight from the browser. Still on the workbench.',
         search: 'A work in progress enhanced laser engraver design tool that will add Web Serial direct machine control: connect to a GRBL laser engraver or cutter over USB serial from the browser, jog the head, home, set origin, frame the job and stream G-code, plus multi-select, boolean operations and SVG and DXF import. Not finished yet.',
         tags: ['tool', 'laser'],
         aura: 'cyan',
@@ -504,7 +490,7 @@ window.RAMI_WORKSHOP = [
         href: './dashboard_v1/',
         glyph: '🪟',
         tagline: 'A shelf with a view',
-        description: 'A decorative shelf-and-bracket dashboard component — an early cut of a personal cockpit, not yet a dashboard.',
+        description: 'A decorative shelf-and-bracket dashboard component, an early cut of a personal cockpit, not yet a dashboard.',
         search: 'An early dashboard user interface component: a decorative shelf and bracket widget, a prototype of a personal dashboard cockpit and homepage.',
         tags: ['ui', 'wip'],
         aura: 'violet',
@@ -526,7 +512,7 @@ window.RAMI_WORKSHOP = [
         href: './fill/',
         glyph: '🗄️',
         tagline: 'A harmless storage prank',
-        description: 'A gentle troll that stuffs the browser’s localStorage with cat pictures — fully reversible with a single click.',
+        description: 'A gentle troll that stuffs the browser’s localStorage with cat pictures, fully reversible with a single click.',
         search: 'A harmless prank tool that fills up the browser localStorage and disk space with cat images as a joke, fully reversible with a stop button to clear it.',
         tags: ['prank', 'fun'],
         aura: 'gold',
@@ -537,7 +523,7 @@ window.RAMI_WORKSHOP = [
         href: './bbq/',
         glyph: '🍖',
         tagline: 'Tax the unlocked',
-        description: 'Left a computer unlocked? A cheeky Dutch mailer fires off a funny “I forgot to lock my PC” confession — the classic office BBQ tax.',
+        description: 'Left a computer unlocked? A cheeky Dutch mailer fires off a funny “I forgot to lock my PC” confession. The classic office BBQ tax.',
         search: 'A prank email tool in Dutch for unlocked computers. When someone leaves their computer unlocked, send a funny joke confession email that they forgot to lock their PC, with random prank messages. The office BBQ punishment tradition.',
         tags: ['prank', 'fun'],
         aura: 'pink',
@@ -548,7 +534,7 @@ window.RAMI_WORKSHOP = [
         href: 'https://md.labidi.eu/',
         glyph: '📝',
         tagline: 'Rune scribe',
-        description: 'A split-view Markdown editor with live preview, twelve themes, vim mode and diagrams — wholly offline, with not a single third-party script. Outgrew the workshop and now lives at md.labidi.eu, in English, Dutch and French.',
+        description: 'A split-view Markdown editor with live preview, twelve themes, vim mode and diagrams, wholly offline, with not a single third-party script. Outgrew the workshop and now lives at md.labidi.eu, in English, Dutch and French.',
         search: 'A Markdown editor with live side by side HTML preview, hosted at md.labidi.eu. Write, edit and preview markdown text with syntax highlighting, twelve themes including a plain dark and a plain light one, a table of contents, slash commands, find and replace, multiple document tabs, lint hints, mermaid style flowchart diagrams, a vim keybinding mode and PWA offline install. Interface in English, Nederlands and Francais. Fully offline and dependency free with a hand written parser and HTML sanitiser, no CDN.',
         tags: ['tool', 'text'],
         aura: 'violet',
@@ -604,7 +590,7 @@ window.RAMI_WORKSHOP = [
         href: './rami/',
         glyph: '🧑‍🔬',
         tagline: 'A scratch page',
-        description: 'A personal scratch page with handy little utilities and links — a workbench, not an exhibit.',
+        description: 'A personal scratch page with handy little utilities and links: a workbench, not an exhibit.',
         search: 'A personal scratch and sandbox page with small utilities, handy links and experiments.',
         tags: ['personal', 'wip'],
         aura: 'violet',
@@ -613,29 +599,19 @@ window.RAMI_WORKSHOP = [
 ];
 
 /* ==========================================================================
-   Planned projects — the hidden fourth realm.
-   Names of spells not yet begun. Shown as a chip-list on /workshop/.
+   Planned projects, the hidden fourth realm.
+   Names of spells not yet begun. Shown as a chip-list under the Workshop.
    Move a name up into RAMI_WORKSHOP once its folder exists and has content.
    ========================================================================== */
 window.RAMI_PLANNED = [
     { name: 'Screen Fill', note: 'Fill the screen with solid colours to hunt dead pixels.' },
-    { name: 'Boolean Bench', note: 'Union, subtract and intersect shapes — the missing spell in both Forges.' },
+    { name: 'Boolean Bench', note: 'Union, subtract and intersect shapes, the missing spell in both Forges.' },
     { name: 'Sitemap Scribe', note: 'Generate sitemap.xml straight from this very registry.' },
     { name: 'Realm Sentinel', note: 'A link-and-asset checker that walks every realm and reports the rot.' },
     { name: 'Colour Grimoire', note: 'Palette conjurer with contrast checking and export to CSS tokens.' },
 ];
 
 /* ==========================================================================
-   Auto-count — keep the Workshop realm’s tagline in sync with the number of
-   projects in RAMI_WORKSHOP. Add a project above and the count updates
-   itself; nothing else to touch.
+   The Workshop cards are rendered straight from RAMI_WORKSHOP onto the hub,
+   so there is no portal card to keep in sync any more.
    ========================================================================== */
-(function () {
-    var count = window.RAMI_WORKSHOP.length;
-    var workshop = window.RAMI_REALMS.find(function (r) {
-        return r.category === 'workshop' && r.href === './workshop/';
-    });
-    if (workshop) {
-        workshop.tagline = count + ' spell' + (count === 1 ? '' : 's') + ' brewing';
-    }
-})();

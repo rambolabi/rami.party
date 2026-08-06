@@ -23,12 +23,6 @@
 
   <!-- ── The three great realms ──────────────────────────────────────────── -->
   <url>
-    <loc>https://rami.party/workshop/</loc>
-    <lastmod>2026-07-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://rami.party/wasteland/</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>yearly</changefreq>

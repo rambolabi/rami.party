@@ -1,5 +1,5 @@
 /* ==========================================================================
-   rami.party — theme engine
+   rami.party: theme engine
    Applies the saved theme before first paint, then renders an accessible
    theme picker into the site header. Load this in <head>, render-blocking,
    BEFORE any other script:  <script src="/theme.js"></script>
@@ -16,7 +16,7 @@
    `data-theme` picker and the two must never collide.
        `scheme` drives <meta name="color-scheme"> and the browser UI colour. */
     var THEMES = [
-        { id: 'enchanted', name: 'Enchanted', glyph: '🔮', note: 'Midnight arcane — the house style', scheme: 'dark', color: '#0b0524' },
+        { id: 'enchanted', name: 'Enchanted', glyph: '🔮', note: 'Midnight arcane, the house style', scheme: 'dark', color: '#0b0524' },
         { id: 'slate', name: 'Professional Dark', glyph: '🛡️', note: 'Calm slate & steel blue', scheme: 'dark', color: '#0d131d' },
         { id: 'daylight', name: 'Professional Light', glyph: '📄', note: 'Crisp, printable, boardroom-safe', scheme: 'light', color: '#f8fafc' },
         { id: 'parchment', name: 'Grimoire', glyph: '📜', note: 'Warm parchment & ink', scheme: 'light', color: '#f6eeda' },
@@ -42,7 +42,7 @@
         try {
             localStorage.setItem(STORAGE_KEY, value);
         } catch (err) {
-            /* Storage blocked (private mode / disabled cookies) — theme is
+            /* Storage blocked (private mode / disabled cookies): theme is
                still applied for this page view, it just will not persist. */
         }
     }
@@ -86,7 +86,7 @@
             document.dispatchEvent(new CustomEvent('rami:themechange', {
                 detail: { preference: pref, theme: id, scheme: theme.scheme }
             }));
-        } catch (err) { /* CustomEvent unsupported — nothing depends on it */ }
+        } catch (err) { /* CustomEvent unsupported, nothing depends on it */ }
         return id;
     }
 

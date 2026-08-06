@@ -1,5 +1,5 @@
 /* ==========================================================================
-   rami.party — enchantments
+   rami.party: enchantments
    Starfield, portal-card rendering, cursor glow, mobile nav, scroll reveal.
    ========================================================================== */
 
@@ -55,9 +55,15 @@ function renderRealms() {
     const groups = window.RAMI_GROUPS;
     if (!root || !Array.isArray(realms) || !Array.isArray(groups)) return;
 
+    // The Workshop is large enough to have had its own page; its cards now come
+    // straight from RAMI_WORKSHOP, whose hrefs are relative to /workshop/.
+    const groupItems = g => g.id === 'workshop'
+        ? (window.RAMI_WORKSHOP || []).map(w => ({ ...w, href: resolveWorkshopHref(w.href, w.external) }))
+        : realms.filter(r => r.category === g.id);
+
     root.innerHTML = '';
     groups.forEach(g => {
-        const items = realms.filter(r => r.category === g.id);
+        const items = groupItems(g);
         if (!items.length) return;
         const section = document.createElement('section');
         section.className = 'realm-group';
@@ -70,11 +76,35 @@ function renderRealms() {
             <ul class="realm-grid" role="list">
                 ${items.map(cardMarkup).join('')}
             </ul>`;
+        if (g.id === 'workshop') section.id = 'workshop';
         root.appendChild(section);
     });
 
+    renderPlanned(root);
     setupCardGlow();
     observeReveal();
+}
+
+function renderPlanned(root) {
+    const planned = window.RAMI_PLANNED;
+    if (!root || !Array.isArray(planned) || !planned.length) return;
+    const section = document.createElement('section');
+    section.className = 'realm-group';
+    section.id = 'planned';
+    section.innerHTML = `
+        <header class="group-head">
+            <span class="group-emoji" aria-hidden="true">🕓</span>
+            <h3>Planned spells (Not started yet)</h3>
+            <p>Named but not yet begun. Ideas waiting for their day in the cauldron.</p>
+        </header>
+        <ul id="plannedList" class="planned-list" role="list">
+            ${planned.map(p => `
+            <li class="planned-chip">
+                <span class="planned-name">✦ ${escapeHtml(p.name)}</span>
+                ${p.note ? `<span class="planned-note">${escapeHtml(p.note)}</span>` : ''}
+            </li>`).join('')}
+        </ul>`;
+    root.appendChild(section);
 }
 
 /* Cursor-following glow on cards */
@@ -111,7 +141,6 @@ function buildSearchIndex() {
     const seen = new Set();
     const push = (item, statusKey, url, external) => {
         if (!item || !item.title) return;
-        if (item.title === 'Enter the Workshop') return;      // a portal, not a project
         const key = item.title.toLowerCase();
         if (seen.has(key)) return;
         seen.add(key);
@@ -405,10 +434,9 @@ function setupMobileNav() {
     overlay.setAttribute('aria-label', 'Mobile navigation');
     overlay.innerHTML = `
         <button class="close-btn" aria-label="Close menu">&times;</button>
-        <a href="#guide">How it works</a>
         <a href="#realms">Realms</a>
         <a href="./gallery/">Gallery</a>
-        <a href="./workshop/">Workshop</a>
+        <a href="#workshop">Workshop</a>
         <a href="./wasteland/">Wastelands</a>
     `;
     document.body.appendChild(overlay);
