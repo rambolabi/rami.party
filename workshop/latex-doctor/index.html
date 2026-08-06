@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0b0524">
+    <title>LaTeX Doctor — LaTeX syntax checker | rami.party</title>
+    <meta name="description" content="Paste your LaTeX and get an instant diagnosis — unbalanced braces, broken environments, unclosed math mode and other common mistakes, explained line by line. Runs entirely in your browser.">
+    <meta name="author" content="rami.party">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/latex-doctor/">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="LaTeX Doctor — LaTeX syntax checker">
+    <meta property="og:description" content="Paste your LaTeX and see exactly which syntax errors are hiding inside — with a line number and a plain-English explanation for each one.">
+    <meta property="og:url" content="https://rami.party/workshop/latex-doctor/">
+    <meta property="og:site_name" content="rami.party">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A9%BA%3C/text%3E%3C/svg%3E">
+</head>
+<body>
+    <div class="app">
+        <header class="app-header">
+            <div>
+                <p class="eyebrow">⚗️ Workshop experiment</p>
+                <h1>LaTeX Doctor</h1>
+                <p class="sub">Paste your <code>.tex</code> source below. The Doctor reads through it as you type and
+                    tells you which syntax errors and common mistakes are hiding inside — with a line number and a
+                    plain-English explanation for each one. Click any finding to jump straight to that line.</p>
+            </div>
+            <a href="../" class="back-link">← Back to the Workshop</a>
+        </header>
+
+        <main class="layout">
+            <section class="editor-pane" aria-labelledby="input-title">
+                <div class="pane-head">
+                    <h2 id="input-title">Your LaTeX</h2>
+                    <div class="pane-actions">
+                        <button id="sampleBtn" class="btn btn-ghost" type="button">Load broken sample</button>
+                        <button id="clearBtn" class="btn btn-ghost" type="button">Clear</button>
+                        <button id="checkBtn" class="btn btn-primary" type="button">Diagnose</button>
+                    </div>
+                </div>
+                <textarea id="texInput" class="tex-input" spellcheck="false" autocapitalize="off" autocorrect="off"
+                    autocomplete="off" aria-label="LaTeX source to check"
+                    placeholder="\documentclass{article}&#10;\begin{document}&#10;Hello world!&#10;\end{document}"></textarea>
+                <p class="hint">Nothing leaves your browser — everything is checked locally, and your draft is kept in
+                    this browser only so it survives a refresh. The diagnosis updates while you type; press
+                    <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd> to re-run it at once. <kbd>Tab</kbd> indents —
+                    press <kbd>Esc</kbd> first if you want <kbd>Tab</kbd> to move on to the next control.</p>
+            </section>
+
+            <section class="results-pane" aria-labelledby="results-title">
+                <div class="pane-head">
+                    <h2 id="results-title">Diagnosis</h2>
+                    <div class="pane-actions">
+                        <button id="copyBtn" class="btn btn-ghost" type="button" disabled>Copy report</button>
+                        <span id="statusChip" class="status-chip status-idle" role="status">Waiting for input</span>
+                    </div>
+                </div>
+                <div id="results" class="results" aria-live="polite">
+                    <p class="placeholder">Paste some LaTeX on the left — the Doctor checks it as you type.</p>
+                </div>
+            </section>
+        </main>
+
+        <section class="checks-list" aria-labelledby="checks-title">
+            <h2 id="checks-title">What the Doctor checks for</h2>
+            <ul>
+                <li><strong>Unbalanced braces</strong> — every <code>{</code> needs a matching <code>}</code>.</li>
+                <li><strong>Broken environments</strong> — every <code>\begin{...}</code> needs a matching
+                    <code>\end{...}</code> with the same name, in the right order.</li>
+                <li><strong>Math mode mishaps</strong> — unclosed <code>$...$</code>, <code>$$...$$</code>,
+                    <code>\[...\]</code> or <code>\(...\)</code>, and stray closing delimiters.</li>
+                <li><strong>Missing document scaffolding</strong> — a <code>\begin{document}</code> without a
+                    <code>\documentclass</code>, or a <code>\documentclass</code> without a
+                    <code>\begin{document}</code>.</li>
+                <li><strong>Unescaped special characters</strong> — a bare <code>&amp;</code>, <code>_</code> or
+                    <code>#</code> outside math mode, a table, or a macro definition, where LaTeX would stop with
+                    an error.</li>
+                <li><strong>Missing packages</strong> — commands such as <code>\includegraphics</code>,
+                    <code>\textcolor</code> or <code>\toprule</code> used without the <code>\usepackage</code>
+                    that provides them.</li>
+                <li><strong>Typos</strong> — near-miss spellings of common commands and environment names, such as
+                    <code>\beign</code> or <code>\begin{enumarate}</code>.</li>
+            </ul>
+            <p class="checks-note">Comments (<code>%</code>), <code>verbatim</code>/<code>lstlisting</code> blocks and
+                <code>\verb</code> spans are skipped, exactly as LaTeX skips them, so they never raise false alarms.
+                The Doctor reads syntax only: it does not compile anything, so it cannot know whether your packages
+                are installed, whether a referenced file exists, or whether a macro is defined elsewhere. Treat a
+                clean bill of health as “no obvious syntax problems”, not as a guaranteed successful build.</p>
+        </section>
+
+        <footer class="app-footer">
+            <p>A little spell from the <a href="../">rami.party workshop</a> — built with plain HTML, CSS and
+                JavaScript, no server, no tracking.</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
