@@ -1,6 +1,11 @@
 /* ==========================================================================
    Loregate — character sheets screen
    ========================================================================== */
+/* The `hidden` attribute must always win over a component's own `display`. */
+[hidden] {
+    display: none !important;
+}
+
 
 .chars-body {
     padding: 0;

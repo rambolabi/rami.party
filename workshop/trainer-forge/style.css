@@ -3,6 +3,11 @@
    Mobile-first. Everything below 380px still works; everything above 1100px
    just gets more breathing room.
    ========================================================================== */
+/* The `hidden` attribute must always win over a component's own `display`. */
+[hidden] {
+    display: none !important;
+}
+
 
 :root {
     --bg: #0c1220;
