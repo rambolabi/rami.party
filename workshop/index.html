@@ -78,8 +78,7 @@
                 </div>
                 <p id="workshopCount" class="search-count" aria-live="polite"></p>
                 <p id="workshopEmpty" class="search-empty" hidden>Nothing on the bench matches that. Try another incantation.</p>
-                <ul id="workshopGrid" class="realm-grid" role="list">
-                    <li class="realm-fallback">The workbench is loading…</li>
+back">The workbench is loading…</li>
                 </ul>
             </div>
         </section>
@@ -114,9 +113,8 @@
             var plan = document.getElementById('plannedList');
             if (plan && Array.isArray(window.RAMI_PLANNED)) {
                 plan.innerHTML = window.RAMI_PLANNED.map(function (p) {
-                    var esc = window.ramiEscapeHtml || function (v) { return v; };
-                    return '<li class="planned-chip"><span class="planned-name">✦ ' + esc(p.name) + '</span>' +
-                        (p.note ? '<span class="planned-note">' + esc(p.note) + '</span>' : '') + '</li>';
+                    return '<li class="planned-chip"><span class="planned-name">✦ ' + p.name + '</span>' +
+                        (p.note ? '<span class="planned-note">' + p.note + '</span>' : '') + '</li>';
                 }).join('');
             }
             if (typeof window.__ramiReveal === 'function') window.__ramiReveal();
