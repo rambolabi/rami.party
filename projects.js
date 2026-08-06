@@ -420,6 +420,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Tremorbell',
+        href: './tremorbell/',
+        glyph: '🔔',
+        tagline: 'A pocket seismograph',
+        description: 'Turn your phone or laptop into a friendly seismograph. Every wobble is drawn as a live trace and turned into a Richter-style local magnitude, with the shaking intensity people would actually feel.',
+        search: 'An earthquake detector and seismograph in the browser that uses the device motion sensors and accelerometer to measure shaking, movement and vibration and converts it into a Richter scale local magnitude, peak ground acceleration in gal and Modified Mercalli felt intensity. Shows a live seismograph trace, a Richter magnitude gauge, a tremor event log with CSV export, adjustable trigger threshold and epicentre distance, a demo quake simulation for devices without sensors, and cute pastel themes including a dark and a high contrast one. Runs locally in the browser.',
+        tags: ['sensor', 'tool'],
+        aura: 'gold',
+        status: 'live',
+    },
+    {
         title: 'Clamor',
         href: './decibel/',
         glyph: '🔊',

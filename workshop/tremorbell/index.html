@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tremorbell — Cute Earthquake Detector</title>
+    <meta name="description"
+        content="Turn your phone or laptop into a friendly seismograph: Tremorbell reads the motion sensors, draws a live trace and estimates a Richter-style local magnitude for every wobble.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#fff7f2">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/tremorbell/">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%94%3C/text%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <a href="#stage" class="skip-link">Skip to the seismograph</a>
+
+    <div class="wrap">
+        <header class="hero">
+            <a class="back" href="../">← Back to the Workshop</a>
+            <div class="hero-mark" id="mascot" aria-hidden="true">🔔</div>
+            <h1>Tremorbell</h1>
+            <p class="lede">A tiny, friendly seismograph. Tremorbell listens to your device’s motion sensors,
+                draws every wobble as a live trace and turns it into a <strong>Richter-style local
+                    magnitude</strong> — plus the shaking intensity people would actually feel.</p>
+
+            <div class="theme-row" role="group" aria-label="Colour theme">
+                <span class="theme-label">Theme</span>
+                <div class="theme-swatches" id="themeSwatches"></div>
+            </div>
+        </header>
+
+        <section id="stage" class="stage" aria-label="Live seismograph">
+            <canvas id="trace" class="trace" role="img"
+                aria-label="Live seismograph trace of the movement measured by the device"></canvas>
+            <div class="stage-top">
+                <div id="statusPill" class="pill pill-idle">
+                    <span class="dot" aria-hidden="true"></span><span id="statusText">Sleeping</span>
+                </div>
+                <div class="sensor-tag" id="sensorTag">Sensor: not started</div>
+            </div>
+            <p class="stage-hint" id="stageHint">Press <strong>Wake the bell</strong> and give the page permission to
+                use motion sensors. No sensor? Try demo mode — it shakes for you.</p>
+        </section>
+
+        <section class="readouts" aria-label="Current measurements">
+            <div class="card card-mag">
+                <p class="card-label">Local magnitude <abbr title="Richter local magnitude">M<sub>L</sub></abbr></p>
+                <p class="mag-value"><span id="magNow">—</span></p>
+                <p class="card-note" id="magWord">Quiet as a sleeping cat</p>
+            </div>
+            <div class="card">
+                <p class="card-label">Peak this session</p>
+                <p class="card-value"><span id="magPeak">—</span></p>
+                <p class="card-note" id="peakWhen">No tremors yet</p>
+            </div>
+            <div class="card">
+                <p class="card-label">Ground acceleration</p>
+                <p class="card-value"><span id="pgaNow">—</span> <span class="unit">gal</span></p>
+                <p class="card-note">1 gal = 1 cm/s² &middot; gravity ≈ 981 gal</p>
+            </div>
+            <div class="card">
+                <p class="card-label">Felt intensity <abbr title="Modified Mercalli Intensity">MMI</abbr></p>
+                <p class="card-value"><span id="mmiNow">—</span></p>
+                <p class="card-note" id="mmiWord">Nothing to feel</p>
+            </div>
+        </section>
+
+        <section class="scale" aria-labelledby="scale-title">
+            <h2 id="scale-title" class="section-title">Where you are on the Richter scale</h2>
+            <div class="gauge" role="img" aria-label="Richter magnitude gauge from 0 to 9">
+                <div class="gauge-track">
+                    <div class="gauge-fill" id="gaugeFill"></div>
+                    <div class="gauge-needle" id="gaugeNeedle"><span class="needle-bubble" id="needleBubble">0.0</span>
+                    </div>
+                </div>
+                <ul class="gauge-ticks" role="list">
+                    <li>0</li>
+                    <li>1</li>
+                    <li>2</li>
+                    <li>3</li>
+                    <li>4</li>
+                    <li>5</li>
+                    <li>6</li>
+                    <li>7</li>
+                    <li>8</li>
+                    <li>9</li>
+                </ul>
+            </div>
+            <ul class="scale-legend" role="list">
+                <li><span class="chip chip-1">&lt; 2.0</span> Micro — only instruments notice</li>
+                <li><span class="chip chip-2">2.0 – 3.9</span> Minor — rarely felt</li>
+                <li><span class="chip chip-3">4.0 – 4.9</span> Light — rattling, small shifts</li>
+                <li><span class="chip chip-4">5.0 – 5.9</span> Moderate — weak buildings suffer</li>
+                <li><span class="chip chip-5">6.0 – 6.9</span> Strong — damage over ~100 km</li>
+                <li><span class="chip chip-6">7.0 +</span> Major — serious, widespread damage</li>
+            </ul>
+        </section>
+
+        <section class="controls" aria-labelledby="controls-title">
+            <h2 id="controls-title" class="section-title">Controls</h2>
+            <div class="control-row">
+                <button id="listenBtn" class="btn btn-primary" type="button">
+                    <span class="btn-icon" aria-hidden="true">🔔</span>
+                    <span class="btn-label">Wake the bell</span>
+                </button>
+                <button id="demoBtn" class="btn" type="button">
+                    <span class="btn-icon" aria-hidden="true">🎢</span>
+                    <span class="btn-label">Demo shake</span>
+                </button>
+                <button id="calibrateBtn" class="btn" type="button" disabled>
+                    <span class="btn-icon" aria-hidden="true">🎯</span>
+                    <span class="btn-label">Re-zero sensor</span>
+                </button>
+            </div>
+
+            <div class="control-grid">
+                <label class="field">
+                    <span class="field-label">Trigger threshold
+                        <span class="field-value"><span id="threshOut">3</span> gal</span></span>
+                    <input type="range" id="thresh" min="1" max="60" step="1" value="3">
+                    <span class="field-hint">How much shaking counts as an event. Lower = twitchier.</span>
+                </label>
+
+                <label class="field">
+                    <span class="field-label">Distance to epicentre
+                        <span class="field-value"><span id="distOut">10</span> km</span></span>
+                    <input type="range" id="dist" min="1" max="600" step="1" value="10">
+                    <span class="field-hint">Richter magnitude needs a distance. Shaking your own desk? Leave it small.</span>
+                </label>
+
+                <label class="switch">
+                    <input type="checkbox" id="soundToggle">
+                    <span class="switch-track" aria-hidden="true"></span>
+                    <span class="switch-label">Ring a little bell on each event</span>
+                </label>
+
+                <label class="switch">
+                    <input type="checkbox" id="motionToggle" checked>
+                    <span class="switch-track" aria-hidden="true"></span>
+                    <span class="switch-label">Let the mascot wobble</span>
+                </label>
+            </div>
+        </section>
+
+        <section class="log-section" aria-labelledby="log-title">
+            <div class="log-head">
+                <h2 id="log-title" class="section-title">Tremor log</h2>
+                <div class="log-actions">
+                    <button id="exportBtn" class="btn btn-small" type="button">Export CSV</button>
+                    <button id="clearBtn" class="btn btn-small" type="button">Clear</button>
+                </div>
+            </div>
+            <ul id="log" class="log" role="list">
+                <li class="log-empty">Nothing recorded yet — the ground is behaving itself.</li>
+            </ul>
+            <p class="sr-only" id="liveRegion" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="explain" aria-labelledby="explain-title">
+            <h2 id="explain-title" class="section-title">How the maths works</h2>
+            <ol class="explain-list">
+                <li><strong>Read the sensors.</strong> The browser’s <code>devicemotion</code> event reports
+                    acceleration on three axes, typically 30–60 times a second.</li>
+                <li><strong>Remove gravity.</strong> A slow-moving average of each axis is subtracted, so only the
+                    shaking is left — that is a simple high-pass filter.</li>
+                <li><strong>Find the peak.</strong> The largest vector magnitude in the last moment becomes the peak
+                    ground acceleration (PGA), converted from m/s² to gal (cm/s²).</li>
+                <li><strong>Estimate the wobble’s frequency</strong> by counting zero crossings, then turn
+                    acceleration into ground displacement with <code>d = a / (2πf)²</code>.</li>
+                <li><strong>Simulate a Wood–Anderson seismograph</strong> — the instrument Richter defined his scale
+                    on — by multiplying that displacement by its 2080× magnification.</li>
+                <li><strong>Apply Richter’s formula</strong> with the Hutton &amp; Boore (1987) attenuation:
+                    <code>M<sub>L</sub> = log₁₀(A) + 1.11·log₁₀(d) + 0.00189·d − 2.09</code>, where <em>A</em> is the
+                    trace amplitude in millimetres and <em>d</em> the distance in kilometres.</li>
+                <li><strong>Felt intensity</strong> comes from Wald et&nbsp;al. (1999):
+                    <code>MMI = 3.66·log₁₀(PGA) − 1.66</code>.</li>
+            </ol>
+            <p class="disclaimer"><span aria-hidden="true">🧸</span> <strong>A gentle warning:</strong> phone and laptop
+                accelerometers are toys next to a real seismometer. They are noisy, they clip, and they cannot tell your
+                footsteps from the crust of the Earth. Tremorbell is for curiosity and delight — never for safety
+                decisions. For real alerts, follow your national seismic service.</p>
+        </section>
+
+        <footer class="foot">
+            <p>Everything happens in your browser. Nothing is uploaded, nothing is stored beyond your own settings.</p>
+            <p class="foot-links"><a href="../">The Workshop</a> · <a href="/">rami.party</a></p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
