@@ -15,12 +15,13 @@ gallery/              🏛️ The Gallery of Wonders (index)
   prankscreens/       🖥️ Prank Screens
 workshop/             ⚗️ The Workshop — a data-driven catalogue of every WIP
   md/                 📝 Markdown Studio — moved to md.labidi.eu (redirect + tombstone sw)
+  mail-ward/          🛡️ Mail Ward — moved to mail.labidi.eu (redirect stubs only; never had a sw)
   3d-forge/ batlistener/ bbq/ blur/ breachlight/ character-forge/ clear/
   dashboard_v1/ demoscene-forge/ dm-screen/ dnd-forge/ DNS-sinkhole/ Engraving/
-  fill/ frostcaller/ laser/ laser-forge/ laser-forge-v2/ mail-ward/ mailheaders/
+  fill/ frostcaller/ laser/ laser-forge/ laser-forge-v2/ mailheaders/
   news/ OASIS/ personality-library/ rami/ scoreboard/ sixth-sense/ spectrum-scryer/
   subnets/ to-check/ todo/ tools/ trace-results/ trainer-forge/ webcheck/
-  mail-ward/analyzer/  ✉️ Mail Headers   ·  mail-ward/volume/  📊 Volume Seer
+  (mailheaders/ and trace-results/ are redirect stubs → mail.labidi.eu)
   personality-library/ + its 15 book workshops (DISC, Big Five, MBTI, Enneagram,
     Attachment, Love Languages, Temperaments, Conflict Styles, EQ, Liars,
     Vampires, Bad Bosses, Psychopaths, Narcissists, Setbacks)
@@ -28,7 +29,8 @@ wasteland/            ☄️ The Wastelands (index)
   neko/  old-rami.party/  adhd/  notes/  bluetooth/  house/  random-first-player/
 ```
 Realms that graduated to their own domains: O.A.S.I.S. (`oasis.labidi.eu`), Phonetic Codex
-(`alphabet.labidi.eu`), Markdown Studio (`md.labidi.eu`), GhostTooth, Huiskeuring, TapFate.
+(`alphabet.labidi.eu`), Markdown Studio (`md.labidi.eu`), Mail Ward (`mail.labidi.eu`),
+GhostTooth, Huiskeuring, TapFate.
 GhostTooth, Huiskeuring and TapFate left husks in `wasteland/` as mementos, each reachable
 from its card; O.A.S.I.S., the Phonetic Codex and Markdown Studio left a redirect page plus a
 **tombstone `sw.js`** in place, because all three were installable PWAs whose old service
@@ -36,6 +38,9 @@ worker would otherwise keep serving a frozen copy from the visitor's own storage
 folders must not be deleted. Each tombstone scopes its teardown to its own cache prefix and
 scope path — `caches` and the service worker registry are shared by the whole origin, so a
 blanket wipe would destroy the other workshop apps' offline copies.
+Mail Ward (2026-08-07) left redirect stubs at `workshop/mail-ward/{,analyzer/,volume/}`,
+`workshop/mailheaders/` and `workshop/trace-results/` — no tombstone needed, it never
+registered a service worker.
 
 ---
 

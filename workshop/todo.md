@@ -48,7 +48,7 @@ per-project section from §1 onward.
 | [3](#3-3d-forge-workshop3d-forge) | 3D Forge | 16 |
 | [4](#4-dd-forge-workshopdnd-forge) | D&D Forge | 21 |
 | [5](#5-loregate--dm-screen-workshopdm-screen) | Loregate (DM Screen) | 10 + 18 ideas |
-| [6](#6-mail-headers-workshopmail-wardanalyzer) | Mail Headers (now Mail Ward · analyzer) | 16 |
+| [6](#6-mail-headers--moved-to-maillabidieu) | Mail Headers (now Mail Ward · analyzer) | moved |
 | [7](#7-markdown-scribe-workshopmd) | Markdown Scribe | 8 |
 | [8](#8-disk-filler-workshopfill) | Disk Filler | 4 |
 | [9](#9-laser-works-workshoplaser) | Laser Works | 3 |
@@ -444,37 +444,19 @@ alignment · encounter builder with CR/XP budget · weather intensity + wind dir
 
 ---
 
-## 6. Mail Headers — `workshop/mail-ward/analyzer/`
+## 6. Mail Headers — moved to `mail.labidi.eu`
 
-> **Moved 2026-07-31.** This tool is no longer a standalone project: it is now the second
-> page of **Mail Ward** (`workshop/mail-ward/`), alongside the SPF/DKIM/DMARC guide and the
-> volume dashboard. `workshop/mailheaders/` is now a noindex redirect stub. The backlog below
-> still applies — see `workshop/mail-ward/analyzer/todo.md` for the tool's own notes.
-
-### 🐞 Known limitations to verify or fix
-- [ ] **Organizational-domain check** uses a small built-in two-part-TLD list, not the full Public
-      Suffix List — exotic ccTLDs may mis-align.
-      *Fix:* bundle a trimmed offline PSL as `js/data-psl.js` (see also the last item below).
-- [ ] **MIME parser is pragmatic, not RFC-complete** — `message/rfc822` nesting and RFC 2231
-      filenames are only partly handled.
-- [ ] **Large base64 attachments hash on the main thread** → UI freeze.
-      *Fix:* move SHA-256 hashing + large-body parsing into a Web Worker.
-- [ ] **Rare legacy charsets** fall back to latin1 (`TextDecoder` limitation).
-
-### Feature backlog
-- [ ] Decode **RFC 2047 encoded-words** (`=?utf-8?B?…?=`) in Subject / From display names.
-- [ ] Extract & list **all body URLs** with per-link opt-in VirusTotal/urlscan lookups; flag
-      look-alike/punycode link domains and mismatched anchor-text vs href.
-- [ ] Detect **tracking pixels** (1×1 images / known trackers) and list them explicitly.
-- [ ] Highlight **reverse-DNS (PTR) vs HELO** name mismatches per relay hop.
-- [ ] Bundle an **offline Public Suffix List** for accurate organizational-domain alignment.
-- [ ] Flag **forged `Received` chains** (private-IP origin, impossible timestamps, missing hops).
-- [ ] Parse & display **DMARC/DKIM policy tags** (`p=`, `sp=`, `adkim`/`aspf`, selector, key length).
-- [ ] Bundled **homoglyph/confusable table** to score look-alike domains offline.
-- [ ] **Header anomaly scan** — duplicate `From`, bare-newline injection, oversized header count.
-- [ ] **Message-ID domain vs From domain** consistency check.
-- [ ] **"Copy as defanged"** output (`hxxp://`, `[.]`) for safe sharing in tickets.
-- [ ] **Shareable permalink** encoding the report in the URL hash (local only, no upload).
+> 🚚 **Moved 2026-08-07.** The whole Mail Ward suite — the SPF/DKIM/DMARC guide, this
+> header analyzer and the volume dashboard — outgrew the workshop and now lives at
+> **<https://mail.labidi.eu/>** (analyzer at `/analyzer/`, dashboard at `/volume/`).
+> `workshop/mail-ward/`, `workshop/mailheaders/` and `workshop/trace-results/` are noindex
+> redirect stubs; no tombstone service worker was needed because Mail Ward never registered
+> one. The registry entry is `external: true` and the sitemap URLs are gone.
+> The full backlog (known limitations + feature ideas, including the Safe Mail Preview)
+> moved with it — see `mail.labidi.eu`'s own `todo.md`.
+>
+> *(Earlier history: moved 2026-07-31 from `workshop/mailheaders/` into
+> `workshop/mail-ward/analyzer/`.)*
 
 ---
 
@@ -619,7 +601,7 @@ a quick review pass (does it work? is it finished? should it be `status:'soon'` 
 | `workshop/to-check/` | Wishlist Scroll | link dump — value? |
 | `workshop/todo/` | Daybook | live, undocumented |
 | `workshop/tools/` | IT Tools Workbench | ✅ CVE sub-page + branding fixed |
-| `workshop/trace-results/` | Volume Seer | **moved** → `workshop/mail-ward/volume/`, redirect stub left behind |
+| `workshop/trace-results/` | Volume Seer | **moved** → `mail.labidi.eu/volume/` (via Mail Ward), redirect stub left behind |
 | `workshop/webcheck/` | Webcheck | live, undocumented |
 | `wasteland/adhd/` | ADHD experiment | empty husk (intentional) |
 | `wasteland/house/` | The Little House | ✅ now reachable from the Wastelands card |

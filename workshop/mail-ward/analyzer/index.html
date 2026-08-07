@@ -1,178 +1,81 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Paste raw email headers or an .eml file and see the SPF, DKIM, DMARC and ARC results, the sender details, the relay path and the attachments. Runs entirely in your browser — nothing is uploaded. Part of Mail Ward.">
-    <meta name="color-scheme" content="light dark">
-    <meta name="theme-color" content="#3b82f6">
-    <meta name="robots" content="index, follow, max-image-preview:large">
-    <title>Email Header Analyzer — read SPF, DKIM &amp; DMARC results | Mail Ward</title>
-    <link rel="canonical" href="https://rami.party/workshop/mail-ward/analyzer/">
+    <title>The Email Header Analyzer has moved · mail.labidi.eu</title>
+    <meta name="description" content="The Email Header Analyzer — part of Mail Ward — now lives at mail.labidi.eu/analyzer/.">
+    <meta name="theme-color" content="#0d0726">
+    <meta name="robots" content="noindex, follow">
+
+    <!-- Mail Ward moved to its own domain on 2026-08-07. No tombstone sw.js:
+         no service worker was ever registered under this scope. -->
+    <link rel="canonical" href="https://mail.labidi.eu/analyzer/">
+    <meta http-equiv="refresh" content="0; url=https://mail.labidi.eu/analyzer/">
+    <script>
+        location.replace('https://mail.labidi.eu/analyzer/' + location.search + location.hash);
+    </script>
+
+    <link rel="stylesheet" href="../../../theme.css">
+    <script src="../../../theme.js"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📧</text></svg>">
-    <link rel="stylesheet" href="css/themes.css">
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="../suite.css">
+
+    <style>
+        body {
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .moved {
+            max-width: 62ch;
+        }
+
+        .moved h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 1.2rem + 2.4vw, 2.6rem);
+            background: var(--spell);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .moved p {
+            color: var(--text-muted);
+            margin-top: 14px;
+        }
+
+        .moved .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 26px;
+        }
+    </style>
 </head>
+
 <body>
-    <nav class="mw-bar" aria-label="Mail Ward">
-        <a class="mw-brand" href="../"><span class="mw-mark" aria-hidden="true">🛡️</span> Mail&nbsp;Ward</a>
-        <span class="mw-sep" aria-hidden="true"></span>
-        <a href="../">Guide</a>
-        <a href="./" aria-current="page">Header analyzer</a>
-        <a href="../volume/">Volume dashboard</a>
-        <span class="mw-right">
-            <div class="theme-picker">
-                <svg class="theme-picker-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
-                    <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
-                    <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
-                    <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
-                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996C18.928 16.267 22 13.267 22 9.5 22 5.281 17.5 2 12 2z"/>
-                </svg>
-                <label class="visually-hidden" for="themeSelect">Colour theme</label>
-                <select id="themeSelect" title="Choose colour theme">
-                    <option value="light">Light · Slate</option>
-                    <option value="dark">Dark · Graphite</option>
-                    <option value="midnight">Midnight · Indigo</option>
-                    <option value="nord">Nord · Arctic</option>
-                    <option value="solarized">Solarized</option>
-                    <option value="matrix">Matrix · Terminal</option>
-                </select>
-            </div>
-            <a href="/workshop/">← Workshop</a>
-        </span>
-    </nav>
-
-    <div class="container">
-
-        <header>
-            <h1>Email Header Analyzer</h1>
-            <p class="subtitle">Analyze email headers for security and authenticity — 100% in your browser</p>
-            <p class="subtitle">
-                Not sure what <a href="../#spf">SPF</a>, <a href="../#dkim">DKIM</a> or
-                <a href="../#dmarc">DMARC</a> mean? The <a href="../">Mail Ward guide</a> explains all three,
-                and the <a href="../#spoof">what-if runbook</a> covers what to do when a result says
-                <code>fail</code>.
-            </p>
-        </header>
-
-        <div id="dropZone" class="input-section">
-            <div class="button-group">
-                <button id="pasteBtn" class="paste-btn" type="button">Paste &amp; Analyze Headers</button>
-                <button id="toggleTextbox" class="toggle-btn" type="button" title="Toggle manual input" aria-expanded="false" aria-controls="textboxContainer">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path d="M10 3L8.5 4.5L13 9H3v2h10l-4.5 4.5L10 17l7-7z"/>
-                    </svg>
-                </button>
-            </div>
-
-            <p class="input-hint">
-                Paste raw headers or a full <code>.eml</code> message — or drag a
-                <code>.eml</code>/<code>.txt</code> file anywhere onto this page.
-                <button id="loadExampleBtn" class="link-btn" type="button">Load an example</button>
-            </p>
-
-            <div id="textboxContainer" class="textbox-container hidden">
-                <textarea id="headersInput" placeholder="Paste email headers (or a whole email) here..." spellcheck="false" aria-label="Email headers"></textarea>
-                <div class="textbox-actions">
-                    <button id="analyzeBtn" class="analyze-btn" type="button">Analyze Headers</button>
-                    <button id="clearBtn" class="clear-btn" type="button">Clear</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="results" class="results hidden">
-            <div class="results-toolbar">
-                <button id="copyReportBtn" class="ghost-btn" type="button">Copy summary</button>
-                <button id="exportJsonBtn" class="ghost-btn" type="button">Export JSON</button>
-                <button id="exportMdBtn" class="ghost-btn" type="button">Export Markdown</button>
-                <button id="resetBtn" class="ghost-btn" type="button">Clear results</button>
-            </div>
-
-            <div class="security-summary">
-                <h2>Security Analysis</h2>
-                <div id="securityChecks" class="security-checks"></div>
-            </div>
-
-            <div class="sender-info">
-                <h2>Sender Information</h2>
-                <div id="senderInfo" class="info-grid"></div>
-            </div>
-
-            <div id="investigationSection" class="investigation hidden">
-                <h2>External Lookups <span class="section-tag">opt-in</span></h2>
-                <p class="section-note">
-                    Nothing here runs automatically. These buttons only open a new tab
-                    when <em>you</em> click them — the relevant domain, IP or hash is
-                    passed to a third-party service (MXToolbox / VirusTotal / who.is) in that tab.
-                </p>
-                <div id="investigationContent" class="investigation-grid"></div>
-            </div>
-
-            <div class="relay-timeline">
-                <h2>Email Relay Timeline</h2>
-                <div id="relayTimeline" class="timeline"></div>
-            </div>
-
-            <div id="attachmentsSection" class="attachments hidden">
-                <h2>Attachments</h2>
-                <p class="section-note">Hashes are computed locally in your browser. VirusTotal links are opt-in.</p>
-                <div id="attachmentsList" class="attachments-list"></div>
-            </div>
-
-            <div id="previewSection" class="email-preview hidden">
-                <h2>Message Body Preview</h2>
-                <div class="preview-warning">
-                    ⚠ The message body can contain tracking pixels, phishing links and scripts.
-                    The <strong>Safe</strong> preview blocks all scripts and remote content (no tracking).
-                    Only use <strong>Raw</strong> if you understand the risk.
-                </div>
-                <div class="preview-controls">
-                    <button id="previewTextBtn" class="ghost-btn" type="button">Plain text</button>
-                    <button id="previewSafeBtn" class="ghost-btn" type="button">Safe HTML (no scripts/remote)</button>
-                    <button id="previewRawBtn" class="ghost-btn danger" type="button">Raw HTML ⚠</button>
-                </div>
-                <div id="previewContainer" class="preview-container"></div>
-            </div>
-
-            <div class="all-headers">
-                <h2>All Headers</h2>
-                <div id="allHeaders" class="headers-list"></div>
-            </div>
-        </div>
-
-        <div id="emptyState" class="empty-state">
-            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-                <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-            <p>Paste email headers to analyze</p>
-            <p class="hint">Press Ctrl+V or click "Paste &amp; Analyze Headers"</p>
-        </div>
-
-        <footer class="page-footer">
-            <p>Everything runs locally in your browser — no headers ever leave this page.</p>
-            <p>Part of <a href="../">Mail Ward</a> — the SPF, DKIM &amp; DMARC guide ·
-                <a href="../#plan">Set the records up</a> ·
-                <a href="../#inspector">Inspect a DNS record</a> ·
-                <a href="../#spoof">Someone is spoofing us</a> ·
-                <a href="../volume/">Volume dashboard</a>
-            </p>
-        </footer>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
     </div>
 
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-    <!-- Data lists (bundled ICANN TLD snapshot, TLD groups, brands, example) -->
-    <script src="js/data-iana-tlds.js"></script>
-    <script src="js/data-tlds-twopart.js"></script>
-    <script src="js/data-tlds-risky.js"></script>
-    <script src="js/data-tlds-nonpublic.js"></script>
-    <script src="js/data-brands.js"></script>
-    <script src="js/data-example.js"></script>
-    <!-- External lookup intelligence (opt-in) -->
-    <script src="js/lookups.js"></script>
-    <!-- Core analyzer (must load last) -->
-    <script src="js/analyzer.js"></script>
+    <main class="moved">
+        <h1>The analyzer has moved</h1>
+        <p>The Email Header Analyzer is now the second page of <strong>Mail Ward</strong>
+            at its own address. Everything it did before, it still does.</p>
+        <p>You should be sent there automatically.</p>
+        <div class="btn-row">
+            <a class="btn btn-primary" href="https://mail.labidi.eu/analyzer/">Go to the analyzer</a>
+            <a class="btn btn-ghost" href="https://mail.labidi.eu/">Start with the guide</a>
+        </div>
+    </main>
 </body>
+
 </html>

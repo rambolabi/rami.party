@@ -1,600 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Upload a message-trace export (CSV or Excel) and chart who is sending mail as your domain, how much and when. Part of Mail Ward.">
-    <meta name="robots" content="index, follow">
-    <title>Email Volume Dashboard — chart a message-trace export | Mail Ward</title>
-    <link rel="canonical" href="https://rami.party/workshop/mail-ward/volume/">
+    <title>The Email Volume Dashboard has moved · mail.labidi.eu</title>
+    <meta name="description" content="The Email Volume Dashboard — part of Mail Ward — now lives at mail.labidi.eu/volume/.">
+    <meta name="theme-color" content="#0d0726">
+    <meta name="robots" content="noindex, follow">
+
+    <!-- Mail Ward moved to its own domain on 2026-08-07. No tombstone sw.js:
+         no service worker was ever registered under this scope. -->
+    <link rel="canonical" href="https://mail.labidi.eu/volume/">
+    <meta http-equiv="refresh" content="0; url=https://mail.labidi.eu/volume/">
+    <script>
+        location.replace('https://mail.labidi.eu/volume/' + location.search + location.hash);
+    </script>
+
+    <link rel="stylesheet" href="../../../theme.css">
+    <script src="../../../theme.js"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-    <link rel="stylesheet" href="../suite.css">
+
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: grid;
+            place-items: center;
             min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 30px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-
-        h1 {
-            color: #2d3748;
-            margin-bottom: 10px;
-            font-size: 2em;
-        }
-
-        .subtitle {
-            color: #718096;
-            font-size: 1em;
-        }
-
-        .controls {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: flex-end;
-        }
-
-        .control-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        label {
-            font-weight: 600;
-            color: #2d3748;
-            font-size: 0.9em;
-        }
-
-        input[type="file"],
-        select {
-            padding: 8px 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 6px;
-            font-size: 0.95em;
-            transition: border-color 0.3s;
-            cursor: pointer;
-        }
-
-        input[type="file"]:focus,
-        select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        button {
-            padding: 10px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            font-size: 0.95em;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 12px rgba(102, 126, 234, 0.4);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid #667eea;
-        }
-
-        .stat-label {
-            color: #718096;
-            font-size: 0.9em;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 2.5em;
-            font-weight: 700;
-            color: #2d3748;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-
-        .chart-container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-
-        .chart-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 20px;
-        }
-
-        .chart-wrapper {
-            position: relative;
-            min-height: 260px;
-        }
-
-        .chart-wrapper > div { width: 100%; }
-        .chart-wrapper svg { display: block; width: 100%; overflow: visible; }
-
-        .table-container {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            overflow-x: auto;
-        }
-
-        .table-title {
-            font-size: 1.3em;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: #f7fafc;
-            padding: 12px;
-            text-align: left;
-            font-weight: 600;
-            color: #2d3748;
-            border-bottom: 2px solid #e2e8f0;
-            font-size: 0.95em;
-        }
-
-        td {
-            padding: 12px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #4a5568;
-        }
-
-        tbody tr:hover {
-            background: #f7fafc;
-        }
-
-        .rank-cell {
-            font-weight: 600;
-            color: #667eea;
-            min-width: 40px;
-        }
-
-        .email-cell {
-            word-break: break-all;
-        }
-
-        .count-cell {
-            font-weight: 600;
-            color: #2d3748;
-            text-align: right;
-            min-width: 80px;
-        }
-
-        .percentage-cell {
-            color: #718096;
-            text-align: right;
-            min-width: 60px;
-        }
-
-        .progress-bar {
-            background: #e2e8f0;
-            height: 6px;
-            border-radius: 3px;
-            margin-top: 5px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            height: 100%;
-            border-radius: 3px;
-            transition: width 0.3s ease;
-        }
-
-        .info-message {
-            background: rgba(102, 126, 234, 0.1);
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            border-radius: 6px;
-            color: #2d3748;
-            margin-bottom: 20px;
-            font-size: 0.95em;
-        }
-
-        .error-message {
-            background: rgba(245, 101, 101, 0.1);
-            border-left: 4px solid #f56565;
-            padding: 15px;
-            border-radius: 6px;
-            color: #742a2a;
-            margin-bottom: 20px;
-        }
-
-        .no-data {
+            padding: 24px;
             text-align: center;
-            padding: 40px;
-            color: #718096;
         }
 
-        @media (max-width: 768px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
+        .moved {
+            max-width: 62ch;
+        }
 
-            .controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
+        .moved h1 {
+            font-family: var(--font-display);
+            font-size: clamp(1.8rem, 1.2rem + 2.4vw, 2.6rem);
+            background: var(--spell);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
 
-            .control-group {
-                width: 100%;
-            }
+        .moved p {
+            color: var(--text-muted);
+            margin-top: 14px;
+        }
 
-            h1 {
-                font-size: 1.5em;
-            }
-
-            .chart-wrapper {
-                min-height: 220px;
-            }
+        .moved .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 26px;
         }
     </style>
 </head>
+
 <body>
-    <nav class="mw-bar" aria-label="Mail Ward">
-        <a class="mw-brand" href="../"><span class="mw-mark" aria-hidden="true">🛡️</span> Mail&nbsp;Ward</a>
-        <span class="mw-sep" aria-hidden="true"></span>
-        <a href="../">Guide</a>
-        <a href="../analyzer/">Header analyzer</a>
-        <a href="./" aria-current="page">Volume dashboard</a>
-        <span class="mw-right"><a href="/workshop/">← Workshop</a></span>
-    </nav>
-
-    <div class="container">
-        <div class="header">
-            <h1>📧 Email Volume Analysis Dashboard</h1>
-            <p class="subtitle">Chart who is sending mail as your domain, from a message-trace export</p>
-        </div>
-
-        <div class="mw-note">
-            <p><strong>What this is for.</strong> Before you enforce a DMARC policy you have to know every
-                system that sends mail as you. DMARC aggregate reports tell you that from the outside;
-                a message trace from your own mail platform tells you from the inside. Export one
-                (Microsoft 365: <em>Exchange admin centre → Mail flow → Message trace</em>) and chart it here to
-                spot the senders you forgot — see <a href="../#step-0">step 0</a> and
-                <a href="../#step-4">step 4</a> of the guide.</p>
-            <p><strong>Your file never leaves this page</strong> — it is read, parsed and charted entirely
-                in your browser. Like the rest of Mail Ward, this page loads no third-party code at all:
-                the charts and the <code>.xlsx</code> reader are hand-written and served from here, so it
-                works offline. Accepts <code>.csv</code> and <code>.xlsx</code>; the legacy binary
-                <code>.xls</code> format is not supported — re-save it as either of those.</p>
-        </div>
-
-        <div class="controls">
-            <div class="control-group" style="flex: 1; min-width: 200px;">
-                <label for="fileInput">Upload CSV or Excel (.xlsx) file:</label>
-                <input type="file" id="fileInput" accept=".xlsx,.csv,.txt">
-            </div>
-            <div class="control-group">
-                <label for="senderColumn">Sender Column:</label>
-                <input type="text" id="senderColumn" placeholder="e.g., SenderAddress" value="SenderAddress">
-            </div>
-            <button type="button" id="loadBtn">📊 Load &amp; Analyze</button>
-        </div>
-
-        <div id="messages"></div>
-        <div id="statsSection" style="display: none;">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Unique Accounts</div>
-                    <div class="stat-value" id="uniqueAccounts">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Emails Sent</div>
-                    <div class="stat-value" id="totalEmails">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Avg Per Account</div>
-                    <div class="stat-value" id="avgPerAccount">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Max Volume</div>
-                    <div class="stat-value" id="maxVolume">0</div>
-                </div>
-            </div>
-
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <div class="chart-title">Top 10 Senders</div>
-                    <div class="chart-wrapper">
-                        <div id="barChart"></div>
-                    </div>
-                </div>
-                <div class="chart-container">
-                    <div class="chart-title">Email Distribution</div>
-                    <div class="chart-wrapper">
-                        <div id="pieChart"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-container">
-                <div class="table-title">Email Volume by Account</div>
-                <table id="detailTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Sender Account</th>
-                            <th>Email Count</th>
-                            <th>Percentage</th>
-                            <th>Volume Indicator</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
     </div>
 
-    <script src="charts.js"></script>
-    <script src="xlsx.js"></script>
-    <script>
-        'use strict';
-
-        var lastTop10 = null;
-
-        function message(kind, text) {
-            var box = document.getElementById('messages');
-            box.textContent = '';
-            var d = document.createElement('div');
-            d.className = kind === 'error' ? 'error-message' : 'info-message';
-            d.textContent = text;
-            box.appendChild(d);
-        }
-
-        async function loadFile() {
-            var file = document.getElementById('fileInput').files[0];
-            var senderColumn = document.getElementById('senderColumn').value.trim() || 'SenderAddress';
-            document.getElementById('messages').textContent = '';
-
-            if (!file) { message('error', '⚠️ Please select a file first.'); return; }
-
-            var name = file.name.toLowerCase();
-            try {
-                var data;
-                if (name.endsWith('.csv') || name.endsWith('.txt')) {
-                    data = await parseCSV(file, senderColumn);
-                } else if (name.endsWith('.xlsx')) {
-                    message('info', '⏳ Unzipping and reading the workbook…');
-                    data = await parseXlsx(file, senderColumn);
-                } else if (name.endsWith('.xls')) {
-                    throw new Error('The legacy binary .xls format is not supported. Open it in Excel and save as .xlsx or .csv.');
-                } else {
-                    throw new Error('Unsupported file type. Use a .csv or .xlsx export.');
-                }
-
-                if (!data.length) {
-                    message('error', '❌ No values found in column "' + senderColumn + '". Check the column name against the first row of your file.');
-                    return;
-                }
-
-                displayDashboard(data);
-                message('info', '✅ ' + data.length.toLocaleString() + ' rows read from "' + senderColumn + '". Nothing was uploaded.');
-            } catch (error) {
-                message('error', '❌ ' + error.message);
-            }
-        }
-
-        /* ---- CSV -----------------------------------------------------------
-           A real RFC 4180 reader: message-trace exports routinely contain
-           quoted fields with commas and newlines in them (subject lines), and
-           a naive split(',') silently shifts every later column. */
-        function parseCsvText(text) {
-            if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);   // strip BOM
-            var rows = [], row = [], field = '', inQuotes = false;
-
-            for (var i = 0; i < text.length; i++) {
-                var ch = text[i];
-                if (inQuotes) {
-                    if (ch === '"') {
-                        if (text[i + 1] === '"') { field += '"'; i++; }
-                        else inQuotes = false;
-                    } else field += ch;
-                    continue;
-                }
-                if (ch === '"') { inQuotes = true; continue; }
-                if (ch === ',') { row.push(field); field = ''; continue; }
-                if (ch === '\r') { if (text[i + 1] === '\n') i++; rows.push(row.concat(field)); row = []; field = ''; continue; }
-                if (ch === '\n') { rows.push(row.concat(field)); row = []; field = ''; continue; }
-                field += ch;
-            }
-            if (field !== '' || row.length) rows.push(row.concat(field));
-            return rows.filter(function (r) { return r.some(function (v) { return v.trim(); }); });
-        }
-
-        function parseCSV(file, senderColumn) {
-            return file.text().then(function (text) {
-                var rows = parseCsvText(text);
-                if (!rows.length) throw new Error('That file is empty.');
-
-                var headers = rows[0].map(function (h) { return h.trim(); });
-                var idx = headers.findIndex(function (h) { return h.toLowerCase() === senderColumn.toLowerCase(); });
-                if (idx === -1) {
-                    throw new Error('Column "' + senderColumn + '" not found. The file has: ' +
-                        headers.filter(Boolean).slice(0, 12).join(', ') + (headers.length > 12 ? '…' : ''));
-                }
-
-                var out = [];
-                for (var i = 1; i < rows.length; i++) {
-                    var v = (rows[i][idx] || '').trim();
-                    if (v) out.push(v);
-                }
-                return out;
-            });
-        }
-
-        /* ---- XLSX (read locally, see xlsx.js) ------------------------------ */
-        function parseXlsx(file, senderColumn) {
-            return MWXlsx.readFirstSheet(file).then(function (rows) {
-                if (!rows.length) throw new Error('The first worksheet is empty.');
-
-                var headers = Object.keys(rows[0]);
-                var key = headers.find(function (h) { return h.toLowerCase() === senderColumn.toLowerCase(); });
-                if (!key) {
-                    throw new Error('Column "' + senderColumn + '" not found. The sheet has: ' +
-                        headers.slice(0, 12).join(', ') + (headers.length > 12 ? '…' : ''));
-                }
-
-                return rows.map(function (r) { return r[key] == null ? '' : String(r[key]).trim(); })
-                    .filter(Boolean);
-            });
-        }
-
-        /* ---- Render -------------------------------------------------------- */
-        function displayDashboard(senderData) {
-            var counted = Object.create(null);
-            senderData.forEach(function (sender) {
-                counted[sender] = (counted[sender] || 0) + 1;
-            });
-
-            var sorted = Object.keys(counted)
-                .map(function (sender) { return { sender: sender, count: counted[sender] }; })
-                .sort(function (a, b) { return b.count - a.count; });
-
-            var total = senderData.length;
-            var unique = sorted.length;
-
-            document.getElementById('uniqueAccounts').textContent = unique.toLocaleString();
-            document.getElementById('totalEmails').textContent = total.toLocaleString();
-            document.getElementById('avgPerAccount').textContent = (total / unique).toFixed(1);
-            document.getElementById('maxVolume').textContent = sorted[0].count.toLocaleString();
-
-            lastTop10 = sorted.slice(0, 10);
-            var colors = generateColors(lastTop10.length);
-
-            var barBox = document.getElementById('barChart');
-            MWCharts.responsive(barBox, function () {
-                MWCharts.bar(barBox, lastTop10, { label: 'Top senders by number of messages' });
-            });
-
-            var pieBox = document.getElementById('pieChart');
-            MWCharts.responsive(pieBox, function () {
-                MWCharts.doughnut(pieBox, lastTop10, {
-                    colors: colors,
-                    label: 'Share of messages across the top senders'
-                });
-            });
-
-            var tbody = document.getElementById('tableBody');
-            tbody.textContent = '';
-            sorted.forEach(function (item, index) {
-                var percentage = ((item.count / total) * 100).toFixed(2);
-                var barWidth = (item.count / sorted[0].count) * 100;
-                var row = document.createElement('tr');
-
-                row.appendChild(cell('rank-cell', String(index + 1)));
-                row.appendChild(cell('email-cell', item.sender));
-                row.appendChild(cell('count-cell', item.count.toLocaleString()));
-                row.appendChild(cell('percentage-cell', percentage + '%'));
-
-                var td = document.createElement('td');
-                var track = document.createElement('div');
-                track.className = 'progress-bar';
-                var fill = document.createElement('div');
-                fill.className = 'progress-fill';
-                fill.style.width = barWidth + '%';
-                track.appendChild(fill);
-                td.appendChild(track);
-                row.appendChild(td);
-
-                tbody.appendChild(row);
-            });
-
-            document.getElementById('statsSection').style.display = 'block';
-        }
-
-        function cell(cls, text) {
-            var td = document.createElement('td');
-            td.className = cls;
-            td.textContent = text;
-            return td;
-        }
-
-        function generateColors(count) {
-            var colors = [
-                '#667eea', '#764ba2', '#f093fb', '#4facfe',
-                '#43e97b', '#fa709a', '#30cfd0', '#330867',
-                '#a8edea', '#fed6e3'
-            ];
-            var result = [];
-            for (var i = 0; i < count; i++) result.push(colors[i % colors.length]);
-            return result;
-        }
-
-        document.getElementById('loadBtn').addEventListener('click', loadFile);
-        document.getElementById('fileInput').addEventListener('change', function () {
-            if (this.files[0]) message('info', 'Ready: ' + this.files[0].name + ' — press Load & Analyze.');
-        });
-    </script>
-
-    <footer class="mw-foot">
-        <p>Part of <a href="../">Mail Ward</a> — the SPF, DKIM &amp; DMARC guide ·
-            <a href="../analyzer/">Header analyzer</a> ·
-            <a href="../#plan">The step-by-step plan</a></p>
-    </footer>
+    <main class="moved">
+        <h1>The dashboard has moved</h1>
+        <p>The Email Volume Dashboard is now part of <strong>Mail Ward</strong> at its own
+            address — it is the tool that finds every system sending mail as your domain.</p>
+        <p>You should be sent there automatically.</p>
+        <div class="btn-row">
+            <a class="btn btn-primary" href="https://mail.labidi.eu/volume/">Go to the dashboard</a>
+            <a class="btn btn-ghost" href="https://mail.labidi.eu/">Start with the guide</a>
+        </div>
+    </main>
 </body>
+
 </html>
