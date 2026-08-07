@@ -76,7 +76,7 @@
                 ? r.problems.length + ' PROBLEM(S)'
                 : 'clean — ' + r.trees + ' trees / ' + r.nodes + ' nodes / ' + r.plays + ' plays / ' +
                 r.terms + ' terms / ' + r.defences + ' defences / ' + r.auditOps + ' audit ops / ' +
-                r.logSources + ' log sources';
+                r.logSources + ' log sources / ' + r.symptoms + ' symptoms';
             v.className = r.problems.length ? 'lede bad' : 'lede ok';
             document.getElementById('result').textContent =
                 r.problems.length ? r.problems.join('\n') : JSON.stringify(r, null, 2);
@@ -110,7 +110,18 @@
                 ['device registered', '#/play/pro-device-registered'],
                 ['golden saml', '#/play/pro-entra-federation'],
                 ['inbox rule created', '#/play/pro-audit-triage'],
-                ['ediscovery export', '#/play/pro-audit-triage']
+                ['ediscovery export', '#/play/pro-audit-triage'],
+                ['unread mail marked read', '#/play/mailbox-compromise'],
+                ['sos only no signal', '#/play/sim-lost-signal'],
+                ['safe account', '#/terms/safe-account'],
+                ['gift card codes', '#/play/gift-card-paid'],
+                ['is the padlock safe', '#/terms/padlock'],
+                ['what does hashed mean', '#/terms/password-hash'],
+                ['50199', '#/play/pro-device-code'],
+                ['dark web alert', '#/terms/dark-web'],
+                ['my phone has a virus', '#/play/phone-malware'],
+                ['app wont uninstall', '#/play/phone-malware'],
+                ['my computer is slow ads everywhere', '#/play/computer-malware']
             ];
             var ul = document.getElementById('searchResults'), pass = 0;
             CHECKS.forEach(function (c) {

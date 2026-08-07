@@ -341,6 +341,73 @@
                 return out;
             },
         },
+        {
+            id: 'interrupt-then-success',
+            sev: 'critical',
+            title: 'Error 50199 followed by a success — the broker-flow phishing tell',
+            why: 'AADSTS50199 is the "user confirmation required" interrupt. In current device-code and broker-client phishing (the Storm-2372 pattern) the victim sees exactly this prompt, confirms it for the attacker, and the success minutes later is the attacker’s session — often followed by device registration and a Primary Refresh Token. Legitimate 50199s exist, but the interrupt-then-success pair from the same account deserves to be read, not skimmed.',
+            actions: [
+                'Treat the success as the attacker’s until shown otherwise: check its IP, ASN and user agent against the user’s normal pattern.',
+                'Check the audit log for a **device registered** by this user shortly after — that is the PRT being minted, and the device must be deleted, not just the tokens revoked.',
+                'Revoke refresh tokens and sessions, then reset. The order matters.',
+                'Block device code flow and restrict device registration in Conditional Access afterwards.',
+            ],
+            link: '../#/play/pro-device-code',
+            run(events) {
+                const out = [];
+                const HOUR = 60 * 60 * 1000;
+                const signins = events.filter(e => e.src === 'signin' && e.ts && e.actor);
+                const interrupts = signins.filter(e => /failure 50199\b/.test(e.result || ''));
+                interrupts.forEach(i => {
+                    const after = signins.filter(s =>
+                        s.result === 'success' &&
+                        s.actor.toLowerCase() === i.actor.toLowerCase() &&
+                        s.ts - i.ts > 0 && s.ts - i.ts <= HOUR);
+                    if (after.length) {
+                        out.push({
+                            detail: i.actor + ' — 50199 interrupt, then success ' +
+                                Math.round((after[0].ts - i.ts) / 60000) + ' min later from ' +
+                                (after[0].actorIp || 'unknown'),
+                            events: [i, after[0]],
+                        });
+                    }
+                });
+                return out;
+            },
+        },
+        {
+            id: 'fast-travel',
+            sev: 'high',
+            title: 'Successful sign-ins from two countries within two hours',
+            why: 'Multi-country alone is weak — this is the stronger version, with the clock attached. Two successes from different countries closer together than a plane could manage means at least one of them is not the user: a VPN, a proxy, corporate egress, or an attacker. The pair is printed so you can judge which.',
+            actions: [
+                'Identify which of the two sources is normal for this user — the other one is the question.',
+                'Rule out the boring answers: VPN and mobile-carrier egress produce this constantly. ASN and user agent settle it faster than geography.',
+                'If neither source can be explained, treat it as an active session from stolen credentials or a stolen token: revoke first, reset second.',
+            ],
+            link: '../#/play/pro-impossible-travel',
+            run(events) {
+                const out = [];
+                const WINDOW = 2 * 60 * 60 * 1000;
+                const signins = events.filter(e =>
+                    e.src === 'signin' && e.result === 'success' && e.ts && e.country && e.actor);
+                groupBy(signins, e => e.actor.toLowerCase()).forEach((list, user) => {
+                    const sorted = list.slice().sort((a, b) => a.ts - b.ts);
+                    for (let i = 1; i < sorted.length; i++) {
+                        const a = sorted[i - 1], b = sorted[i];
+                        if (a.country !== b.country && b.ts - a.ts <= WINDOW) {
+                            out.push({
+                                detail: user + ' — ' + a.country + ' then ' + b.country + ' ' +
+                                    Math.round((b.ts - a.ts) / 60000) + ' min apart',
+                                events: [a, b],
+                            });
+                            break;   /* one finding per user keeps the noise down */
+                        }
+                    }
+                });
+                return out;
+            },
+        },
     ];
 
     /* ------------------------------------------------------------- the run */

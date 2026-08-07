@@ -108,12 +108,6 @@ function updateProgress() {
     }
 }
 
-// Prevent user from leaving page
-window.addEventListener('beforeunload', function (e) {
-    e.preventDefault();
-    e.returnValue = '';
-});
-
 // Start the update after initial delay
 setTimeout(() => {
     steps[0].element.classList.add('active');

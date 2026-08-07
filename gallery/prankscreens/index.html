@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prank Screens · rami.party</title>
+    <title>Tasks for unlocked computers · rami.party</title>
 
     <!-- Theme engine: applies the saved theme before first paint -->
     <script src="/theme.js?v=20260806"></script>
@@ -15,12 +15,12 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <meta name="description" content="A cabinet of full-screen illusions — realistic fake boot, update, BIOS and “hacked” screens. For harmless mischief only.">
+    <meta name="description" content="Someone left their computer unlocked. Three ways to mark the occasion: cast a full-screen illusion, send the BBQ confession mail, or run a harmless reversible desktop prank.">
     <meta name="author" content="Rami">
     <meta name="theme-color" content="#0b0524">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://rami.party/gallery/prankscreens/">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%96%A5%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%94%93%3C/text%3E%3C/svg%3E">
 </head>
 
 <body>
@@ -32,7 +32,7 @@
 
     <header class="site-header">
         <div class="container">
-            <a href="/" class="wordmark" aria-label="rami.party — home">
+            <a href="/" class="wordmark" aria-label="rami.party home">
                 <span class="wordmark-spark" aria-hidden="true">✦</span>
                 <span class="wordmark-text">RAMI<span class="dot">.</span>PARTY</span>
             </a>
@@ -43,90 +43,132 @@
     <main>
         <section class="ps-hero">
             <div class="container">
-                <p class="eyebrow"><span aria-hidden="true">🎭</span> A cabinet of illusions <span aria-hidden="true">🎭</span></p>
-                <h1 class="ps-title">Prank Screens</h1>
-                <p class="ps-sub">Cast a convincing full-screen illusion, then hand over the device and
-                    watch the panic bloom. To break the spell yourself, <b>press Esc three times</b>
-                    — or simply close the tab.</p>
+                <p class="eyebrow"><span aria-hidden="true">🔓</span> Win + L was right there <span aria-hidden="true">🔓</span></p>
+                <h1 class="ps-title">Tasks for unlocked computers</h1>
+                <p class="ps-sub">A colleague walked away without locking their screen. Tradition
+                    demands a response. Pick one of the three below.</p>
 
-                <p class="warning-box">⚠️ These illusions look real on purpose. Use them kindly, for
-                    harmless fun and learning — never to genuinely frighten or deceive.</p>
+                <p class="warning-box">⚠️ All three are harmless and reversible. Use them kindly, for
+                    fun and for teaching people to lock their screen, never to genuinely frighten,
+                    deceive or humiliate anyone.</p>
 
-                <div class="options-grid">
-                    <a href="blackscreen/" class="spell-card">
-                        <span class="spell-icon" aria-hidden="true">💀</span>
-                        <h2>Black Screen of Death</h2>
-                        <p>Modern Windows BSOD — the new nightmare</p>
-                    </a>
-                    <a href="purplescreen/" class="spell-card">
-                        <span class="spell-icon" aria-hidden="true">🐧</span>
-                        <h2>Purple Screen of Death</h2>
-                        <p>Linux kernel panic — terminal terror</p>
-                    </a>
-                    <a href="ransomware-real/" class="spell-card">
-                        <span class="spell-icon" aria-hidden="true">🔒</span>
-                        <h2>Realistic Ransomware</h2>
-                        <p>How it actually looks in real life</p>
-                    </a>
-                    <a href="ransomware-movie/" class="spell-card">
-                        <span class="spell-icon" aria-hidden="true">🎬</span>
-                        <h2>Hollywood Ransomware</h2>
-                        <p>Dramatic movie-style hack screen</p>
-                    </a>
-                    <a href="windows11/" class="spell-card">
-                        <span class="spell-icon" aria-hidden="true">🪟</span>
-                        <h2>Windows 11 Update</h2>
-                        <p>Realistic Windows update screen</p>
-                    </a>
-                    <a href="macos/" class="spell-card">
-                        <span class="spell-icon" aria-hidden="true">🍎</span>
-                        <h2>macOS Update</h2>
-                        <p>Installing macOS Sonoma screen</p>
-                    </a>
-                    <a href="android/" class="spell-card">
-                        <span class="spell-icon" aria-hidden="true">🤖</span>
-                        <h2>Android System Update</h2>
-                        <p>Installing Android system update</p>
-                    </a>
-                    <a href="hp/" class="spell-card">
-                        <span class="spell-icon" aria-hidden="true">🖥️</span>
-                        <h2>HP System Update</h2>
-                        <p>HP Support Assistant updating</p>
-                    </a>
+                <div class="chooser" role="tablist" aria-label="Pick your task">
+                    <button type="button" class="choice" role="tab" id="tab-screens"
+                        aria-controls="panel-screens" aria-selected="true" data-panel="screens">
+                        <span class="choice-icon" aria-hidden="true">🖥️</span>
+                        <span class="choice-title">Fake screen</span>
+                        <span class="choice-sub">Cast a full-screen illusion and hand the device back</span>
+                    </button>
+                    <button type="button" class="choice" role="tab" id="tab-bbq"
+                        aria-controls="panel-bbq" aria-selected="false" tabindex="-1" data-panel="bbq">
+                        <span class="choice-icon" aria-hidden="true">🍖</span>
+                        <span class="choice-title">Send BBQ mail</span>
+                        <span class="choice-sub">The traditional "I forgot to lock my PC" confession</span>
+                    </button>
+                    <button type="button" class="choice" role="tab" id="tab-actions"
+                        aria-controls="panel-actions" aria-selected="false" tabindex="-1" data-panel="actions">
+                        <span class="choice-icon" aria-hidden="true">🎛️</span>
+                        <span class="choice-title">Take actions</span>
+                        <span class="choice-sub">Reversible desktop pranks, each with an undo</span>
+                    </button>
                 </div>
 
-                <div class="separator-bar"><span>🧪 Testing phase — work in progress</span></div>
+                <div class="ps-panel" id="panel-screens" role="tabpanel" aria-labelledby="tab-screens">
+                    <p class="panel-lede">Open one on their machine, press <b>F</b> or click once for
+                        fullscreen, then walk away. To break the spell, <b>press Esc three times</b>
+                        or close the tab.</p>
 
-                <div class="options-grid">
-                    <a href="bios/" class="spell-card is-wip">
-                        <span class="spell-icon" aria-hidden="true">💾</span>
-                        <h2>BIOS Flash Update</h2>
-                        <p>American Megatrends BIOS update</p>
-                    </a>
-                    <a href="hacked/" class="spell-card is-wip">
-                        <span class="spell-icon" aria-hidden="true">⚡</span>
-                        <h2>You've Been Hacked</h2>
-                        <p>Warning: flashing warning screen</p>
-                    </a>
-                    <a href="hp-bios/" class="spell-card is-wip">
-                        <span class="spell-icon" aria-hidden="true">⚙️</span>
-                        <h2>HP BIOS Update</h2>
-                        <p>HP EliteBook BIOS flash utility</p>
-                    </a>
+                    <div class="options-grid">
+                        <a href="blackscreen/" class="spell-card">
+                            <span class="spell-icon" aria-hidden="true">💀</span>
+                            <h2>Black Screen of Death</h2>
+                            <p>Modern Windows BSOD, the new nightmare</p>
+                        </a>
+                        <a href="purplescreen/" class="spell-card">
+                            <span class="spell-icon" aria-hidden="true">🐧</span>
+                            <h2>Purple Screen of Death</h2>
+                            <p>Linux kernel panic, terminal terror</p>
+                        </a>
+                        <a href="ransomware-real/" class="spell-card">
+                            <span class="spell-icon" aria-hidden="true">🔒</span>
+                            <h2>Realistic Ransomware</h2>
+                            <p>How it actually looks in real life</p>
+                        </a>
+                        <a href="ransomware-movie/" class="spell-card">
+                            <span class="spell-icon" aria-hidden="true">🎬</span>
+                            <h2>Hollywood Ransomware</h2>
+                            <p>Dramatic movie-style hack screen</p>
+                        </a>
+                        <a href="windows11/" class="spell-card">
+                            <span class="spell-icon" aria-hidden="true">🪟</span>
+                            <h2>Windows 11 Update</h2>
+                            <p>Realistic Windows update screen</p>
+                        </a>
+                        <a href="macos/" class="spell-card">
+                            <span class="spell-icon" aria-hidden="true">🍎</span>
+                            <h2>macOS Update</h2>
+                            <p>Installing macOS Sonoma screen</p>
+                        </a>
+                        <a href="android/" class="spell-card">
+                            <span class="spell-icon" aria-hidden="true">🤖</span>
+                            <h2>Android System Update</h2>
+                            <p>Installing Android system update</p>
+                        </a>
+                        <a href="hp/" class="spell-card">
+                            <span class="spell-icon" aria-hidden="true">🖥️</span>
+                            <h2>HP System Update</h2>
+                            <p>HP Support Assistant updating</p>
+                        </a>
+                    </div>
+
+                    <div class="separator-bar"><span>🧪 Testing phase, work in progress</span></div>
+
+                    <div class="options-grid">
+                        <a href="bios/" class="spell-card is-wip">
+                            <span class="spell-icon" aria-hidden="true">💾</span>
+                            <h2>BIOS Flash Update</h2>
+                            <p>American Megatrends BIOS update</p>
+                        </a>
+                        <a href="hacked/" class="spell-card is-wip">
+                            <span class="spell-icon" aria-hidden="true">⚡</span>
+                            <h2>You've Been Hacked</h2>
+                            <p>Warning: flashing warning screen</p>
+                        </a>
+                        <a href="hp-bios/" class="spell-card is-wip">
+                            <span class="spell-icon" aria-hidden="true">⚙️</span>
+                            <h2>HP BIOS Update</h2>
+                            <p>HP EliteBook BIOS flash utility</p>
+                        </a>
+                    </div>
                 </div>
 
-                <div class="separator-bar"><span>🔓 Unlocked Computer Assistant — gentle desktop pranks</span></div>
+                <div class="ps-panel" id="panel-bbq" role="tabpanel" aria-labelledby="tab-bbq" hidden>
+                    <p class="panel-lede">The office classic: a confession mail, sent from their own
+                        machine, admitting they left it unlocked and volunteering to bring the BBQ.
+                        Written in Dutch, English or French, with a pile of ready-made messages.</p>
 
-                <p class="warning-box">🖥️ All Windows, all harmless &amp; reversible. Every card is tagged with the
-                    console to use — <b>PowerShell</b>, <b>Command Prompt</b> or a <b>keyboard</b> shortcut — and comes
-                    with an <b>Undo</b>. Copy, run, giggle, then put it back. Win + L is your friend 😉</p>
+                    <p class="warning-box">📧 Nothing is sent from this site. The tool composes the
+                        message and hands it to the mail client, so you always see it before it goes.</p>
 
-                <div class="prank-toolkit">
-                    <div class="prank-grid" id="prankGrid"></div>
+                    <p class="panel-cta">
+                        <a href="bbq/" class="btn-open">Open the BBQ mailer <span aria-hidden="true">→</span></a>
+                    </p>
+                </div>
 
-                    <div class="combo-section">
-                        <h2>🎭 Ultimate combo moves</h2>
-                        <div id="comboList"></div>
+                <div class="ps-panel" id="panel-actions" role="tabpanel" aria-labelledby="tab-actions" hidden>
+                    <p class="panel-lede">Gentle desktop pranks they will notice within a minute.</p>
+
+                    <p class="warning-box">🖥️ All Windows, all harmless &amp; reversible. Every card is tagged with the
+                        console to use, <b>PowerShell</b>, <b>Command Prompt</b> or a <b>keyboard</b> shortcut, and comes
+                        with an <b>Undo</b>. Copy, run, giggle, then put it back. Win + L is your friend 😉</p>
+
+                    <div class="prank-toolkit">
+                        <div class="prank-grid" id="prankGrid"></div>
+
+                        <div class="combo-section">
+                            <h2>🎭 Ultimate combo moves</h2>
+                            <div id="comboList"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -144,6 +186,7 @@
 
     <script src="/script.js?v=20260806"></script>
     <script src="prank-toolkit.js?v=20260806"></script>
+    <script src="chooser.js?v=20260807"></script>
 </body>
 
 </html>

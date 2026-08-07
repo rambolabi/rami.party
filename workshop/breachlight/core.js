@@ -128,6 +128,7 @@
     const PAGES = [
         { id: '', label: 'Start', href: '#/' },
         { id: 'triage', label: 'Triage', href: '#/triage' },
+        { id: 'signs', label: 'Symptoms', href: '#/signs' },
         { id: 'plays', label: 'Playbooks', href: '#/plays' },
         { id: 'terms', label: 'Glossary', href: '#/terms' },
         { id: 'defend', label: 'Defence bench', href: '#/defend' },

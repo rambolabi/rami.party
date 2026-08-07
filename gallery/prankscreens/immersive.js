@@ -79,3 +79,63 @@
 
     acquire();
 })();
+
+/* ==========================================================================
+   Holding on to fullscreen
+   A browser will never let a page block Escape outright, and it should not.
+   What it does offer is the Keyboard Lock API: while the page is fullscreen,
+   navigator.keyboard.lock(['Escape']) routes Escape to the page as an
+   ordinary keydown instead of dropping out of fullscreen. The way out then
+   becomes press-and-HOLD Escape, which the browser still enforces itself, so
+   nobody can be trapped. Chrome and Edge on desktop support it; everywhere
+   else this is a no-op and Escape behaves normally.
+
+   Whatever happens, if fullscreen is lost the illusion still fills the whole
+   window, and the next click quietly restores it.
+   ========================================================================== */
+(function () {
+    'use strict';
+
+    var kb = navigator.keyboard;
+    var wanted = false;             // did the user ever ask for fullscreen?
+
+    function inFullscreen() {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement);
+    }
+
+    function lockEscape() {
+        if (!kb || !kb.lock) return;
+        try { kb.lock(['Escape']).catch(function () { }); } catch (e) { }
+    }
+
+    function unlockEscape() {
+        if (!kb || !kb.unlock) return;
+        try { kb.unlock(); } catch (e) { }
+    }
+
+    function enter() {
+        var el = document.documentElement;
+        var req = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (!req) return;
+        var p = req.call(el);
+        if (p && p.catch) p.catch(function () { });
+    }
+
+    document.addEventListener('fullscreenchange', function () {
+        if (inFullscreen()) {
+            wanted = true;
+            lockEscape();
+        } else {
+            unlockEscape();
+        }
+    });
+
+    // Any per-screen script may have taken us fullscreen already.
+    if (inFullscreen()) { wanted = true; lockEscape(); }
+
+    // Escape drops fullscreen on browsers without keyboard lock; the next
+    // click puts it back rather than leaving a half-broken illusion.
+    window.addEventListener('pointerdown', function () {
+        if (wanted && !inFullscreen()) enter();
+    }, true);
+})();

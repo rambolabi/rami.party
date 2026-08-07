@@ -120,8 +120,16 @@ window.BL_TREES = [
                     { a: 'My files are encrypted and there’s a ransom note', to: 'r-ransom' },
                     { a: 'Someone else was controlling it', to: 'r-remote' },
                     { a: 'It’s lost or stolen', to: 'r-lost' },
-                    { a: 'Pop-ups, unknown apps, or it’s suddenly very slow', to: 'r-malware' },
-                    { a: 'I installed something I now regret', to: 'r-malware' },
+                    { a: 'Pop-ups, “virus” warnings, unknown apps, or suddenly slow', to: 'q-malware-dev' },
+                    { a: 'I installed a crack, a cheat, or something a pop-up pushed on me', to: 'r-malware' },
+                ],
+            },
+            'q-malware-dev': {
+                q: 'Which device is it?',
+                hint: 'Phones and computers get compromised differently, and the fixes differ too.',
+                options: [
+                    { a: 'A Windows PC or a Mac', to: 'r-computer-malware' },
+                    { a: 'A phone or a tablet', to: 'r-phone-malware' },
                 ],
             },
 
@@ -379,6 +387,28 @@ window.BL_TREES = [
                     'Plan a full reinstall. Self-deleting malware makes a clean scan meaningless.',
                 ],
                 link: '#/play/infostealer-home',
+            },
+            'r-computer-malware': {
+                result: 'Sort the impostors out first, then clean, then scan',
+                tag: 'high',
+                steps: [
+                    '“Virus alerts” in the screen corner are usually browser **notifications** from a site you once told Allow — remove them in the browser settings.',
+                    'Strip browser extensions you do not use and put your search engine back.',
+                    'Run a **full** scan with what is already installed — never with something an ad offered.',
+                    'If a stealer or trojan turns up, or you ran a crack: treat your saved passwords as stolen.',
+                ],
+                link: '#/play/computer-malware',
+            },
+            'r-phone-malware': {
+                result: 'Most phone “infections” are notification spam — check the real two',
+                tag: 'high',
+                steps: [
+                    'Remove hijacked notification permissions (and on iPhone, subscribed calendars) — that is where the “virus warnings” live.',
+                    'Android: run Play Protect, then check Accessibility and device-admin for apps that should not be there.',
+                    'iPhone or iPad: delete configuration profiles you never knowingly installed, and prune subscriptions.',
+                    'If banking or codes run through the phone, change email and bank passwords from another device today.',
+                ],
+                link: '#/play/phone-malware',
             },
             'r-threat': {
                 result: 'Stop replying, preserve everything, do not pay',
@@ -986,5 +1016,322 @@ window.BL_TREES = [
                 link: '#/play/pro-comms',
             },
         },
+    },
+];
+
+/* ==========================================================================
+   The symptom index — "I am seeing X, what is it?"
+
+   The trees ask questions; this works the other way round. Each entry maps
+   one concrete observation to what it usually means and the page that deals
+   with it. Written so the OBSERVATION is in the reader's words — that exact
+   phrasing is also what feeds the search index.
+
+   Schema
+     id      stable, unique
+     aud     'user' | 'pro'
+     group   heading id (see BL_SYMPTOM_GROUPS)
+     see     the observation, phrased as the reader would say it
+     means   what it usually is — including the innocent explanation if
+             there is a common one, so nobody panics over a battery
+     sev     'critical' | 'high' | 'medium'  (how fast to act if it is real)
+     link    where to go — a play, tree, term or defence hash route
+     keys    extra search words
+   ========================================================================== */
+
+window.BL_SYMPTOM_GROUPS = [
+    /* user */
+    { id: 'sg-mail', aud: 'user', title: 'In your email', glyph: '📧' },
+    { id: 'sg-money', aud: 'user', title: 'On your bank or card', glyph: '💳' },
+    { id: 'sg-account', aud: 'user', title: 'On your accounts', glyph: '🔓' },
+    { id: 'sg-phone', aud: 'user', title: 'On your phone', glyph: '📱' },
+    { id: 'sg-device', aud: 'user', title: 'On your computer', glyph: '💻' },
+    { id: 'sg-contact', aud: 'user', title: 'Someone contacted you', glyph: '📨' },
+    /* pro */
+    { id: 'sg-identity', aud: 'pro', title: 'Identity alerts', glyph: '🪪' },
+    { id: 'sg-mailflow', aud: 'pro', title: 'Mail and data alerts', glyph: '📬' },
+    { id: 'sg-directory', aud: 'pro', title: 'Directory alerts', glyph: '🏰' },
+];
+
+window.BL_SYMPTOMS = [
+
+    /* ------------------------------------------------------------- email -- */
+    {
+        id: 'sy-read-mail', aud: 'user', group: 'sg-mail', sev: 'critical',
+        see: 'Mail is marked read that I never read',
+        means: 'The classic sign someone else is inside the mailbox. Occasionally it is your own second device or a linked mail app — but check properly, because a reader in your mail is preparing something.',
+        link: '#/play/mailbox-compromise',
+        keys: 'unread mail marked read emails opened by themselves already read someone reading my email',
+    },
+    {
+        id: 'sy-missing-mail', aud: 'user', group: 'sg-mail', sev: 'critical',
+        see: 'Messages are disappearing, or replies mention mails I never saw',
+        means: 'A hidden rule is usually moving or deleting messages so you do not see the conversation the attacker is having in your name.',
+        link: '#/play/mailbox-compromise',
+        keys: 'emails disappearing deleted missing replies to messages i didnt send hidden folder rss feeds rule',
+    },
+    {
+        id: 'sy-sent-spam', aud: 'user', group: 'sg-mail', sev: 'high',
+        see: 'People say they got a strange message from my address',
+        means: 'Either your account really is compromised, or your address was spoofed — forged on mail sent from elsewhere. The mailbox playbook starts by telling the two apart.',
+        link: '#/play/mailbox-compromise',
+        keys: 'friends got spam from me strange email sent from my address i didnt send it spoofed contacts receiving',
+    },
+
+    /* ------------------------------------------------------------- money -- */
+    {
+        id: 'sy-small-charge', aud: 'user', group: 'sg-money', sev: 'critical',
+        see: 'A tiny charge I don’t recognise — one or two euros',
+        means: 'Often card testing: a stolen card number is probed with a small amount before a big purchase. The small charge is the warning shot, not the attack.',
+        link: '#/play/card-fraud',
+        keys: 'small charge one euro two test transaction unknown tiny payment card testing probe',
+    },
+    {
+        id: 'sy-big-charge', aud: 'user', group: 'sg-money', sev: 'critical',
+        see: 'Charges or transfers I did not make',
+        means: 'Card fraud or account fraud in progress. This is the one with a deadline measured in minutes — phone the bank before reading anything else.',
+        link: '#/play/card-fraud',
+        keys: 'money gone unknown charges transactions i didnt make unauthorised payment stolen',
+    },
+    {
+        id: 'sy-recurring', aud: 'user', group: 'sg-money', sev: 'medium',
+        see: 'A monthly charge under a name I don’t recognise',
+        means: 'Usually a subscription trap — a "free trial" that converted — or a family member’s purchase under an obscure merchant name. Search the merchant name first, then dispute.',
+        link: '#/terms/subscription-trap',
+        keys: 'monthly charge subscription i didnt order recurring unknown merchant name free trial converted cancel',
+    },
+    {
+        id: 'sy-bank-sms', aud: 'user', group: 'sg-money', sev: 'critical',
+        see: 'My bank texted a code or approval for a payment I did not start',
+        means: 'Someone has your card or banking details and is at the checkout right now. Do not approve anything; phone the bank on the number on your card.',
+        link: '#/play/card-fraud',
+        keys: 'bank sent code payment approval i didnt start authorise 3d secure prompt unexpected',
+    },
+
+    /* ---------------------------------------------------------- accounts -- */
+    {
+        id: 'sy-pwd-changed', aud: 'user', group: 'sg-account', sev: 'critical',
+        see: '"Your password was changed" — but I didn’t change it',
+        means: 'A takeover completing. If you can still get in, act now; if not, go straight to the recovery process. Minutes matter either way.',
+        link: '#/play/account-takeover',
+        keys: 'password was changed email notification i didnt change it security alert account',
+    },
+    {
+        id: 'sy-locked-out', aud: 'user', group: 'sg-account', sev: 'critical',
+        see: 'I’m locked out and the recovery email or phone was changed',
+        means: 'The attacker is closing the doors behind them. Every service has a compromised-account recovery route that beats this — the playbook lists them.',
+        link: '#/play/account-takeover',
+        keys: 'locked out cant sign in recovery email changed phone number changed hacked account get back in',
+    },
+    {
+        id: 'sy-new-device', aud: 'user', group: 'sg-account', sev: 'critical',
+        see: 'A "new sign-in" alert from a place or device that isn’t mine',
+        means: 'Someone has your password and used it. You still having access does not make it fine — treat it as live compromise: change the password AND sign out everything.',
+        link: '#/play/entered-password',
+        keys: 'new sign in alert device location login from another country notification someone logged in',
+    },
+    {
+        id: 'sy-mfa-prompts', aud: 'user', group: 'sg-account', sev: 'critical',
+        see: 'Sign-in prompts or codes keep arriving that I did not request',
+        means: 'Your password is already in someone’s hands — the prompts are them trying to get past your second factor. Never approve one to make it stop.',
+        link: '#/play/approved-mfa',
+        keys: 'mfa prompts keep coming approval requests codes arriving i didnt request push notifications spam authenticator',
+    },
+    {
+        id: 'sy-social-posts', aud: 'user', group: 'sg-account', sev: 'high',
+        see: 'My social account is posting or messaging things I didn’t write',
+        means: 'Account takeover or a malicious connected app. Friends are being scammed in your name while it runs — speed protects them, not just you.',
+        link: '#/play/social-hijack',
+        keys: 'instagram facebook posting by itself messages i didnt write sent crypto spam my account posting ads',
+    },
+
+    /* ------------------------------------------------------------- phone -- */
+    {
+        id: 'sy-no-signal', aud: 'user', group: 'sg-phone', sev: 'critical',
+        see: 'My phone suddenly shows no signal — "SOS only" — for no reason',
+        means: 'If it lasts more than a few minutes in a place with coverage, this can be a SIM swap: your number moved to someone else’s SIM to catch your banking codes. The genuinely urgent version of a boring symptom.',
+        link: '#/play/sim-lost-signal',
+        keys: 'no signal sos only no service sim not working suddenly number stopped sim swap port out',
+    },
+    {
+        id: 'sy-battery', aud: 'user', group: 'sg-phone', sev: 'medium',
+        see: 'Battery drains fast, phone runs hot, data use jumped',
+        means: 'Nearly always a misbehaving app, a failing battery or an OS update indexing. Worth ruling out a hostile app — and, especially if a partner or ex had access to the phone, stalkerware.',
+        link: '#/play/phone-malware',
+        keys: 'battery draining phone hot data usage high spyware tracking am i being tracked stalkerware check',
+    },
+    {
+        id: 'sy-phone-popups', aud: 'user', group: 'sg-phone', sev: 'medium',
+        see: '“Virus detected” warnings keep appearing on my phone',
+        means: 'A web page cannot scan your phone — these are hijacked browser notifications (or, on iPhone, calendar spam), and the “cleaner” they advertise is the actual scam. Removing the permission removes the “infection”.',
+        link: '#/play/phone-malware',
+        keys: 'phone says virus detected warning popup android chrome notifications iphone calendar spam clean your phone fake alert',
+    },
+    {
+        id: 'sy-phone-app', aud: 'user', group: 'sg-phone', sev: 'high',
+        see: 'An app I don’t remember installing, or one that won’t uninstall',
+        means: 'The real phone-malware case. On Android an app that resists removal has usually taken device-admin or Accessibility rights — revoke those first, and check what else it touched.',
+        link: '#/play/phone-malware',
+        keys: 'app i didnt install unknown app wont uninstall cant remove app device admin accessibility sideloaded apk',
+    },
+    {
+        id: 'sy-phone-charges', aud: 'user', group: 'sg-phone', sev: 'high',
+        see: 'Charges on my phone bill or app store that I didn’t make',
+        means: 'Premium-SMS fraud on the carrier bill, or “fleeceware” subscriptions on the store account. Dispute with the carrier and block premium SMS; cancel unknown subscriptions in the store settings.',
+        link: '#/play/phone-malware',
+        keys: 'phone bill charges premium sms app store subscription i didnt order google play apple charged weekly fleeceware',
+    },
+
+    /* ---------------------------------------------------------- computer -- */
+    {
+        id: 'sy-encrypted', aud: 'user', group: 'sg-device', sev: 'critical',
+        see: 'My files won’t open, have strange extensions, or there’s a ransom note',
+        means: 'Ransomware. Disconnect the machine from the network now — the encryption may still be running — then work the playbook. Do not pay before reading it.',
+        link: '#/play/ransomware-home',
+        keys: 'files encrypted wont open strange extension ransom note readme locked documents',
+    },
+    {
+        id: 'sy-passwords-gone', aud: 'user', group: 'sg-device', sev: 'critical',
+        see: 'I’m suddenly signed out of everything, or saved passwords vanished',
+        means: 'The signature of an infostealer: it grabs every saved password and session in seconds, then the accounts start falling. The response is bigger than a virus scan.',
+        link: '#/play/infostealer-home',
+        keys: 'signed out of everything saved passwords gone chrome logged out all accounts stealer',
+    },
+    {
+        id: 'sy-cursor', aud: 'user', group: 'sg-device', sev: 'critical',
+        see: 'The cursor moved by itself, or software appeared I never installed',
+        means: 'Someone may have live remote control — especially if you recently let "support" connect, or installed something from a link. Disconnect from the internet first, then read.',
+        link: '#/play/remote-access',
+        keys: 'cursor moving by itself mouse moved remote control software i didnt install anydesk teamviewer appeared',
+    },
+    {
+        id: 'sy-popups', aud: 'user', group: 'sg-device', sev: 'medium',
+        see: 'A full-screen virus warning with a phone number and a siren',
+        means: 'Scareware — the page is the whole attack, and it wants you to call the number. Your computer is very probably fine. Close the browser; never call.',
+        link: '#/play/computer-malware',
+        keys: 'virus warning full screen alarm sound phone number microsoft warning locked pc call support popup',
+    },
+    {
+        id: 'sy-slow-fans', aud: 'user', group: 'sg-device', sev: 'medium',
+        see: 'My computer is suddenly slow, or the fans roar when it should be idle',
+        means: 'Usually an update, a full disk or one greedy browser tab — occasionally adware or a hidden miner. The malware playbook sorts the innocent explanations from the real ones in order.',
+        link: '#/play/computer-malware',
+        keys: 'computer suddenly slow fans loud spinning hot cpu 100 disk busy mining lagging freezes',
+    },
+    {
+        id: 'sy-browser-weird', aud: 'user', group: 'sg-device', sev: 'medium',
+        see: 'New toolbar, different search engine, ads everywhere',
+        means: 'Adware or a hostile browser extension riding along with a download. Annoying more than catastrophic — but if that browser stores passwords, treat it more seriously.',
+        link: '#/play/computer-malware',
+        keys: 'browser hijacked new toolbar search engine changed ads popups everywhere extension remove',
+    },
+
+    /* ----------------------------------------------------------- contact -- */
+    {
+        id: 'sy-family-money', aud: 'user', group: 'sg-contact', sev: 'high',
+        see: 'A family member asked for money from a new number, or by a voice call',
+        means: 'The family-emergency scam — now often with a cloned voice. Hang up and call their real number yourself; ask for the code word if you have one.',
+        link: '#/play/deepfake-call',
+        keys: 'hi mum new number child asked for money voice sounded like grandchild emergency call verify',
+    },
+    {
+        id: 'sy-sextortion-mail', aud: 'user', group: 'sg-contact', sev: 'high',
+        see: 'An email threatens to publish video of me — and quotes an old password',
+        means: 'A mass-mailed bluff. The password is from an old data breach and is the only real thing in the message; there is no video. Different rules apply if the threat comes from someone you actually shared images with — the playbook covers both.',
+        link: '#/play/sextortion-threat',
+        keys: 'sextortion email threat video webcam old password bitcoin they know my password blackmail bluff',
+    },
+    {
+        id: 'sy-parcel-sms', aud: 'user', group: 'sg-contact', sev: 'medium',
+        see: 'A text about a parcel fee, a toll, or a missed delivery',
+        means: 'One of the highest-volume scam texts on earth. If you only received it: delete. If you paid the "fee": your card details are taken — treat it as card fraud, quickly.',
+        link: '#/terms/delivery-scam',
+        keys: 'parcel text package fee sms toll missed delivery paid small fee dpd postnl bpost customs',
+    },
+    {
+        id: 'sy-refund-call', aud: 'user', group: 'sg-contact', sev: 'critical',
+        see: 'A "support" caller refunded too much and wants the difference back',
+        means: 'The refund scam. No money ever arrived — they edited the page you were looking at while controlling your screen. Sending the "difference" is sending your own money.',
+        link: '#/play/money-transfer',
+        keys: 'refund too much send back difference support called overpaid my account shows extra money remote',
+    },
+
+    /* ====================================================== responder side == */
+    {
+        id: 'sy-pro-50199', aud: 'pro', group: 'sg-identity', sev: 'critical',
+        see: 'Sign-in error 50199, then a success minutes later',
+        means: 'The tell of device-code and broker-consent phishing: the interrupt prompt, then the attacker’s session. Treat the success as theirs until proven otherwise.',
+        link: '#/play/pro-device-code',
+        keys: '50199 error code then success device code broker consent interrupt sign in',
+    },
+    {
+        id: 'sy-pro-mfa-new', aud: 'pro', group: 'sg-identity', sev: 'critical',
+        see: 'A new MFA method or phone number appeared on an account',
+        means: 'Persistence being installed. "User registered security info" right after an anomalous sign-in is a takeover being made durable.',
+        link: '#/play/pro-mfa-anomaly',
+        keys: 'new mfa method registered security info phone number added authenticator persistence',
+    },
+    {
+        id: 'sy-pro-travel', aud: 'pro', group: 'sg-identity', sev: 'high',
+        see: 'Impossible travel / unfamiliar sign-in properties alert',
+        means: 'A weak signal alone, a strong one in company. Judge it on ASN, device and MFA interaction, not geography — then check what happened right after the sign-in.',
+        link: '#/play/pro-impossible-travel',
+        keys: 'impossible travel alert unfamiliar sign in properties risky location anonymous ip',
+    },
+    {
+        id: 'sy-pro-consent', aud: 'pro', group: 'sg-identity', sev: 'high',
+        see: 'A user consented to an app nobody recognises',
+        means: 'OAuth consent phishing — mailbox access that survives password resets and MFA. The grant, not the login, is the breach.',
+        link: '#/play/pro-oauth-grant',
+        keys: 'consent to application unknown app oauth grant permissions mailbox offline_access',
+    },
+    {
+        id: 'sy-pro-helpdesk', aud: 'pro', group: 'sg-identity', sev: 'critical',
+        see: 'A password or MFA reset by the service desk, then anomalous activity',
+        means: 'The help desk may have been social-engineered — the attacker resets their way in with no phishing at all. Verify the ticket, the caller and the callback.',
+        link: '#/play/pro-helpdesk',
+        keys: 'helpdesk reset service desk social engineering vishing admin reset then sign in',
+    },
+    {
+        id: 'sy-pro-inbox-rule', aud: 'pro', group: 'sg-mailflow', sev: 'critical',
+        see: 'New-InboxRule or forwarding appeared on a mailbox',
+        means: 'The most reliable single indicator of business email compromise. Read the rule before deleting it — its filters name the fraud in progress.',
+        link: '#/play/pro-inbox-rules',
+        keys: 'new inboxrule forwarding smtp forward rule created rss deletion bec indicator',
+    },
+    {
+        id: 'sy-pro-mass', aud: 'pro', group: 'sg-mailflow', sev: 'high',
+        see: 'The same lure landed in many mailboxes at once',
+        means: 'A campaign, not an incident-per-user. Purge centrally, hunt the click-throughs, and assume some credentials are already gone.',
+        link: '#/play/pro-mass-campaign',
+        keys: 'mass campaign same email many users phishing wave purge zap hunt',
+    },
+    {
+        id: 'sy-pro-exfil', aud: 'pro', group: 'sg-mailflow', sev: 'high',
+        see: 'Bulk downloads, a mailbox synced, or an outbound mail burst',
+        means: 'Collection or exfiltration. Volume and rate separate it from work; what exactly left decides the notification question, so enumerate before concluding.',
+        link: '#/play/pro-log-collection',
+        keys: 'bulk download filedownloaded sync mailbox outbound burst exfiltration data left',
+    },
+    {
+        id: 'sy-pro-dcsync', aud: 'pro', group: 'sg-directory', sev: 'critical',
+        see: 'Event 4662 with replication GUIDs from a non-DC account',
+        means: 'DCSync — the directory database walking out of the door credential by credential. Tier 0 response, immediately.',
+        link: '#/play/pro-ad-dcsync',
+        keys: 'dcsync 4662 replication guid ds-replication-get-changes non dc account mimikatz',
+    },
+    {
+        id: 'sy-pro-federation', aud: 'pro', group: 'sg-directory', sev: 'critical',
+        see: '"Set domain authentication" or a new federation trust in the audit log',
+        means: 'Potential Golden SAML — a hostile signing key that can assert any user, with MFA claims included. The highest-severity Entra finding there is.',
+        link: '#/play/pro-entra-federation',
+        keys: 'set domain authentication federation changed golden saml signing certificate trust added',
+    },
+    {
+        id: 'sy-pro-secret', aud: 'pro', group: 'sg-directory', sev: 'critical',
+        see: 'A key, token or connection string turned up somewhere public',
+        means: 'Assume it was found the moment it landed — scanners watch public repos in real time. Rotate first, investigate second.',
+        link: '#/play/pro-exposed-secret',
+        keys: 'exposed secret api key github public repo connection string token leaked rotate',
     },
 ];

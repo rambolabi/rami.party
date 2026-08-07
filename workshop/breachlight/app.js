@@ -14,7 +14,7 @@
 (function () {
     'use strict';
 
-    const VERSION = '2.0.0';
+    const VERSION = '2.2.0';
 
     const C = window.BLC;
     const P = window.BLP;
@@ -29,6 +29,8 @@
     const DEFEND_CATS = window.BL_DEFEND_CATS || [];
     const AUDIT_OPS = window.BL_AUDIT_OPS || [];
     const LOG_SOURCES = window.BL_LOG_SOURCES || [];
+    const SYMPTOMS = window.BL_SYMPTOMS || [];
+    const SYMPTOM_GROUPS = window.BL_SYMPTOM_GROUPS || [];
 
     const main = $('#main');
 
@@ -91,6 +93,12 @@
             const body = [s.what, s.fields, s.retention].concat(s.holds || []).concat(s.exportHow || []).join(' ');
             push('log source', s.id, s.name, s.what, '#/play/pro-log-collection',
                 (s.aka || []).join(' ') + ' log export retention which logs', plain(body), 'pro');
+        });
+
+        /* Symptoms are indexed under the reader's own phrasing — "unread mail
+           marked read" should land here before anywhere else. */
+        SYMPTOMS.forEach(s => {
+            push('symptom', s.id, s.see, s.means, s.link, s.keys, plain(s.means), s.aud);
         });
 
         return idx;
@@ -177,6 +185,7 @@
             case '': frag = P.home(); railId = ''; break;
             case 'triage': frag = P.triage(null); break;
             case 't': frag = P.triage(parts[1]); railId = 'triage'; break;
+            case 'signs': frag = P.signs(); break;
             case 'plays': frag = P.plays(); break;
             case 'play': frag = P.play(parts[1]); railId = 'plays'; break;
             case 'terms': frag = P.terms(parts[1]); railId = 'terms'; break;
@@ -198,7 +207,7 @@
 
         const TITLES = {
             '': 'Breachlight — what to do the moment after you clicked',
-            triage: 'Triage', t: 'Triage', plays: 'Playbooks', play: 'Playbook',
+            triage: 'Triage', t: 'Triage', signs: 'Symptoms', plays: 'Playbooks', play: 'Playbook',
             terms: 'Glossary', defend: 'Defence bench', about: 'About', q: 'Search',
         };
         const label = TITLES[head];
@@ -300,6 +309,19 @@
             if (!s.exportHow || !s.exportHow.length) problems.push('log source "' + s.id + '" has no export instructions');
         });
 
+        /* The symptom index routes frightened people — a broken link here is a
+           dead end at the worst possible moment. */
+        const seenSy = {};
+        SYMPTOMS.forEach(s => {
+            if (seenSy[s.id]) problems.push('duplicate symptom id: ' + s.id);
+            seenSy[s.id] = 1;
+            if (!s.see || !s.means) problems.push('symptom "' + s.id + '" is missing text');
+            if (!SYMPTOM_GROUPS.some(g => g.id === s.group && g.aud === s.aud)) problems.push('symptom "' + s.id + '" has unknown group "' + s.group + '" for audience ' + s.aud);
+            if (['critical', 'high', 'medium'].indexOf(s.sev) < 0) problems.push('symptom "' + s.id + '" has odd severity "' + s.sev + '"');
+            if (!s.link) problems.push('symptom "' + s.id + '" has no link');
+            else checkLink(s.link, 'symptom "' + s.id + '"');
+        });
+
         const summary = {
             trees: TREES.length,
             nodes: TREES.reduce((n, t) => n + Object.keys(t.nodes).length, 0),
@@ -308,6 +330,7 @@
             defences: DEFEND.length,
             auditOps: AUDIT_OPS.length,
             logSources: LOG_SOURCES.length,
+            symptoms: SYMPTOMS.length,
             problems: problems,
         };
         if (problems.length) console.warn('Breachlight audit — ' + problems.length + ' problem(s)', problems);

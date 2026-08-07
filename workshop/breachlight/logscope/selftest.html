@@ -120,7 +120,9 @@
                 ).join('\r\n') + '\r\n';
 
             const signinCsv = '"Date (UTC)","Username","Application","IP address","Location","Status","Sign-in error code","Client app","Authentication Protocol","Conditional Access","Multifactor authentication result"\r\n' +
-                '"2026-07-28T12:00:00Z","bob@contoso.com","Azure Portal","203.0.113.44","US","Success","0","Browser","","Success","MFA requirement satisfied by claim in the token"\r\n';
+                '"2026-07-28T12:00:00Z","bob@contoso.com","Azure Portal","203.0.113.44","US","Success","0","Browser","","Success","MFA requirement satisfied by claim in the token"\r\n' +
+                '"2026-07-28T13:00:00Z","eve@contoso.com","Microsoft Office","203.0.113.80","FR","Failure","50199","Browser","","",""\r\n' +
+                '"2026-07-28T13:07:00Z","eve@contoso.com","Microsoft Office","198.51.100.99","FR","Success","0","Browser","","Success",""\r\n';
 
             /* ---------------- format detection ---------------- */
 
@@ -151,6 +153,7 @@
             const rSigninCsv = LS_PARSE.parseText(signinCsv, 'signins.csv');
             ok('sign-in CSV detected', rSigninCsv.kind === 'signin', rSigninCsv.kind);
             ok('sign-in CSV prior claim', rSigninCsv.events[0].mfa === 'prior', rSigninCsv.events[0].mfa);
+            ok('sign-in CSV error code kept', rSigninCsv.events[1].result === 'failure 50199', rSigninCsv.events[1].result);
 
             ok('garbage does not throw', (function () {
                 try { LS_PARSE.parseText('%%%not a log%%%', 'x.txt'); return true; } catch (e) { return false; }
@@ -172,6 +175,11 @@
             ok('rule: guest sign-in', has('guest-signin'));
             ok('rule: outbound burst', has('outbound-burst'));
             ok('rule: sign-in then persistence chain', has('chain'));
+            ok('rule: 50199 interrupt then success', has('interrupt-then-success'));
+            ok('rule: fast travel pairs countries', (function () {
+                const f = findings.filter(x => x.id === 'fast-travel')[0];
+                return f && f.groups.some(g => /NL then SG|SG then NL/.test(g.detail));
+            })());
 
             ok('catalogue: Add service principal', has('op:Add service principal'));
             ok('catalogue: credentials added', has('op:Add service principal credentials'));

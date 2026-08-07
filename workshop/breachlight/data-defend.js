@@ -140,7 +140,7 @@ window.BL_DEFEND = [
             },
         ],
         keys: 'mfa 2fa upgrade passkey security key authenticator app sms codes number matching best two factor phishing resistant',
-        terms: ['mfa', 'passkey', 'mfa-fatigue', 'aitm'],
+        terms: ['mfa', 'passkey', 'authenticator-app', 'backup-codes', 'mfa-fatigue', 'aitm'],
     },
     {
         id: 'recovery-paths',
@@ -266,7 +266,7 @@ window.BL_DEFEND = [
             },
         ],
         keys: 'should i click links in email never click links go to the site directly type the address bookmark bank instead of link is it safe to click',
-        terms: ['phishing', 'open-redirect', 'homograph', 'typosquatting'],
+        terms: ['phishing', 'domain-name', 'open-redirect', 'homograph', 'typosquatting'],
     },
     {
         id: 'check-a-site',
@@ -310,7 +310,7 @@ window.BL_DEFEND = [
             },
         ],
         keys: 'how to check if a website is real fake website check is this site legit verify a website domain check padlock whois new domain safe shopping',
-        terms: ['typosquatting', 'homograph', 'fake-shop', 'open-redirect'],
+        terms: ['typosquatting', 'homograph', 'padlock', 'domain-name', 'fake-shop', 'open-redirect'],
     },
     {
         id: 'check-a-link',
@@ -347,7 +347,7 @@ window.BL_DEFEND = [
             },
         ],
         keys: 'check a link before clicking hover over link preview link shortened url expand bitly is this link safe long press link',
-        terms: ['open-redirect', 'homograph', 'quishing'],
+        terms: ['open-redirect', 'homograph', 'domain-name', 'quishing'],
     },
     {
         id: 'verify-a-human',
@@ -634,7 +634,7 @@ window.BL_DEFEND = [
             },
         ],
         keys: 'public wifi safe vpn needed airport wifi hotel wifi coffee shop wifi juice jacking usb charging captive portal',
-        terms: ['evil-twin', 'juice-jacking'],
+        terms: ['evil-twin', 'juice-jacking', 'vpn'],
     },
 
     /* ============================================================== PEOPLE == */

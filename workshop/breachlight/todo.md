@@ -49,14 +49,16 @@ headlessly and is the preferred route.
 1. `python -m http.server 8866 --bind 127.0.0.1` from `c:\Temp\Git\rami.party`
 2. Structure + search:
    `powershell -File logscope/run-selftest.ps1 -Url http://127.0.0.1:8866/workshop/breachlight/audit.html`
-   Expect `clean` and `24 / 24 search checks`.
-   Baseline: 7 trees / 150 nodes / 58 plays / 112 terms / 29 defences /
-   32 audit ops / 8 log sources.
+   Expect `clean` and `35 / 35 search checks`.
+   Baseline: 7 trees / 153 nodes / 61 plays / 153 terms / 29 defences /
+   32 audit ops / 8 log sources / 38 symptoms.
 3. Logscope parser and rules:
-   `powershell -File logscope/run-selftest.ps1`  → expect `41 / 41 passed`.
+   `powershell -File logscope/run-selftest.ps1`  → expect `44 / 44 passed`.
 4. Layout at any width:
    `powershell -File logscope/run-selftest.ps1 -Url "http://.../overflow.html?w=320"`
-   Tested clean at 320 / 345 / 360 / 390 / 414 across 27 routes.
+   Tested clean at 320 / 345 / 360 / 390 / 414 across 29 routes.
+   **The headless Edge profile caches hard** — delete `$env:TEMP\bl-edge-profile`
+   and add a `?cb=` cache-buster or you will re-test the previous build.
 5. Screenshots: `powershell -File logscope/shots.ps1`.
    **Headless screenshots clip and are not evidence of overflow** — they show
    false positives at narrow widths. Trust `overflow.html`, which measures
@@ -73,6 +75,15 @@ headlessly and is the preferred route.
    ```
 
 ## Backlog
+- [ ] **The move to breachlight.labidi.eu.** Everything is relative-pathed already;
+      the work is the canonical link, manifest scope check, a CNAME, and updating
+      rami.party's projects.js/sitemap to point outward.
+- [ ] **Point at the mail tools** (SPF/DKIM/DMARC checkers and friends) from the
+      spoofing/BEC content — once they live at their final address. Keep it a link,
+      not an embed: those tools make network calls and Breachlight must not.
+- [x] ~~A short "what happened to me?" symptom picker~~ — shipped as the
+      **Symptoms** room (`#/signs`): 34 observations across both modes, each
+      mapped straight to a play, searchable under the reader's own phrasing.
 - [ ] Dutch and French content packs. The structure is already data-only, so this
       is a translation job, not a code one — but `keys` must be rewritten, not
       translated, since it holds the words a frightened person actually types.
@@ -80,8 +91,6 @@ headlessly and is the preferred route.
       product itself and translating it would make it harder to search.
 - [ ] Printable one-page "first hour card" per playbook (print CSS exists, needs a
       dedicated layout). Highest value for `pro-ad-tier0` and `pro-ad-golden`.
-- [ ] A short "what happened to me?" symptom picker that maps observations
-      (unread mail marked read, no signal, small unknown charge) straight to a play.
 - [ ] Country selector that swaps in the right reporting route, fraud hotline and
       credit-freeze mechanism. Currently deliberately jurisdiction-neutral.
 - [ ] Responder mode: add Google Workspace and Okta equivalents alongside the
@@ -121,9 +130,11 @@ licence- or date-dependent before quoting it in a report.
 | Device code attack chain | **incomplete — extended** | Since Feb 2025 Storm-2372 uses the Microsoft Authentication Broker client ID to get a refresh token → **register their own device** → obtain a **PRT**. Added, plus the `50199`-then-success tell, the Graph mailbox keyword search, and *restrict device registration* as a control. |
 | KB5014754 | **out of date — corrected** | Full Enforcement became the default in **Feb 2025**; the **Sept 2025** update removed the fallback to Compatibility mode. The task is no longer "enable it" but "find what it broke" — hunt the no-strong-mapping KDC audit events, reissue with the SID extension or add a strong `altSecurityIdentities` mapping (`X509IssuerSerialNumber` recommended). |
 | AD CS "ESC1–ESC13" | **brittle — reframed** | The numbering has grown past 13. Content now names the well-established ones and says explicitly to enumerate with current tooling rather than trusting a fixed list. |
+| Message trace "~10 days" | **verified 2026-08-07** | Instant summary trace covers 10 days (90 via historical search, CSV-only, hours-slow, last 24h of archive typically unavailable). Client IP detail exists **only** in the 10-day enhanced/extended reports. "Export it first" stands. Source: message-trace-modern-eac, updated Jun 2025. |
+| Sign-in error 50199 | added | AADSTS50199 = "user confirmation required" interrupt; the 50199-then-success pair is the Storm-2372 broker-flow tell. Now a Logscope aggregate rule and a pro symptom. |
 
 Still unverified and worth checking before relying on: exact reimbursement rules
-per country, message-trace retention figures, and the newest ESC numbers.
+per country and the newest ESC numbers.
 
 ### Positions that are load-bearing
 - Phishing-resistant MFA (FIDO2/WebAuthn passkeys) is the only factor that

@@ -10,7 +10,7 @@
    online and behaves identically offline.
    ========================================================================== */
 
-const VERSION = 'breachlight-v3';
+const VERSION = 'breachlight-v5';
 const SHELL = [
     './',
     './index.html',

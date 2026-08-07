@@ -81,12 +81,6 @@ function changeMessage() {
     setTimeout(changeMessage, interval);
 }
 
-// Prevent user from leaving page
-window.addEventListener('beforeunload', function (e) {
-    e.preventDefault();
-    e.returnValue = '';
-});
-
 // Start updates
 setTimeout(() => {
     updateProgress();

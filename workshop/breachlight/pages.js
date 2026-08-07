@@ -24,6 +24,8 @@
     const DEFEND_CATS = window.BL_DEFEND_CATS || [];
     const LOG_SOURCES = window.BL_LOG_SOURCES || [];
     const AUDIT_OPS = window.BL_AUDIT_OPS || [];
+    const SYMPTOMS = window.BL_SYMPTOMS || [];
+    const SYMPTOM_GROUPS = window.BL_SYMPTOM_GROUPS || [];
 
     const AUD = () => C.getAud();
     const forAud = it => C.forAud(it);
@@ -46,13 +48,15 @@
         }
 
         const trail = el('ol', { class: 'trail' });
-        const body = el('div');
+        /* aria-live so the new question or result is announced; focus follows
+           the click so keyboard users are not dropped at the removed button. */
+        const body = el('div', { 'aria-live': 'polite' });
         const controls = el('div', { class: 'btn-row' });
         append(sec, [trail, body, controls]);
 
         let stack = [];
 
-        function goTo(id) {
+        function goTo(id, moveFocus) {
             const node = tree.nodes[id];
             body.textContent = '';
             if (!node) {
@@ -62,7 +66,7 @@
 
             if (node.result) {
                 const r = el('div', { class: 'tree-result' });
-                const h = el('h4', null, document.createTextNode(node.result));
+                const h = el('h4', { tabindex: '-1' }, document.createTextNode(node.result));
                 const t = sevTag(node.tag);
                 if (t) h.appendChild(t);
                 r.appendChild(h);
@@ -77,19 +81,24 @@
                 }
                 body.appendChild(r);
             } else {
-                body.appendChild(el('p', { class: 'tree-question' }, rich(node.q)));
+                body.appendChild(el('p', { class: 'tree-question', tabindex: '-1' }, rich(node.q)));
                 if (node.hint) body.appendChild(el('p', { class: 'note', text: node.hint }));
                 const opts = el('div', { class: 'tree-opts' });
                 (node.options || []).forEach(o => {
                     opts.appendChild(el('button', {
                         type: 'button', class: 'tree-opt',
-                        onclick: () => { stack.push({ id: id, answer: o.a }); goTo(o.to); },
+                        onclick: () => { stack.push({ id: id, answer: o.a }); goTo(o.to, true); },
                     }, [
                         el('span', null, o.a),
                         el('span', { class: 'arrow', 'aria-hidden': 'true', text: '→' }),
                     ]));
                 });
                 body.appendChild(opts);
+            }
+
+            if (moveFocus) {
+                const target = body.querySelector('.tree-question, .tree-result h4');
+                if (target) target.focus({ preventScroll: true });
             }
 
             trail.textContent = '';
@@ -100,11 +109,11 @@
             if (stack.length) {
                 controls.appendChild(el('button', {
                     class: 'btn ghost', type: 'button',
-                    onclick: () => { const prev = stack.pop(); goTo(prev.id); },
+                    onclick: () => { const prev = stack.pop(); goTo(prev.id, true); },
                 }, '← Back'));
                 controls.appendChild(el('button', {
                     class: 'btn ghost', type: 'button',
-                    onclick: () => { stack = []; goTo(tree.start); },
+                    onclick: () => { stack = []; goTo(tree.start, true); },
                 }, 'Start again'));
             }
         }
@@ -112,7 +121,7 @@
         if (autoStart) goTo(tree.start);
         else {
             body.appendChild(el('div', { class: 'btn-row' }, [
-                el('button', { class: 'btn', type: 'button', onclick: () => goTo(tree.start) }, 'Start ▸'),
+                el('button', { class: 'btn', type: 'button', onclick: () => goTo(tree.start, true) }, 'Start ▸'),
             ]));
         }
         return sec;
@@ -123,6 +132,21 @@
     function pageHome() {
         const frag = document.createDocumentFragment();
         const aud = AUD();
+
+        /* First visit only: one paragraph that explains the two modes and the
+           colour change, then never appears again. The toggle itself is not
+           self-explanatory to someone who has never seen the site — and that
+           is exactly who arrives here frightened. */
+        if (!store.get('seenModes', false)) {
+            const intro = el('div', { class: 'mode-intro', role: 'note' });
+            intro.appendChild(el('p', null, rich(
+                'This site has **two modes**, switched at the top right. **🙂 For me** (amber) is written for the person it happened to — plain words, no tools assumed. **🛡 For responders** (cyan) is for whoever holds the alert at work. The colour tells you which one you are reading, and nothing is locked away — each mode still links to the other.')));
+            intro.appendChild(el('button', {
+                class: 'btn ghost tiny', type: 'button',
+                onclick: function () { store.set('seenModes', true); intro.remove(); },
+            }, 'Got it'));
+            frag.appendChild(intro);
+        }
 
         const bar = el('div', { class: 'panic-bar' });
         if (aud === 'user') {
@@ -171,6 +195,8 @@
                 ['I clicked a link', '#/play/clicked-link'],
                 ['I scanned a QR code', '#/play/qr-scanned'],
                 ['My files are encrypted', '#/play/ransomware-home'],
+                ['My computer seems infected', '#/play/computer-malware'],
+                ['My phone seems infected', '#/play/phone-malware'],
                 ['Someone is blackmailing me', '#/play/sextortion-threat'],
                 ['I’m being locked out', '#/play/account-takeover'],
             ];
@@ -179,13 +205,18 @@
         quick.forEach(([t, h]) => jump.appendChild(el('a', { class: 'jump-link urgent', href: h }, t)));
         frag.appendChild(jump);
 
-        frag.appendChild(sectionHead(aud === 'pro' ? 'The rooms' : 'The four rooms'));
+        frag.appendChild(sectionHead(aud === 'pro' ? 'The rooms' : 'The five rooms'));
         const grid = el('div', { class: 'grid' });
         grid.appendChild(linkCard('#/triage', '🧭', 'Triage',
             aud === 'pro'
                 ? 'Alert routing and scoping questions for the first ten minutes.'
                 : 'Answer questions, get an instruction. Start here if you are not sure what happened.',
             [tag(TREES.filter(forAud).length + ' guides')]));
+        grid.appendChild(linkCard('#/signs', '👁', 'Symptoms',
+            aud === 'pro'
+                ? 'From a specific alert or observation straight to the playbook that handles it.'
+                : 'Start from the thing you noticed — “mail marked read”, “no signal”, “a small strange charge” — and go straight to the answer.',
+            [tag(SYMPTOMS.filter(forAud).length + ' signs')]));
         grid.appendChild(linkCard('#/plays', '📕', 'Playbooks',
             aud === 'pro'
                 ? 'Containment, investigation and eradication steps per incident class.'
@@ -719,7 +750,8 @@
         frag.appendChild(sectionHead('Counts'));
         const grid = el('div', { class: 'grid' });
         [['🧭', TREES.length + ' triage guides', TREES.reduce((n, t) => n + Object.keys(t.nodes).length, 0) + ' decision points'],
-        ['📕', PLAYS.length + ' playbooks', PLAYS.filter(p => p.aud === 'user').length + ' personal · ' + PLAYS.filter(p => p.aud === 'pro').length + ' responder'],
+        ['�', SYMPTOMS.length + ' symptoms', 'observations mapped straight to a playbook'],
+        ['�📕', PLAYS.length + ' playbooks', PLAYS.filter(p => p.aud === 'user').length + ' personal · ' + PLAYS.filter(p => p.aud === 'pro').length + ' responder'],
         ['📖', TERMS.length + ' glossary terms', TERM_CATS.length + ' categories'],
         ['🛡', DEFEND.length + ' defence guides', DEFEND.reduce((n, d) => n + d.steps.length, 0) + ' checklist items'],
         ['🔔', AUDIT_OPS.length + ' audit operations', 'shared by the site and Logscope'],
@@ -738,6 +770,71 @@
         return frag;
     }
 
+    /* -------------------------------------------------------------- symptoms */
+
+    /**
+     * The reverse of the trees: start from the thing you noticed. One click
+     * from observation to instructions — no questions in between, because the
+     * reader arriving here already has the observation in hand.
+     */
+    function symptomCard(s, groupGlyph) {
+        const a = el('a', { class: 'card symptom' + (s.sev === 'critical' ? ' urgent' : ''), href: s.link });
+        a.appendChild(el('h3', null, [
+            el('span', { class: 'g', 'aria-hidden': 'true', text: groupGlyph }),
+            document.createTextNode(s.see),
+        ]));
+        a.appendChild(el('p', null, rich(s.means)));
+        const m = el('div', { class: 'meta' });
+        m.appendChild(sevTag(s.sev));
+        a.appendChild(m);
+        return a;
+    }
+
+    function pageSigns() {
+        const frag = document.createDocumentFragment();
+        const aud = AUD();
+
+        frag.appendChild(pageHead('Symptoms',
+            aud === 'pro' ? 'From alert to playbook' : 'What am I seeing?', '👁',
+            aud === 'pro'
+                ? 'The common observations, mapped straight to the playbook that deals with them. For anything not listed, start at alert triage.'
+                : 'Find the thing you noticed and it will take you straight to the instructions — no questions in between. If nothing matches, the **triage guide** works it out with you.'));
+
+        SYMPTOM_GROUPS.filter(g => g.aud === aud).forEach(g => {
+            const items = SYMPTOMS.filter(s => s.group === g.id);
+            if (!items.length) return;
+            frag.appendChild(sectionHead(g.glyph + '  ' + g.title));
+            const grid = el('div', { class: 'grid wide' });
+            items.forEach(s => grid.appendChild(symptomCard(s, g.glyph)));
+            frag.appendChild(grid);
+        });
+
+        frag.appendChild(sectionHead('Nothing matches?', 'Two other ways in.'));
+        const jump = el('div', { class: 'jump' });
+        [[aud === 'pro' ? 'Start alert triage' : 'Answer a few questions instead', aud === 'pro' ? '#/t/pro-start' : '#/t/start'],
+        ['Something feels wrong but nothing obvious happened', aud === 'pro' ? '#/t/pro-scope' : '#/play/not-sure'],
+        ['Browse all playbooks', '#/plays']]
+            .forEach(([t, h]) => jump.appendChild(el('a', { class: 'jump-link', href: h }, t)));
+        frag.appendChild(jump);
+
+        /* The other mode stays reachable — a responder recognises a user's
+           description here, and a user can see what their IT team watches. */
+        const otherAud = aud === 'pro' ? 'user' : 'pro';
+        const otherGroups = SYMPTOM_GROUPS.filter(g => g.aud === otherAud);
+        if (otherGroups.length) {
+            frag.appendChild(sectionHead(
+                aud === 'pro' ? '🙂  What the person affected notices' : '🛡  What a security team watches for',
+                'Different mode — still readable, switch at the top to make it the default.'));
+            const g2 = el('div', { class: 'grid wide' });
+            otherGroups.forEach(g => {
+                SYMPTOMS.filter(s => s.group === g.id).forEach(s => g2.appendChild(symptomCard(s, g.glyph)));
+            });
+            frag.appendChild(g2);
+        }
+
+        return frag;
+    }
+
     function pageMissing() {
         const frag = document.createDocumentFragment();
         frag.appendChild(pageHead('Not found', 'That page does not exist', '🕳',
@@ -752,6 +849,7 @@
         renderTree,
         home: pageHome, triage: pageTriage, plays: pagePlays, play: pagePlay,
         terms: pageTerms, defend: pageDefend, about: pageAbout, missing: pageMissing,
+        signs: pageSigns,
         rerender: null,
     };
 
