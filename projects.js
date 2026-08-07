@@ -453,6 +453,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'PDF Search',
+        href: './pdf-search/',
+        glyph: '🔎',
+        tagline: 'One search, every PDF',
+        description: 'A shelf of PDFs with their full text extracted, searchable all at once. Pick which documents to look in, search words, phrases or exclusions, and jump straight to the page that mentions them.',
+        search: 'A full text search engine for PDF documents that searches across several PDFs at the same time. Extracts the text of each PDF into a JavaScript index so you can search for keywords, subjects, titles, phrases and clues across a whole shelf of documents at once, select which documents to include, exclude words, match whole words only, see highlighted snippets in context and open the source PDF at the exact page. Currently holds the EU Cyber Resilience Act, Regulation (EU) 2024/2847, and the Commission guidance C(2026) 5252 on applying it. Runs entirely in the browser with nothing uploaded.',
+        tags: ['tool', 'search', 'documents'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'LaTeX Doctor',
         href: './latex-doctor/',
         glyph: '🩺',

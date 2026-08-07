@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>PDF Search · Search across a shelf of PDFs at once</title>
+
+    <meta name="description"
+        content="Search the full text of several PDFs at the same time. Pick which documents to look in, search for keywords, phrases or exclusions, and jump straight to the page that mentions them.">
+    <meta name="theme-color" content="#0b1016">
+    <meta name="color-scheme" content="dark">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/pdf-search/">
+
+    <!--
+      OFFLINE POLICY
+      No fonts, no CDNs, no analytics, no frameworks. The PDFs and their
+      extracted text sit in this folder; nothing is uploaded and nothing is
+      fetched from anywhere else.
+    -->
+    <link rel="stylesheet" href="style.css?v=20260806">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b1016'/%3E%3Cpath d='M18 12h18l12 12v28a2 2 0 0 1-2 2H18a2 2 0 0 1-2-2V14a2 2 0 0 1 2-2Z' fill='none' stroke='%235eead4' stroke-width='3'/%3E%3Cpath d='M36 12v12h12' fill='none' stroke='%235eead4' stroke-width='3'/%3E%3Ccircle cx='30' cy='38' r='8' fill='none' stroke='%23fbbf24' stroke-width='3.5'/%3E%3Cpath d='M36 44l8 8' stroke='%23fbbf24' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="wrap">
+            <h1><span class="glyph" aria-hidden="true">🔎</span> PDF Search</h1>
+            <p class="tagline">Search the full text of every document on the shelf at once.</p>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <section class="panel" aria-labelledby="search-title">
+            <h2 id="search-title" class="sr-only">Search</h2>
+
+            <div class="searchrow">
+                <span class="searchicon" aria-hidden="true">🔍</span>
+                <input type="search" id="q" class="qinput" autocomplete="off" spellcheck="false"
+                    placeholder="Search every selected document…" aria-label="Search the documents"
+                    aria-describedby="syntax">
+                <button type="button" id="clear" class="clearbtn" aria-label="Clear search" hidden>✕</button>
+            </div>
+
+            <p id="syntax" class="syntax">
+                Space-separated words must <strong>all</strong> appear.
+                Use <code>"exact phrase"</code> for a phrase and <code>-word</code> to exclude.
+                Try
+                <button type="button" class="chip" data-q="reporting obligation">reporting obligation</button>
+                <button type="button" class="chip" data-q="&quot;products with digital elements&quot;">"products with digital elements"</button>
+                <button type="button" class="chip" data-q="vulnerability -annex">vulnerability -annex</button>
+            </p>
+
+            <div class="controls">
+                <label class="toggle">
+                    <input type="checkbox" id="whole"> <span>Whole words only</span>
+                </label>
+                <label class="toggle">
+                    Sort
+                    <select id="sort">
+                        <option value="relevance">by relevance</option>
+                        <option value="order">by document order</option>
+                    </select>
+                </label>
+                <button type="button" id="copy" class="ghostbtn">Copy results</button>
+            </div>
+        </section>
+
+        <section class="panel" aria-labelledby="docs-title">
+            <div class="panel-head">
+                <h2 id="docs-title">Documents on the shelf</h2>
+                <div class="panel-actions">
+                    <button type="button" id="all" class="ghostbtn">Select all</button>
+                    <button type="button" id="none" class="ghostbtn">Select none</button>
+                </div>
+            </div>
+            <ul id="docs" class="doclist" role="list">
+                <li class="loading">Loading the shelf…</li>
+            </ul>
+        </section>
+
+        <section class="panel" aria-labelledby="results-title">
+            <div class="panel-head">
+                <h2 id="results-title">Results</h2>
+                <p id="summary" class="summary" role="status" aria-live="polite"></p>
+            </div>
+            <div id="results" class="results">
+                <p class="hint">Type something above to search across the selected documents.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="foot">
+        <div class="wrap">
+            <p>Everything runs in your browser. The PDFs and their extracted text live in this
+                folder, nothing is uploaded and no other server is contacted.</p>
+            <p class="muted">Adding more PDFs: drop them in <code>pdf/</code> and run
+                <code>python tools/build.py</code>.</p>
+        </div>
+    </footer>
+
+    <script src="data/manifest.js?v=20260806"></script>
+    <script src="script.js?v=20260806"></script>
+    <script src="/backlink.js" defer></script>
+</body>
+
+</html>

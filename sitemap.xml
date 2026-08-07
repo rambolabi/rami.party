@@ -188,6 +188,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://rami.party/workshop/pdf-search/</loc>
+    <lastmod>2026-08-06</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://rami.party/workshop/latex-doctor/</loc>
     <lastmod>2026-08-06</lastmod>
     <changefreq>monthly</changefreq>
