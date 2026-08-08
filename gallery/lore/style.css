@@ -279,3 +279,214 @@ body.lightbox-open {
     }
     #lightbox-img { transform: none !important; }
 }
+
+/* ==========================================================================
+   Lore Creator
+   ========================================================================== */
+#creator.hidden,
+#gallery-wrap.hidden,
+.search-container.hidden {
+    display: none;
+}
+
+#creator {
+    padding: 30px 0 70px;
+}
+
+.creator-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(280px, 1fr);
+    gap: 26px;
+    align-items: start;
+}
+
+.creator-stage {
+    position: sticky;
+    top: 20px;
+}
+
+#creator-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: var(--radius);
+    border: 1px solid var(--card-border);
+    box-shadow: var(--shadow);
+    cursor: crosshair;
+    background: var(--card);
+}
+
+.creator-hint {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
+.creator-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.creator-group {
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    background: var(--card);
+    backdrop-filter: blur(var(--glass-blur));
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.creator-group legend {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--gold);
+    padding: 0 8px;
+}
+
+.creator-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.creator-btn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: var(--surface-soft);
+    cursor: pointer;
+    transition: all 0.25s var(--ease);
+}
+
+.creator-btn:hover {
+    color: var(--text);
+    border-color: var(--cyan);
+    transform: translateY(-2px);
+}
+
+.creator-btn.active,
+.creator-primary {
+    color: var(--btn-primary-ink);
+    border-color: transparent;
+    background: var(--spell);
+    background-size: 200% auto;
+    box-shadow: 0 8px 22px var(--accent-glow);
+}
+
+.creator-upload {
+    display: inline-flex;
+    align-items: center;
+}
+
+.creator-swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.creator-swatch {
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    border: 2px solid var(--card-border);
+    cursor: pointer;
+    transition: transform 0.2s var(--ease), border-color 0.2s ease;
+}
+
+.creator-swatch:hover {
+    transform: translateY(-2px) scale(1.06);
+}
+
+.creator-swatch.active {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.35);
+}
+
+#creator-quotes,
+#creator-top,
+#creator-bottom {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: var(--surface-soft);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+#creator-quotes:focus,
+#creator-top:focus,
+#creator-bottom:focus {
+    border-color: var(--violet);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.25);
+}
+
+.creator-emojis {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+    gap: 6px;
+}
+
+.creator-emoji {
+    font-size: 1.5rem;
+    padding: 6px 0;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    transition: transform 0.15s var(--ease), background 0.15s ease, border-color 0.15s ease;
+}
+
+.creator-emoji:hover {
+    transform: scale(1.2);
+    background: var(--surface-soft);
+}
+
+.creator-emoji.active {
+    border-color: var(--gold);
+    background: var(--accent-soft);
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.35);
+}
+
+.creator-slider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.creator-slider input {
+    flex: 1;
+    accent-color: var(--violet);
+}
+
+.creator-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+@media (max-width: 860px) {
+    .creator-layout {
+        grid-template-columns: 1fr;
+    }
+    .creator-stage {
+        position: static;
+    }
+}
+

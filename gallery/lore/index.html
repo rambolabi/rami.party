@@ -9,7 +9,7 @@
     <!-- Theme engine: applies the saved theme before first paint -->
     <script src="/theme.js?v=20260807"></script>
     <link rel="stylesheet" href="/theme.css?v=20260807">
-    <link rel="stylesheet" href="style.css?v=20260807">
+    <link rel="stylesheet" href="style.css?v=20260808">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -51,6 +51,7 @@
                     <button id="lore-btn" class="active" role="tab" aria-selected="true">📜 Magical Lore</button>
                     <button id="muggle-btn" role="tab" aria-selected="false">😄 Muggle Humor</button>
                     <button id="magic-btn" role="tab" aria-selected="false">✨ Magical Cuteness</button>
+                    <button id="creator-btn" role="tab" aria-selected="false">🪄 Lore Creator</button>
                 </div>
 
                 <div class="search-container">
@@ -60,9 +61,67 @@
         </section>
 
         <div class="container">
-            <div id="gallery">
-                <!-- Images loaded by script.js -->
+            <div id="gallery-wrap">
+                <div id="gallery">
+                    <!-- Images loaded by script.js -->
+                </div>
             </div>
+
+            <!-- Lore Creator: forge your own lore images -->
+            <section id="creator" class="hidden" aria-label="Lore Creator">
+                <div class="creator-layout">
+                    <div class="creator-stage">
+                        <canvas id="creator-canvas" width="1000" height="1000"
+                            aria-label="Lore image preview — click to place the selected emoji"></canvas>
+                        <p class="creator-hint">Pick an emoji below, then click the image to stamp it. 🪄</p>
+                    </div>
+
+                    <div class="creator-controls">
+                        <fieldset class="creator-group">
+                            <legend>📜 Backdrop</legend>
+                            <div class="creator-swatches" id="creator-swatches"></div>
+                            <div class="creator-row">
+                                <button type="button" id="creator-random-img" class="creator-btn">🎲 Random lore image</button>
+                                <label class="creator-btn creator-upload">
+                                    📁 Upload image
+                                    <input type="file" id="creator-upload" accept="image/*" hidden>
+                                </label>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="creator-group">
+                            <legend>✍️ Words of power</legend>
+                            <select id="creator-quotes" aria-label="Quote presets">
+                                <option value="">— Choose a classic quote —</option>
+                            </select>
+                            <input type="text" id="creator-top" maxlength="80" placeholder="Top text…" aria-label="Top text">
+                            <input type="text" id="creator-bottom" maxlength="80" placeholder="Bottom text…" aria-label="Bottom text">
+                            <div class="creator-row creator-styles" role="radiogroup" aria-label="Text style">
+                                <button type="button" id="creator-style-meme" class="creator-btn active" role="radio" aria-checked="true">😄 Meme</button>
+                                <button type="button" id="creator-style-scroll" class="creator-btn" role="radio" aria-checked="false">📜 Scroll</button>
+                            </div>
+                        </fieldset>
+
+                        <fieldset class="creator-group">
+                            <legend>✨ Emoji enchantments</legend>
+                            <div class="creator-emojis" id="creator-emojis"></div>
+                            <label class="creator-slider">
+                                Stamp size
+                                <input type="range" id="creator-emoji-size" min="48" max="240" value="120">
+                            </label>
+                            <div class="creator-row">
+                                <button type="button" id="creator-undo" class="creator-btn">↩️ Undo stamp</button>
+                                <button type="button" id="creator-clear" class="creator-btn">🧹 Clear stamps</button>
+                            </div>
+                        </fieldset>
+
+                        <div class="creator-actions">
+                            <button type="button" id="creator-surprise" class="creator-btn">🎲 Surprise me</button>
+                            <button type="button" id="creator-download" class="creator-btn creator-primary">⬇️ Download PNG</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
@@ -74,8 +133,9 @@
         <div id="lightbox-title"></div>
     </div>
 
-    <script src="img.js?v=20260807"></script>
-    <script src="script.js?v=20260807"></script>
+    <script src="img.js?v=20260808"></script>
+    <script src="script.js?v=20260808"></script>
+    <script src="creator.js?v=20260808"></script>
 </body>
 
 </html>

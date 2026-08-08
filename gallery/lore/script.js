@@ -1,6 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     const gallery = document.getElementById('gallery');
     const searchBar = document.getElementById('search-bar');
+    const searchContainer = document.querySelector('.search-container');
+    const galleryWrap = document.getElementById('gallery-wrap');
+    const creator = document.getElementById('creator');
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
     const lightboxTitle = document.getElementById('lightbox-title');
@@ -12,7 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const buttons = {
         lore: document.getElementById('lore-btn'),
         muggle: document.getElementById('muggle-btn'),
-        magic: document.getElementById('magic-btn')
+        magic: document.getElementById('magic-btn'),
+        creator: document.getElementById('creator-btn')
     };
 
     let currentCategory = 'lore';
@@ -20,79 +24,24 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImages = [];
     let lastFocused = null;
 
-    // Cache of discovered images per category, so we only scan a folder once.
-    const discovered = new Map();
-
     /* ---------------------------------------------------------------------
-       Image auto-discovery
-       Probes ./img/<folder>/<folder> (n).<ext> and finds how many exist.
-       Uses exponential + binary search so a folder of 500 images costs
-       only ~18 tiny requests instead of 500. Assumes contiguous numbering.
+       Image lists
+       Built directly from GALLERY_CONFIG (img.js) — no network probing,
+       so the page renders instantly and never spams the console with 404s.
        --------------------------------------------------------------------- */
-    function resolveImage(folder, index) {
-        // Try each allowed extension until one loads; resolves to the src or null.
-        return new Promise((resolve) => {
-            let i = 0;
-            const tryNext = () => {
-                if (i >= GALLERY_EXTENSIONS.length) return resolve(null);
-                const src = `./img/${folder}/${folder} (${index}).${GALLERY_EXTENSIONS[i++]}`;
-                const probe = new Image();
-                probe.onload = () => resolve(src);
-                probe.onerror = tryNext;
-                probe.src = src;
-            };
-            tryNext();
-        });
-    }
-
-    async function countImages(folder) {
-        if (!(await resolveImage(folder, 1))) return 0;
-        // Find an upper bound that does NOT exist.
-        let lo = 1;
-        let hi = 2;
-        while (await resolveImage(folder, hi)) {
-            lo = hi;
-            hi *= 2;
-            if (hi > 100000) break; // safety valve
-        }
-        // Binary search for the last existing index between lo and hi.
-        while (hi - lo > 1) {
-            const mid = Math.floor((lo + hi) / 2);
-            if (await resolveImage(folder, mid)) lo = mid;
-            else hi = mid;
-        }
-        return lo;
-    }
-
-    async function loadCategory(category) {
-        if (discovered.has(category)) return discovered.get(category);
-
-        const cfg = GALLERY_CONFIG.find((c) => c.category === category);
-        if (!cfg) {
-            discovered.set(category, []);
-            return [];
-        }
-
-        const count = await countImages(cfg.folder);
+    const categories = new Map();
+    GALLERY_CONFIG.forEach((cfg) => {
         const list = [];
-        for (let i = 1; i <= count; i++) {
+        for (let i = 1; i <= cfg.count; i++) {
             list.push({
-                folder: cfg.folder,
-                index: i,
-                src: candidate(cfg.folder, i, 0),
+                src: `./img/${cfg.folder}/${cfg.folder} (${i}).${cfg.ext}`,
                 title: `${cfg.title} ${i}`,
                 keywords: `${cfg.keywords} ${i}`,
                 category: cfg.category
             });
         }
-        discovered.set(category, list);
-        return list;
-    }
-
-    // Build the src for a folder/index using the Nth allowed extension.
-    function candidate(folder, index, extIndex) {
-        return `./img/${folder}/${folder} (${index}).${GALLERY_EXTENSIONS[extIndex]}`;
-    }
+        categories.set(cfg.category, list);
+    });
 
     /* ---------------------------------------------------------------------
        Rendering
@@ -121,22 +70,10 @@ document.addEventListener('DOMContentLoaded', () => {
             img.alt = image.title;
             img.loading = 'lazy';
             img.decoding = 'async';
-            // Fade each thumbnail in once it has decoded, and remember which
-            // extension actually worked so the lightbox reuses it instantly.
-            img.addEventListener('load', () => {
-                image.src = img.src;
-                img.classList.add('loaded');
-            });
-            // Try the next allowed extension; drop the tile only if none work.
-            let extIndex = 0;
-            img.addEventListener('error', () => {
-                extIndex++;
-                if (extIndex < GALLERY_EXTENSIONS.length) {
-                    img.src = candidate(image.folder, image.index, extIndex);
-                } else {
-                    item.remove();
-                }
-            });
+            img.addEventListener('load', () => img.classList.add('loaded'));
+            // If a file is missing, quietly drop its tile instead of showing
+            // a broken image.
+            img.addEventListener('error', () => item.remove());
             img.src = image.src;
 
             const title = document.createElement('div');
@@ -154,17 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
         gallery.appendChild(fragment);
     }
 
-    async function filterByCategory() {
-        const category = currentCategory;
-        if (!discovered.has(category)) {
-            setMessage('Summoning the archives…');
-            await loadCategory(category);
-            // The user switched category while we were loading — bail out.
-            if (category !== currentCategory) return;
-        }
-
+    function filterByCategory() {
         const searchTerm = searchBar.value.trim().toLowerCase();
-        let filtered = discovered.get(category) || [];
+        let filtered = categories.get(currentCategory) || [];
 
         if (searchTerm) {
             filtered = filtered.filter((image) =>
@@ -179,20 +108,16 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ---------------------------------------------------------------------
        Lightbox
        --------------------------------------------------------------------- */
-    let lightboxExt = 0;
-
     function preload(index) {
         const image = currentImages[index];
         if (!image) return;
         const probe = new Image();
-        probe.onload = () => { image.src = probe.src; };
         probe.src = image.src;
     }
 
     function updateLightbox() {
         const image = currentImages[currentIndex];
         if (!image) return;
-        lightboxExt = 0;
         lightboxImg.classList.remove('loaded');
         lightboxImg.src = image.src;
         lightboxImg.alt = image.title;
@@ -242,19 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     lightboxImg.addEventListener('load', () => {
-        const image = currentImages[currentIndex];
-        if (image) image.src = lightboxImg.src;
         lightboxImg.classList.add('loaded');
-    });
-
-    // If the current extension fails in the lightbox, try the next one.
-    lightboxImg.addEventListener('error', () => {
-        const image = currentImages[currentIndex];
-        if (!image) return;
-        lightboxExt++;
-        if (lightboxExt < GALLERY_EXTENSIONS.length) {
-            lightboxImg.src = candidate(image.folder, image.index, lightboxExt);
-        }
     });
 
     /* ---------------------------------------------------------------------
@@ -269,7 +182,14 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.toggle('active', isActive);
             btn.setAttribute('aria-selected', String(isActive));
         });
-        filterByCategory();
+
+        // The creator "tab" swaps the gallery for the Lore Creator studio.
+        const isCreator = category === 'creator';
+        if (creator) creator.classList.toggle('hidden', !isCreator);
+        if (galleryWrap) galleryWrap.classList.toggle('hidden', isCreator);
+        if (searchContainer) searchContainer.classList.toggle('hidden', isCreator);
+
+        if (!isCreator) filterByCategory();
     }
 
     Object.entries(buttons).forEach(([category, btn]) => {
