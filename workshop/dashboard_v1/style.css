@@ -1631,9 +1631,8 @@ body {
     opacity: 0.8;
 }
 
-        height: 95vh;
-    }
-
+/* The 450px panel is wider than a phone; slide it in full-width instead. */
+@media (max-width: 480px) {
     .settings-panel {
         width: 100%;
         right: -100%;

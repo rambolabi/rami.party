@@ -1,73 +1,37 @@
 /* ==========================================================================
-   Breachlight — sw.js
+   Tombstone service worker.
    --------------------------------------------------------------------------
-   Offline support only. There is no back end and no telemetry, so this worker
-   exists purely so the site still opens on a phone with no signal.
+   Breachlight moved from /workshop/breachlight/ to https://breach.labidi.eu/.
 
-   Strategy: NETWORK FIRST, cache as fallback.
-   A cache-first worker on a site like this ships stale advice and stale code,
-   and the pages here are edited often. Network-first costs a few milliseconds
-   online and behaves identically offline.
+   The worker that used to live here was network-first, so most returning
+   visitors reach the redirect page on their next load anyway. This tombstone
+   covers the rest: installed-app users and anyone offline at the wrong
+   moment. It installs, deletes the old breachlight caches, unregisters
+   itself, and reloads any open window — which then reaches the redirect.
+
+   There is deliberately NO fetch handler. With none, requests bypass the
+   worker entirely and go straight to the network.
+
+   Do not delete this file. It has to outlive the caches on other people's
+   devices, and there is no way to know when the last one is gone.
    ========================================================================== */
 
-const VERSION = 'breachlight-v5';
-const SHELL = [
-    './',
-    './index.html',
-    './style.css',
-    './core.js',
-    './pages.js',
-    './app.js',
-    './data-terms.js',
-    './data-defend.js',
-    './data-plays.js',
-    './data-trees.js',
-    './data-logs.js',
-    './data-ad-entra.js',
-    './data-ad-entra-plays.js',
-    './data-phish-plays.js',
-    './manifest.webmanifest',
-    './logscope/',
-    './logscope/index.html',
-    './logscope/logscope.css',
-    './logscope/parse.js',
-    './logscope/rules.js',
-    './logscope/app.js',
-];
-
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(VERSION)
-            .then(c => c.addAll(SHELL))
-            .then(() => self.skipWaiting())
-            .catch(() => self.skipWaiting())
-    );
-});
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys()
-            .then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
-            .then(() => self.clients.claim())
-    );
-});
+    event.waitUntil((async () => {
+        try {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+        } catch (e) { /* storage may be unavailable; carry on regardless */ }
 
-self.addEventListener('fetch', event => {
-    const req = event.request;
-    if (req.method !== 'GET') return;
+        try { await self.registration.unregister(); } catch (e) { }
 
-    const url = new URL(req.url);
-    if (url.origin !== self.location.origin) return;
-
-    event.respondWith(
-        fetch(req)
-            .then(res => {
-                if (res && res.ok && res.type === 'basic') {
-                    const copy = res.clone();
-                    caches.open(VERSION).then(c => c.put(req, copy)).catch(() => { });
-                }
-                return res;
-            })
-            .catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
-    );
+        /* Send any window still showing the stale copy back through the
+           network, where the redirect page is waiting. */
+        try {
+            const windows = await self.clients.matchAll({ type: 'window' });
+            windows.forEach(c => { try { c.navigate(c.url); } catch (e) { } });
+        } catch (e) { }
+    })());
 });

@@ -47,22 +47,16 @@ Two "failures" that are **not** bugs, confirmed by reading the code:
 
 ## 1. Bugs
 
-### 1.1 🐞 `workshop/dashboard_v1/style.css` has two extra closing braces
-204 `{` against 206 `}`. Depth goes negative at **line 1635** and again at **line 1641**,
-so every rule after the first stray brace is silently discarded by the parser.
+### ✅ 1.1 `workshop/dashboard_v1/style.css` — FIXED
+The file was born broken (the fragment exists in its very first commit): an orphaned
+media-query body with two stray `}` at lines 1635/1641 discarded every rule after it.
+Reconstructed as `@media (max-width: 480px)` around the `.settings-panel` full-width
+override (its intent was unambiguous — the base panel is a fixed 450px slide-in) and
+dropped the selector-less `height: 95vh` line that never had an owner. Braces now 205/205.
 
-**Fix** — delete the two orphan `}` lines. Worth doing even though Window View is
-`status:'soon'`, because it is a two-second fix and the file is otherwise dead weight.
-
-### 1.2 Volume Seer points at nothing
-`projects.js` still carries `href: '#'` with the comment *"real path once the folder
-returns: `./trace-results/`"*. But `workshop/trace-results/` now exists as a **tombstone
-redirect to `https://mail.labidi.eu/volume/`** — the dashboard was folded into Mail Ward.
-
-**Fix** — either make the entry `external: true` with
-`href: 'https://mail.labidi.eu/volume/'`, or drop it entirely since Mail Ward already
-appears in the catalogue and covers it. Right now it renders as a locked teaser that can
-never unlock.
+### ✅ 1.2 Volume Seer — FIXED
+`https://mail.labidi.eu/volume/` went live (checked: 200), so the entry is now
+`external: true, status: 'live'` pointing there instead of a locked teaser at `href: '#'`.
 
 ---
 
@@ -100,17 +94,14 @@ processed. Worst offenders: `laser-forge-v2` (53), `laser-forge` (49), `frostcal
 **Fix** — same treatment as before: replace with commas, colons or full stops per
 sentence rather than swapping in hyphens.
 
-### 2.4 SEO/mobile gaps on older pages
+### 2.4 SEO/mobile gaps on older pages — partly done
 - **41 pages** have no `<meta name="description">` (includes all 11 prank screens, which is
   arguably fine — they are illusions, not content).
-- **8 pages** have no viewport meta, so they do not scale on phones:
-  `og-image.html`, `wasteland/adhd/`, three `old-rami.party` pages,
-  `breachlight/audit.html`, `breachlight/logscope/selftest.html`, `breachlight/overflow.html`.
-- **4 pages** have no `<html lang>`.
+- ✅ The three `breachlight` dev pages got their viewport metas (2026-08-07).
+- Remaining without viewport: `og-image.html` (render template) and the preserved
+  `wasteland/adhd/` + `old-rami.party` relics — intentional, leave them.
+- **4 pages** have no `<html lang>` (all preserved relics).
 - **2 pages** have no `<title>`: `og-image.html`, `wasteland/adhd/index.html`.
-
-**Fix** — the wasteland ones are preserved relics; leave them and note it. The three
-`breachlight` pages are live tooling and should get viewport + title + description.
 
 ### 2.5 Sitemap is still hand-maintained
 Adding a project means remembering to edit `sitemap.xml`. It has drifted before.
@@ -125,12 +116,21 @@ cards hard-coded, and they have already drifted from `RAMI_REALMS`.
 **Fix** — move the wastes cards into `RAMI_REALMS` and render with `cardMarkup`, with an
 optional `relic:` field for the "poke the husk" links.
 
-### 2.7 Three stale `TODO` markers in shipped code
+### 2.7 Stale `TODO` markers in shipped code — partly done
 - `workshop/frostcaller/writer/lab.js` — *"TODO: fill these in from your capture diffs."*
 - `workshop/tools/index.html` — *"TODO hieronder verder controleren"* (Dutch, in a comment)
-- `workshop/webcheck/about.html` — a literal `TODO` rendered **on the page**
+- ✅ The user-visible `TODO` heading on `webcheck/about.html` now reads "Roadmap" (2026-08-07).
 
-**Fix** — the webcheck one is user-visible; resolve or remove it.
+### ✅ 2.8 Theme system gaps — FIXED (2026-08-07)
+- `workshop/frostcaller/` and `workshop/frostcaller/writer/` loaded `theme.css` but not
+  `theme.js`, so they ignored the saved theme and showed no picker. Both now load the
+  engine; a user's choice follows them, and their own content-palette select coexists
+  (namespaced `data-theme` vs global `data-rami-theme`).
+- The picker's mobile breakpoint hid the "Theme" label, leaving a bare 🔮 glyph nobody
+  could identify. The label now stays visible (smaller) on phones, and the toggle uses
+  full-contrast text instead of muted.
+- Verified: picker mounts and the saved theme applies on all ten themed pages
+  (hub, 404, gallery ×3, wasteland, DNS-sinkhole, Engraving, frostcaller ×2).
 
 ---
 
