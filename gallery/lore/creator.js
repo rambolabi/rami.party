@@ -173,14 +173,19 @@ document.addEventListener('DOMContentLoaded', () => {
         swatches.querySelectorAll('.creator-swatch').forEach((b) => b.classList.toggle('active', b === active));
     }
 
-    function setImageBackground(src, crossOriginSafe) {
+    function setImageBackground(src, retries = 3) {
         const img = new Image();
         img.onload = () => {
             state.bg = { type: 'image', gradient: state.bg.gradient, image: img };
             markActiveSwatch(null);
             render();
         };
-        img.onerror = () => setImageBackground(randomGallerySrc(), crossOriginSafe);
+        // A missing file? Try another random image a few times, then fall
+        // back to the current gradient instead of retrying forever.
+        img.onerror = () => {
+            if (retries > 0) setImageBackground(randomGallerySrc(), retries - 1);
+            else render();
+        };
         img.src = src;
     }
 
