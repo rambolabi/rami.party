@@ -1,0 +1,63 @@
+/* ==UserStyle==
+@name           ConnectWise Manage · Comfort Glamour (CSS-only)
+@namespace      https://rami.party/workshop/glamours/
+@version        1.0.0
+@description    The CSS-only half of the Comfort Glamour for ConnectWise Manage: readable scrollbars, row hover highlighting, visible keyboard focus rings and a slightly friendlier login form. Install with the Stylus extension. The optional dark "midnight veil" is included below, commented out.
+@author         rami.party
+@license        MIT
+@homepageURL    https://rami.party/workshop/glamours/
+==/UserStyle== */
+
+@-moz-document domain("myconnectwise.net") {
+
+    /* bookmarklet:start — the always-safe comfort rules, also used to build
+       the one-click bookmarklet on https://rami.party/workshop/glamours/ */
+
+    /* Chunky, visible scrollbars — Manage panes are scroll-heavy and the
+       default thumbs are nearly invisible. */
+    *::-webkit-scrollbar { width: 14px; height: 14px; }
+    *::-webkit-scrollbar-track { background: rgba(100, 116, 139, .12); }
+    *::-webkit-scrollbar-thumb {
+        background: rgba(100, 116, 139, .75);
+        border-radius: 8px;
+        border: 3px solid transparent;
+        background-clip: padding-box;
+    }
+    *::-webkit-scrollbar-thumb:hover { background-color: rgba(71, 85, 105, .95); }
+    *::-webkit-scrollbar-corner { background: transparent; }
+    html { scrollbar-color: #64748b transparent; }
+
+    /* Row hover highlight — keeps your eye on the right line in wide
+       ticket/time grids. Generic on purpose: Manage's own class names are
+       obfuscated and change between releases. */
+    tr:hover > td,
+    tr:hover > th { background-color: rgba(37, 99, 235, .10) !important; }
+    [role="row"]:hover > [role="gridcell"],
+    [role="row"]:hover > [role="cell"],
+    [role="row"]:hover > [role="rowheader"] { background-color: rgba(37, 99, 235, .10) !important; }
+
+    /* Visible keyboard focus — tab around without losing your place. */
+    :focus-visible { outline: 2px solid #2563eb !important; outline-offset: 1px !important; }
+
+    /* Login form: a little bigger, a little calmer. */
+    #loginContainer .loginTextBox { font-size: 15px !important; }
+    #loginContainer .loginButton { cursor: pointer; }
+
+    /* bookmarklet:end */
+
+    /* ---------------------------------------------------------------------
+       Midnight veil (dark mode) — uncomment to enable.
+       Kept off by default: pure CSS cannot skip the iframes the way the
+       userscript can, so photos inside frames stay inverted. The userscript
+       version handles frames properly; prefer it if you want dark mode.
+       ---------------------------------------------------------------------
+    html {
+        filter: invert(.92) hue-rotate(180deg) !important;
+        background: #0b0d12 !important;
+    }
+    img, video, canvas, embed, object, picture,
+    [style*="background-image"] {
+        filter: invert(1) hue-rotate(180deg) !important;
+    }
+    --------------------------------------------------------------------- */
+}

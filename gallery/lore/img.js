@@ -1,25 +1,22 @@
 /* ============================================================================
-   LORE GALLERY — IMAGE CONFIG
+   LORE GALLERY — IMAGE MANIFEST
    ----------------------------------------------------------------------------
-   ✨ HOW TO ADD IMAGES (no code changes needed) ✨
+   ✨ HOW TO ADD IMAGES ✨
 
-   1. Drop your image files into the matching folder inside  ./img/
-          Magical Lore      →  ./img/lore/
-          Muggle Humor      →  ./img/muggle/
-          Magical Cuteness  →  ./img/cute/
+   1. Drop your image into the matching folder inside  ./img/  and name it
+      with the folder name + the NEXT number in brackets (no gaps):
+          Magical Lore      →  ./img/lore/lore (166).jpg
+          Muggle Humor      →  ./img/muggle/muggle (60).jpg
+          Magical Cuteness  →  ./img/cute/cute (21).jpg
 
-   2. Name them with the folder name + a number in brackets, counting up
-      from 1 with NO gaps. Any of these extensions work: .jpg .jpeg .png .webp .gif
-          lore (1).jpg
-          lore (2).jpg
-          lore (3).png   ← extensions can be mixed, that's fine
-          ...
+   2. Bump that category's `count` below by one. That's it. 🪄
 
-   3. That's it. Refresh the page — new images appear automatically.
-      You never have to touch the code again. 🪄
+   Images are .jpg by default. For a different extension, add the number to
+   that category's `exts` map, e.g.  exts: { 166: 'png' }  means image 166
+   is  lore (166).png  instead of  lore (166).jpg.
 
-   (Advanced: to add a brand-new category, copy one block below and give it a
-    folder, a matching button id in index.html, a title and some search keywords.)
+   Why a manifest? Listing the images here means the page renders instantly,
+   with zero "guessing" network requests and zero 404 noise in the console.
    ========================================================================== */
 
 const GALLERY_CONFIG = [
@@ -27,21 +24,32 @@ const GALLERY_CONFIG = [
         folder: 'lore',
         category: 'lore',
         title: 'Magical Lore',
+        count: 165,
+        exts: {},
         keywords: 'ancient mystical magic spell enchantment wizard witch sorcery artifact relic prophecy'
     },
     {
         folder: 'muggle',
         category: 'muggle',
         title: 'Muggle Humor',
+        count: 59,
+        exts: {},
         keywords: 'funny hilarious comedy laugh joke smile amusing entertaining'
     },
     {
         folder: 'cute',
         category: 'magic',
         title: 'Magical Cuteness',
+        count: 20,
+        exts: {},
         keywords: 'cute adorable sweet lovely precious wholesome heartwarming cheerful'
     }
 ];
 
-/* File extensions to look for, in priority order. */
-const GALLERY_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+const GALLERY_DEFAULT_EXT = 'jpg';
+
+/* Build the URL for image N of a category config. */
+function gallerySrc(cfg, index) {
+    const ext = (cfg.exts && cfg.exts[index]) || GALLERY_DEFAULT_EXT;
+    return `./img/${cfg.folder}/${cfg.folder} (${index}).${ext}`;
+}

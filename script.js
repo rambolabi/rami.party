@@ -464,6 +464,26 @@ function setupMobileNav() {
 
 /* ---- Scroll reveal ------------------------------------------------------- */
 let revealObserver;
+let revealSafetyArmed = false;
+
+/* Content must never be trapped invisible. If the IntersectionObserver never
+   fires — a backgrounded tab on first load suspends it, and some browsers are
+   flaky — a safety net reveals everything a moment later, and again as soon as
+   the page becomes visible. The animation still plays in the normal case. */
+function revealAll() {
+    document.querySelectorAll('.reveal:not(.visible)').forEach(el => el.classList.add('visible'));
+}
+
+function armRevealSafety() {
+    if (revealSafetyArmed) return;
+    revealSafetyArmed = true;
+    setTimeout(revealAll, 1400);
+    window.addEventListener('load', revealAll);
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') observeReveal();
+    });
+}
+
 function observeReveal() {
     const items = document.querySelectorAll('.reveal:not(.visible)');
     if (!items.length) return;
@@ -471,6 +491,7 @@ function observeReveal() {
         items.forEach(el => el.classList.add('visible'));
         return;
     }
+    armRevealSafety();
     if (!revealObserver) {
         revealObserver = new IntersectionObserver((entries, obs) => {
             entries.forEach(entry => {

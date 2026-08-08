@@ -268,6 +268,320 @@ body.lightbox-open {
     .gallery-item img { height: 150px; }
 }
 
+/* ==========================================================================
+   Lore Creator
+   ========================================================================== */
+.creator-toggle {
+    margin-top: 22px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--btn-primary-ink);
+    padding: 12px 26px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: var(--spell);
+    background-size: 200% auto;
+    cursor: pointer;
+    box-shadow: 0 10px 26px var(--accent-glow);
+    transition: transform 0.25s var(--ease), box-shadow 0.25s ease;
+}
+
+.creator-toggle:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px var(--accent-glow);
+}
+
+.creator-toggle:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 3px;
+}
+
+.creator {
+    padding: 10px 0 26px;
+    scroll-margin-top: 80px;
+}
+
+.creator-panel {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--shadow);
+    padding: clamp(18px, 3.5vw, 34px);
+}
+
+.creator-head h2 {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(1.5rem, 4vw, 2.1rem);
+    background: var(--spell);
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 8px;
+}
+
+.creator-head p {
+    color: var(--text-muted);
+    max-width: 640px;
+    margin-bottom: 22px;
+}
+
+.creator-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: clamp(18px, 3vw, 32px);
+    align-items: start;
+}
+
+.creator-stage {
+    position: sticky;
+    top: 84px;
+}
+
+#creator-canvas {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 14px;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+    touch-action: none;
+    cursor: grab;
+}
+
+#creator-canvas:active { cursor: grabbing; }
+
+.stage-hint {
+    margin-top: 10px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.creator-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    min-width: 0;
+}
+
+.control-group {
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 14px 16px 16px;
+    background: var(--surface-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.control-group legend {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 2.4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    padding: 0 8px;
+}
+
+.control-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.chip-btn {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text);
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    cursor: pointer;
+    transition: border-color 0.2s ease, transform 0.2s var(--ease);
+}
+
+.chip-btn:hover {
+    border-color: var(--cyan);
+    transform: translateY(-1px);
+}
+
+.chip-btn:focus-visible,
+.chip-file:focus-within {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+.chip-file { display: inline-flex; align-items: center; }
+.chip-file input[type="file"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+}
+
+.select-label {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.creator-controls select {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+
+.creator-controls input[type="text"] {
+    width: 100%;
+    padding: 11px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.creator-controls input[type="text"]:focus {
+    border-color: var(--violet);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.25);
+}
+
+.creator-controls input[type="range"] {
+    flex: 1;
+    min-width: 120px;
+    accent-color: var(--violet);
+}
+
+.mode-row { gap: 12px; }
+
+.mode-pill {
+    position: relative;
+    cursor: pointer;
+}
+
+.mode-pill input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.mode-pill span {
+    display: inline-block;
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    padding: 9px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    transition: all 0.2s ease;
+}
+
+.mode-pill input:checked + span {
+    color: var(--btn-primary-ink);
+    border-color: transparent;
+    background: var(--spell);
+    background-size: 200% auto;
+    box-shadow: 0 6px 18px var(--accent-glow);
+}
+
+.mode-pill input:focus-visible + span {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+.emoji-tray {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+    gap: 8px;
+}
+
+.emoji-chip {
+    font-size: 1.4rem;
+    line-height: 1;
+    padding: 8px 0;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    cursor: pointer;
+    transition: transform 0.15s var(--ease), border-color 0.15s ease;
+}
+
+.emoji-chip:hover {
+    transform: translateY(-2px) scale(1.08);
+    border-color: var(--violet);
+}
+
+.emoji-chip:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+.creator-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.creator-actions .btn-primary,
+.creator-actions .btn-ghost {
+    cursor: pointer;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+}
+
+/* Remix button inside the lightbox */
+#remix-btn {
+    position: absolute;
+    top: 22px;
+    left: 26px;
+    font-family: var(--font-body);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+    padding: 12px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: var(--card);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#remix-btn:hover {
+    border-color: var(--cyan);
+    background: var(--accent-soft);
+}
+
+#remix-btn:focus-visible {
+    outline: 2px solid var(--cyan);
+    outline-offset: 2px;
+}
+
+@media (max-width: 900px) {
+    .creator-body { grid-template-columns: 1fr; }
+    .creator-stage { position: static; }
+}
+
+@media (max-width: 560px) {
+    #remix-btn { top: auto; bottom: 84px; left: 50%; transform: translateX(-50%); }
+}
+
 /* Respect users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
     .gallery-item,
@@ -278,4 +592,7 @@ body.lightbox-open {
         transition: opacity 0.2s ease !important;
     }
     #lightbox-img { transform: none !important; }
+    .creator-toggle,
+    .chip-btn,
+    .emoji-chip { transition: none !important; }
 }

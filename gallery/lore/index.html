@@ -7,14 +7,14 @@
     <title>Lore Gallery · rami.party</title>
 
     <!-- Theme engine: applies the saved theme before first paint -->
-    <script src="/theme.js?v=20260807"></script>
-    <link rel="stylesheet" href="/theme.css?v=20260807">
-    <link rel="stylesheet" href="style.css?v=20260807">
+    <script src="/theme.js?v=20260809"></script>
+    <link rel="stylesheet" href="/theme.css?v=20260809">
+    <link rel="stylesheet" href="style.css?v=20260809b">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <meta name="description" content="A living grimoire of magical lore, muggle mischief and impossibly cute creatures.">
+    <meta name="description" content="A living grimoire of magical lore, muggle mischief and impossibly cute creatures — plus a Lore Creator to forge your own cards and memes.">
     <meta name="author" content="Rami">
     <meta name="theme-color" content="#0b0524">
     <meta name="robots" content="index, follow">
@@ -56,6 +56,92 @@
                 <div class="search-container">
                     <input type="text" id="search-bar" placeholder="Discover ancient artifacts…" aria-label="Search the gallery">
                 </div>
+
+                <button id="creator-toggle" class="creator-toggle" type="button" aria-expanded="false" aria-controls="creator">
+                    <span aria-hidden="true">🪄</span> Open the Lore Creator
+                </button>
+            </div>
+        </section>
+
+        <section id="creator" class="creator" aria-label="Lore Creator" hidden>
+            <div class="container">
+                <div class="creator-panel">
+                    <header class="creator-head">
+                        <h2>Lore Creator</h2>
+                        <p>Forge your own lore card: pick a backdrop, choose your words, sprinkle some
+                            emoji, then download it. Everything happens on your device.</p>
+                    </header>
+
+                    <div class="creator-body">
+                        <div class="creator-stage">
+                            <canvas id="creator-canvas" width="1080" height="1080" role="img"
+                                aria-label="Preview of your lore card"></canvas>
+                            <p class="stage-hint">Drag emoji to move them · double-tap an emoji to remove it</p>
+                        </div>
+
+                        <div class="creator-controls">
+                            <fieldset class="control-group">
+                                <legend>Backdrop</legend>
+                                <div class="control-row">
+                                    <button id="creator-bg-gallery" type="button" class="chip-btn">🎲 From the gallery</button>
+                                    <label class="chip-btn chip-file">📁 Upload
+                                        <input id="creator-bg-upload" type="file" accept="image/*">
+                                    </label>
+                                </div>
+                                <div class="control-row">
+                                    <label class="select-label" for="creator-bg-style">Generated:</label>
+                                    <select id="creator-bg-style">
+                                        <option value="nebula" selected>🌌 Nebula</option>
+                                        <option value="aurora">🌠 Aurora</option>
+                                        <option value="parchment">📜 Parchment</option>
+                                        <option value="midnight">🌙 Midnight</option>
+                                        <option value="potion">🧪 Potion</option>
+                                    </select>
+                                    <button id="creator-bg-generate" type="button" class="chip-btn">✨ Conjure anew</button>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="control-group">
+                                <legend>Style</legend>
+                                <div class="control-row mode-row" role="radiogroup" aria-label="Card style">
+                                    <label class="mode-pill">
+                                        <input type="radio" name="creator-mode" value="lore" checked>
+                                        <span>📜 Lore card</span>
+                                    </label>
+                                    <label class="mode-pill">
+                                        <input type="radio" name="creator-mode" value="meme">
+                                        <span>😄 Meme</span>
+                                    </label>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="control-group">
+                                <legend>Words</legend>
+                                <input id="creator-top-text" type="text" maxlength="60"
+                                    placeholder="Title / top text" aria-label="Title or top text">
+                                <input id="creator-bottom-text" type="text" maxlength="120"
+                                    placeholder="Quote / bottom text" aria-label="Quote or bottom text">
+                                <button id="creator-quote" type="button" class="chip-btn">🎲 Roll a quote</button>
+                            </fieldset>
+
+                            <fieldset class="control-group">
+                                <legend>Emoji stickers</legend>
+                                <div id="creator-emoji-tray" class="emoji-tray"></div>
+                                <div class="control-row">
+                                    <label class="select-label" for="creator-emoji-size">Size:</label>
+                                    <input id="creator-emoji-size" type="range" min="48" max="320" value="130"
+                                        aria-label="Sticker size">
+                                    <button id="creator-emoji-clear" type="button" class="chip-btn">🧹 Clear</button>
+                                </div>
+                            </fieldset>
+
+                            <div class="creator-actions">
+                                <button id="creator-random" type="button" class="btn-ghost">🎲 Surprise me</button>
+                                <button id="creator-download" type="button" class="btn-primary">⬇ Download PNG</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -72,10 +158,12 @@
         <span class="next-btn" role="button" tabindex="0" aria-label="Next">&gt;</span>
         <img id="lightbox-img" src="" alt="Enlarged lore image">
         <div id="lightbox-title"></div>
+        <button id="remix-btn" type="button" aria-label="Remix this image in the Lore Creator">🪄 Remix</button>
     </div>
 
-    <script src="img.js?v=20260807"></script>
-    <script src="script.js?v=20260807"></script>
+    <script src="img.js?v=20260809b"></script>
+    <script src="script.js?v=20260809b"></script>
+    <script src="creator.js?v=20260809b"></script>
 </body>
 
 </html>

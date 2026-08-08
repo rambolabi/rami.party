@@ -7,8 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeBtn = document.querySelector('.close-btn');
     const prevBtn = document.querySelector('.prev-btn');
     const nextBtn = document.querySelector('.next-btn');
+    const remixBtn = document.getElementById('remix-btn');
 
-    // Wire each category button to its config entry via a shared handler.
     const buttons = {
         lore: document.getElementById('lore-btn'),
         muggle: document.getElementById('muggle-btn'),
@@ -20,79 +20,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentImages = [];
     let lastFocused = null;
 
-    // Cache of discovered images per category, so we only scan a folder once.
-    const discovered = new Map();
-
     /* ---------------------------------------------------------------------
-       Image auto-discovery
-       Probes ./img/<folder>/<folder> (n).<ext> and finds how many exist.
-       Uses exponential + binary search so a folder of 500 images costs
-       only ~18 tiny requests instead of 500. Assumes contiguous numbering.
+       Catalogue — built synchronously from the manifest in img.js.
+       No network probing, no 404s: the page knows every image up front.
        --------------------------------------------------------------------- */
-    function resolveImage(folder, index) {
-        // Try each allowed extension until one loads; resolves to the src or null.
-        return new Promise((resolve) => {
-            let i = 0;
-            const tryNext = () => {
-                if (i >= GALLERY_EXTENSIONS.length) return resolve(null);
-                const src = `./img/${folder}/${folder} (${index}).${GALLERY_EXTENSIONS[i++]}`;
-                const probe = new Image();
-                probe.onload = () => resolve(src);
-                probe.onerror = tryNext;
-                probe.src = src;
-            };
-            tryNext();
-        });
-    }
-
-    async function countImages(folder) {
-        if (!(await resolveImage(folder, 1))) return 0;
-        // Find an upper bound that does NOT exist.
-        let lo = 1;
-        let hi = 2;
-        while (await resolveImage(folder, hi)) {
-            lo = hi;
-            hi *= 2;
-            if (hi > 100000) break; // safety valve
-        }
-        // Binary search for the last existing index between lo and hi.
-        while (hi - lo > 1) {
-            const mid = Math.floor((lo + hi) / 2);
-            if (await resolveImage(folder, mid)) lo = mid;
-            else hi = mid;
-        }
-        return lo;
-    }
-
-    async function loadCategory(category) {
-        if (discovered.has(category)) return discovered.get(category);
-
-        const cfg = GALLERY_CONFIG.find((c) => c.category === category);
-        if (!cfg) {
-            discovered.set(category, []);
-            return [];
-        }
-
-        const count = await countImages(cfg.folder);
+    const catalogue = new Map();
+    GALLERY_CONFIG.forEach((cfg) => {
         const list = [];
-        for (let i = 1; i <= count; i++) {
+        for (let i = 1; i <= cfg.count; i++) {
             list.push({
-                folder: cfg.folder,
-                index: i,
-                src: candidate(cfg.folder, i, 0),
+                src: gallerySrc(cfg, i),
                 title: `${cfg.title} ${i}`,
                 keywords: `${cfg.keywords} ${i}`,
                 category: cfg.category
             });
         }
-        discovered.set(category, list);
-        return list;
-    }
-
-    // Build the src for a folder/index using the Nth allowed extension.
-    function candidate(folder, index, extIndex) {
-        return `./img/${folder}/${folder} (${index}).${GALLERY_EXTENSIONS[extIndex]}`;
-    }
+        catalogue.set(cfg.category, list);
+    });
 
     /* ---------------------------------------------------------------------
        Rendering
@@ -121,22 +65,9 @@ document.addEventListener('DOMContentLoaded', () => {
             img.alt = image.title;
             img.loading = 'lazy';
             img.decoding = 'async';
-            // Fade each thumbnail in once it has decoded, and remember which
-            // extension actually worked so the lightbox reuses it instantly.
-            img.addEventListener('load', () => {
-                image.src = img.src;
-                img.classList.add('loaded');
-            });
-            // Try the next allowed extension; drop the tile only if none work.
-            let extIndex = 0;
-            img.addEventListener('error', () => {
-                extIndex++;
-                if (extIndex < GALLERY_EXTENSIONS.length) {
-                    img.src = candidate(image.folder, image.index, extIndex);
-                } else {
-                    item.remove();
-                }
-            });
+            img.addEventListener('load', () => img.classList.add('loaded'));
+            // Only fires if the manifest count is wrong — drop the tile quietly.
+            img.addEventListener('error', () => item.remove());
             img.src = image.src;
 
             const title = document.createElement('div');
@@ -154,17 +85,9 @@ document.addEventListener('DOMContentLoaded', () => {
         gallery.appendChild(fragment);
     }
 
-    async function filterByCategory() {
-        const category = currentCategory;
-        if (!discovered.has(category)) {
-            setMessage('Summoning the archives…');
-            await loadCategory(category);
-            // The user switched category while we were loading — bail out.
-            if (category !== currentCategory) return;
-        }
-
+    function filterByCategory() {
         const searchTerm = searchBar.value.trim().toLowerCase();
-        let filtered = discovered.get(category) || [];
+        let filtered = catalogue.get(currentCategory) || [];
 
         if (searchTerm) {
             filtered = filtered.filter((image) =>
@@ -179,20 +102,15 @@ document.addEventListener('DOMContentLoaded', () => {
     /* ---------------------------------------------------------------------
        Lightbox
        --------------------------------------------------------------------- */
-    let lightboxExt = 0;
-
     function preload(index) {
         const image = currentImages[index];
         if (!image) return;
-        const probe = new Image();
-        probe.onload = () => { image.src = probe.src; };
-        probe.src = image.src;
+        new Image().src = image.src;
     }
 
     function updateLightbox() {
         const image = currentImages[currentIndex];
         if (!image) return;
-        lightboxExt = 0;
         lightboxImg.classList.remove('loaded');
         lightboxImg.src = image.src;
         lightboxImg.alt = image.title;
@@ -241,21 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateLightbox();
     }
 
-    lightboxImg.addEventListener('load', () => {
-        const image = currentImages[currentIndex];
-        if (image) image.src = lightboxImg.src;
-        lightboxImg.classList.add('loaded');
-    });
-
-    // If the current extension fails in the lightbox, try the next one.
-    lightboxImg.addEventListener('error', () => {
-        const image = currentImages[currentIndex];
-        if (!image) return;
-        lightboxExt++;
-        if (lightboxExt < GALLERY_EXTENSIONS.length) {
-            lightboxImg.src = candidate(image.folder, image.index, lightboxExt);
-        }
-    });
+    lightboxImg.addEventListener('load', () => lightboxImg.classList.add('loaded'));
 
     /* ---------------------------------------------------------------------
        Events
@@ -286,6 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
     closeBtn.addEventListener('click', closeLightbox);
     prevBtn.addEventListener('click', showPrev);
     nextBtn.addEventListener('click', showNext);
+
+    // Send the current image into the Lore Creator.
+    if (remixBtn) {
+        remixBtn.addEventListener('click', () => {
+            const image = currentImages[currentIndex];
+            if (!image || !window.LoreCreator) return;
+            closeLightbox();
+            window.LoreCreator.openWith(image.src);
+        });
+    }
 
     // Let the control "spans" respond to Enter/Space like real buttons.
     [closeBtn, prevBtn, nextBtn].forEach((el) => {
