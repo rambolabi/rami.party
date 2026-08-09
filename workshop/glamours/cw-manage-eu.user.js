@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Comfort Glamour
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.5.1
+// @version      1.6.1
 // @description  Quality-of-life for ConnectWise Manage: four dark themes, a hover ticket preview with pickable columns plus the latest note and its screenshots, stale-ticket highlighting, one-click Change/Change/Change, auto-closing of company status-note popups, a password-manager-friendly login that carries you through single sign-on, and true text-only scaling. Every tweak is a toggle — press Alt+Shift+G for the panel.
 // @author       rami.party
 // @license      MIT
@@ -40,6 +40,7 @@
     'use strict';
 
     var IS_TOP = window.self === window.top;
+    var VERSION = '1.6.1';               // keep in step with @version above
     var KEY = 'rpGlamourCw.v1';
     var COLS_KEY = 'rpGlamourCw.cols';   // columns of the grid last hovered
     var DEFAULTS = {
@@ -151,6 +152,7 @@
             'border-top:1px solid rgba(159,176,201,.3)}',
             '#rpg-preview .rpg-pv-notes p{margin:6px 0 0;white-space:pre-wrap;',
             'max-height:220px;overflow:hidden;color:#cfd9e8}',
+            '#rpg-preview .rpg-pv-wait{color:#8ea3bd;font-style:italic}',
             '#rpg-preview .rpg-pv-shots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}',
             '#rpg-preview .rpg-pv-shots img{max-height:92px;max-width:100%;border-radius:6px;',
             'border:1px solid rgba(159,176,201,.35);background:#0d1117}',
@@ -723,7 +725,20 @@
         return out;
     }
 
+    function notePlaceholder() {
+        var sec = el('div', { 'class': 'rpg-pv-notes', 'data-pending': '' });
+        sec.appendChild(el('b', { text: 'Ticket content' }));
+        sec.appendChild(el('p', { 'class': 'rpg-pv-wait', text: 'asking Manage for the note\u2026' }));
+        return sec;
+    }
+
+    function dropPlaceholder() {
+        var old = pvEl && pvEl.querySelector('.rpg-pv-notes[data-pending]');
+        if (old) old.parentNode.removeChild(old);
+    }
+
     function adoptNote(node, text) {
+        dropPlaceholder();
         var sec = el('div', { 'class': 'rpg-pv-notes' });
         sec.appendChild(el('b', { text: 'Ticket content' }));
 
@@ -773,7 +788,12 @@
     function tryAdopt() {
         var h = pvHunt;
         if (!h || !pvEl || h.done) return;
-        if (Date.now() > h.deadline) { stopNoteHunt(); return; }
+        if (Date.now() > h.deadline) {
+            var wait = pvEl.querySelector('.rpg-pv-notes[data-pending] .rpg-pv-wait');
+            if (wait) wait.textContent = 'Manage did not return a note for this row.';
+            stopNoteHunt();
+            return;
+        }
 
         /* Manage reuses one tooltip element, so it can already be sitting in
            the page when the hover starts and never mutate again. Sweep the
@@ -804,11 +824,60 @@
         }
     }
 
+    /* Manage only loads the note when you hover the cell its own tooltip is
+       bound to — usually the summary. Hovering any other column produced no
+       note at all, which read as "slow" when it was really "never", so the
+       hover is echoed onto that cell. It runs only once the card is already
+       up: echoing a hover can make Manage re-render the row, and the card
+       must not depend on a row that Manage is about to replace. */
+    var pvNudging = false;
+
+    function nudgeNote(row) {
+        if (!row.isConnected) return;
+        var cells = rowCells(row);
+        if (!cells.length) return;
+        var heads = headerCells(row);
+        var target = null;
+
+        for (var i = 0; i < heads.length && !target; i++) {
+            if (!/summary|description|subject/i.test(heads[i].textContent)) continue;
+            var hr = heads[i].getBoundingClientRect();
+            if (!hr.width) break;
+            var centre = hr.left + hr.width / 2;
+            for (var j = 0; j < cells.length; j++) {
+                var cr = cells[j].getBoundingClientRect();
+                if (cr.width && centre >= cr.left && centre < cr.right) { target = cells[j]; break; }
+            }
+        }
+        if (!target) {                       // widest cell is the summary in practice
+            var widest = 0;
+            for (var k = 0; k < cells.length; k++) {
+                var w = cells[k].getBoundingClientRect().width;
+                if (w > widest) { widest = w; target = cells[k]; }
+            }
+        }
+        if (!target) return;
+
+        var r = target.getBoundingClientRect();
+        var x = r.left + r.width / 2, y = r.top + r.height / 2;
+        var inner = target.firstElementChild || target;
+        pvNudging = true;
+        try {
+            ['mouseover', 'mousemove'].forEach(function (type) {
+                inner.dispatchEvent(new MouseEvent(type, {
+                    bubbles: true, cancelable: true, view: window, clientX: x, clientY: y
+                }));
+            });
+        } finally {
+            pvNudging = false;
+        }
+    }
+
     /* Started on hover, not when the card appears: Manage's tooltip can beat
        the card, and every millisecond of head start is one less to wait. */
-    function huntNotes(rowText) {
+    function huntNotes(row) {
         stopNoteHunt();
-        var h = pvHunt = { rowText: rowText, seen: [], obs: null, timer: 0, pending: 0,
+        var h = pvHunt = { rowText: pvClean(row.textContent), seen: [], obs: null, timer: 0, pending: 0,
             deadline: Date.now() + 8000, done: false };
 
         h.obs = new MutationObserver(function (records) {
@@ -855,7 +924,11 @@
         document.body.appendChild(pvEl);
         place(row, mode, x, y);
         pvEl.setAttribute('data-show', '');
-        tryAdopt();                              // the tooltip may already be up
+        if (CUR.previewNotes) {
+            pvEl.appendChild(notePlaceholder());
+            try { nudgeNote(row); } catch (err) { /* the note is optional */ }
+            tryAdopt();                          // the tooltip may already be up
+        }
 
         /* Manage fills a recycled row's cells a beat after it appears, so a
            card built the instant you arrive can be missing columns. Rebuild a
@@ -891,7 +964,7 @@
 
     function initPreview() {
         document.addEventListener('mouseover', function (e) {
-            if (!CUR.preview) return;
+            if (!CUR.preview || pvNudging) return;
             var row = findRow(e.target);
             if (!row) { if (pvRow || pvHunt) hidePreview(); return; }
             /* Moving between cells of the same row is not a new hover: restarting
@@ -900,10 +973,12 @@
             pvHoverRow = row;
             clearTimeout(pvTimer);
             var x = e.clientX, y = e.clientY, mode = CUR.previewMode;
-            /* Ahead of the card on purpose: Manage's own tooltip is the slow
-               part, so the watch starts the instant you arrive. */
-            if (CUR.previewNotes) huntNotes(pvClean(row.textContent));
+            /* The card is scheduled FIRST and on its own: the note machinery
+               is optional, and nothing it does may keep the preview away. */
             pvTimer = setTimeout(function () { showPreview(row, mode, x, y); }, 180);
+            if (CUR.previewNotes) {
+                try { huntNotes(row); } catch (err) { stopNoteHunt(); }
+            }
         }, true);
 
         document.addEventListener('mouseout', function (e) {
@@ -1220,7 +1295,9 @@
         'background:rgba(168,85,247,.15);color:#ece9ff;font:700 14px/1 system-ui,sans-serif;cursor:pointer}',
         '#rpg-zoom output{min-width:44px;text-align:center;font-weight:700}',
         '#rpg-note{margin:10px 0 0;font-size:11px;color:#b9b3d9}',
-        '#rpg-note a{color:#22d3ee;text-decoration:none}'
+        '#rpg-note a{color:#22d3ee;text-decoration:none}',
+        '#rpg-ver{margin-left:6px;padding:1px 6px;border-radius:999px;',
+        'border:1px solid rgba(168,85,247,.45);color:#b9b3d9;font-size:10px;white-space:nowrap}'
     ].join('');
 
     var TOGGLES = [
@@ -1425,6 +1502,7 @@
         note.appendChild(document.createTextNode('Alt+Shift+G toggles this panel \u00b7 Alt+Shift+D toggles the theme. Settings stay in this browser. '));
         var home = el('a', { href: 'https://rami.party/workshop/glamours/', target: '_blank', rel: 'noopener', text: 'About this glamour \u2197' });
         note.appendChild(home);
+        note.appendChild(el('span', { id: 'rpg-ver', title: 'Comfort Glamour version', text: 'v' + VERSION }));
         panel.appendChild(note);
 
         pill.addEventListener('click', function () {
