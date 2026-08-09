@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark">
+    <meta name="theme-color" content="#0d0726">
+
+    <!-- Primary SEO -->
+    <title>Glamours — userscripts &amp; userstyles that re-enchant other people's websites | rami.party</title>
+    <meta name="description" content="A spellbook of small Tampermonkey userscripts and Stylus userstyles that make third-party web apps nicer to use: dark modes, readable scrollbars, saner logins. First entry: a comfort pack for ConnectWise Manage. Each glamour explains what it does, how it works and why it's nice — plus every way to install it without Tampermonkey.">
+    <meta name="keywords" content="userscript, userstyle, Tampermonkey, Stylus, Violentmonkey, custom CSS, dark mode, ConnectWise Manage, myconnectwise, bookmarklet, browser extension, greasemonkey, uBlock cosmetic filter">
+    <meta name="author" content="rami.party">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://rami.party/workshop/glamours/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Glamours — re-enchant other people's websites">
+    <meta property="og:description" content="Small userscripts &amp; userstyles that make the web apps you're stuck with nicer to use. Documented, toggleable, no tracking.">
+    <meta property="og:url" content="https://rami.party/workshop/glamours/">
+    <meta property="og:site_name" content="rami.party">
+    <meta property="og:locale" content="en_GB">
+    <meta property="og:image" content="https://rami.party/workshop/glamours/og-image.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Glamours — re-enchant other people's websites">
+    <meta name="twitter:description" content="Small userscripts &amp; userstyles that make the web apps you're stuck with nicer to use.">
+    <meta name="twitter:image" content="https://rami.party/workshop/glamours/og-image.svg">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d0726'/%3E%3Cpath d='M50 18 L57 43 L82 50 L57 57 L50 82 L43 57 L18 50 L43 43 Z' fill='%23a855f7'/%3E%3Ccircle cx='75' cy='25' r='6' fill='%2322d3ee'/%3E%3C/svg%3E">
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Glamours — userscripts & userstyles",
+      "url": "https://rami.party/workshop/glamours/",
+      "description": "A documented collection of userscripts and userstyles that improve third-party web applications, starting with a comfort pack for ConnectWise Manage.",
+      "isPartOf": { "@type": "WebSite", "name": "rami.party", "url": "https://rami.party/" }
+    }
+    </script>
+</head>
+<body>
+    <div class="app-bg" aria-hidden="true">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+    </div>
+
+    <header class="topbar">
+        <a class="home" href="https://rami.party/#workshop">← rami.party</a>
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">🪄</span>
+            <div class="brand-text">
+                <strong>Glamours</strong>
+                <small>userscripts · userstyles · local, no tracking</small>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1>Re-enchant other people's websites</h1>
+            <p>Some web apps you don't get to choose — you just get to stare at them all day.
+               A <em>glamour</em> is a small illusion spell: a few lines of CSS or JavaScript your
+               browser applies on arrival, so the site looks and behaves the way it always should
+               have. This page collects ours — each one documented: <strong>what it does, how it
+               works, and why it's nice.</strong></p>
+        </div>
+
+        <!-- ============================== the spellbook ============================== -->
+        <section class="card" aria-labelledby="book-title">
+            <h2 id="book-title"><span class="ic">📖</span> The spellbook</h2>
+            <div id="glamour-list"></div>
+        </section>
+
+        <!-- ============================== install guide ============================== -->
+        <section class="card" aria-labelledby="install-title">
+            <h2 id="install-title"><span class="ic">🐒</span> Casting with Tampermonkey (2 minutes)</h2>
+            <ol class="steps">
+                <li><strong>Install a userscript manager.</strong> <a href="https://www.tampermonkey.net/" target="_blank" rel="noopener">Tampermonkey</a> works on Chrome, Edge and Firefox. Prefer open source? <a href="https://violentmonkey.github.io/" target="_blank" rel="noopener">Violentmonkey</a> runs the exact same scripts.</li>
+                <li><strong>Enable Developer mode</strong> (Chrome/Edge only): <code>chrome://extensions</code> → toggle <em>Developer mode</em> on. Since Manifest V3, userscript managers need it to inject scripts.</li>
+                <li><strong>Click an “Install userscript” button below.</strong> Any link ending in <code>.user.js</code> makes the manager pop its install screen automatically — review the code, confirm, done.</li>
+                <li><strong>Visit the site.</strong> The glamour applies itself on every page load. Look for its settings pill to toggle individual tweaks.</li>
+            </ol>
+            <p class="fineprint">Trust rule: only ever install userscripts you (or someone you trust) have read. A userscript runs with full access to the pages it matches — which is precisely why it can fix them. Everything here is plain, commented source with <code>@grant none</code>: no special privileges, no external requests.</p>
+        </section>
+
+        <!-- ============================== alternatives ============================== -->
+        <section class="card" aria-labelledby="alt-title">
+            <h2 id="alt-title"><span class="ic">🧪</span> No Tampermonkey? Six other ways to cast</h2>
+            <p class="lead">A userscript manager is the most comfortable wand, but it is not the only one.
+               Pick by what the tweak needs (CSS only vs. JavaScript) and what your machine allows:</p>
+
+            <div class="alt-grid">
+                <article class="alt">
+                    <h3>🖌️ Stylus <span class="tag good">best for CSS-only</span></h3>
+                    <p>The <a href="https://github.com/openstyles/stylus" target="_blank" rel="noopener">Stylus</a> extension applies user <em>styles</em> — CSS only, no script execution, so it needs far less trust and fewer permissions. Every glamour here that has a <code>.user.css</code> file installs into Stylus with one click and can be toggled per site.</p>
+                    <p class="verdict">Persistent · auto-applies · can't do JS features (panels, login helpers)</p>
+                </article>
+
+                <article class="alt">
+                    <h3>🔖 Bookmarklet <span class="tag">zero extensions</span></h3>
+                    <p>A bookmark whose URL is <code>javascript:…</code> code that injects the CSS when clicked. Nothing to install — works even where extensions are forbidden. The catch: you click it once per visit, and sites with a strict <code>style-src</code> CSP can refuse it.</p>
+                    <p class="verdict">No install rights needed · manual, per-tab, per-visit · each card below offers a drag-to-bookmark version</p>
+                </article>
+
+                <article class="alt">
+                    <h3>🛠️ DevTools local overrides <span class="tag">built into the browser</span></h3>
+                    <p>Chrome/Edge can persist your CSS edits across reloads: DevTools → <em>Sources → Overrides</em> → pick a local folder → edit any stylesheet. Firefox has <em>Style Editor</em> for the session. Great for prototyping a glamour before packaging it; clumsy as a daily driver.</p>
+                    <p class="verdict">No extension · survives reloads (Chromium) · per machine, fiddly</p>
+                </article>
+
+                <article class="alt">
+                    <h3>🛡️ uBlock Origin cosmetic filters <span class="tag">you may already have it</span></h3>
+                    <p>If a tweak only needs to <em>hide</em> things, uBlock Origin does it natively: dashboard → <em>My filters</em> → <code>eu.myconnectwise.net##.annoying-thing</code>. No styling or behaviour changes, but zero extra software if it's already installed.</p>
+                    <p class="verdict">Hide-only · syncs with uBlock backup · can't recolour or add features</p>
+                </article>
+
+                <article class="alt">
+                    <h3>🦊 Firefox userContent.css <span class="tag">no extension at all</span></h3>
+                    <p>Firefox natively loads <code>chrome/userContent.css</code> from your profile folder at startup. Wrap rules in <code>@-moz-document domain("eu.myconnectwise.net") { … }</code>, flip <code>toolkit.legacyUserProfileCustomizations.stylesheets</code> to <code>true</code> in <code>about:config</code>, restart.</p>
+                    <p class="verdict">Pure browser feature · CSS only · needs a restart per change</p>
+                </article>
+
+                <article class="alt">
+                    <h3>🔍 Per-site zoom <span class="tag">the humble classic</span></h3>
+                    <p><kbd>Ctrl</kbd>+<kbd>+</kbd>/<kbd>−</kbd> is remembered per origin by every browser. It's the no-code answer to “this app's text is too small” — and the honest baseline any density tweak should beat.</p>
+                    <p class="verdict">Zero setup · scales everything equally, fixes nothing structural</p>
+                </article>
+            </div>
+
+            <p class="fineprint">For a whole team: IT can force-install Tampermonkey/Stylus with a preloaded script list via managed browser policies (<code>ExtensionInstallForcelist</code> + each extension's managed storage) — one glamour, everyone's browser. And for completeness: ConnectWise Manage itself offers <strong>no</strong> theming, custom-CSS or density options server-side, which is exactly why this page exists.</p>
+        </section>
+
+        <footer>
+            <p>Made with ♥ at <a href="https://rami.party/">rami.party</a> · everything runs locally · no tracking, no analytics.</p>
+        </footer>
+    </main>
+
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

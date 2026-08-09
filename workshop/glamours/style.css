@@ -1,0 +1,377 @@
+/* ==========================================================================
+   Glamours — spellbook styling (house aurora palette)
+   ========================================================================== */
+
+:root {
+    --bg: #0d0726;
+    --panel: rgba(22, 12, 52, .72);
+    --panel-solid: #161033;
+    --line: rgba(168, 85, 247, .28);
+    --line-strong: rgba(168, 85, 247, .5);
+    --ink: #ece9ff;
+    --muted: #b9b3d9;
+    --accent: #a855f7;
+    --accent-2: #22d3ee;
+    --good: #34d399;
+    --radius: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html { scrollbar-color: #64748b transparent; }
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 16px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+    overflow-x: hidden;
+}
+
+/* ---------------- backdrop ---------------- */
+
+.app-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+}
+
+.blob {
+    position: absolute;
+    width: 55vmax;
+    height: 55vmax;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: .35;
+}
+
+.b1 { top: -20vmax; left: -15vmax; background: radial-gradient(circle, #6d28d9, transparent 65%); }
+.b2 { bottom: -25vmax; right: -18vmax; background: radial-gradient(circle, #0e7490, transparent 65%); }
+
+/* ---------------- header ---------------- */
+
+.topbar {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 16px clamp(16px, 4vw, 40px);
+    border-bottom: 1px solid var(--line);
+    background: rgba(13, 7, 38, .8);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.home {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.home:hover, .home:focus-visible { color: var(--accent-2); }
+
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand-mark { font-size: 26px; }
+.brand-text strong { display: block; font-size: 17px; letter-spacing: .3px; }
+.brand-text small { color: var(--muted); font-size: 12px; }
+
+/* ---------------- layout ---------------- */
+
+main {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 24px clamp(14px, 4vw, 32px) 60px;
+}
+
+.hero { padding: 26px 4px 10px; }
+
+.hero h1 {
+    margin: 0 0 12px;
+    font-size: clamp(26px, 4.5vw, 40px);
+    line-height: 1.15;
+    background: linear-gradient(90deg, #e9d5ff, #a5f3fc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.hero p { max-width: 70ch; color: var(--muted); margin: 0; }
+.hero strong, .hero em { color: var(--ink); }
+
+.card {
+    margin-top: 26px;
+    padding: clamp(18px, 3.5vw, 30px);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    backdrop-filter: blur(6px);
+}
+
+.card > h2 {
+    margin: 0 0 16px;
+    font-size: 21px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ic { font-size: 22px; }
+
+.lead { color: var(--muted); margin: 0 0 18px; max-width: 75ch; }
+
+.fineprint {
+    margin: 18px 0 0;
+    font-size: 13px;
+    color: var(--muted);
+    border-top: 1px dashed var(--line);
+    padding-top: 14px;
+}
+
+/* ---------------- glamour cards ---------------- */
+
+.glamour {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: rgba(13, 7, 38, .55);
+    padding: clamp(16px, 3vw, 24px);
+}
+
+.glamour + .glamour { margin-top: 20px; }
+
+.g-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 14px;
+    margin-bottom: 6px;
+}
+
+.g-glyph { font-size: 28px; }
+
+.g-head h3 { margin: 0; font-size: 19px; flex: 1 1 auto; }
+
+.badge {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    color: #e9d5ff;
+    white-space: nowrap;
+}
+
+.badge.site { border-color: rgba(34, 211, 238, .5); color: #a5f3fc; }
+
+.g-summary { color: var(--muted); margin: 6px 0 14px; max-width: 78ch; }
+
+.g-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 14px;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    font: 600 13.5px/1 system-ui, sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid var(--line-strong);
+    color: var(--ink);
+    background: rgba(168, 85, 247, .16);
+    transition: transform .15s ease, background .15s ease;
+}
+
+.btn:hover, .btn:focus-visible { background: rgba(168, 85, 247, .3); transform: translateY(-1px); }
+
+.btn.primary {
+    background: linear-gradient(90deg, #7c3aed, #0891b2);
+    border-color: transparent;
+}
+
+.btn.primary:hover, .btn.primary:focus-visible { filter: brightness(1.15); }
+
+.btn.mark { cursor: grab; }
+
+/* what / how / why */
+
+.g-cols details {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-top: 10px;
+    background: rgba(22, 12, 52, .5);
+}
+
+.g-cols summary {
+    cursor: pointer;
+    padding: 11px 14px;
+    font-weight: 700;
+    font-size: 14.5px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.g-cols summary::-webkit-details-marker { display: none; }
+
+.g-cols summary::after {
+    content: '▾';
+    margin-left: auto;
+    color: var(--muted);
+    transition: transform .2s ease;
+}
+
+.g-cols details[open] summary::after { transform: rotate(180deg); }
+
+.g-body { padding: 0 16px 14px; }
+
+.g-body ul { margin: 4px 0 0; padding-left: 20px; }
+.g-body li { margin: 6px 0; color: var(--muted); }
+.g-body li strong, .g-body li em { color: var(--ink); }
+.g-body p { margin: 4px 0 0; color: var(--muted); max-width: 78ch; }
+
+/* code viewer */
+
+.code-view {
+    margin-top: 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #0a0518;
+    overflow: hidden;
+}
+
+.code-view[hidden] { display: none; }
+
+.code-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--line);
+    font-size: 12.5px;
+    color: var(--muted);
+}
+
+.code-bar .spacer { flex: 1; }
+
+.code-bar button {
+    font: 600 12px/1 system-ui, sans-serif;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.code-bar button:hover { background: rgba(168, 85, 247, .2); }
+
+.code-view pre {
+    margin: 0;
+    padding: 14px 16px;
+    max-height: 420px;
+    overflow: auto;
+    font: 12.5px/1.55 ui-monospace, "Cascadia Code", Consolas, monospace;
+    color: #c9d1e9;
+    tab-size: 4;
+}
+
+/* ---------------- install steps ---------------- */
+
+.steps { margin: 0; padding-left: 22px; }
+.steps li { margin: 12px 0; color: var(--muted); }
+.steps li strong { color: var(--ink); }
+
+/* ---------------- alternatives grid ---------------- */
+
+.alt-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr));
+    gap: 16px;
+}
+
+.alt {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+    background: rgba(13, 7, 38, .55);
+}
+
+.alt h3 {
+    margin: 0 0 8px;
+    font-size: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+}
+
+.tag.good { border-color: rgba(52, 211, 153, .55); color: var(--good); }
+
+.alt p { margin: 0 0 8px; font-size: 14px; color: var(--muted); }
+
+.verdict {
+    font-size: 12.5px !important;
+    color: #8f88b8 !important;
+    border-top: 1px dashed var(--line);
+    padding-top: 8px;
+    margin-bottom: 0 !important;
+}
+
+/* ---------------- shared bits ---------------- */
+
+a { color: var(--accent-2); }
+a:hover { color: #67e8f9; }
+
+code, kbd {
+    font: 12.5px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace;
+    background: rgba(168, 85, 247, .14);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 1.5px 6px;
+    color: #e9d5ff;
+    overflow-wrap: anywhere;
+}
+
+kbd { border-bottom-width: 2px; }
+
+footer {
+    margin-top: 40px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+
+[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}
+
+@media (max-width: 560px) {
+    .g-actions .btn { flex: 1 1 100%; justify-content: center; }
+}

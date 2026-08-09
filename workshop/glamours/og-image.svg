@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+    <defs>
+        <radialGradient id="g1" cx="15%" cy="10%" r="70%">
+            <stop offset="0%" stop-color="#6d28d9" stop-opacity=".55"/>
+            <stop offset="100%" stop-color="#6d28d9" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="g2" cx="90%" cy="95%" r="70%">
+            <stop offset="0%" stop-color="#0e7490" stop-opacity=".5"/>
+            <stop offset="100%" stop-color="#0e7490" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="t" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#e9d5ff"/>
+            <stop offset="100%" stop-color="#a5f3fc"/>
+        </linearGradient>
+    </defs>
+    <rect width="1200" height="630" fill="#0d0726"/>
+    <rect width="1200" height="630" fill="url(#g1)"/>
+    <rect width="1200" height="630" fill="url(#g2)"/>
+    <path d="M950 120 L974 196 L1050 220 L974 244 L950 320 L926 244 L850 220 L926 196 Z" fill="#a855f7" opacity=".9"/>
+    <circle cx="1035" cy="140" r="14" fill="#22d3ee"/>
+    <circle cx="880" cy="330" r="9" fill="#e9d5ff" opacity=".8"/>
+    <text x="80" y="285" font-family="Segoe UI, system-ui, sans-serif" font-size="86" font-weight="800" fill="url(#t)">Glamours</text>
+    <text x="82" y="360" font-family="Segoe UI, system-ui, sans-serif" font-size="34" fill="#b9b3d9">Userscripts &amp; userstyles that re-enchant</text>
+    <text x="82" y="410" font-family="Segoe UI, system-ui, sans-serif" font-size="34" fill="#b9b3d9">other people's websites</text>
+    <text x="82" y="530" font-family="Segoe UI, system-ui, sans-serif" font-size="26" font-weight="600" fill="#22d3ee">rami.party/workshop/glamours</text>
+</svg>

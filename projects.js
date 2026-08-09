@@ -151,6 +151,17 @@ window.RAMI_REALMS = [
    ========================================================================== */
 window.RAMI_WORKSHOP = [
     {
+        title: 'Glamours',
+        href: './glamours/',
+        glyph: '🪄',
+        tagline: 'Re-enchant other people\u2019s websites',
+        description: 'A spellbook of small userscripts and userstyles that fix the web apps you are stuck with: dark veils, readable scrollbars, saner logins. First entry: a comfort pack for ConnectWise Manage. Each glamour explains what it does, how it works and why it\u2019s nice.',
+        search: 'A collection of Tampermonkey userscripts and Stylus userstyles that improve and customize third party websites with custom CSS and JavaScript. Includes a ConnectWise Manage PSA comfort pack for eu.myconnectwise.net with dark mode, bigger visible scrollbars, table row hover highlighting, keyboard focus outlines, a password manager friendly login with autocomplete fixed and a caps lock warning, and text zoom. Explains how to install userscript managers like Tampermonkey and Violentmonkey, plus every alternative: Stylus userstyles, bookmarklets, DevTools local overrides, uBlock Origin cosmetic filters, Firefox userContent.css and per site browser zoom.',
+        tags: ['userscript', 'css', 'tool'],
+        aura: 'violet',
+        status: 'live',
+    },
+    {
         title: 'Chronoport',
         href: './chronoport/',
         glyph: '⏳',
