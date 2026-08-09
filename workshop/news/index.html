@@ -5,17 +5,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="A hand-curated bench of IT tools: network, security, development and system utilities, the whole Microsoft admin portal maze, browsers, self-host gear and a few tools hosted right here.">
+        content="A curated scroll of IT and cybersecurity learning: news sources, labs, CTFs, OSINT and incident response tools, plus every hacker conference and camp worth the train fare from Belgium.">
     <meta name="theme-color" content="#0b0524">
     <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://rami.party/workshop/tools/">
-    <title>IT Toolkit · rami.party</title>
+    <link rel="canonical" href="https://rami.party/workshop/news/">
+    <title>IT News Scroll · rami.party</title>
 
     <meta property="og:type" content="website">
-    <meta property="og:title" content="IT Toolkit · rami.party">
+    <meta property="og:title" content="IT News Scroll · rami.party">
     <meta property="og:description"
-        content="A hand-curated bench of IT tools: network, security, development, Microsoft portals and more.">
-    <meta property="og:url" content="https://rami.party/workshop/tools/">
+        content="Curated IT and security resources, plus the European conference and hacker camp calendar seen from Belgium.">
+    <meta property="og:url" content="https://rami.party/workshop/news/">
 
     <!-- Shared enchanted theme, then this page's own styling -->
     <link rel="stylesheet" href="../../theme.css">
@@ -30,7 +30,7 @@
         rel="stylesheet">
 
     <link rel="icon"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%B0%3C/text%3E%3C/svg%3E">
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%B0%3C/text%3E%3C/svg%3E">
 </head>
 
 <body>
@@ -54,26 +54,41 @@
 
     <main class="container" id="top">
         <section class="hero">
-            <p class="eyebrow"><span aria-hidden="true">✦</span> The workbench <span aria-hidden="true">✦</span></p>
-            <h1 class="hero-title">IT <span class="glow">Toolkit</span></h1>
+            <p class="eyebrow"><span aria-hidden="true">✦</span> The daily scroll <span aria-hidden="true">✦</span></p>
+            <h1 class="hero-title">IT News <span class="glow">Scroll</span></h1>
             <p class="hero-sub">
-                Tools me and my friends have come across and kept.
-                <strong id="statTools">0</strong> of them so far, <strong id="statFree">0</strong> completely free,
-                and <strong id="statLocal">0</strong> living right here on rami.party.
+                Somewhere to start when you want to learn something, check an indicator, or find a conference
+                worth the train fare. <strong id="statResources">0</strong> curated resources and
+                <strong id="statEvents">0</strong> European events, of which
+                <strong id="statSoon">0</strong> are still to come.
             </p>
             <p class="hero-note">
-                🛡️ GDPR marks tools that claim compliance or can be used compliantly — verify that yourself before
-                trusting one with real data. Use everything at your own risk.
+                Verify anything important against a second source, and only practise on systems you are allowed to
+                touch.
             </p>
         </section>
 
         <!-- Toolbar ------------------------------------------------------- -->
+        <div id="toolbarAnchor" aria-hidden="true"></div>
         <section class="toolbar" id="filterbar" aria-label="Search and filters">
             <div class="toolbar-top">
+                <div class="segmented" role="group" aria-label="What are you looking for">
+                    <button type="button" class="seg" data-tab="resource" aria-pressed="true">
+                        <span class="seg__glyph" aria-hidden="true">📚</span>
+                        <span class="seg__text">Resources</span>
+                        <span class="seg__count" id="tabResourceCount">0</span>
+                    </button>
+                    <button type="button" class="seg" data-tab="event" aria-pressed="false">
+                        <span class="seg__glyph" aria-hidden="true">📅</span>
+                        <span class="seg__text">Events</span>
+                        <span class="seg__count" id="tabEventCount">0</span>
+                    </button>
+                </div>
+
                 <div class="search-wrap" role="search">
                     <span class="search-icon" aria-hidden="true">🔍</span>
-                    <label class="visually-hidden" for="searchInput">Search the toolkit</label>
-                    <input type="search" id="searchInput" placeholder="Search tools, portals, topics…"
+                    <label class="visually-hidden" for="searchInput">Search the scroll</label>
+                    <input type="search" id="searchInput" placeholder="Search resources, tools, topics…"
                         autocomplete="off" spellcheck="false" enterkeyhint="search">
                     <button type="button" id="clearSearch" class="search-clear" aria-label="Clear the search"
                         hidden>✕</button>
@@ -92,22 +107,30 @@
 
             <div class="toolbar-collapse" id="toolbarCollapse">
                 <div class="toolbar-collapse__inner">
-                    <div class="chips" id="chips" role="group" aria-label="Filter by topic"></div>
+                    <div class="chips" id="chips" role="group" aria-label="Filter by category"></div>
 
                     <div class="facets">
-                        <label class="select-wrap">
-                            <span class="select-label">Runs as</span>
-                            <select id="typeSelect"></select>
-                        </label>
-
                         <div class="facet-group">
                             <button type="button" class="toggle" id="freeToggle" aria-pressed="false">
                                 <span aria-hidden="true">💚</span> Free only
                             </button>
-                            <button type="button" class="toggle" id="gdprToggle" aria-pressed="false"
-                                title="Only tools that claim GDPR compliance or can be used compliantly">
-                                <span aria-hidden="true">🛡️</span> GDPR
+                        </div>
+
+                        <div class="facet-group" id="resourceFilters">
+                            <button type="button" class="toggle" id="openToggle" aria-pressed="false">
+                                <span aria-hidden="true">🌐</span> No account needed
                             </button>
+                        </div>
+
+                        <div class="facet-group" id="eventFilters" hidden>
+                            <button type="button" class="toggle" id="upcomingToggle" aria-pressed="false"
+                                title="Only events with a confirmed date in the future">
+                                <span aria-hidden="true">⏳</span> Still to come
+                            </button>
+                            <label class="select-wrap">
+                                <span class="select-label">Where</span>
+                                <select id="regionSelect"></select>
+                            </label>
                         </div>
 
                         <label class="select-wrap select-wrap--sort">
@@ -135,6 +158,8 @@
                     </div>
                 </div>
             </div>
+
+            <p class="cross-hint" id="crossHint" hidden></p>
         </section>
 
         <!-- Results ------------------------------------------------------- -->
@@ -150,8 +175,8 @@
         <div class="container">
             <div class="footer-bottom">
                 <p>
-                    Links were checked on <strong id="checkedOn">9 August 2026</strong>.
-                    Tools change hands, licences and URLs: always verify downloads on the official site.
+                    Links and event dates were checked on <strong id="checkedOn">9 August 2026</strong>.
+                    Dates move: confirm on the organiser's own site before you book anything.
                 </p>
                 <p class="muted">
                     Curated at <a href="../../">rami.party</a>. Nothing here is sponsored, and nothing tracks you.

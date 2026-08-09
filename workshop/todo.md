@@ -594,13 +594,13 @@ a quick review pass (does it work? is it finished? should it be `status:'soon'` 
 | `workshop/demoscene-forge/` | Demoscene Generator | live; `todo.md` is the original brief, not a build log |
 | `workshop/DNS-sinkhole/` | DNS Sinkhole | live, undocumented |
 | `workshop/Engraving/` | Engraving Gallery | live, undocumented |
-| `workshop/news/` | IT News Scroll | live; ✅ rebranded |
+| `workshop/news/` | IT News Scroll | ✅ rebuilt 2026-08-09: shared theme, data-driven, events calendar |
 | `workshop/rami/` | Tinkerer's Desk | scratch page — now `status:'soon'` ✅ |
 | `workshop/scoreboard/` | Scoreboard | live, undocumented |
 | `workshop/subnets/` | Subnet Calculator | live, undocumented |
 | `workshop/to-check/` | Wishlist Scroll | link dump — value? |
 | `workshop/todo/` | Daybook | live, undocumented |
-| `workshop/tools/` | IT Tools Workbench | ✅ CVE sub-page + branding fixed |
+| `workshop/tools/` | IT Toolkit | ✅ rebuilt 2026-08-09: shared theme, data-driven (215 tools), CVE sub-page restyled |
 | `workshop/trace-results/` | Volume Seer | **moved** → `mail.labidi.eu/volume/` (via Mail Ward), redirect stub left behind |
 | `workshop/webcheck/` | Webcheck | live, undocumented |
 | `wasteland/adhd/` | ADHD experiment | empty husk (intentional) |

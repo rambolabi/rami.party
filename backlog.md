@@ -86,6 +86,11 @@ documented anti-tabnabbing measure and a linter will keep flagging it.
 **Fix** — a scripted pass adding `rel="noopener noreferrer"` to any `target="_blank"`
 anchor that has no `rel` at all.
 
+- ✅ `workshop/news/` is done (2026-08-09): it was rebuilt data-driven, and every link is
+  now created in `app.js`, which sets `rel="noopener noreferrer"` on external anchors.
+- ✅ `workshop/tools/` is done (2026-08-09): same rebuild, same data-driven link creation.
+  What remains is scattered singles across the smaller pages.
+
 ### 2.3 51 HTML files still contain em-dashes
 The earlier sweep only covered the 9 hub-level files. The per-project pages were never
 processed. Worst offenders: `laser-forge-v2` (53), `laser-forge` (49), `frostcaller` (26),
@@ -118,9 +123,9 @@ optional `relic:` field for the "poke the husk" links.
 
 ### 2.7 Stale `TODO` markers in shipped code — partly done
 - `workshop/frostcaller/writer/lab.js` — *"TODO: fill these in from your capture diffs."*
-- `workshop/tools/index.html` — *"TODO hieronder verder controleren"* (Dutch, in a comment)
+- ✅ `workshop/tools/index.html` — the Dutch *"TODO hieronder verder controleren"* comment
+  went away with the 2026-08-09 data-driven rebuild.
 - ✅ The user-visible `TODO` heading on `webcheck/about.html` now reads "Roadmap" (2026-08-07).
-
 ### ✅ 2.8 Theme system gaps — FIXED (2026-08-07)
 - `workshop/frostcaller/` and `workshop/frostcaller/writer/` loaded `theme.css` but not
   `theme.js`, so they ignored the saved theme and showed no picker. Both now load the

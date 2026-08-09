@@ -1,50 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>rami.party // Weekly CVE Check</title>
-  <link rel="stylesheet" href="../style.css">
-  <link rel="stylesheet" href="./cve.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Weekly CVE and PSIRT check: every vendor security-advisory page I monitor, openable with one click.">
+    <meta name="theme-color" content="#0b0524">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/tools/cve/">
+    <title>Weekly CVE Check · rami.party</title>
+
+    <!-- Shared enchanted theme, then this page's own styling -->
+    <link rel="stylesheet" href="../../../theme.css">
+    <script src="../../../theme.js"></script>
+    <link rel="stylesheet" href="cve.css?v=2">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Quicksand:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%9B%A1%EF%B8%8F%3C/text%3E%3C/svg%3E">
 </head>
-<body class="terminal-bg" data-lang="en">
-  <div class="terminal-window">
-    <div class="terminal-header">
-      <span class="prompt-title">rami.party:~/cve$</span>
-      <span class="prompt-blink">█</span>
+
+<body data-lang="en">
+    <!-- Decorative enchanted backdrop -->
+    <div class="aurora" aria-hidden="true">
+        <span class="aurora-blob a1"></span>
+        <span class="aurora-blob a2"></span>
+        <span class="aurora-blob a3"></span>
     </div>
-    <div class="terminal-body">
-      <div class="terminal-intro">
-        <span class="lang en" data-text-template="Weekly security feeds for week {week}, {year} — open all monitored pages with one click."></span>
-        <span class="lang fr" data-text-template="Flux de sécurité hebdomadaires pour la semaine {week}, {year} — ouvrez toutes les pages surveillées en un seul clic."></span>
-        <span class="lang nl" data-text-template="Wekelijkse beveiligingsfeeds voor week {week}, {year} — open alle gemonitorde pagina's met één klik."></span>
-      </div>
 
-      <div class="terminal-section">
-        <span class="section-label"># Weekly URLs</span>
-        <div class="cve-controls">
-          <button id="openAll" class="open-all-btn">Open all</button>
-          <div class="note">Opens each link in a new tab (small delay to reduce popup blocking)</div>
+    <header class="site-header">
+        <div class="container">
+            <a href="../" class="back-home" aria-label="Back to the IT Toolkit">
+                <span aria-hidden="true">←</span> IT Toolkit
+            </a>
+            <div class="language-selector" role="group" aria-label="Language">
+                <button type="button" class="lang-btn active" data-lang="en" aria-pressed="true">EN</button>
+                <button type="button" class="lang-btn" data-lang="fr" aria-pressed="false">FR</button>
+                <button type="button" class="lang-btn" data-lang="nl" aria-pressed="false">NL</button>
+            </div>
         </div>
+    </header>
 
-        <div class="cve-list" id="cveList">
-          <div class="note">Loading links…</div>
+    <main class="container">
+        <section class="hero">
+            <p class="eyebrow"><span aria-hidden="true">✦</span> PSIRT rounds <span aria-hidden="true">✦</span></p>
+            <h1 class="hero-title">Weekly <span class="glow">CVE Check</span></h1>
+            <p class="hero-sub intro">
+                <span class="lang en"
+                    data-text-template="Weekly security feeds for week {week}, {year} — open all monitored pages with one click."></span>
+                <span class="lang fr"
+                    data-text-template="Flux de sécurité hebdomadaires pour la semaine {week}, {year} — ouvrez toutes les pages surveillées en un seul clic."></span>
+                <span class="lang nl"
+                    data-text-template="Wekelijkse beveiligingsfeeds voor week {week}, {year} — open alle gemonitorde pagina's met één klik."></span>
+            </p>
+        </section>
+
+        <section class="panel" aria-label="Monitored pages">
+            <div class="cve-controls">
+                <button id="openAll" class="btn btn-primary open-all-btn" type="button">🗂️ Open all</button>
+                <p class="note">Opens each link in a new tab (small delay to reduce popup blocking)</p>
+            </div>
+
+            <div class="cve-list" id="cveList">
+                <div class="note">Loading links…</div>
+            </div>
+
+            <p class="hint">
+                <span class="lang en">Tip: if popups are blocked by your browser, allow popups for this site or open
+                    links individually.</span>
+                <span class="lang fr">Astuce : si votre navigateur bloque les popups, autorisez-les pour ce site ou
+                    ouvrez les liens un par un.</span>
+                <span class="lang nl">Tip: als je browser popups blokkeert, sta ze toe voor deze site of open de links
+                    één voor één.</span>
+            </p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-bottom">
+                <p class="muted">Part of the <a href="../">IT Toolkit</a> at <a href="../../../">rami.party</a>.</p>
+            </div>
         </div>
-      </div>
-
-      <div class="terminal-section terminal-hint">
-        <span class="lang en">Tip: If popups are blocked by your browser, allow popups for this site or open links individually.</span>
-      </div>
-    </div>
-    <footer class="terminal-footer">
-      <div class="language-selector">
-        <button onclick="setLanguage('en')" class="lang-btn active" data-lang="en">EN</button>
-        <button onclick="setLanguage('fr')" class="lang-btn" data-lang="fr">FR</button>
-        <button onclick="setLanguage('nl')" class="lang-btn" data-lang="nl">NL</button>
-      </div>
     </footer>
-  </div>
 
-  <script src="./script.js" defer></script>
+    <script src="./script.js?v=2" defer></script>
 </body>
+
 </html>

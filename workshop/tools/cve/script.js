@@ -17,12 +17,26 @@ function getWeekNumber(d) {
     return weekNo;
 }
 
+// Language switcher shared by every code path below.
+function setLanguage(lang) {
+  document.body.setAttribute('data-lang', lang);
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    const on = b.getAttribute('data-lang') === lang;
+    b.classList.toggle('active', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+  document.querySelectorAll('.lang-btn').forEach(b => {
+    b.addEventListener('click', () => setLanguage(b.getAttribute('data-lang')));
+  });
+
   // Update intro text with week number
   const now = new Date();
   const week = getWeekNumber(now);
   const year = now.getFullYear();
-  document.querySelectorAll('.terminal-intro .lang[data-text-template]').forEach(span => {
+  document.querySelectorAll('.lang[data-text-template]').forEach(span => {
     const template = span.getAttribute('data-text-template');
     span.textContent = template.replace('{week}', week).replace('{year}', year);
   });
@@ -40,17 +54,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     links = await res.json();
   } catch (e) {
     console.error('Could not load links.json', e);
-    listContainer.innerHTML = '<div class="note">Failed to load link list. See console for details.</div>';
-    // still expose setLanguage
-    window.setLanguage = (lang) => {
-      document.body.setAttribute('data-lang', lang);
-      document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-lang') === lang));
-    };
+    listContainer.textContent = '';
+    const fail = document.createElement('div');
+    fail.className = 'note';
+    fail.textContent = 'Failed to load link list. See console for details.';
+    listContainer.appendChild(fail);
     return;
   }
 
   // Render list
-  listContainer.innerHTML = '';
+  listContainer.textContent = '';
   links.forEach(item => {
     const div = document.createElement('div');
     div.className = 'cve-item';
@@ -62,7 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const a = document.createElement('a');
       a.href = url;
       a.target = '_blank';
-      a.rel = 'noopener';
+      a.rel = 'noopener noreferrer';
       a.textContent = title;
       div.appendChild(a);
     } else {
@@ -125,9 +138,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  // language switcher used by page
-  window.setLanguage = function(lang){
-    document.body.setAttribute('data-lang', lang);
-    document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.getAttribute('data-lang') === lang));
-  };
 });

@@ -116,11 +116,10 @@
         var css = chunk
             .replace(/\/\*[\s\S]*?\*\//g, ' ')   // strip comments
             .replace(/\s+/g, ' ')                 // collapse whitespace
-            .replace(/'/g, "\\'")
             .trim();
-        var js = "(function(){var i='rpg-mark-" + id + "',s=document.getElementById(i);" +
-            "if(s){s.remove();return}s=document.createElement('style');s.id=i;" +
-            "s.textContent='" + css + "';document.documentElement.appendChild(s)})();";
+        var js = '(function(){var i=' + JSON.stringify('rpg-mark-' + id) + ',s=document.getElementById(i);' +
+            'if(s){s.remove();return}s=document.createElement("style");s.id=i;' +
+            's.textContent=' + JSON.stringify(css) + ';document.documentElement.appendChild(s)})();';
         return 'javascript:' + encodeURIComponent(js);
     }
 

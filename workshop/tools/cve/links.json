@@ -12,7 +12,7 @@
   { "title_en": "HPE — security bulletin library", "url": "https://support.hpe.com/connect/s/securitybulletinlibrary?language=en_US#sort=%40hpescuniversaldate%20descending&layout=table&numberOfResults=25&f:@kmdoclanguagecode=[cv1871440]&hpe=1" },
   { "title_en": "fortinet — PSIRT / Security Advisories", "url": "https://www.fortiguard.com/psirt" },
   { "title_en": "connectsecure — support", "url": "https://connectsecure.com/support" },
-  { "title_en": "keeper — release notes", "url": "https://docs.keeper.io/en/v/release-notes" },
+  { "title_en": "keeper — release notes", "url": "https://docs.keeper.io/release-notes" },
   { "title_en": "N-able — security notices (status)", "url": "https://status.n-able.com/category/security-notices/" },
   { "title_en": "NinjaOne — incident history", "url": "https://status.ninjaone.com/history" },
   { "title_en": "Netskope — security advisories", "url": "https://www.netskope.com/company/security-compliance-and-assurance/security-advisories-and-disclosures" },

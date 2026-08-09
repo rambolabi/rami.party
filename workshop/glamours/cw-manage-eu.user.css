@@ -1,8 +1,8 @@
 /* ==UserStyle==
 @name           ConnectWise Manage · Comfort Glamour (CSS-only)
 @namespace      https://rami.party/workshop/glamours/
-@version        1.0.0
-@description    The CSS-only half of the Comfort Glamour for ConnectWise Manage: readable scrollbars, row hover highlighting, visible keyboard focus rings and a slightly friendlier login form. Install with the Stylus extension. The optional dark "midnight veil" is included below, commented out.
+@version        1.2.0
+@description    The CSS-only half of the Comfort Glamour for ConnectWise Manage: a friendlier login form and a readable-text bump that leaves buttons, icons and grid columns alone. Install with the Stylus extension. The optional dark themes are included below, commented out. The hover ticket preview, status-note auto-close and the settings panel need JavaScript — use the userscript for those.
 @author         rami.party
 @license        MIT
 @homepageURL    https://rami.party/workshop/glamours/
@@ -13,31 +13,16 @@
     /* bookmarklet:start — the always-safe comfort rules, also used to build
        the one-click bookmarklet on https://rami.party/workshop/glamours/ */
 
-    /* Chunky, visible scrollbars — Manage panes are scroll-heavy and the
-       default thumbs are nearly invisible. */
-    *::-webkit-scrollbar { width: 14px; height: 14px; }
-    *::-webkit-scrollbar-track { background: rgba(100, 116, 139, .12); }
-    *::-webkit-scrollbar-thumb {
-        background: rgba(100, 116, 139, .75);
-        border-radius: 8px;
-        border: 3px solid transparent;
-        background-clip: padding-box;
+    /* Readable text without page zoom: font sizes only, so buttons, icons,
+       toolbars and column widths stay exactly where they are. Blunt compared
+       with the userscript, which scales every element from its own original
+       size between 80% and 130%. */
+    td, th, label, a, span, div, p, li, input, textarea, select, button {
+        font-size: 13px;
     }
-    *::-webkit-scrollbar-thumb:hover { background-color: rgba(71, 85, 105, .95); }
-    *::-webkit-scrollbar-corner { background: transparent; }
-    html { scrollbar-color: #64748b transparent; }
-
-    /* Row hover highlight — keeps your eye on the right line in wide
-       ticket/time grids. Generic on purpose: Manage's own class names are
-       obfuscated and change between releases. */
-    tr:hover > td,
-    tr:hover > th { background-color: rgba(37, 99, 235, .10) !important; }
-    [role="row"]:hover > [role="gridcell"],
-    [role="row"]:hover > [role="cell"],
-    [role="row"]:hover > [role="rowheader"] { background-color: rgba(37, 99, 235, .10) !important; }
-
-    /* Visible keyboard focus — tab around without losing your place. */
-    :focus-visible { outline: 2px solid #2563eb !important; outline-offset: 1px !important; }
+    h1 { font-size: 20px; }
+    h2 { font-size: 18px; }
+    h3 { font-size: 16px; }
 
     /* Login form: a little bigger, a little calmer. */
     #loginContainer .loginTextBox { font-size: 15px !important; }
@@ -46,18 +31,22 @@
     /* bookmarklet:end */
 
     /* ---------------------------------------------------------------------
-       Midnight veil (dark mode) — uncomment to enable.
+       Dark themes — uncomment the block and keep ONE filter line.
        Kept off by default: pure CSS cannot skip the iframes the way the
        userscript can, so photos inside frames stay inverted. The userscript
-       version handles frames properly; prefer it if you want dark mode.
-       ---------------------------------------------------------------------
+       handles frames properly and ships a four-theme picker; prefer it.
+
     html {
-        filter: invert(.92) hue-rotate(180deg) !important;
+        filter: invert(.92) hue-rotate(180deg) !important;                          | midnight
+        filter: invert(1) hue-rotate(180deg) contrast(.92) !important;              | obsidian
+        filter: invert(.88) hue-rotate(200deg) saturate(.85) !important;            | slate
+        filter: invert(.9) hue-rotate(180deg) sepia(.28) saturate(1.15) !important; | ember
         background: #0b0d12 !important;
     }
     img, video, canvas, embed, object, picture,
     [style*="background-image"] {
         filter: invert(1) hue-rotate(180deg) !important;
     }
-    --------------------------------------------------------------------- */
+       --------------------------------------------------------------------- */
 }
+

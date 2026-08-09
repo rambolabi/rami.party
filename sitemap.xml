@@ -61,7 +61,7 @@
        listed here. -->
   <url>
     <loc>https://rami.party/workshop/tools/</loc>
-    <lastmod>2026-07-27</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -234,9 +234,9 @@
   </url>
   <url>
     <loc>https://rami.party/workshop/news/</loc>
-    <lastmod>2026-07-27</lastmod>
+    <lastmod>2026-08-09</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://rami.party/workshop/blur/</loc>

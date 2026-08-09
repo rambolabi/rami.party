@@ -1,5 +1,5 @@
 /* ==========================================================================
-   IT Toolkit: page styling
+   IT News Scroll: page styling
    Sits on top of the shared enchanted theme (../../theme.css) and only uses
    its tokens, so every rami.party theme keeps working here.
    ========================================================================== */
@@ -85,11 +85,15 @@
     opacity: 0.85;
 }
 
+/* Holds the toolbar's space open while the toolbar itself is fixed. */
+#toolbarAnchor {
+    height: 0;
+}
+
 /* Toolbar ------------------------------------------------------------------- */
+/* Deliberately in normal flow: it scrolls away like any other block, and the
+   compact bar below only takes over once it is off screen. */
 .toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 5;
     display: grid;
     /* A bare 1fr track refuses to shrink below the widest control, which puts
        the whole page into horizontal scroll at 320px. */
@@ -103,7 +107,6 @@
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     box-shadow: var(--shadow);
-    transition: padding 0.25s var(--ease), gap 0.25s var(--ease);
 }
 
 .toolbar-top {
@@ -114,11 +117,11 @@
     min-width: 0;
 }
 
-/* Everything the reader does not need while scrolling lives in here. */
+/* Everything the reader does not need while scrolling lives in here. Only the
+   condensed state animates: it is out of flow, so nothing else can move. */
 .toolbar-collapse {
     display: grid;
     grid-template-rows: 1fr;
-    transition: grid-template-rows 0.28s var(--ease);
 }
 
 .toolbar-collapse__inner {
@@ -132,6 +135,7 @@
 
 .toolbar.is-condensed .toolbar-collapse {
     grid-template-rows: 0fr;
+    transition: grid-template-rows 0.28s var(--ease);
 }
 
 /* Zero height alone still leaves the controls focusable, so hide them for
@@ -143,6 +147,7 @@
 
 .toolbar.is-condensed.is-open .toolbar-collapse {
     grid-template-rows: 1fr;
+    transition: grid-template-rows 0.28s var(--ease);
 }
 
 .toolbar.is-condensed.is-open .toolbar-collapse__inner {
@@ -151,13 +156,46 @@
 }
 
 .toolbar.is-condensed {
+    /* Fixed, not sticky: a shrinking in-flow bar changes the document height,
+       and scroll anchoring then pulls the page back and flips the state every
+       frame. Out of flow, #toolbarAnchor keeps the layout still. */
+    position: fixed;
+    z-index: 5;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(92%, 1180px);
+    margin-bottom: 0;
     padding: 8px 12px;
     gap: 8px;
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    transition: padding 0.25s var(--ease), gap 0.25s var(--ease);
+    animation: bar-drop 0.22s var(--ease);
+}
+
+@keyframes bar-drop {
+    from {
+        transform: translate(-50%, -100%);
+    }
+
+    to {
+        transform: translate(-50%, 0);
+    }
 }
 
 .toolbar.is-condensed.is-open {
     max-height: 88vh;
     overflow-y: auto;
+}
+
+.toolbar.is-condensed .seg {
+    padding: 6px 12px;
+}
+
+.toolbar.is-condensed .seg__count {
+    display: none;
 }
 
 .toolbar.is-condensed #searchInput {
@@ -192,14 +230,67 @@
     min-width: 1.3em;
     padding: 0 6px;
     border-radius: 999px;
-    background: var(--accent);
-    color: var(--btn-primary-ink, #fff);
+    background: var(--chip-bg);
+    background: color-mix(in srgb, var(--accent) 32%, transparent);
+    color: var(--text);
     font-size: 0.72rem;
     text-align: center;
 }
 
-:root[data-rami-theme="contrast"] .filters-btn__count {
+/* Segmented resource / event switch */
+.segmented {
+    display: flex;
+    gap: 6px;
+    flex: 0 1 auto;
+    min-width: 0;
+    padding: 5px;
+    border: 1px solid var(--chip-border);
+    border-radius: 999px;
+    background: var(--surface-softer, rgba(255, 255, 255, 0.03));
+}
+
+.seg {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.25s var(--ease), color 0.25s var(--ease);
+}
+
+.seg:hover {
+    color: var(--text);
+}
+
+.seg[aria-pressed="true"] {
+    background: var(--btn-primary-bg, var(--spell));
+    color: #fff;
+    box-shadow: var(--btn-primary-shadow);
+}
+
+:root[data-rami-theme="contrast"] .seg[aria-pressed="true"] {
     color: #000;
+}
+
+.seg__count {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.seg[aria-pressed="false"] .seg__count {
+    background: var(--chip-bg);
 }
 
 /* Search */
@@ -511,6 +602,11 @@
     color: var(--gold);
 }
 
+.cross-hint {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
 /* Results grid -------------------------------------------------------------- */
 .grid {
     display: grid;
@@ -583,43 +679,46 @@
     color: color-mix(in srgb, var(--gold) 70%, var(--text));
 }
 
-.badge--gdpr {
+.badge--soon {
     color: var(--accent-2);
     color: color-mix(in srgb, var(--accent-2) 70%, var(--text));
     border-color: var(--accent-2);
-}
-
-.badge--local {
-    color: var(--gold);
-    color: color-mix(in srgb, var(--gold) 70%, var(--text));
-    border-color: var(--gold);
 }
 
 .badge__glyph {
     font-size: 0.85em;
 }
 
+.meta {
+    display: grid;
+    gap: 4px;
+    font-size: 0.84rem;
+}
+
+.meta__row {
+    display: grid;
+    grid-template-columns: 4.6rem minmax(0, 1fr);
+    gap: 8px;
+}
+
+.meta__key {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    padding-top: 2px;
+}
+
+.meta__val {
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
 .card__desc {
     font-size: 0.9rem;
     color: var(--text-muted);
     margin-bottom: auto;
-}
-
-/* A warning worth reading before you install. */
-.card__note {
-    display: flex;
-    gap: 8px;
-    padding: 8px 10px;
-    border: 1px solid var(--gold);
-    border-radius: 10px;
-    background: var(--chip-bg);
-    background: color-mix(in srgb, var(--gold) 12%, transparent);
-    font-size: 0.82rem;
-    color: var(--text);
-}
-
-.card__note-glyph {
-    flex: 0 0 auto;
 }
 
 .card__links {
@@ -748,9 +847,26 @@
     overflow: hidden;
 }
 
-.grid--compact .card__note {
-    padding: 4px 8px;
-    font-size: 0.78rem;
+/* Events carry their facts in the meta list, so the prose can go. */
+.grid--compact .card--event .card__desc {
+    display: none;
+}
+
+.grid--compact .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 16px;
+}
+
+.grid--compact .meta__row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    grid-template-columns: none;
+}
+
+.grid--compact .meta__key {
+    padding-top: 0;
 }
 
 .grid--compact .card__links {
@@ -780,9 +896,6 @@
     background: var(--overlay-bg, var(--card));
     box-shadow: var(--shadow);
     min-width: 15rem;
-    /* Portal cards fold 17+ links in here; keep the panel on screen. */
-    max-height: min(60vh, 480px);
-    overflow-y: auto;
 }
 
 @media (max-width: 700px) {
@@ -801,8 +914,6 @@
     .grid--compact .more__list {
         position: static;
         min-width: 0;
-        max-height: none;
-        overflow-y: visible;
         padding: 6px 0 2px;
         border: 0;
         background: none;
@@ -861,11 +972,18 @@
 @media (prefers-reduced-motion: reduce) {
 
     .card,
+    .seg,
     .chip,
     .toolbar,
     .toolbar-collapse,
     .more__summary::before {
         transition: none;
+    }
+
+    .toolbar.is-condensed,
+    .toolbar.is-condensed .toolbar-collapse {
+        transition: none;
+        animation: none;
     }
 
     .card:hover {

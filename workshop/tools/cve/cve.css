@@ -1,62 +1,187 @@
-/* Page-specific overrides for cve/index.html */
+/* ==========================================================================
+   Weekly CVE Check: page styling
+   Sits on top of the shared enchanted theme (../../../theme.css) and only
+   uses its tokens, so every rami.party theme keeps working here.
+   ========================================================================== */
 
-/* Layout for controls and list */
+/* Header -------------------------------------------------------------------- */
+.site-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 0;
+}
+
+.language-selector {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--chip-border);
+    border-radius: 10px;
+    background: var(--chip-bg);
+}
+
+.lang-btn {
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.lang-btn.active {
+    background: var(--chip-bg);
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--text);
+}
+
+/* Only the chosen language is visible. */
+.lang {
+    display: none;
+}
+
+body[data-lang="en"] .lang.en,
+body[data-lang="fr"] .lang.fr,
+body[data-lang="nl"] .lang.nl {
+    display: inline;
+}
+
+/* Hero ---------------------------------------------------------------------- */
+.hero {
+    text-align: center;
+    padding: 46px 0 26px;
+}
+
+.eyebrow {
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.eyebrow span {
+    color: var(--gold);
+}
+
+.hero-title {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(2rem, 6vw, 3.2rem);
+    line-height: 1.08;
+}
+
+.glow {
+    background: var(--spell);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+/* The flat themes have no gradient to clip, so the words would vanish. */
+:root[data-rami-theme="slate"] .glow,
+:root[data-rami-theme="daylight"] .glow,
+:root[data-rami-theme="contrast"] .glow {
+    background: none;
+    color: var(--accent);
+    -webkit-text-fill-color: var(--accent);
+}
+
+.hero-sub {
+    max-width: 62ch;
+    margin: 18px auto 0;
+    color: var(--text-muted);
+}
+
+/* Panel ---------------------------------------------------------------------- */
+.panel {
+    padding: 20px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    background: var(--card);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--shadow);
+}
+
 .cve-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-hairline, rgba(255, 255, 255, 0.08));
 }
 
-.open-all-btn {
-  padding: 8px 14px;
-  border-radius: 6px;
-  border: 1px solid var(--terminal-link);
-  background: var(--terminal-link);
-  color: #222826;
-  cursor: pointer;
-  font-weight: 700;
-  font-family: inherit;
-}
-
-.open-all-btn[aria-busy="true"]{
-  opacity: 0.7;
-  cursor: wait;
-}
-
-.cve-list {
-  display: block;
-  margin-top: 8px;
-}
-
-.cve-item {
-  margin: 6px 0;
-}
-
-.cve-item a {
-  text-decoration: none;
-  color: var(--terminal-link);
-  border: 1px solid transparent;
-  padding: 6px 10px;
-  border-radius: 4px;
-  display: inline-block;
-}
-
-.cve-item a:hover, .cve-item a:focus {
-  background: var(--terminal-link-hover);
-  color: #222826;
-  border-color: var(--terminal-link-hover);
-  outline: none;
+.open-all-btn[aria-busy="true"] {
+    opacity: 0.7;
+    cursor: wait;
 }
 
 .note {
-  color: var(--terminal-amber);
-  font-size: 0.95rem;
-  margin-top: 8px;
+    color: var(--text-muted);
+    font-size: 0.86rem;
 }
 
-/* Small responsive tweak */
-@media (max-width: 520px) {
-  .cve-controls { flex-direction: column; align-items: stretch; }
-  .open-all-btn { width: 100%; }
+.cve-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+    gap: 6px;
+    padding: 14px 0;
+}
+
+.cve-item a {
+    display: block;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.cve-item a:hover,
+.cve-item a:focus-visible {
+    border-color: var(--accent);
+    background: var(--chip-bg);
+    background: color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+.cve-item .missing-url {
+    display: block;
+    padding: 8px 12px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+.hint {
+    padding-top: 10px;
+    border-top: 1px solid var(--border-hairline, rgba(255, 255, 255, 0.08));
+    color: var(--text-muted);
+    font-size: 0.84rem;
+}
+
+/* Footer ---------------------------------------------------------------------- */
+.site-footer {
+    margin-top: 60px;
+}
+
+.footer-bottom {
+    text-align: center;
+    font-size: 0.88rem;
+}
+
+.footer-bottom a {
+    color: var(--accent-2, var(--cyan));
+    text-decoration: underline;
+    text-underline-offset: 3px;
 }
