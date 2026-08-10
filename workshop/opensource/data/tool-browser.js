@@ -1,0 +1,150 @@
+/* ==========================================================================
+   Tools: Browsers and extensions
+   Everything on the tools shelf whose home subject is browsers and extensions.
+   Add an entry by appending one object below. Nothing else to touch.
+   ========================================================================== */
+
+OST.add('tool', [
+    {
+        id: 'google-chrome',
+        name: 'Google Chrome',
+        subs: ['browser'],
+        type: 'download', cost: 'free',
+        desc: 'Fast, secure web browser from Google with extensive extension support.',
+        links: [{ t: 'Official Site', u: 'https://www.google.com/chrome/', g: '🌐' }],
+        tags: 'web browser chromium',
+    },
+    {
+        id: 'brave-browser',
+        name: 'Brave Browser',
+        subs: ['browser'],
+        type: 'download', cost: 'free',
+        desc: 'Privacy-focused browser blocking ads and trackers by default.',
+        links: [
+            { t: 'Official Site', u: 'https://brave.com/', g: '🌐' },
+            { t: 'GitHub', u: 'https://github.com/brave/brave-browser', g: '📦' },
+            { t: 'Download', u: 'https://brave.com/download/', g: '⬇️' },
+        ],
+        tags: 'web browser privacy adblock chromium',
+    },
+    {
+        id: 'firefox-portable',
+        name: 'Firefox Portable',
+        subs: ['browser'],
+        type: 'download', cost: 'free',
+        desc: 'Portable version of Firefox browser that runs from USB without installation.',
+        links: [
+            { t: 'Official Site', u: 'https://www.firefox.com/', g: '🌐' },
+            { t: 'Download', u: 'https://portableapps.com/apps/internet/firefox_portable', g: '⬇️' },
+        ],
+        tags: 'web browser portable no install',
+    },
+    {
+        id: 'ublock-origin',
+        name: 'uBlock Origin',
+        subs: ['security', 'browser'],
+        type: 'extension', cost: 'free',
+        desc: 'Efficient ad blocker and content filter - supports Chrome, Firefox, Edge, Opera, and Safari.',
+        note: 'NOTE: Chrome (Manifest V3) no longer supports the full uBlock Origin. Use uBlock Origin Lite on Chrome, or Firefox for the full version.',
+        links: [
+            { t: 'Official Site', u: 'https://github.com/gorhill/uBlock', g: '🌐' },
+            { t: 'Chrome (uBO Lite)', u: 'https://chromewebstore.google.com/detail/ublock-origin-lite/ddkjiahejlhfcafbddmgiahcphecmpfh', g: '🌐' },
+            { t: 'Firefox', u: 'https://addons.mozilla.org/firefox/addon/ublock-origin/', g: '🦊' },
+            { t: 'Edge', u: 'https://microsoftedge.microsoft.com/addons/detail/ublock-origin/odfafepnkmbhccpbejgmiehpchacaeak', g: '🌐' },
+        ],
+        tags: 'adblock content blocker privacy addon',
+    },
+    {
+        id: 'sponsorblock',
+        name: 'SponsorBlock',
+        subs: ['browser'],
+        type: 'extension', cost: 'free',
+        desc: 'Skip YouTube sponsor segments automatically - community-driven crowdsourced database.',
+        links: [
+            { t: 'Official Site', u: 'https://sponsor.ajay.app/', g: '🌐' },
+            { t: 'Chrome', u: 'https://chromewebstore.google.com/detail/mnjggcdmjocbbbhaepdhchncahnbgone', g: '🌐' },
+            { t: 'Firefox', u: 'https://addons.mozilla.org/firefox/addon/sponsorblock/', g: '🦊' },
+            { t: 'Edge', u: 'https://microsoftedge.microsoft.com/addons/detail/sponsorblock-for-youtube-/mbmgnelfcpoecdepckhlhegpcehmpmji', g: '🌐' },
+        ],
+        tags: 'youtube skip sponsor segments addon',
+    },
+    {
+        id: 'enhancer-for-youtube',
+        name: 'Enhancer for YouTube',
+        subs: ['browser'],
+        type: 'extension', cost: 'free',
+        desc: 'YouTube enhancement extension with custom themes, playback controls, and UI improvements.',
+        links: [
+            { t: 'Official Site', u: 'https://www.mrfdev.com/enhancer-for-youtube', g: '🌐' },
+            { t: 'Chrome', u: 'https://chromewebstore.google.com/detail/ponfpcnoihfmfllpaingbgckeeldkhle', g: '🌐' },
+            { t: 'Firefox', u: 'https://addons.mozilla.org/firefox/addon/enhancer-for-youtube/', g: '🦊' },
+            { t: 'Edge', u: 'https://microsoftedge.microsoft.com/addons/detail/enhancer-for-youtube/dlgfaleeejmphhnemjgiaekdbonkagkd', g: '🌐' },
+        ],
+        tags: 'youtube player tweaks addon',
+    },
+    {
+        id: 'wappalyzer',
+        name: 'Wappalyzer',
+        subs: ['browser'],
+        type: 'extension', cost: 'free',
+        desc: 'Technology profiler that identifies technologies used on websites including frameworks and analytics.',
+        links: [
+            { t: 'Official Site', u: 'https://www.wappalyzer.com/', g: '🌐' },
+            { t: 'Chrome', u: 'https://chromewebstore.google.com/detail/gppongmhjkpfnbhagpmjfkannfbllamg', g: '🌐' },
+            { t: 'Firefox', u: 'https://addons.mozilla.org/firefox/addon/wappalyzer/', g: '🦊' },
+            { t: 'Edge', u: 'https://microsoftedge.microsoft.com/addons/detail/wappalyzer/mnbndgmknlpdjdnjfmfcdjoegcckoikn', g: '🌐' },
+        ],
+        tags: 'technology profiler detect stack addon',
+    },
+    {
+        id: 'keeper-browser-extension',
+        name: 'Keeper Browser Extension',
+        subs: ['security', 'browser'],
+        type: 'extension', cost: 'paid',
+        desc: 'Password manager browser extension for Chrome, Firefox, Edge, Safari, and Opera.',
+        links: [
+            { t: 'Official Site', u: 'https://www.keepersecurity.com/download.html', g: '🌐' },
+            { t: 'Chrome', u: 'https://chromewebstore.google.com/detail/bfogiafebfohielmmehodmfbbebbbpei', g: '🌐' },
+            { t: 'Firefox', u: 'https://addons.mozilla.org/firefox/addon/keeper-password-manager/', g: '🦊' },
+            { t: 'Edge', u: 'https://microsoftedge.microsoft.com/addons/detail/keeper-password-manager/lfochlioelphaglamdcakfjemolpichk', g: '🌐' },
+        ],
+        tags: 'password autofill vault addon',
+    },
+    {
+        id: 'bitwarden-browser-extension',
+        name: 'Bitwarden Browser Extension',
+        subs: ['security', 'browser'],
+        type: 'extension', cost: 'free',
+        desc: 'Open source password manager extension for all major browsers with cross-platform sync.',
+        links: [
+            { t: 'Official Site', u: 'https://bitwarden.com/download/', g: '🌐' },
+            { t: 'Chrome', u: 'https://chromewebstore.google.com/detail/nngceckbapebfimnlniiiahkandclblb', g: '🌐' },
+            { t: 'Firefox', u: 'https://addons.mozilla.org/firefox/addon/bitwarden-password-manager/', g: '🦊' },
+            { t: 'Edge', u: 'https://microsoftedge.microsoft.com/addons/detail/bitwarden-free-password/jbkfoedolllekgbhcbcoahefnbanhhlh', g: '🌐' },
+        ],
+        tags: 'password autofill vault open source addon',
+    },
+    {
+        id: 'firefox-multi-account-containers',
+        name: 'Firefox Multi-Account Containers',
+        subs: ['browser'],
+        type: 'extension', cost: 'free',
+        desc: 'Firefox-only extension for containers per tab instead of per profile/window. Alternative to Edge profiles.',
+        links: [
+            { t: 'Firefox Add-on', u: 'https://addons.mozilla.org/firefox/addon/multi-account-containers/', g: '🦊' },
+            { t: 'GitHub', u: 'https://github.com/mozilla/multi-account-containers', g: '📦' },
+        ],
+        tags: 'containers isolate sessions tabs addon',
+    },
+    {
+        id: 'refined-microsoft-learn',
+        name: 'Refined Microsoft Learn',
+        subs: ['microsoft', 'browser'],
+        type: 'extension', cost: 'free',
+        desc: 'Browser extension to make Microsoft Learn distraction-free and focus on the content. Created by Merill Fernando for better learning experience.',
+        links: [
+            { t: 'GitHub', u: 'https://github.com/merill/refined-microsoft-learn', g: '📦' },
+        ],
+        tags: 'learn docs distraction free userscript portal admin',
+    },
+]);

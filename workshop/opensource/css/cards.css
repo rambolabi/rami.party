@@ -1,0 +1,353 @@
+/* ==========================================================================
+   Cards: one result, in the roomy view and in the list view
+   ========================================================================== */
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    gap: 16px;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    min-width: 0;
+    padding: 16px 18px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    background: var(--card);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--shadow);
+    transition: transform 0.25s var(--ease), border-color 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    border-color: var(--accent);
+    box-shadow: var(--shadow-hover);
+}
+
+.card__head {
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    min-width: 0;
+}
+
+.card__shelf {
+    flex: 0 0 auto;
+    font-size: 0.95rem;
+    line-height: 1;
+}
+
+.card__title {
+    min-width: 0;
+    /* Product names carry meaning in their capitals: uBlock, pfSense, nmap.
+       The display face only has capitals, so it is not used here. */
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.card__desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+/* A warning worth reading before you install. */
+.card__note {
+    display: flex;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--gold);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--gold) 12%, transparent);
+    font-size: 0.82rem;
+    color: var(--text);
+}
+
+.card__note-glyph {
+    flex: 0 0 auto;
+}
+
+/* Where and when, for events ------------------------------------------------ */
+.meta {
+    display: grid;
+    gap: 3px;
+    margin: 0;
+    font-size: 0.83rem;
+}
+
+.meta__row {
+    display: grid;
+    grid-template-columns: 4.4rem minmax(0, 1fr);
+    gap: 8px;
+}
+
+.meta__key {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-size: 0.66rem;
+    color: var(--text-muted);
+    padding-top: 2px;
+}
+
+.meta__val {
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+/* Labels -------------------------------------------------------------------- */
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border: 1px solid var(--chip-border);
+    border-radius: 999px;
+    background: var(--chip-bg);
+    font-size: 0.71rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Badge ink is pulled towards the text colour so small bold type keeps its
+   contrast in every theme, while the accent hue still reads. */
+.badge--sub {
+    color: color-mix(in srgb, var(--accent) 62%, var(--text));
+}
+
+.badge--cost {
+    color: color-mix(in srgb, var(--gold) 70%, var(--text));
+}
+
+.badge--soon,
+.badge--gdpr {
+    color: color-mix(in srgb, var(--accent-2) 70%, var(--text));
+    border-color: var(--accent-2);
+}
+
+.badge--source,
+.badge--local {
+    color: color-mix(in srgb, var(--gold) 70%, var(--text));
+    border-color: var(--gold);
+}
+
+.badge__glyph {
+    font-size: 0.85em;
+}
+
+/* Links --------------------------------------------------------------------- */
+.card__links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+    /* Cards in a row are stretched to the tallest one: the slack collects
+       here, so the labels stay attached to the text they describe. */
+    margin-top: auto;
+    padding-top: 2px;
+}
+
+.card__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.86rem;
+    padding: 9px 16px;
+    max-width: 100%;
+}
+
+.link__text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.link__ext {
+    font-size: 0.75em;
+    opacity: 0.75;
+}
+
+.more {
+    width: 100%;
+    font-size: 0.84rem;
+}
+
+.more__summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-weight: 700;
+    list-style: none;
+    padding: 4px 0;
+}
+
+.more__summary::-webkit-details-marker {
+    display: none;
+}
+
+.more__summary::before {
+    content: "▸";
+    font-size: 0.8em;
+    transition: transform 0.2s var(--ease);
+}
+
+.more[open] .more__summary::before {
+    transform: rotate(90deg);
+}
+
+.more__summary:hover {
+    color: var(--text);
+}
+
+.more__count {
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    font-size: 0.72rem;
+}
+
+.more__list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px 0 2px;
+}
+
+.more__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.more__link:hover {
+    background: var(--chip-bg);
+    color: var(--text);
+}
+
+/* List view ----------------------------------------------------------------- */
+.grid--list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 7px;
+}
+
+.grid--list .card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 3px 16px;
+    padding: 11px 16px;
+}
+
+.grid--list .card>* {
+    grid-column: 1;
+}
+
+.grid--list .card:hover {
+    transform: none;
+}
+
+.grid--list .card__title {
+    font-size: 0.96rem;
+}
+
+.grid--list .card__desc {
+    font-size: 0.83rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.grid--list .meta {
+    font-size: 0.78rem;
+}
+
+.grid--list .meta__row {
+    grid-template-columns: 3.8rem minmax(0, 1fr);
+}
+
+.grid--list .card__note {
+    padding: 4px 8px;
+    font-size: 0.78rem;
+}
+
+.grid--list .card__links {
+    position: relative;
+    grid-column: 2;
+    grid-row: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+.grid--list .more {
+    position: relative;
+    width: auto;
+    max-width: 100%;
+}
+
+.grid--list .more__list {
+    position: absolute;
+    right: 0;
+    z-index: 4;
+    margin-top: 4px;
+    padding: 8px;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    background: var(--overlay-bg, var(--card));
+    box-shadow: var(--shadow);
+    min-width: 15rem;
+    /* The portal cards fold 17+ links in here; keep the panel on screen. */
+    max-height: min(60vh, 480px);
+    overflow-y: auto;
+}
+
+@media (max-width: 700px) {
+    .grid--list .card {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+    }
+
+    .grid--list .card__links {
+        grid-column: 1;
+        grid-row: auto;
+        align-items: flex-start;
+    }
+
+    /* No room for a floating panel on a phone, so let the links flow. */
+    .grid--list .more__list {
+        position: static;
+        min-width: 0;
+        max-height: none;
+        overflow-y: visible;
+        padding: 6px 0 2px;
+        border: 0;
+        background: none;
+        box-shadow: none;
+    }
+}

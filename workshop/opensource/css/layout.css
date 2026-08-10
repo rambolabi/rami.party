@@ -1,0 +1,142 @@
+/* ==========================================================================
+   Layout: the search bar on top, the rail on the left, results on the right
+   --bar-h is measured in app.js, because the search bar wraps to two rows
+   when it runs out of width and the rail has to stick underneath it.
+   ========================================================================== */
+
+:root {
+    --bar-h: 76px;
+    --rail-w: 260px;
+}
+
+/* The search bar ------------------------------------------------------------ */
+.searchbar {
+    position: sticky;
+    top: 0;
+    z-index: 7;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 12px;
+    margin-bottom: 18px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    background: var(--card);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--shadow);
+}
+
+/* The two columns ----------------------------------------------------------- */
+.workbench {
+    display: grid;
+    /* A bare track refuses to shrink below its widest child, which would put
+       the whole page into horizontal scroll on a phone. */
+    grid-template-columns: var(--rail-w) minmax(0, 1fr);
+    align-items: start;
+    gap: 22px;
+}
+
+.rail {
+    position: sticky;
+    top: calc(var(--bar-h) + 22px);
+    max-height: calc(100vh - var(--bar-h) - 40px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    background: var(--card);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    box-shadow: var(--shadow);
+}
+
+.rail__head {
+    margin: 0 0 8px;
+    font: 700 0.72rem/1.2 inherit;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.rail__head+.rail__head,
+.refine+.rail__head {
+    margin-top: 16px;
+}
+
+.rail__foot {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-hairline, rgba(255, 255, 255, 0.08));
+}
+
+.results {
+    min-width: 0;
+}
+
+.result-count {
+    margin: 0 0 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.grid:focus {
+    outline: none;
+}
+
+/* The button that stands in for the rail on a phone ------------------------- */
+.rail-toggle {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid var(--chip-border);
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.rail-toggle__now {
+    margin-left: auto;
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    font-size: 0.78rem;
+}
+
+@media (max-width: 900px) {
+    .workbench {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .rail-toggle {
+        display: flex;
+    }
+
+    /* Out of the flow entirely until asked for, so it cannot push the results
+       off the first screen. */
+    .rail {
+        display: none;
+        position: static;
+        max-height: none;
+        overflow: visible;
+    }
+
+    .rail.is-open {
+        display: block;
+    }
+}

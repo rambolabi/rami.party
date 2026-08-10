@@ -1,0 +1,210 @@
+/* ==========================================================================
+   Tools: Self-host and hosting
+   Everything on the tools shelf whose home subject is self-host and hosting.
+   Add an entry by appending one object below. Nothing else to touch.
+   ========================================================================== */
+
+OST.add('tool', [
+    {
+        id: 'dynu',
+        name: 'Dynu',
+        subs: ['selfhost'],
+        type: 'online', cost: 'free',
+        desc: 'Free dynamic DNS hosting service (for personal use).',
+        links: [
+            { t: 'Official Site', u: 'https://www.dynu.com/en-US', g: '🌐' },
+        ],
+        tags: 'dynamic dns ddns free domain',
+    },
+    {
+        id: 'desec',
+        name: 'deSEC',
+        subs: ['selfhost'],
+        type: 'online', cost: 'free',
+        desc: 'Free DNS hosting with DNSSEC support (for personal use).',
+        links: [
+            { t: 'Official Site', u: 'https://desec.io/', g: '🌐' },
+            { t: 'GitHub', u: 'https://github.com/desec-io', g: '📦' },
+        ],
+        tags: 'dns dnssec free hosting api domain',
+    },
+    {
+        id: 'docker-desktop',
+        name: 'Docker Desktop',
+        subs: ['selfhost'],
+        type: 'download', cost: 'freemium',
+        gdpr: true,
+        desc: 'Complete containerization platform for building, sharing, and running applications.',
+        links: [{ t: 'Official Site', u: 'https://www.docker.com/products/docker-desktop/', g: '🌐' }],
+        tags: 'containers images compose kubernetes container',
+    },
+    {
+        id: 'docker-hub',
+        name: 'Docker Hub',
+        subs: ['selfhost'],
+        type: 'online', cost: 'freemium',
+        gdpr: true,
+        desc: 'Cloud-based registry for finding and sharing container images.',
+        links: [
+            { t: 'Open Tool', u: 'https://hub.docker.com/', g: '🔗' },
+            { t: 'Documentation', u: 'https://docs.docker.com/docker-hub/', g: '📚' },
+        ],
+        tags: 'container registry images',
+    },
+    {
+        id: 'docker-compose',
+        name: 'Docker Compose',
+        subs: ['selfhost'],
+        type: 'download', cost: 'free',
+        desc: 'Tool for defining and running multi-container Docker applications using YAML.',
+        links: [
+            { t: 'Official Site', u: 'https://docs.docker.com/compose/', g: '🌐' },
+            { t: 'GitHub', u: 'https://github.com/docker/compose', g: '📦' },
+            { t: 'Download', u: 'https://docs.docker.com/compose/install/', g: '⬇️' },
+        ],
+        tags: 'multi container yaml orchestration',
+    },
+    {
+        id: 'podman',
+        name: 'Podman',
+        subs: ['selfhost'],
+        type: 'download', cost: 'free',
+        desc: 'Daemonless container engine for developing, managing, and running OCI containers. Docker-compatible alternative.',
+        links: [
+            { t: 'Official Site', u: 'https://podman.io/', g: '🌐' },
+            { t: 'GitHub', u: 'https://github.com/podman-container-tools/podman', g: '📦' },
+            { t: 'Download', u: 'https://podman.io/getting-started/installation', g: '⬇️' },
+        ],
+        tags: 'containers daemonless rootless docker alternative container',
+    },
+    {
+        id: 'proxmox-ve',
+        name: 'Proxmox VE',
+        subs: ['system', 'selfhost'],
+        type: 'download', cost: 'freemium',
+        desc: 'Open-source server virtualization platform combining KVM virtual machines and LXC containers under one web UI. The homelab and SMB standard; paid enterprise repository optional.',
+        links: [
+            { t: 'Official Site', u: 'https://www.proxmox.com/en/products/proxmox-virtual-environment/overview', g: '🌐' },
+            { t: 'Download', u: 'https://www.proxmox.com/en/downloads', g: '⬇️' },
+        ],
+        tags: 'virtualization hypervisor kvm lxc cluster homelab',
+    },
+    {
+        id: 'uptime-kuma',
+        name: 'Uptime Kuma',
+        subs: ['network', 'selfhost'],
+        type: 'download', cost: 'free',
+        desc: 'Self-hosted uptime monitoring with a polished dashboard: HTTP(S), TCP, ping, DNS and certificate-expiry checks, plus notifications to almost anything.',
+        links: [
+            { t: 'Official Site', u: 'https://uptime.kuma.pet/', g: '🌐' },
+            { t: 'GitHub', u: 'https://github.com/louislam/uptime-kuma', g: '📦' },
+        ],
+        tags: 'uptime monitoring status page alerts self hosted',
+    },
+    {
+        id: 'portainer',
+        name: 'Portainer',
+        subs: ['selfhost'],
+        type: 'download', cost: 'freemium',
+        gdpr: true,
+        desc: 'Lightweight management UI for Docker environments with container visualization.',
+        links: [
+            { t: 'Official Site', u: 'https://www.portainer.io/', g: '🌐' },
+            { t: 'GitHub', u: 'https://github.com/portainer/portainer', g: '📦' },
+            { t: 'Download', u: 'https://docs.portainer.io/start/install', g: '⬇️' },
+        ],
+        tags: 'docker management ui containers container',
+    },
+    {
+        id: 'lazydocker',
+        name: 'Lazydocker',
+        subs: ['selfhost'],
+        type: 'download', cost: 'free',
+        desc: 'Terminal UI for Docker and Docker Compose with simple keyboard navigation.',
+        links: [
+            { t: 'Official Site', u: 'https://github.com/jesseduffield/lazydocker', g: '🌐' },
+            { t: 'Download', u: 'https://github.com/jesseduffield/lazydocker/releases', g: '⬇️' },
+        ],
+        tags: 'docker terminal ui tui container',
+    },
+    {
+        id: 'render',
+        name: 'Render',
+        subs: ['selfhost'],
+        type: 'online', cost: 'freemium',
+        desc: 'Cloud platform for hosting web services, static sites, databases, and more with automatic deployments.',
+        links: [
+            { t: 'Official Site', u: 'https://render.com/', g: '🌐' },
+        ],
+        tags: 'hosting deploy paas web services registrar domain',
+    },
+    {
+        id: 'transip',
+        name: 'TransIP',
+        subs: ['selfhost'],
+        type: 'online', cost: 'paid',
+        desc: 'Dutch and Belgian domain registrar and hosting provider offering domain registration, web hosting, and VPS services.',
+        links: [
+            { t: 'TransIP NL', u: 'https://www.transip.nl/', g: '🌐' },
+            { t: 'TransIP BE', u: 'https://www.transip.be/', g: '🌐' },
+        ],
+        tags: 'registrar dns vps dutch hosting domain',
+    },
+    {
+        id: 'namecheap',
+        name: 'Namecheap',
+        subs: ['selfhost'],
+        type: 'online', cost: 'paid',
+        desc: 'Domain registrar and web hosting provider with competitive pricing for domain names and SSL certificates.',
+        links: [
+            { t: 'Official Site', u: 'https://www.namecheap.com/', g: '🌐' },
+        ],
+        tags: 'registrar domains dns ssl hosting domain',
+    },
+    {
+        id: 'kinamo',
+        name: 'Kinamo',
+        subs: ['selfhost'],
+        type: 'online', cost: 'paid',
+        desc: 'Belgian domain registrar and hosting provider offering domain registration, web hosting, and cloud services.',
+        note: 'Potential issues: Need to contact support to change certain values like NS.',
+        links: [
+            { t: 'Official Site', u: 'https://www.kinamo.be/en', g: '🌐' },
+        ],
+        tags: 'registrar hosting belgian domain',
+    },
+    {
+        id: 'unstoppable-domains',
+        name: 'Unstoppable Domains',
+        subs: ['selfhost'],
+        type: 'online', cost: 'paid',
+        desc: 'Blockchain-based domain names for decentralized websites and cryptocurrency wallet addresses. Also supports certain ICANN domains now.',
+        links: [
+            { t: 'Official Site', u: 'https://unstoppabledomains.com/', g: '🌐' },
+        ],
+        tags: 'web3 crypto domains nft registrar hosting domain',
+    },
+    {
+        id: 'combell',
+        name: 'Combell',
+        subs: ['selfhost'],
+        type: 'online', cost: 'paid',
+        desc: 'Belgian and European hosting provider offering domain registration, web hosting, and cloud services.',
+        links: [
+            { t: 'Official Site', u: 'https://www.combell.com/', g: '🌐' },
+        ],
+        tags: 'registrar hosting belgian domain',
+    },
+    {
+        id: 'cloudflare',
+        name: 'Cloudflare',
+        subs: ['security', 'network', 'selfhost'],
+        type: 'online', cost: 'freemium',
+        desc: 'Web performance and security platform offering CDN, DNS management, domain registration, DDoS protection, and SSL certificates. Free tier includes DNS and basic CDN.',
+        links: [
+            { t: 'Dashboard', u: 'https://dash.cloudflare.com/', g: '🌐' },
+            { t: 'Official Site', u: 'https://www.cloudflare.com/', g: '🌐' },
+        ],
+        tags: 'cdn dns waf proxy pages workers registrar hosting domain',
+    },
+]);

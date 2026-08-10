@@ -1,0 +1,329 @@
+/* ==========================================================================
+   Filters: the search box, the three shelves, the subject list and the
+   handful of refinements under it.
+   ========================================================================== */
+
+/* Search -------------------------------------------------------------------- */
+.search-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex: 1 1 260px;
+    min-width: 0;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 0.95rem;
+    pointer-events: none;
+    opacity: 0.75;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 13px 92px 13px 42px;
+    border: 1px solid var(--chip-border);
+    border-radius: 12px;
+    background: var(--surface-soft, rgba(255, 255, 255, 0.05));
+    color: var(--text);
+    font: inherit;
+    font-weight: 600;
+}
+
+#searchInput::placeholder {
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+#searchInput:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+#searchInput::-webkit-search-cancel-button {
+    display: none;
+}
+
+.search-clear {
+    position: absolute;
+    right: 48px;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--chip-bg);
+    color: var(--text);
+    font-size: 0.8rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.search-clear:hover {
+    background: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.search-key {
+    position: absolute;
+    right: 14px;
+    padding: 2px 8px;
+    border: 1px solid var(--chip-border);
+    border-radius: 6px;
+    background: var(--chip-bg);
+    color: var(--text-muted);
+    font-family: inherit;
+    font-size: 0.75rem;
+}
+
+@media (max-width: 560px) {
+    .search-key {
+        display: none;
+    }
+
+    .search-clear {
+        right: 12px;
+    }
+
+    #searchInput {
+        padding-right: 48px;
+    }
+}
+
+/* The three shelves --------------------------------------------------------- */
+.shelves {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-width: 0;
+    padding: 5px;
+    border: 1px solid var(--chip-border);
+    border-radius: 999px;
+    background: var(--surface-softer, rgba(255, 255, 255, 0.03));
+}
+
+.shelf {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 15px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.25s var(--ease), color 0.25s var(--ease);
+}
+
+.shelf:hover {
+    color: var(--text);
+}
+
+.shelf[aria-pressed="true"] {
+    background: var(--btn-primary-bg, var(--spell));
+    color: #fff;
+    box-shadow: var(--btn-primary-shadow);
+}
+
+:root[data-rami-theme="contrast"] .shelf[aria-pressed="true"] {
+    color: #000;
+}
+
+.shelf__count {
+    font-size: 0.75rem;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.22);
+    font-variant-numeric: tabular-nums;
+}
+
+.shelf[aria-pressed="false"] .shelf__count {
+    background: var(--chip-bg);
+}
+
+@media (max-width: 620px) {
+    .shelves {
+        width: 100%;
+    }
+
+    .shelf {
+        flex: 1 1 0;
+        justify-content: center;
+        padding: 9px 8px;
+        gap: 5px;
+    }
+
+    .shelf__label {
+        display: none;
+    }
+}
+
+/* The subject list ---------------------------------------------------------- */
+.subjects {
+    display: grid;
+    gap: 2px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.subject {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 5px 10px;
+    border: 0;
+    border-left: 3px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+.subject__label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.subject__count {
+    margin-left: auto;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.subject:hover:not(:disabled) {
+    color: var(--text);
+    background: var(--chip-bg);
+}
+
+.subject[aria-pressed="true"] {
+    color: var(--text);
+    border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.subject:disabled {
+    opacity: 0.38;
+    cursor: default;
+}
+
+/* The refinements ----------------------------------------------------------- */
+.refine {
+    display: grid;
+    gap: 10px;
+}
+
+.field {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.field__label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1.1px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.field select {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--chip-border);
+    border-radius: 10px;
+    background: var(--chip-bg);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.field select:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.field option,
+.field optgroup {
+    background: var(--night-1);
+    color: var(--text);
+}
+
+.switches {
+    display: grid;
+    gap: 6px;
+}
+
+.switch {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--chip-border);
+    border-radius: 10px;
+    background: var(--chip-bg);
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.switch:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.switch[aria-pressed="true"] {
+    color: var(--text);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.views {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--chip-border);
+    border-radius: 10px;
+    background: var(--chip-bg);
+}
+
+.view-btn {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.view-btn[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--accent) 22%, transparent);
+    color: var(--text);
+}

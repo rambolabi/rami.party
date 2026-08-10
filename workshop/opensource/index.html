@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description"
-        content="One search across everything on the bench: IT tools, security and learning resources, and the European conference calendar, all sorted into plain subjects like network, security, Microsoft, OSINT, labs and open source.">
+        content="One place to search everything: IT tools, security and learning resources, and the European conference calendar. Pick a subject on the left, or type in the box.">
     <meta name="theme-color" content="#0b0524">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://rami.party/workshop/opensource/">
@@ -14,15 +14,17 @@
     <meta property="og:type" content="website">
     <meta property="og:title" content="Rami&rsquo;s Open Source Toolkit · rami.party">
     <meta property="og:description"
-        content="One search box over the whole bench: tools, reading and events, filtered by subject.">
+        content="Tools, reading and events in one searchable list, sorted into eighteen plain subjects.">
     <meta property="og:url" content="https://rami.party/workshop/opensource/">
 
-    <!-- Shared enchanted theme, then this page's own styling -->
+    <!-- Shared enchanted theme, then this page's own styling, split by area -->
     <link rel="stylesheet" href="../../theme.css">
     <script src="../../theme.js"></script>
-    <link rel="stylesheet" href="style.css?v=1">
+    <link rel="stylesheet" href="css/base.css?v=1">
+    <link rel="stylesheet" href="css/layout.css?v=1">
+    <link rel="stylesheet" href="css/filters.css?v=1">
+    <link rel="stylesheet" href="css/cards.css?v=1">
 
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -34,7 +36,6 @@
 </head>
 
 <body>
-    <!-- Decorative enchanted backdrop -->
     <canvas id="starfield" aria-hidden="true"></canvas>
     <div class="aurora" aria-hidden="true">
         <span class="aurora-blob a1"></span>
@@ -42,7 +43,7 @@
         <span class="aurora-blob a3"></span>
     </div>
 
-    <a href="#grid" class="skip-link">Skip to the results</a>
+    <a href="#results" class="skip-link">Skip to the results</a>
 
     <header class="site-header">
         <div class="container">
@@ -58,109 +59,95 @@
                     aria-hidden="true">✦</span></p>
             <h1 class="hero-title">Rami&rsquo;s Open Source <span class="glow">Toolkit</span></h1>
             <p class="hero-sub">
-                Everything I have collected, in one place and sorted by subject:
-                <strong id="statTools">0</strong> tools, <strong id="statRead">0</strong> things to read or watch
-                and <strong id="statEvents">0</strong> European events, across
-                <strong id="statSubjects">0</strong> subjects. Pick a subject, or just start typing.
-            </p>
-            <p class="hero-note">
-                Pulled live from the <a href="../tools/">IT Toolkit</a> and the <a href="../news/">IT News Scroll</a>,
-                so nothing is copied twice. The catalogue itself is open — it is two plain data files you can read.
-                Not everything listed <em>is</em> open-source software: look for the 🐙 badge when that matters to you.
+                <strong id="statTools">0</strong> tools, <strong id="statRead">0</strong> things to read or watch and
+                <strong id="statEvents">0</strong> European events. Pick a subject on the left, or just start typing.
             </p>
         </section>
 
-        <!-- Toolbar ------------------------------------------------------- -->
-        <!-- Zero-height marker above the bar: the bar is sticky, so its own
-             offsetTop follows it once stuck and cannot say how far we are. -->
-        <div id="toolbarAnchor" aria-hidden="true"></div>
-        <section class="toolbar" id="filterbar" aria-label="Search and filters">
-            <div class="toolbar-top">
-                <div class="search-wrap" role="search">
-                    <span class="search-icon" aria-hidden="true">🔍</span>
-                    <label class="visually-hidden" for="searchInput">Search the whole bench</label>
-                    <input type="search" id="searchInput" placeholder="Search tools, reading, events…"
-                        autocomplete="off" spellcheck="false" enterkeyhint="search">
-                    <button type="button" id="clearSearch" class="search-clear" aria-label="Clear the search"
-                        hidden>✕</button>
-                    <kbd class="search-key" aria-hidden="true">/</kbd>
-                </div>
-
-                <p class="result-count" id="resultCount" role="status" aria-live="polite"></p>
-
-                <button type="button" class="toggle filters-btn" id="filtersBtn" aria-expanded="true"
-                    aria-controls="toolbarCollapse">
-                    <span aria-hidden="true">⚙</span>
-                    <span class="filters-btn__text">Filters</span>
-                    <span class="filters-btn__count" id="filtersCount" hidden>0</span>
-                </button>
+        <!-- Always in reach: the search box and the three shelves ---------- -->
+        <div class="searchbar" id="searchbar">
+            <div class="search-wrap" role="search">
+                <span class="search-icon" aria-hidden="true">🔍</span>
+                <label class="visually-hidden" for="searchInput">Search everything</label>
+                <input type="search" id="searchInput" placeholder="Search anything: nmap, phishing, OSINT, Brussels…"
+                    autocomplete="off" spellcheck="false" enterkeyhint="search">
+                <button type="button" id="clearSearch" class="search-clear" aria-label="Clear the search"
+                    hidden>✕</button>
+                <kbd class="search-key" aria-hidden="true">/</kbd>
             </div>
+            <div class="shelves" id="shelves" role="group" aria-label="What kind of thing"></div>
+        </div>
 
-            <div class="segmented" id="shelves" role="group" aria-label="What kind of thing"></div>
+        <div class="workbench">
+            <!-- Small screens get a button; wide screens show the rail always -->
+            <button type="button" class="rail-toggle" id="railToggle" aria-expanded="false" aria-controls="rail">
+                <span aria-hidden="true">⚙</span>
+                <span class="rail-toggle__text">Subjects &amp; filters</span>
+                <span class="rail-toggle__now" id="railNow">Everything</span>
+            </button>
 
-            <div class="toolbar-collapse" id="toolbarCollapse">
-                <div class="toolbar-collapse__inner">
-                    <div class="chips" id="chips" role="group" aria-label="Filter by subject"></div>
+            <aside class="rail" id="rail" aria-label="Subjects and filters">
+                <h2 class="rail__head" id="subjectsHead">Subject</h2>
+                <ul class="subjects" id="subjects" aria-labelledby="subjectsHead"></ul>
 
-                    <div class="facets">
-                        <label class="select-wrap" id="formatWrap" hidden>
-                            <span class="select-label" id="formatLabel">Format</span>
-                            <select id="formatSelect"></select>
-                        </label>
+                <h2 class="rail__head">Refine</h2>
+                <div class="refine">
+                    <label class="field" id="formatField" hidden>
+                        <span class="field__label" id="formatLabel">Format</span>
+                        <select id="formatSelect"></select>
+                    </label>
 
-                        <label class="select-wrap" id="regionWrap" hidden>
-                            <span class="select-label">Where</span>
-                            <select id="regionSelect"></select>
-                        </label>
+                    <label class="field" id="whereField" hidden>
+                        <span class="field__label">Where</span>
+                        <select id="whereSelect"></select>
+                    </label>
 
-                        <div class="facet-group">
-                            <button type="button" class="toggle" id="freeToggle" aria-pressed="false">
-                                <span aria-hidden="true">💚</span> Free only
-                            </button>
-                            <button type="button" class="toggle" id="sourceToggle" aria-pressed="false"
-                                title="Only entries that link to a public source repository — GitHub, GitLab, Codeberg and friends. It is a link check, not a licence check.">
-                                <span aria-hidden="true">🐙</span> Source available
-                            </button>
-                            <button type="button" class="toggle" id="soonToggle" aria-pressed="false" hidden
-                                title="Only events with a confirmed date in the future">
-                                <span aria-hidden="true">⏳</span> Still to come
-                            </button>
-                        </div>
-
-                        <label class="select-wrap select-wrap--sort">
-                            <span class="select-label">Sort</span>
-                            <select id="sortSelect"></select>
-                        </label>
-
-                        <div class="view-toggle" role="group" aria-label="Layout">
-                            <button type="button" class="view-btn" data-view="cards" aria-pressed="true"
-                                title="Card view">
-                                <span aria-hidden="true">▤</span><span class="view-btn__text">Cards</span>
-                            </button>
-                            <button type="button" class="view-btn" data-view="compact" aria-pressed="false"
-                                title="Compact list">
-                                <span aria-hidden="true">☰</span><span class="view-btn__text">Compact</span>
-                            </button>
-                        </div>
+                    <div class="switches">
+                        <button type="button" class="switch" id="freeToggle" aria-pressed="false">
+                            <span aria-hidden="true">💚</span> Free only
+                        </button>
+                        <button type="button" class="switch" id="sourceToggle" aria-pressed="false"
+                            title="Only entries that link to a public source repository on GitHub, GitLab, Codeberg and friends. It is a link check, not a licence check.">
+                            <span aria-hidden="true">🐙</span> Source available
+                        </button>
+                        <button type="button" class="switch" id="soonToggle" aria-pressed="false" hidden
+                            title="Only events with a confirmed date in the future">
+                            <span aria-hidden="true">⏳</span> Still to come
+                        </button>
                     </div>
 
-                    <div class="toolbar-foot">
-                        <button type="button" class="link-btn" id="resetFilters" hidden>Clear filters</button>
-                        <button type="button" class="link-btn" id="shareBtn">
-                            <span aria-hidden="true">🔗</span> <span id="shareText">Copy this view</span>
+                    <label class="field">
+                        <span class="field__label">Sort</span>
+                        <select id="sortSelect"></select>
+                    </label>
+
+                    <div class="views" role="group" aria-label="Layout">
+                        <button type="button" class="view-btn" data-view="cards" aria-pressed="true">
+                            <span aria-hidden="true">▤</span> Cards
+                        </button>
+                        <button type="button" class="view-btn" data-view="list" aria-pressed="false">
+                            <span aria-hidden="true">☰</span> List
                         </button>
                     </div>
                 </div>
-            </div>
-        </section>
 
-        <!-- Results ------------------------------------------------------- -->
-        <section id="grid" class="grid" aria-label="Results" tabindex="-1"></section>
+                <div class="rail__foot">
+                    <button type="button" class="link-btn" id="resetFilters" hidden>Clear everything</button>
+                    <button type="button" class="link-btn" id="shareBtn">
+                        <span aria-hidden="true">🔗</span> <span id="shareText">Copy this view</span>
+                    </button>
+                </div>
+            </aside>
 
-        <p class="empty-state" id="emptyState" hidden>
-            Nothing matches that combination.
-            <button type="button" class="link-btn" id="emptyReset">Clear the filters</button>
-        </p>
+            <section class="results" aria-label="Results">
+                <p class="result-count" id="resultCount" role="status" aria-live="polite"></p>
+                <div id="results" class="grid" tabindex="-1"></div>
+                <p class="empty-state" id="emptyState" hidden>
+                    Nothing matches that combination.
+                    <button type="button" class="link-btn" id="emptyReset">Clear everything</button>
+                </p>
+            </section>
+        </div>
     </main>
 
     <footer class="site-footer">
@@ -171,9 +158,9 @@
                     Tools change hands and event dates move: confirm on the official site before you rely on either.
                 </p>
                 <p class="muted">
-                    The subject of an event is worked out from its name and tags, so treat it as a signpost rather
-                    than a label. Curated at <a href="../../">rami.party</a>. Nothing here is sponsored, and nothing
-                    tracks you.
+                    Not everything listed is open-source software, the 🐙 badge marks the entries that link to a public
+                    source repository. Curated at <a href="../../">rami.party</a>. Nothing here is sponsored, and
+                    nothing tracks you.
                 </p>
             </div>
         </div>
@@ -181,10 +168,56 @@
 
     <button id="toTop" class="to-top" type="button" aria-label="Back to top" hidden>↑</button>
 
-    <!-- The two catalogues, unchanged: this page is only an index over them. -->
-    <script src="../tools/data.js?v=3" defer></script>
-    <script src="../news/data.js?v=3" defer></script>
-    <script src="app.js?v=1" defer></script>
+    <!-- Vocabulary and plumbing ------------------------------------------- -->
+    <script src="js/vocabulary.js?v=1" defer></script>
+    <script src="js/dom.js?v=1" defer></script>
+    <script src="js/catalogue.js?v=1" defer></script>
+
+    <!-- The catalogue itself, one file per shelf and subject -------------- -->
+    <script src="data/tool-ai.js?v=1" defer></script>
+    <script src="data/tool-browser.js?v=1" defer></script>
+    <script src="data/tool-creative.js?v=1" defer></script>
+    <script src="data/tool-development.js?v=1" defer></script>
+    <script src="data/tool-microsoft.js?v=1" defer></script>
+    <script src="data/tool-microsoft-portals.js?v=1" defer></script>
+    <script src="data/tool-network.js?v=1" defer></script>
+    <script src="data/tool-productivity.js?v=1" defer></script>
+    <script src="data/tool-search-web.js?v=1" defer></script>
+    <script src="data/tool-search-media.js?v=1" defer></script>
+    <script src="data/tool-search-deep.js?v=1" defer></script>
+    <script src="data/tool-security.js?v=1" defer></script>
+    <script src="data/tool-selfhost.js?v=1" defer></script>
+    <script src="data/tool-system.js?v=1" defer></script>
+
+    <script src="data/read-belgium.js?v=1" defer></script>
+    <script src="data/read-advisories.js?v=1" defer></script>
+    <script src="data/read-community.js?v=1" defer></script>
+    <script src="data/read-feeds.js?v=1" defer></script>
+    <script src="data/read-incident.js?v=1" defer></script>
+    <script src="data/read-learning.js?v=1" defer></script>
+    <script src="data/read-microsoft.js?v=1" defer></script>
+    <script src="data/read-osint.js?v=1" defer></script>
+    <script src="data/read-practice.js?v=1" defer></script>
+    <script src="data/read-security.js?v=1" defer></script>
+
+    <script src="data/event-belgium.js?v=1" defer></script>
+    <script src="data/event-netherlands.js?v=1" defer></script>
+    <script src="data/event-france.js?v=1" defer></script>
+    <script src="data/event-germany.js?v=1" defer></script>
+    <script src="data/event-britain.js?v=1" defer></script>
+    <script src="data/event-switzerland.js?v=1" defer></script>
+    <script src="data/event-nordics.js?v=1" defer></script>
+    <script src="data/event-southern.js?v=1" defer></script>
+    <script src="data/event-central.js?v=1" defer></script>
+    <script src="data/event-online.js?v=1" defer></script>
+
+    <!-- The page ---------------------------------------------------------- -->
+    <script src="js/search.js?v=1" defer></script>
+    <script src="js/cards.js?v=1" defer></script>
+    <script src="js/state.js?v=1" defer></script>
+    <script src="js/rail.js?v=1" defer></script>
+    <script src="js/starfield.js?v=1" defer></script>
+    <script src="js/app.js?v=1" defer></script>
 </body>
 
 </html>
