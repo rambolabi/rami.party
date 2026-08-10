@@ -1,13 +1,12 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Comfort Glamour
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.6.1
-// @description  Quality-of-life for ConnectWise Manage: four dark themes, a hover ticket preview with pickable columns plus the latest note and its screenshots, stale-ticket highlighting, one-click Change/Change/Change, auto-closing of company status-note popups, a password-manager-friendly login that carries you through single sign-on, and true text-only scaling. Every tweak is a toggle — press Alt+Shift+G for the panel.
+// @version      1.8.0
+// @description  Quality-of-life for ConnectWise Manage: four dark themes, a hover ticket preview with pickable columns plus the latest note, stale-ticket highlighting, one-click Change/Change/Change, auto-closing of company status-note popups, a password-manager-friendly login, and true text-only scaling. Every tweak is a toggle — press Alt+Shift+G for the panel.
 // @author       rami.party
 // @license      MIT
 // @match        https://eu.myconnectwise.net/*
 // @match        https://*.myconnectwise.net/*
-// @match        https://auth.connectwise.com/*
 // @icon         data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d0726'/%3E%3Cpath d='M50 18 L57 43 L82 50 L57 57 L50 82 L43 57 L18 50 L43 43 Z' fill='%23a855f7'/%3E%3Ccircle cx='75' cy='25' r='6' fill='%2322d3ee'/%3E%3C/svg%3E
 // @run-at       document-start
 // @grant        GM_getValue
@@ -32,15 +31,16 @@
    • Images/video get a counter-invert in every frame so photos stay natural,
      and so do our own overlays.
    • The ✨ settings panel mounts only in the top frame. Settings live in the
-     userscript manager's storage so they survive the hop to the sign-on
-     domain, mirrored into localStorage whose 'storage' event syncs frames.
+     userscript manager's storage so one set of preferences covers every
+     regional tenant, mirrored into localStorage whose 'storage' event syncs
+     frames.
    -------------------------------------------------------------------------- */
 
 (function () {
     'use strict';
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.6.1';               // keep in step with @version above
+    var VERSION = '1.8.0';               // keep in step with @version above
     var KEY = 'rpGlamourCw.v1';
     var COLS_KEY = 'rpGlamourCw.cols';   // columns of the grid last hovered
     var DEFAULTS = {
@@ -56,22 +56,21 @@
         staleColour: 'red', // red | amber | violet
         tripleChange: false, // Type = Change → Subtype + Item = Change
         statusNote: false,  // auto-close the company Status Note popup
+        navDark: false,     // keep the left menu bar dark
         login: true,        // login page helper
         loginCompany: '',   // auto-filled into #company
         loginUser: '',      // auto-filled into #username (the password is NEVER stored)
-        loginEmail: '',     // auto-filled into the auth.connectwise.com SSO step
-        loginAuto: false,   // press LOGIN / NEXT once every field is filled
         zoom: 100,          // text-only scale %, 80–130
         pill: true          // show the floating ✨ button
     };
 
     /* Each theme is a CSS filter recipe applied to the top <html>. */
     var THEMES = [
-        { id: 'none',     label: 'ConnectWise default',     filter: '', bg: '' },
-        { id: 'midnight', label: 'Midnight · neutral dark', filter: 'invert(.92) hue-rotate(180deg)', bg: '#0b0d12' },
-        { id: 'obsidian', label: 'Obsidian · deep black',   filter: 'invert(1) hue-rotate(180deg) contrast(.92)', bg: '#000' },
-        { id: 'slate',    label: 'Slate · cool blue-grey',  filter: 'invert(.88) hue-rotate(200deg) saturate(.85)', bg: '#0d1218' },
-        { id: 'ember',    label: 'Ember · warm amber',      filter: 'invert(.9) hue-rotate(180deg) sepia(.28) saturate(1.15)', bg: '#14100b' }
+        { id: 'none',     label: 'ConnectWise default',     filter: '' },
+        { id: 'midnight', label: 'Midnight · neutral dark', filter: 'invert(.92) hue-rotate(180deg)' },
+        { id: 'obsidian', label: 'Obsidian · deep black',   filter: 'invert(1) hue-rotate(180deg) contrast(.92)' },
+        { id: 'slate',    label: 'Slate · cool blue-grey',  filter: 'invert(.88) hue-rotate(200deg) saturate(.85)' },
+        { id: 'ember',    label: 'Ember · warm amber',      filter: 'invert(.9) hue-rotate(180deg) sepia(.28) saturate(1.15)' }
     ];
     function themeById(id) {
         for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i];
@@ -79,10 +78,10 @@
     }
 
     /* ---------------- settings I/O ----------------
-       Manage and its sign-in page are different origins, so localStorage alone
-       loses your settings the moment single sign-on hands you over. The
-       manager's own storage spans both; localStorage is kept in step because
-       its 'storage' event is what syncs the iframes live. */
+       Regional tenants (eu., na., …) are separate origins, so localStorage on
+       its own would mean setting the glamour up again on each. The manager's
+       storage spans them; localStorage is kept in step because its 'storage'
+       event is what syncs the iframes live. */
 
     var GM_OK = typeof GM_getValue === 'function' && typeof GM_setValue === 'function';
     var memFallback = null;
@@ -153,9 +152,6 @@
             '#rpg-preview .rpg-pv-notes p{margin:6px 0 0;white-space:pre-wrap;',
             'max-height:220px;overflow:hidden;color:#cfd9e8}',
             '#rpg-preview .rpg-pv-wait{color:#8ea3bd;font-style:italic}',
-            '#rpg-preview .rpg-pv-shots{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}',
-            '#rpg-preview .rpg-pv-shots img{max-height:92px;max-width:100%;border-radius:6px;',
-            'border:1px solid rgba(159,176,201,.35);background:#0d1117}',
             '@media (prefers-reduced-motion:reduce){#rpg-preview{transition:none}}'
         ].join(''),
 
@@ -199,50 +195,59 @@
     var fsFactor = 1;
     var fsObserver = null;
     var fsPending = 0;
+    var fsQueue = [];
 
     function tagFontSizes(root) {
         if (root.nodeType === 1 && root.closest && root.closest('#rpg-root,#rpg-preview')) return;
-        var sheet = document.getElementById('rpg-textscale');
-        var live = sheet && sheet.sheet;
-        if (live) live.disabled = true;          // measure the ORIGINAL sizes
-        try {
-            var walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
-                acceptNode: function (n) {
-                    if (n.id === 'rpg-root' || n.id === 'rpg-preview') return NodeFilter.FILTER_REJECT;
-                    var t = n.tagName;
-                    if (t === 'SCRIPT' || t === 'STYLE' || t === 'LINK' || t === 'META' ||
-                        t === 'HEAD' || t === 'TITLE' || t === 'IFRAME') return NodeFilter.FILTER_REJECT;
-                    return NodeFilter.FILTER_ACCEPT;
-                }
-            });
-            var n = root.nodeType === 1 ? root : walker.nextNode();
-            while (n) {
-                if (!n.hasAttribute(FS_ATTR)) {
-                    var px = parseFloat(getComputedStyle(n).fontSize);
-                    if (px) {
-                        var bucket = String(Math.round(px * 2) / 2);
-                        n.setAttribute(FS_ATTR, bucket);
-                        fsBuckets[bucket] = true;
-                    }
-                }
-                n = walker.nextNode();
+        var walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT, {
+            acceptNode: function (n) {
+                if (n.id === 'rpg-root' || n.id === 'rpg-preview') return NodeFilter.FILTER_REJECT;
+                var t = n.tagName;
+                if (t === 'SCRIPT' || t === 'STYLE' || t === 'LINK' || t === 'META' ||
+                    t === 'HEAD' || t === 'TITLE' || t === 'IFRAME') return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
             }
-        } finally {
-            if (live) live.disabled = false;
+        });
+        var n = root.nodeType === 1 ? root : walker.nextNode();
+        while (n) {
+            if (!n.hasAttribute(FS_ATTR)) {
+                var px = parseFloat(getComputedStyle(n).fontSize);
+                if (px) {
+                    var bucket = String(Math.round(px * 2) / 2);
+                    n.setAttribute(FS_ATTR, bucket);
+                    fsBuckets[bucket] = true;
+                }
+            }
+            n = walker.nextNode();
         }
     }
 
+    /* The attribute selector is repeated on purpose: Manage pins its grid text
+       with `.mm_grid > div > div table > tbody > tr > td{font-size:11px!important}`,
+       and one attribute selector loses that tie however important it is. */
     function fsSheetCSS() {
         var out = [];
         for (var v in fsBuckets) {
-            out.push('[' + FS_ATTR + '="' + v + '"]{font-size:' +
+            var sel = '[' + FS_ATTR + '="' + v + '"]';
+            out.push(sel + sel + sel + '{font-size:' +
                 (Math.round(parseFloat(v) * fsFactor * 100) / 100) + 'px!important}');
         }
         return out.join('');
     }
 
-    function scaleNewNodes(root) {
-        tagFontSizes(root);
+    /* Our own sheet is switched off around the measuring pass, so the sizes
+       read back are the page's originals and re-applying never compounds. */
+    function rescale(roots) {
+        var sheet = document.getElementById('rpg-textscale');
+        var live = sheet && sheet.sheet;
+        if (live) live.disabled = true;
+        try {
+            for (var i = 0; i < roots.length; i++) {
+                if (roots[i].isConnected) tagFontSizes(roots[i]);
+            }
+        } finally {
+            if (live) live.disabled = false;
+        }
         setSheet('rpg-textscale', fsSheetCSS());
     }
 
@@ -253,22 +258,23 @@
             return;
         }
         if (!document.body) return;
-        scaleNewNodes(document.body);
+        rescale([document.body]);
         if (fsObserver) return;
         fsObserver = new MutationObserver(function (records) {
-            if (fsFactor === 1 || fsPending) return;
-            var fresh = [];
+            if (fsFactor === 1) return;
             records.forEach(function (r) {
                 for (var i = 0; i < r.addedNodes.length; i++) {
-                    if (r.addedNodes[i].nodeType === 1) fresh.push(r.addedNodes[i]);
+                    if (r.addedNodes[i].nodeType === 1) fsQueue.push(r.addedNodes[i]);
                 }
             });
-            if (!fresh.length) return;
+            /* Nodes arriving while a batch waits join the queue instead of
+               being dropped, which used to leave late grids unscaled. */
+            if (!fsQueue.length || fsPending) return;
             fsPending = setTimeout(function () {
                 fsPending = 0;
-                fresh.forEach(function (node) {
-                    if (node.isConnected) scaleNewNodes(node);
-                });
+                var batch = fsQueue;
+                fsQueue = [];
+                rescale(batch);
             }, 350);
         });
         fsObserver.observe(document.body, { childList: true, subtree: true });
@@ -277,10 +283,27 @@
     /* Top frame only. The filter makes <html> the containing block for
        position:fixed children — on ConnectWise the shell does not scroll,
        so nothing drifts. #rpg-root is counter-inverted to keep the panel
-       in its true colours. */
+       in its true colours. No background is set here: the page canvas is
+       inverted along with everything else, so painting it dark would light
+       it back up — that was the pale wash behind half-empty screens. */
     function themeRootCSS(t) {
-        return 'html{filter:' + t.filter + '!important;background:' + t.bg + '!important}' +
+        return 'html{filter:' + t.filter + '!important}' +
             '#rpg-root{filter:invert(1) hue-rotate(180deg)}';
+    }
+
+    /* Manage's left menu is the one dark surface it ships (#212121 with #ccc
+       text), so a theme inverts it into a pale column. These colours are
+       written pre-filter: with a theme on, the page filter turns them back
+       into light text on near-black. Only the <svg> gets a fill, never the
+       paths — half of them carry fill="none" and would become solid blocks. */
+    var NAV_SEL = 'div:has(> .cw-lcm-section)';
+
+    function navCSS(themed) {
+        var bg = themed ? '#f2f2f2' : '#12141a';
+        var fg = themed ? '#1f2229' : '#cfd3da';
+        return NAV_SEL + '{background:' + bg + '!important}' +
+            NAV_SEL + ' .gwt-Label{color:' + fg + '!important}' +
+            NAV_SEL + ' svg{fill:' + fg + '!important}';
     }
 
     /* ---------------- apply settings ---------------- */
@@ -292,13 +315,12 @@
         var theme = themeById(s.theme);
         setSheet('rpg-dark-media', theme.filter ? CSS.darkMedia : '');
         if (IS_TOP) setSheet('rpg-dark-root', theme.filter ? themeRootCSS(theme) : '');
+        setSheet('rpg-nav', s.navDark ? navCSS(!!theme.filter) : '');
         setSheet('rpg-login', s.login ? CSS.login : '');
         /* Our overlay lives inside the inverted page, so it needs the same
            counter-invert the panel gets. */
         setSheet('rpg-preview-css', s.preview
-            ? CSS.preview + (theme.filter
-                ? '#rpg-preview{filter:invert(1) hue-rotate(180deg)}#rpg-preview img{filter:none!important}'
-                : '')
+            ? CSS.preview + (theme.filter ? '#rpg-preview{filter:invert(1) hue-rotate(180deg)}' : '')
             : '');
         if (!s.preview) hidePreview();
         setSheet('rpg-stale', s.stale ? staleCSS(s.staleColour) : '');
@@ -408,10 +430,10 @@
     }
 
     function findRow(node) {
-        for (var el = node, i = 0; el && el.nodeType === 1 && i < 12; el = el.parentElement, i++) {
-            if (el.id === 'rpg-preview' || el.id === 'rpg-root') return null;
-            var role = el.getAttribute && el.getAttribute('role');
-            if (el.tagName === 'TR' || role === 'row') return el;
+        for (var cur = node, i = 0; cur && cur.nodeType === 1 && i < 12; cur = cur.parentElement, i++) {
+            if (cur.id === 'rpg-preview' || cur.id === 'rpg-root') return null;
+            var role = cur.getAttribute && cur.getAttribute('role');
+            if (cur.tagName === 'TR' || role === 'row') return cur;
         }
         return null;
     }
@@ -452,7 +474,8 @@
         }
         var summary = pick(/summary|description|subject/i);
         var ticket = pick(/ticket\s*#|^#$|^id$/i);
-        var heading = (summary && summary.value) || pvClean(row.querySelector('a') && row.querySelector('a').textContent) || fields[0].value;
+        var link = row.querySelector('a');
+        var heading = (summary && summary.value) || pvClean(link && link.textContent) || fields[0].value;
         if (ticket && ticket.value) heading = '#' + ticket.value + ' \u00b7 ' + heading;
 
         var hidden = CUR.previewCols || [];
@@ -684,47 +707,6 @@
             .replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
     }
 
-    /* Screenshots pasted into a note are worth seeing. Copy the source only —
-       never markup — and leave out the spacer and shadow graphics GXT uses.
-       Sources hide in three places: src, a lazy-loading attribute, or a CSS
-       background on a plain div. */
-    var NOTE_IMG_MAX = 4;
-    var IMG_SRC_OK = /^(https?:|data:image\/|\/\/|\/)/i;
-
-    function noteImages(node) {
-        var out = [], seen = {};
-
-        function add(src) {
-            if (!src || !IMG_SRC_OK.test(src) || seen[src] || out.length >= NOTE_IMG_MAX) return;
-            seen[src] = true;
-            var copy = document.createElement('img');
-            copy.src = src;
-            copy.alt = '';
-            copy.referrerPolicy = 'no-referrer';
-            out.push(copy);
-        }
-
-        var imgs = node.querySelectorAll('img');
-        for (var i = 0; i < imgs.length && out.length < NOTE_IMG_MAX; i++) {
-            var im = imgs[i];
-            var w = im.naturalWidth || im.width, h = im.naturalHeight || im.height;
-            if (w && h && (w < 20 || h < 20)) continue;      // spacers, shadows, icons
-            add(im.currentSrc || im.src || im.getAttribute('data-src') || im.getAttribute('data-original'));
-        }
-
-        if (out.length < NOTE_IMG_MAX) {
-            var all = node.querySelectorAll('[style*="background-image"],[class]');
-            for (var k = 0; k < all.length && out.length < NOTE_IMG_MAX; k++) {
-                var r = all[k].getBoundingClientRect();
-                if (r.width < 24 || r.height < 24) continue;
-                var bg = getComputedStyle(all[k]).backgroundImage;
-                var m = /url\(["']?([^"')]+)["']?\)/.exec(bg || '');
-                if (m) add(m[1]);
-            }
-        }
-        return out;
-    }
-
     function notePlaceholder() {
         var sec = el('div', { 'class': 'rpg-pv-notes', 'data-pending': '' });
         sec.appendChild(el('b', { text: 'Ticket content' }));
@@ -754,13 +736,6 @@
             sec.appendChild(dl);
         }
         if (text) sec.appendChild(el('p', { text: text.length > 900 ? text.slice(0, 900) + '\u2026' : text }));
-
-        var shots = noteImages(node);
-        if (shots.length) {
-            var strip = el('div', { 'class': 'rpg-pv-shots' });
-            shots.forEach(function (img) { strip.appendChild(img); });
-            sec.appendChild(strip);
-        }
 
         pvEl.appendChild(sec);
         pvTip = { node: node, vis: node.style.visibility };
@@ -800,6 +775,7 @@
            handful of floating containers as well as the observed additions. */
         var pool = [];
         for (var b = 0; b < document.body.children.length && b < 40; b++) pool.push(document.body.children[b]);
+        var standing = pool.length;                  // everything after this arrived during the hover
         for (var j = h.seen.length - 1; j >= 0 && j > h.seen.length - 60; j--) pool.push(h.seen[j]);
 
         var fallback = null;
@@ -815,7 +791,7 @@
             }
             /* Untimestamped text is only trusted when it genuinely appeared
                during this hover, and only once the wait is nearly over. */
-            if (!fallback && i >= document.body.children.length) fallback = { node: pool[i], text: text };
+            if (!fallback && i >= standing) fallback = { node: pool[i], text: text };
         }
         if (fallback && Date.now() > h.deadline - 1200) {
             h.done = true;
@@ -966,7 +942,7 @@
         document.addEventListener('mouseover', function (e) {
             if (!CUR.preview || pvNudging) return;
             var row = findRow(e.target);
-            if (!row) { if (pvRow || pvHunt) hidePreview(); return; }
+            if (!row) { if (pvHoverRow || pvRow || pvHunt) hidePreview(); return; }
             /* Moving between cells of the same row is not a new hover: restarting
                here would throw away the note candidates collected so far. */
             if (row === pvHoverRow) return;
@@ -981,8 +957,11 @@
             }
         }, true);
 
+        /* A null relatedTarget means the pointer left the window entirely. */
         document.addEventListener('mouseout', function (e) {
-            if (pvRow && !findRow(e.relatedTarget || e.target)) hidePreview();
+            if (!pvHoverRow) return;
+            var to = e.relatedTarget;
+            if (!to || !findRow(to)) hidePreview();
         }, true);
 
         ['click', 'keydown', 'wheel'].forEach(function (evt) {
@@ -998,9 +977,14 @@
        Close button, and ONLY that: the "Don't show this message again" box
        is never touched, because that is a server-side change for everyone. */
 
-    var SN_DONE = 'data-rpg-sn';
+    var SN_TRIES = 3;                  // presses per showing before giving up
+    var snState = new WeakMap();       // dialog element → { title, tries }
     /* cw-gxt-wnd is Manage's own dialog class and is not obfuscated. */
     var DIALOG_SEL = '.cw-gxt-wnd,[role="dialog"],[class*="x-window"],[class*="cw-dialog"]';
+
+    function shown(box) {
+        return !!box.getClientRects().length && getComputedStyle(box).visibility !== 'hidden';
+    }
 
     function findCloseControl(box) {
         var nodes = box.querySelectorAll('a,button,span,div,td,input[type="button"],input[type="submit"],[role="button"]');
@@ -1025,18 +1009,24 @@
         node.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
     }
 
-    function isStatusNoteBox(box) {
+    function statusNoteTitle(box) {
         var label = box.querySelector('[id$="-label"],[class*="header"],[class*="title"]');
         var text = pvClean((label && label.textContent) || box.textContent).slice(0, 200);
-        return /status note\b/i.test(text);
+        return /status note\b/i.test(text) ? text : '';
     }
 
-    function closeStatusNote(box) {
-        if (!box || box.hasAttribute(SN_DONE)) return false;
-        if (box.offsetParent === null && getComputedStyle(box).display === 'none') return false;
+    /* Manage reuses ONE window element for every status note, so the guard has
+       to mean "handled this showing" — it is dropped when the box hides or the
+       company changes, or the feature would work exactly once per page load. */
+    function closeStatusNote(box, title) {
+        if (!box) return false;
+        if (!shown(box)) { snState.delete(box); return false; }
+        var st = snState.get(box);
+        if (!st || st.title !== title) { st = { title: title, tries: 0 }; snState.set(box, st); }
+        if (st.tries >= SN_TRIES) return false;
         var btn = findCloseControl(box);
         if (!btn) return false;
-        box.setAttribute(SN_DONE, '1');
+        st.tries++;
         pressControl(btn);
         return true;
     }
@@ -1048,9 +1038,14 @@
             var found = root.querySelectorAll(DIALOG_SEL);
             for (var i = 0; i < found.length; i++) boxes.push(found[i]);
         }
-        var handled = false;
-        boxes.forEach(function (b) { if (isStatusNoteBox(b)) handled = closeStatusNote(b) || handled; });
-        if (handled || boxes.length) return;
+        var recognised = false;
+        for (var b = 0; b < boxes.length; b++) {
+            var title = statusNoteTitle(boxes[b]);
+            if (!title) continue;
+            recognised = true;
+            closeStatusNote(boxes[b], title);
+        }
+        if (recognised) return;
 
         /* Unknown dialog markup: fall back to finding the title text itself. */
         var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
@@ -1061,19 +1056,23 @@
         });
         var hit = walker.nextNode();
         if (!hit) return;
+        var text = pvClean(hit.nodeValue).slice(0, 200);
         for (var box = hit.parentElement, n = 0; box && n < 8; box = box.parentElement, n++) {
-            if (box.hasAttribute(SN_DONE)) return;
-            if (closeStatusNote(box)) return;
+            if (closeStatusNote(box, text)) return;
         }
     }
 
     function initStatusNote() {
-        var pending = 0;
+        var pending = 0, queue = [];
         function sweep(nodes) {
-            clearTimeout(pending);
+            queue = queue.concat(nodes);
+            if (pending) return;                 // a batch is already due; these join it
             pending = setTimeout(function () {
+                pending = 0;
+                var batch = queue;
+                queue = [];
                 if (!CUR.statusNote) return;
-                nodes.forEach(function (n) { if (n.isConnected) scanStatusNote(n); });
+                batch.forEach(function (n) { if (n.isConnected) scanStatusNote(n); });
             }, 200);
         }
         new MutationObserver(function (records) {
@@ -1096,33 +1095,15 @@
 
     /* ---------------- login page helpers ---------------- */
 
-    var AUTOKEY = 'rpgAutoLoginTs';
-
-    /* One automatic press per step per session-ish. Without this a failed
-       login would retry in a loop and lock the account. sessionStorage is
-       per origin, so the Manage step and the SSO step guard separately. */
-    function autoAllowed() {
-        try { return Date.now() - (parseInt(sessionStorage.getItem(AUTOKEY), 10) || 0) > 45000; }
-        catch (e) { return true; }
-    }
-    function autoTaken() {
-        try { sessionStorage.setItem(AUTOKEY, String(Date.now())); } catch (e) { /* ignore */ }
-    }
-
     function setVal(input, v) {
         input.value = v;
         input.dispatchEvent(new Event('input', { bubbles: true }));
         input.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    function visible(node) {
-        return !!(node && (node.offsetWidth || node.offsetHeight || node.getClientRects().length));
-    }
-
-    /* Keeps a saved value in a field that the browser keeps second-guessing.
-       Focus is no signal here (ConnectWise puts autofocus on the e-mail box),
-       and browser autofill writes .value without firing anything — so instead:
-       re-assert until an edit arrives that we did not make ourselves. */
+    /* Keeps a saved value in a field the browser keeps second-guessing.
+       Focus is no signal, and autofill writes .value without firing anything —
+       so instead: re-assert until an edit arrives that we did not make. */
     function keeper(input, wanted) {
         var stop = false, writing = false;
         input.addEventListener('input', function () { if (!writing) stop = true; }, true);
@@ -1139,32 +1120,8 @@
         [150, 400, 900, 1600, 2600].forEach(function (ms) { setTimeout(assert, ms); });
     }
 
-    /* Step two of SSO: auth.connectwise.com asks for the e-mail, then NEXT. */
-    function enhanceSso(s) {
-        var email = document.getElementById('Input_Email') ||
-            document.querySelector('input[name="Input.Email"],input[type="email"]');
-        if (!email) return;
-        email.setAttribute('autocomplete', 'username');
-        keeper(email, function () { return s.loginEmail; });
-
-        if (!s.loginAuto || !autoAllowed()) return;
-
-        var tries = 0;
-        var watcher = setInterval(function () {
-            var btn = document.querySelector('input[type="submit"][value="NEXT" i],button[value="NEXT" i]');
-            if (email.value && visible(btn)) {
-                clearInterval(watcher);
-                autoTaken();
-                btn.click();
-            } else if (++tries > 40) {
-                clearInterval(watcher);
-            }
-        }, 700);
-    }
-
     function enhanceLogin(s) {
         if (!s.login) return;
-        if (/(^|\.)auth\.connectwise\.com$/i.test(location.hostname)) return enhanceSso(s);
 
         var form = document.getElementById('loginForm');
         var company = document.getElementById('company');
@@ -1185,17 +1142,18 @@
 
         /* Focus the first empty field once init() reveals the container. */
         var box = document.getElementById('loginContainer');
-        var focused = false;
+        var watcher = null;
         function tryFocus() {
-            if (focused || !box || box.style.display === 'none') return;
-            var target = [company, username, password].filter(function (el) {
-                return el && !el.value;
+            if (!box || box.style.display === 'none') return;
+            var target = [company, username, password].filter(function (f) {
+                return f && !f.value;
             })[0] || company;
-            try { target.focus(); focused = true; } catch (e) { /* ignore */ }
+            try { target.focus(); } catch (e) { /* ignore */ }
+            if (watcher) { watcher.disconnect(); watcher = null; }
         }
         if (box) {
-            new MutationObserver(tryFocus)
-                .observe(box, { attributes: true, attributeFilter: ['style'] });
+            watcher = new MutationObserver(tryFocus);
+            watcher.observe(box, { attributes: true, attributeFilter: ['style'] });
         }
         tryFocus();
 
@@ -1211,27 +1169,6 @@
             });
         });
         password.addEventListener('blur', function () { hint.hidden = true; });
-
-        /* Auto-LOGIN: press the button once everything it needs is there.
-           With SSO switched on Manage hides the password field entirely and
-           shows "Single Sign On is enabled", so waiting for a password would
-           wait forever — an invisible password box counts as satisfied. */
-        if (s.loginAuto && autoAllowed()) {
-            var tries = 0;
-            var watcher = setInterval(function () {
-                var btn = document.getElementById('loginBtn');
-                var needsPassword = visible(password) && !password.disabled;
-                var ready = visible(box) && company.value && username.value &&
-                    (!needsPassword || password.value) && visible(btn);
-                if (ready) {
-                    clearInterval(watcher);
-                    autoTaken();
-                    btn.click();
-                } else if (++tries > 60) {
-                    clearInterval(watcher); // ~18 s and still nothing: give up quietly
-                }
-            }, 300);
-        }
     }
 
     /* ---------------- settings panel (top frame only) ---------------- */
@@ -1301,6 +1238,7 @@
     ].join('');
 
     var TOGGLES = [
+        ['navDark', 'Darken the left menu bar'],
         ['preview', 'Ticket preview on hover'],
         ['stale', 'Highlight stale tickets'],
         ['tripleChange', 'Change change change'],
@@ -1339,7 +1277,7 @@
         notes.checked = !!s.previewNotes;
         notes.addEventListener('change', function () { update('previewNotes', notes.checked); });
         kids.push(el('label', null, [notes, el('span', { text: 'Show ticket content (notes)' })]));
-        kids.push(el('p', { 'class': 'rpg-subhint', text: 'Turn the columns off and the notes on for a card that shows nothing but the ticket text and its screenshots.' }));
+        kids.push(el('p', { 'class': 'rpg-subhint', text: 'Turn the columns off and the notes on for a card that shows nothing but the ticket text.' }));
 
         var reset = el('button', { type: 'button', text: 'Show all' });
         reset.addEventListener('click', function () { update('previewCols', []); });
@@ -1413,7 +1351,7 @@
         try { return JSON.parse(localStorage.getItem(COLS_KEY)) || []; } catch (e) { return []; }
     }
 
-    /* Company / Username / auto-LOGIN, shown right under the Login helper. */
+    /* Company / Username, shown right under the Login helper. */
     function buildLoginSub(s) {
         function field(labelText, key, value) {
             var input = el('input', { type: 'text', spellcheck: 'false', autocomplete: 'off' });
@@ -1424,14 +1362,9 @@
         }
         var company = field('Company', 'loginCompany', s.loginCompany);
         var user = field('Username', 'loginUser', s.loginUser);
-        var mail = field('SSO e-mail', 'loginEmail', s.loginEmail);
-        var auto = el('input', { type: 'checkbox' });
-        auto.checked = !!s.loginAuto;
-        auto.addEventListener('change', function () { update('loginAuto', auto.checked); });
-        var autoRow = el('label', null, [auto, el('span', { text: 'Auto-LOGIN once filled' })]);
-        var hint = el('p', { 'class': 'rpg-subhint', text: 'Auto-LOGIN also presses NEXT on the ConnectWise sign-in page with the e-mail above. Your password is never stored \u2014 that stays with your password manager.' });
-        var node = el('div', { id: 'rpg-login-sub', 'class': 'rpg-sub' }, [company.row, user.row, mail.row, autoRow, hint]);
-        return { node: node, company: company.input, user: user.input, mail: mail.input, auto: auto };
+        var hint = el('p', { 'class': 'rpg-subhint', text: 'Filled in on the Manage sign-in screen and kept there against whatever your browser remembered. Your password is never stored \u2014 that stays with your password manager.' });
+        var node = el('div', { id: 'rpg-login-sub', 'class': 'rpg-sub' }, [company.row, user.row, hint]);
+        return { node: node, company: company.input, user: user.input };
     }
 
     function buildPanel(s) {
@@ -1561,8 +1494,6 @@
             sub.node.hidden = !s.login;
             if (document.activeElement !== sub.company) sub.company.value = s.loginCompany || '';
             if (document.activeElement !== sub.user) sub.user.value = s.loginUser || '';
-            if (document.activeElement !== sub.mail) sub.mail.value = s.loginEmail || '';
-            sub.auto.checked = !!s.loginAuto;
         }
     }
 
@@ -1570,6 +1501,7 @@
         var s = loadSettings();
         Object.keys(patch).forEach(function (k) { s[k] = patch[k]; });
         s.zoom = Math.max(80, Math.min(130, parseInt(s.zoom, 10) || 100));
+        s.staleDays = Math.max(1, Math.min(365, parseInt(s.staleDays, 10) || 5));
         saveSettings(s);
         apply(s);
     }
@@ -1592,7 +1524,10 @@
         initStatusNote();
         initStale();
         initTripleChange();
-        if (IS_TOP) buildPanel(s);
+        if (IS_TOP) {
+            saveSettings(s);                     // rewrites the blob so settings dropped in an update stop being kept
+            buildPanel(s);
+        }
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', onReady);
