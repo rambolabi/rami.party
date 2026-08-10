@@ -157,8 +157,8 @@ OST.add('tool', [
         name: 'Listen Notes',
         subs: ['search', 'feeds'],
         type: 'online', cost: 'freemium',
-        desc: 'Full-text search across podcast episodes rather than shows, so you can find the one interview where somebody said the thing.',
+        desc: 'A search engine for podcasts that works at the episode level, across titles, descriptions and people, so you can find the one interview instead of the whole show.',
         links: [{ t: 'Listen Notes', u: 'https://www.listennotes.com/', g: '🎧' }],
-        tags: 'listen notes podcast episode transcript full text search show interview engine',
+        tags: 'listen notes podcast episode search show interview guest engine',
     },
 ]);

@@ -25,7 +25,7 @@ OST.add('tool', [
         name: 'grep.app',
         subs: ['search', 'development'],
         type: 'online', cost: 'free',
-        desc: 'Instant regular expression search over half a million repositories, with no login and no rate limit to argue with.',
+        desc: 'Instant regular expression search over a large slice of public GitHub, with no login and no rate limit to argue with.',
         links: [{ t: 'grep.app', u: 'https://grep.app/', g: '🔍' }],
         tags: 'grep.app regex code search fast public repository no login instant',
     },

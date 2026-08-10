@@ -166,7 +166,7 @@ OST.add('tool', [
         name: 'Seznam',
         subs: ['search'],
         type: 'online', cost: 'free',
-        desc: 'The Czech engine with its own crawler, and one of the few national portals that never lost its home market to Google.',
+        desc: 'The Czech engine with its own crawler. Google leads there now too, but Seznam held out longer than almost any other European portal and still matters for Czech sources.',
         links: [{ t: 'Seznam', u: 'https://www.seznam.cz/', g: '🌐' }],
         tags: 'seznam czech republic national portal own crawler search engine',
     },

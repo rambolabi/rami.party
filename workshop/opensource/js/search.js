@@ -40,8 +40,15 @@
 
     /* Without a query, "best" means the rail order: subject first, then the
        shelf, then the name. The entries come from thirty files, so their
-       written order would only look random here. */
+       written order would only look random here. With a subject chosen, the
+       entries that call it home lead; the ones that merely mention it follow. */
     function bySubject(a, b) {
+        var chosen = OST.state.sub;
+        if (chosen) {
+            var ah = a.subs[0] === chosen ? 0 : 1;
+            var bh = b.subs[0] === chosen ? 0 : 1;
+            if (ah !== bh) return ah - bh;
+        }
         var ao = OST.subjectById[a.subs[0]], bo = OST.subjectById[b.subs[0]];
         ao = ao ? ao.order : 99;
         bo = bo ? bo.order : 99;
