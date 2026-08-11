@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Ticket Autopilot
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.4.0
-// @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, a priority and a due date, applied in that order because each one decides what the next may contain. Then have it switch itself off after the time you set. Every change is logged, and the countdown at the bottom means you cannot leave it running by accident. Alt+Shift+A.
+// @version      1.5.1
+// @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, a priority and a due date, applied in that order because each one decides what the next may contain. Press the Run autopilot button in a ticket's toolbar to apply them to that one ticket, or set the clock running to have every ticket you open stamped until it switches itself off. Every change is logged. Alt+Shift+A.
 // @author       rami.party
 // @license      MIT
 // @match        https://eu.myconnectwise.net/*
@@ -31,9 +31,11 @@
 
    It writes into a live PSA, so it is built to be timid:
 
-   • It runs on a timer you set, shows the countdown, and switches ITSELF off.
-     A stamping rule you forgot about is worse than no rule at all, which is
-     why the clock is the one control you cannot skip.
+   • There are two ways to run it, and neither is on by accident. A Run
+     autopilot button sits in the ticket's own toolbar and stamps that one
+     ticket when you press it. The clock is the other way: it stamps every
+     ticket you open and switches ITSELF off when the time is up, because a
+     stamping rule you forgot about is worse than no rule at all.
    • Every field is "leave it alone" until you pick something.
    • It fills empty fields. Anything already answered is left alone unless you
      explicitly allow overwriting.
@@ -54,7 +56,7 @@
     if (window[NS]) { window[NS].toggle(); return; }
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.4.0';
+    var VERSION = '1.5.1';
     var KEY = 'rpGlamourCwAuto.v1';
 
     var DEFAULTS = {
@@ -68,6 +70,7 @@
         skipWeekend: true,
         dateFormat: 'auto',  // auto | dmy | mdy | ymd
         overwrite: false,    // touch fields that already have a value
+        button: true,        // put a Run autopilot button in the ticket toolbar
         minutes: 30,         // how long a run lasts
         until: 0,            // epoch ms; 0 = not running
         pill: true
@@ -397,10 +400,15 @@
         return CUR[name];
     }
 
-    function stamp(scope) {
-        if (!running() || busy.get(scope)) return;
+    /* Pressing the button in a ticket means "do it now", so a manual run
+       ignores both the clock and the once-per-ticket guard. */
+    function stamp(scope, manual, whenDone) {
+        if (busy.get(scope)) { if (whenDone) whenDone(); return; }
         var id = ticketId(scope);
-        if (stamped.get(scope) === id) return;
+        if (!manual) {
+            if (!running()) return;
+            if (stamped.get(scope) === id) return;
+        }
         stamped.set(scope, id);
         busy.set(scope, true);
 
@@ -423,6 +431,10 @@
                     log(changes.label + ': could not set ' + changes.failed.join(', ') +
                         '. Manage would not take the value on this ticket.');
                 }
+                if (manual && !changes.list.length && !changes.kept.length && !changes.failed.length) {
+                    log(changes.label + ': nothing to do, every field already reads that way.');
+                }
+                if (whenDone) whenDone();
                 return;
             }
 
@@ -446,8 +458,92 @@
         })(0, 0);
     }
 
+    /* ---------------- the button in the ticket toolbar ----------------
+       The bar itself carries nothing but compiler-generated classes and is not
+       even an x-toolbar, but the buttons in it are named cw_ToolbarButton_Save,
+       _Delete and so on. So the anchor is a button, not the bar: ours goes in
+       beside Delete, in whatever element happens to be holding it. */
+
+    var BUTTON_CSS = [
+        '.rpg-ap-run{display:inline-flex!important;align-items:center;gap:5px;margin:0 6px;',
+        'padding:3px 10px;border-radius:6px;border:1px solid #a855f7;background:#150a33;',
+        'color:#ece9ff!important;font:600 11.5px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;',
+        'cursor:pointer;vertical-align:middle;white-space:nowrap}',
+        '.rpg-ap-run:hover{background:#241150}',
+        '.rpg-ap-run[disabled]{opacity:.55;cursor:default}'
+    ].join('');
+
+    function scopeAbove(node) {
+        for (var e = node, i = 0; e && e.tagName !== 'BODY' && i < 20; e = e.parentElement, i++) {
+            var anchor = e.querySelector && e.querySelector('input.cw_type');
+            if (anchor) return ticketScope(anchor);
+        }
+        return null;
+    }
+
+    /* A ticket's action bar is the one holding Delete (or failing that Save).
+       The app chrome has toolbar buttons of its own, and "is there a ticket
+       somewhere above me" is far too loose to tell them apart. */
+    var ANCHORS = ['Delete', 'SaveAndClose', 'Save'];
+
+    function toolbarAnchors() {
+        var bars = [], out = [];
+        for (var a = 0; a < ANCHORS.length; a++) {
+            var btns = document.querySelectorAll('[class*="cw_ToolbarButton_' + ANCHORS[a] + '"]');
+            for (var i = 0; i < btns.length; i++) {
+                var b = btns[i];
+                if (!b.getClientRects().length || !b.parentElement) continue;
+                if (bars.indexOf(b.parentElement) !== -1) continue;
+                if (!scopeAbove(b)) continue;
+                bars.push(b.parentElement);
+                out.push(b);
+            }
+        }
+        return out;
+    }
+
+    function runButton() {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'rpg-ap-run';
+        btn.textContent = '\ud83c\udfaf Run autopilot';
+        btn.title = 'Apply the Ticket Autopilot settings to this ticket now.';
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (btn.disabled) return;
+            /* Resolved on the press, not when the button was made: Manage
+               re-uses a ticket window for the next ticket you open. */
+            var scope = scopeAbove(btn);
+            if (!scope) { log('could not find the ticket that button belongs to'); return; }
+            btn.disabled = true;
+            btn.textContent = '\ud83c\udfaf Running\u2026';
+            stamp(scope, true, function () {
+                btn.disabled = false;
+                btn.textContent = '\ud83c\udfaf Run autopilot';
+            });
+        });
+        return btn;
+    }
+
+    function syncRunButtons() {
+        if (!CUR.button) {
+            var old = document.querySelectorAll('.rpg-ap-run');
+            for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+            return;
+        }
+        setSheet('rpg-ap-btn-css', BUTTON_CSS);
+        var anchors = toolbarAnchors();
+        for (var a = 0; a < anchors.length; a++) {
+            var bar = anchors[a].parentElement;
+            if (bar.querySelector('.rpg-ap-run')) continue;
+            bar.insertBefore(runButton(), anchors[a].nextSibling);
+        }
+    }
+
     function watchTickets() {
         function sweep() {
+            try { syncRunButtons(); } catch (e) { /* the button is optional */ }
             if (!running()) return;
             var anchors = document.querySelectorAll('input.cw_type');
             for (var i = 0; i < anchors.length; i++) {
@@ -455,7 +551,7 @@
             }
         }
         new MutationObserver(function () {
-            if (!running() || pending) return;
+            if (pending || (!running() && !CUR.button)) return;
             pending = setTimeout(function () { pending = 0; sweep(); }, 700);
         }).observe(document.body, { childList: true, subtree: true });
         setInterval(sweep, 2500);
@@ -640,6 +736,16 @@
         safeSet.appendChild(el('p', { 'class': 'hint', text: 'Off by default: a field somebody already answered is left as it is, and the log says which. Status and Priority almost always hold a value already, so they need this on.' }));
         panel.appendChild(safeSet);
 
+        /* --- how it is run --- */
+        var runSet = el('fieldset');
+        runSet.appendChild(el('legend', { text: 'Run it' }));
+        var btnCb = el('input', { type: 'checkbox' });
+        btnCb.checked = !!CUR.button;
+        btnCb.addEventListener('change', function () { update({ button: btnCb.checked }); syncRunButtons(); });
+        runSet.appendChild(el('label', { 'class': 'check' }, [btnCb, el('span', { text: 'Run autopilot button in the ticket toolbar' })]));
+        runSet.appendChild(el('p', { 'class': 'hint', text: 'Press it on a ticket and the fields above are applied to that ticket, once. Use the clock below instead to have every ticket you open stamped automatically.' }));
+        panel.appendChild(runSet);
+
         /* --- the clock --- */
         var clock = el('div', { 'class': 'clock' });
         var big = el('b', { text: ', ' });
@@ -681,7 +787,8 @@
         root.appendChild(pillEl);
 
         refs = { rows: rows, dueSel: dueSel, weekendCb: weekendCb, fmtSel: fmtSel,
-                 overCb: overCb, minutes: minutes, big: big, small: small, clock: clock, log: logBox };
+                 overCb: overCb, btnCb: btnCb, minutes: minutes, big: big, small: small,
+                 clock: clock, log: logBox };
         sync();
         setInterval(tick, 1000);
     }
@@ -693,6 +800,7 @@
         refs.weekendCb.checked = !!CUR.skipWeekend;
         refs.fmtSel.value = CUR.dateFormat;
         refs.overCb.checked = !!CUR.overwrite;
+        refs.btnCb.checked = !!CUR.button;
         refs.minutes.value = String(CUR.minutes);
         drawLog();
         tick();
