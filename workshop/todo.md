@@ -595,6 +595,7 @@ a quick review pass (does it work? is it finished? should it be `status:'soon'` 
 | `workshop/DNS-sinkhole/` | DNS Sinkhole | live, undocumented |
 | `workshop/Engraving/` | Engraving Gallery | live, undocumented |
 | `workshop/news/` | IT News Scroll | ✅ rebuilt 2026-08-09: shared theme, data-driven, events calendar |
+| `workshop/opensource/` | Rami's Open Source Toolkit | ✅ new 2026-08-10: own copy of both catalogues, the CVE vendor list and a full search-engine collection (704 entries, 35 data files), 19 shared subjects, subject rail. **Successor to `tools/` + `news/`, archive those once it has settled** |
 | `workshop/rami/` | Tinkerer's Desk | scratch page — now `status:'soon'` ✅ |
 | `workshop/scoreboard/` | Scoreboard | live, undocumented |
 | `workshop/subnets/` | Subnet Calculator | live, undocumented |

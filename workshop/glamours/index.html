@@ -3,21 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="color-scheme" content="dark">
-    <meta name="theme-color" content="#0d0726">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14171c" media="(prefers-color-scheme: dark)">
 
     <!-- Primary SEO -->
-    <title>Glamours — userscripts &amp; userstyles that re-enchant other people's websites | rami.party</title>
-    <meta name="description" content="A spellbook of small userscripts and userstyles that make third-party web apps nicer to use: dark modes, hover previews, saner logins. First entry: a comfort pack for ConnectWise Manage. Compares Greasemonkey, Tampermonkey, Violentmonkey and FireMonkey, explains the Chrome 'Allow User Scripts' permission, and lists every way to install one without a userscript manager.">
-    <meta name="keywords" content="userscript, userstyle, Tampermonkey, Violentmonkey, Greasemonkey, FireMonkey, Stylus, userscript manager, allow user scripts, developer mode, custom CSS, dark mode, ConnectWise Manage, myconnectwise, bookmarklet, browser extension, uBlock cosmetic filter">
+    <title>Glamours: userscripts for the web apps you're stuck with | rami.party</title>
+    <meta name="description" content="Read me first, setup steps, scripts. A small library of userscripts that improve third-party web apps: Truesight shows every host, IP and browser API a page reaches for. Prism repaints and rescales any site for comfortable reading. Plus a comfort glamour and a ticket autopilot for ConnectWise Manage. Install once with Tampermonkey, or run them straight from a bookmark with no extension at all.">
+    <meta name="keywords" content="userscript, Tampermonkey, Violentmonkey, Greasemonkey, FireMonkey, Stylus, allow user scripts, site access, bookmarklet, dark mode, ConnectWise Manage, incident response, reading comfort">
     <meta name="author" content="rami.party">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://rami.party/workshop/glamours/">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Glamours — re-enchant other people's websites">
-    <meta property="og:description" content="Small userscripts &amp; userstyles that make the web apps you're stuck with nicer to use. Documented, toggleable, no tracking.">
+    <meta property="og:title" content="Glamours: userscripts for the web apps you're stuck with">
+    <meta property="og:description" content="Read me first, setup steps, scripts. Small userscripts that make third-party web apps nicer to use. Documented, toggleable, no tracking.">
     <meta property="og:url" content="https://rami.party/workshop/glamours/">
     <meta property="og:site_name" content="rami.party">
     <meta property="og:locale" content="en_GB">
@@ -25,209 +26,282 @@
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Glamours — re-enchant other people's websites">
-    <meta name="twitter:description" content="Small userscripts &amp; userstyles that make the web apps you're stuck with nicer to use.">
+    <meta name="twitter:title" content="Glamours: userscripts for the web apps you're stuck with">
+    <meta name="twitter:description" content="Read me first, setup steps, scripts. Small userscripts that make third-party web apps nicer to use.">
     <meta name="twitter:image" content="https://rami.party/workshop/glamours/og-image.svg">
 
     <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d0726'/%3E%3Cpath d='M50 18 L57 43 L82 50 L57 57 L50 82 L43 57 L18 50 L43 43 Z' fill='%23a855f7'/%3E%3Ccircle cx='75' cy='25' r='6' fill='%2322d3ee'/%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232563eb'/%3E%3Cpath d='M28 34h44M28 50h44M28 66h28' stroke='%23fff' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
 
     <!-- Structured data -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "CollectionPage",
-      "name": "Glamours — userscripts & userstyles",
+      "@type": "TechArticle",
+      "name": "Glamours: userscripts for the web apps you're stuck with",
       "url": "https://rami.party/workshop/glamours/",
-      "description": "A documented collection of userscripts and userstyles that improve third-party web applications, starting with a comfort pack for ConnectWise Manage.",
+      "description": "How to install a userscript manager, grant it the two permissions it needs, and run a small library of documented userscripts for third-party web applications.",
       "isPartOf": { "@type": "WebSite", "name": "rami.party", "url": "https://rami.party/" }
     }
     </script>
 </head>
 <body>
-    <div class="app-bg" aria-hidden="true">
-        <div class="blob b1"></div>
-        <div class="blob b2"></div>
-    </div>
-
     <header class="topbar">
-        <a class="home" href="https://rami.party/#workshop">← rami.party</a>
-        <div class="brand">
-            <span class="brand-mark" aria-hidden="true">🪄</span>
-            <div class="brand-text">
-                <strong>Glamours</strong>
-                <small>userscripts · userstyles · local, no tracking</small>
-            </div>
+        <div class="wrap bar">
+            <a class="home" href="https://rami.party/#workshop">← rami.party</a>
+            <span class="brand">Glamours</span>
+            <nav class="jump" aria-label="Sections">
+                <a href="#read-me">Read me first</a>
+                <a href="#setup">Setup steps</a>
+                <a href="scripts.html">Scripts</a>
+            </nav>
         </div>
     </header>
 
-    <main>
-        <div class="hero">
-            <h1>Re-enchant other people's websites</h1>
-            <p>Some web apps you don't get to choose — you just get to stare at them all day.
-               A <em>glamour</em> is a small illusion spell: a few lines of CSS or JavaScript your
-               browser applies on arrival, so the site looks and behaves the way it always should
-               have. This page collects ours — each one documented: <strong>what it does, how it
-               works, and why it's nice.</strong></p>
+    <main class="wrap">
+
+        <div class="intro">
+            <h1>Userscripts for the web apps you're stuck with</h1>
+            <p>Small pieces of code your browser runs on a website you don't control, so it behaves
+               the way it should have in the first place. Three things to do, in order.</p>
         </div>
 
-        <!-- ============================== the spellbook ============================== -->
-        <section class="card" aria-labelledby="book-title">
-            <h2 id="book-title"><span class="ic">📖</span> The spellbook</h2>
-            <div id="glamour-list"></div>
-        </section>
+        <!-- ============================== 1 · read me first ============================== -->
+        <section id="read-me" aria-labelledby="read-me-title">
+            <h2 id="read-me-title"><span class="step-no">1</span> Read me first</h2>
 
-        <!-- ============================== managers ============================== -->
-        <section class="card" aria-labelledby="mgr-title">
-            <h2 id="mgr-title"><span class="ic">🐒</span> Step 1 · Pick a userscript manager</h2>
-            <p class="lead">A userscript manager is a browser extension that keeps your scripts,
-               decides which sites they run on and updates them. Four are worth knowing. They all
-               read the same <code>.user.js</code> format, so a glamour from this page works in any
-               of them — the differences are the browser you use, whether the code is open source,
-               and how many extras you want.</p>
-
-            <div class="alt-grid">
-                <article class="alt">
-                    <h3>🐵 Tampermonkey <span class="tag good">the default choice</span></h3>
-                    <p><strong>Chrome · Edge · Safari · Opera · Firefox.</strong> By far the most used
-                       manager, and the one every script is tested against. Built-in editor, automatic
-                       update checks, ZIP import/export and sync through Google Drive, Dropbox or
-                       OneDrive.</p>
-                    <p>The catch: it is <strong>free but not open source</strong> — the Firefox listing
-                       is “All Rights Reserved”. On Chrome-based browsers it also needs one extra
-                       permission click (step 2 below).</p>
-                    <p class="verdict">Best compatibility &amp; most features · closed source · <a href="https://www.tampermonkey.net/" target="_blank" rel="noopener">tampermonkey.net ↗</a></p>
-                </article>
-
-                <article class="alt">
-                    <h3>🟣 Violentmonkey <span class="tag good">open source pick</span></h3>
-                    <p><strong>Chrome · Edge · Firefox · Opera · Firefox for Android.</strong>
-                       <strong>MIT-licensed</strong> and developed in the open, so anyone can audit
-                       exactly what the extension does with its “access all websites” permission —
-                       which matters for something that can read every page you visit.</p>
-                    <p>Runs most Greasemonkey and Tampermonkey scripts unchanged, syncs through
-                       Dropbox, OneDrive, Google Drive or any WebDAV server, and asks for fewer
-                       permissions (downloads are optional).</p>
-                    <p class="verdict">Same job, auditable code · slightly fewer conveniences · <a href="https://violentmonkey.github.io/" target="_blank" rel="noopener">violentmonkey.github.io ↗</a></p>
-                </article>
-
-                <article class="alt">
-                    <h3>🐒 Greasemonkey <span class="tag">the original</span></h3>
-                    <p><strong>Firefox only.</strong> The 2005 extension that invented all of this:
-                       the <code>.user.js</code> file, the <code>==UserScript==</code> header, the
-                       <code>@match</code> rules. Still maintained, still MIT.</p>
-                    <p>The catch: version 4 moved to the modern asynchronous <code>GM.*</code> API and
-                       dropped several classic <code>GM_*</code> functions, so a fair number of older
-                       scripts in the wild run in Tampermonkey and Violentmonkey but not here.
-                       (Ours use neither — they ask for <code>@grant none</code>.)</p>
-                    <p class="verdict">Historic &amp; lean · Firefox only · patchiest script compatibility · <a href="https://www.greasespot.net/" target="_blank" rel="noopener">greasespot.net ↗</a></p>
-                </article>
-
-                <article class="alt">
-                    <h3>🔥 FireMonkey <span class="tag">scripts + styles in one</span></h3>
-                    <p><strong>Firefox only</strong> (Android support experimental). Handles
-                       <em>both</em> userscripts and userstyles, so it replaces a Greasemonkey-type
-                       extension <em>and</em> Stylus at once — handy for this page, where several
-                       glamours ship a CSS-only version.</p>
-                    <p>Built on Firefox’s dedicated <code>userScripts</code> API rather than generic
-                       injection, supports both the old <code>GM_*</code> and new <code>GM.*</code>
-                       styles, MPL-2.0 licensed and contains no tracking. It is much smaller than the
-                       others, so it gets less real-world testing.</p>
-                    <p class="verdict">Lightweight, one extension for both · Firefox only · small user base · <a href="https://addons.mozilla.org/firefox/addon/firemonkey/" target="_blank" rel="noopener">addons.mozilla.org ↗</a></p>
-                </article>
+            <div class="facts">
+                <div class="fact">
+                    <h3>What these are</h3>
+                    <p>A userscript is a text file your browser loads on the sites named inside it.
+                       It can restyle a page, add a panel, or fill in a field: anything you could
+                       do by hand, done for you.</p>
+                </div>
+                <div class="fact">
+                    <h3>What you need</h3>
+                    <p>One extension, set up once: <strong>Tampermonkey</strong>. About two minutes,
+                       and then you never touch it again. The steps are below, with pictures.</p>
+                </div>
+                <div class="fact">
+                    <h3>What to know</h3>
+                    <p>A userscript runs with full access to the pages it matches, which is exactly
+                       why it can fix them. <strong>Only run ones you, or someone you trust, have
+                       read.</strong> Every script here is plain commented source you can open
+                       before installing.</p>
+                </div>
+                <div class="fact">
+                    <h3>What they don't do</h3>
+                    <p>No network requests, no analytics, nothing leaves your browser. Settings stay
+                       on your machine, and every feature has an off switch.</p>
+                </div>
             </div>
 
-            <p class="fineprint"><strong>Short version:</strong> on Chrome or Edge, Tampermonkey unless
-               you want open source, then Violentmonkey. On Firefox, Violentmonkey for the widest
-               script compatibility, FireMonkey if you also want your userstyles in the same place,
-               Greasemonkey if you like the original. Whatever you pick, install <em>one</em> — two
-               managers will both run the same script twice.</p>
+            <p class="aside">Not allowed to install extensions? Skip to
+               <a href="#no-extension">running them from a bookmark</a> at the bottom of this page.</p>
         </section>
 
-        <!-- ============================== permission ============================== -->
-        <section class="card" aria-labelledby="perm-title">
-            <h2 id="perm-title"><span class="ic">🔓</span> Step 2 · Allow userscripts (Chrome-based browsers)</h2>
-            <p class="lead">Since Tampermonkey 5.3, a Chrome-based browser will not execute userscripts
-               until you grant permission. Straight from the
-               <a href="https://www.tampermonkey.net/faq.php?q=Q209#Q209" target="_blank" rel="noopener">Tampermonkey FAQ (Q209)</a>:
-               you need <strong>either</strong> the “Allow User Scripts” toggle (available in Chrome 138+
-               in the extension’s settings) <strong>or</strong> Developer Mode.</p>
-            <ol class="steps">
-                <li><strong>Right-click the Tampermonkey icon</strong> in the toolbar and choose <em>Manage Extension</em>.</li>
-                <li><strong>Find the “Allow User Scripts” toggle and switch it on.</strong> That enables the <code>userScripts</code> API for Tampermonkey. On older Chrome builds without the toggle, turn on <em>Developer mode</em> at the top of <code>chrome://extensions</code> instead.</li>
+        <!-- ============================== 2 · setup steps ============================== -->
+        <section id="setup" aria-labelledby="setup-title">
+            <h2 id="setup-title"><span class="step-no">2</span> Setup steps</h2>
+            <p class="lede">Once, in this order. The pictures are Microsoft Edge; Chrome looks all
+               but identical. On Firefox, only the first step applies.</p>
+
+            <ol class="setup">
+                <li>
+                    <h3>Install Tampermonkey</h3>
+                    <p>Get it from <a href="https://www.tampermonkey.net/" target="_blank" rel="noopener">tampermonkey.net</a>
+                       or your browser's add-on store, and let the install finish.</p>
+                    <p class="tiny">Install <em>one</em> manager: two will run the same script
+                       twice. <a href="#managers">Prefer a different one?</a></p>
+                </li>
+
+                <li>
+                    <h3>Open the extension's settings</h3>
+                    <p>Right-click the Tampermonkey icon in the toolbar and choose
+                       <strong>Manage extension</strong>. While that menu is open, set
+                       <strong>Site Access</strong> to <strong>Allowed on all sites</strong>.</p>
+                    <figure>
+                        <a href="media/tamper-monkey.png" target="_blank" rel="noopener">
+                            <img src="media/tamper-monkey.png" width="270" height="409" loading="lazy"
+                                 alt="The Tampermonkey toolbar menu, showing Site Access set to Allowed on all sites and the Manage extension entry near the bottom.">
+                        </a>
+                        <figcaption>Microsoft Edge. Click to open full size.</figcaption>
+                    </figure>
+                </li>
+
+                <li>
+                    <h3>Switch on Allow User Scripts</h3>
+                    <p>On the page that opens, turn <strong>Allow User Scripts</strong> on. Check
+                       that <strong>Site access</strong> reads <strong>On all sites</strong> while
+                       you are there.</p>
+                    <figure>
+                        <a href="media/tamper-monkey2.png" target="_blank" rel="noopener">
+                            <img src="media/tamper-monkey2.png" width="1169" height="732" loading="lazy"
+                                 alt="The Tampermonkey extension page, with Site access set to On all sites and the Allow User Scripts toggle switched on.">
+                        </a>
+                        <figcaption>Click to open full size.</figcaption>
+                    </figure>
+                    <p class="tiny">Chrome and Edge split this in two on purpose: the permission on
+                       its own shows no warning at install time, so the toggle makes running
+                       userscripts a decision you took knowingly. If your browser is old enough not
+                       to show the toggle, switch on <em>Developer mode</em> at the bottom of the
+                       extensions page instead. Firefox needs neither.</p>
+                </li>
+
+                <li>
+                    <h3>Install a script</h3>
+                    <p>Press <strong>Install userscript</strong> on any script in the
+                       <a href="scripts.html">catalogue</a>. Tampermonkey opens its install screen
+                       with the full source, so you can read it, confirm, then visit the site.
+                       Updates arrive on their own after that.</p>
+                </li>
             </ol>
-            <p class="fineprint"><strong>Why is this necessary?</strong> Userscripts use a two-step
-               authorisation: the <code>userScripts</code> permission <em>plus</em> the toggle or
-               Developer Mode. The permission on its own shows no warning when the extension is
-               installed, so Google added the second step to make sure running arbitrary userscripts is
-               a decision you took knowingly. Firefox needs none of this.</p>
+
+            <details id="managers">
+                <summary>Prefer a different manager?</summary>
+                <div class="details-body">
+                    <p>Everything here is a standard <code>.user.js</code> file, so any of these
+                       will run it.</p>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr><th>Manager</th><th>Browsers</th><th>Licence</th><th>Notes</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><a href="https://www.tampermonkey.net/" target="_blank" rel="noopener">Tampermonkey</a></td>
+                                    <td>Chrome, Edge, Firefox, Safari, Opera</td>
+                                    <td>Free, closed source</td>
+                                    <td>The default: most used, best tested, cloud sync.</td>
+                                </tr>
+                                <tr>
+                                    <td><a href="https://violentmonkey.github.io/" target="_blank" rel="noopener">Violentmonkey</a></td>
+                                    <td>Chrome, Edge, Firefox, Opera, Firefox&nbsp;Android</td>
+                                    <td>MIT, open source</td>
+                                    <td>Auditable, asks for fewer permissions. Same scripts.</td>
+                                </tr>
+                                <tr>
+                                    <td><a href="https://www.greasespot.net/" target="_blank" rel="noopener">Greasemonkey</a></td>
+                                    <td>Firefox</td>
+                                    <td>MIT, open source</td>
+                                    <td>The 2005 original. Dropped some old APIs, so older scripts can fail.</td>
+                                </tr>
+                                <tr>
+                                    <td><a href="https://addons.mozilla.org/firefox/addon/firemonkey/" target="_blank" rel="noopener">FireMonkey</a></td>
+                                    <td>Firefox</td>
+                                    <td>MPL-2.0, open source</td>
+                                    <td>Scripts and styles in one extension. Small user base.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </details>
         </section>
 
-        <!-- ============================== install ============================== -->
-        <section class="card" aria-labelledby="install-title">
-            <h2 id="install-title"><span class="ic">✨</span> Step 3 · Cast it</h2>
-            <ol class="steps">
-                <li><strong>Click an “Install userscript” button above.</strong> Any link ending in <code>.user.js</code> makes your manager pop its install screen automatically — review the code, confirm, done. A <code>.user.css</code> link does the same in Stylus or FireMonkey.</li>
-                <li><strong>Visit the site.</strong> The glamour applies itself on every page load. Look for its settings pill to toggle individual tweaks.</li>
-                <li><strong>Updates are automatic.</strong> Each script carries an <code>@updateURL</code> pointing back here, so your manager picks up new versions on its own.</li>
-            </ol>
-            <p class="fineprint">Trust rule: only ever install userscripts you (or someone you trust) have read. A userscript runs with full access to the pages it matches — which is precisely why it can fix them. Everything here is plain, commented source that makes no network requests of its own; the only privileges asked for are the two storage calls that remember your own settings between ConnectWise's two domains.</p>
+        <!-- ============================== 3 · scripts ============================== -->
+        <section id="scripts" aria-labelledby="scripts-title">
+            <h2 id="scripts-title"><span class="step-no">3</span> Scripts</h2>
+            <p class="lede">The library lives on its own page, where you can search it and filter by
+               site. Each entry lists what it does, how it works and where it falls short, with the
+               full source one click away.</p>
+
+            <p class="cta-row">
+                <a class="btn primary big" href="scripts.html">Browse all scripts</a>
+                <span id="script-count" class="count"></span>
+            </p>
+
+            <div id="script-index" class="script-index"></div>
+            <noscript>
+                <p class="aside">This index needs JavaScript to build itself. The
+                    <a href="scripts.html">catalogue page</a> lists every script, and each one can
+                    be installed straight from its file:
+                    <a href="user-scripts/truesight.user.js">truesight.user.js</a>,
+                    <a href="user-scripts/prism.user.js">prism.user.js</a>,
+                    <a href="user-scripts/cw-manage-eu.user.js">cw-manage-eu.user.js</a>,
+                    <a href="user-scripts/cw-manage-autopilot.user.js">cw-manage-autopilot.user.js</a>.</p>
+            </noscript>
         </section>
-
-        <!-- ============================== alternatives ============================== -->
-        <section class="card" aria-labelledby="alt-title">
-            <h2 id="alt-title"><span class="ic">🧪</span> No userscript manager? Six other ways to cast</h2>
-            <p class="lead">A manager is the most comfortable wand, but it is not the only one.
-               If extensions are locked down on your machine, or a tweak is pure CSS anyway,
-               pick by what it needs and what you are allowed to install:</p>
-
-            <div class="alt-grid">
-                <article class="alt">
-                    <h3>🖌️ Stylus <span class="tag good">best for CSS-only</span></h3>
-                    <p>The <a href="https://github.com/openstyles/stylus" target="_blank" rel="noopener">Stylus</a> extension applies user <em>styles</em> — CSS only, no script execution, so it needs far less trust and fewer permissions. Every glamour here that has a <code>.user.css</code> file installs into Stylus with one click and can be toggled per site. On Firefox, FireMonkey does the same job in the same extension as your scripts.</p>
-                    <p class="verdict">Persistent · auto-applies · can't do JS features (panels, login helpers)</p>
-                </article>
-
-                <article class="alt">
-                    <h3>🔖 Bookmarklet <span class="tag">zero extensions</span></h3>
-                    <p>A bookmark whose URL is <code>javascript:…</code> code that injects the CSS when clicked. Nothing to install — works even where extensions are forbidden. The catch: you click it once per visit, and sites with a strict <code>style-src</code> CSP can refuse it.</p>
-                    <p class="verdict">No install rights needed · manual, per-tab, per-visit · each card below offers a drag-to-bookmark version</p>
-                </article>
-
-                <article class="alt">
-                    <h3>🛠️ DevTools local overrides <span class="tag">built into the browser</span></h3>
-                    <p>Chrome/Edge can persist your CSS edits across reloads: DevTools → <em>Sources → Overrides</em> → pick a local folder → edit any stylesheet. Firefox has <em>Style Editor</em> for the session. Great for prototyping a glamour before packaging it; clumsy as a daily driver.</p>
-                    <p class="verdict">No extension · survives reloads (Chromium) · per machine, fiddly</p>
-                </article>
-
-                <article class="alt">
-                    <h3>🛡️ uBlock Origin cosmetic filters <span class="tag">you may already have it</span></h3>
-                    <p>If a tweak only needs to <em>hide</em> things, uBlock Origin does it natively: dashboard → <em>My filters</em> → <code>eu.myconnectwise.net##.annoying-thing</code>. No styling or behaviour changes, but zero extra software if it's already installed.</p>
-                    <p class="verdict">Hide-only · syncs with uBlock backup · can't recolour or add features</p>
-                </article>
-
-                <article class="alt">
-                    <h3>🦊 Firefox userContent.css <span class="tag">no extension at all</span></h3>
-                    <p>Firefox natively loads <code>chrome/userContent.css</code> from your profile folder at startup. Wrap rules in <code>@-moz-document domain("eu.myconnectwise.net") { … }</code>, flip <code>toolkit.legacyUserProfileCustomizations.stylesheets</code> to <code>true</code> in <code>about:config</code>, restart.</p>
-                    <p class="verdict">Pure browser feature · CSS only · needs a restart per change</p>
-                </article>
-
-                <article class="alt">
-                    <h3>🔍 Per-site zoom <span class="tag">the humble classic</span></h3>
-                    <p><kbd>Ctrl</kbd>+<kbd>+</kbd>/<kbd>−</kbd> is remembered per origin by every browser. It's the no-code answer to “this app's text is too small” — and the honest baseline any density tweak should beat.</p>
-                    <p class="verdict">Zero setup · scales everything equally, fixes nothing structural</p>
-                </article>
-            </div>
-
-            <p class="fineprint">For a whole team: IT can force-install a manager (Tampermonkey, Violentmonkey) or Stylus with a preloaded script list via managed browser policies (<code>ExtensionInstallForcelist</code> + each extension's managed storage) — one glamour, everyone's browser. And for completeness: ConnectWise Manage itself offers <strong>no</strong> theming, custom-CSS or density options server-side, which is exactly why this page exists.</p>
-        </section>
-
-        <footer>
-            <p>Made with ♥ at <a href="https://rami.party/">rami.party</a> · everything runs locally · no tracking, no analytics.</p>
-        </footer>
     </main>
 
+    <!-- ====================================================================== -->
+    <!-- hard divide: nothing below this line needs the extension               -->
+    <!-- ====================================================================== -->
+    <div class="divide"><span>No extension needed below this line</span></div>
+
+    <section id="no-extension" class="optional" aria-labelledby="no-ext-title">
+        <div class="wrap">
+            <p class="kicker">Optional: nothing below needs an extension</p>
+            <h2 id="no-ext-title">Other ways to run these</h2>
+            <p class="lede">If extensions are blocked on your machine, or you only want a tweak for
+               five minutes, these work without installing anything.</p>
+
+            <div class="options">
+                <article>
+                    <h3>Bookmarklet</h3>
+                    <p>A bookmark whose address is the script itself. Drag the bookmarklet button
+                       from any script in the <a href="scripts.html">catalogue</a> onto your
+                       bookmarks bar, then click it on any page. The whole script travels inside the
+                       bookmark, so nothing is fetched when you click it.</p>
+                    <p class="verdict">No install rights needed &middot; one click per visit &middot; starts when
+                       you click, not when the page loads</p>
+                </article>
+
+                <article>
+                    <h3>Stylus</h3>
+                    <p>An extension for user <em>styles</em>: CSS only, no script execution, so it
+                       needs far less trust. Anything here that ships a <code>.user.css</code> file
+                       installs into it with one click.</p>
+                    <p class="verdict">Persistent · applies itself · cannot add panels or behaviour</p>
+                </article>
+
+                <article>
+                    <h3>DevTools overrides</h3>
+                    <p>Chrome and Edge keep your own CSS edits across reloads:
+                       <em>DevTools → Sources → Overrides</em>, pick a folder, edit the stylesheet.
+                       Firefox has Style Editor for the session.</p>
+                    <p class="verdict">Built into the browser · survives reloads · fiddly, per machine</p>
+                </article>
+
+                <article>
+                    <h3>uBlock Origin filters</h3>
+                    <p>If you only need to <em>hide</em> something and already have uBlock:
+                       dashboard → <em>My filters</em> →
+                       <code>example.com##.annoying-thing</code>.</p>
+                    <p class="verdict">Nothing extra to install · hide-only · no restyling</p>
+                </article>
+
+                <article>
+                    <h3>Firefox userContent.css</h3>
+                    <p>Firefox loads <code>chrome/userContent.css</code> from your profile at
+                       startup. Wrap rules in <code>@-moz-document domain("example.com") { … }</code>
+                       and enable <code>toolkit.legacyUserProfileCustomizations.stylesheets</code>.</p>
+                    <p class="verdict">Pure browser feature · CSS only · restart per change</p>
+                </article>
+
+                <article>
+                    <h3>Per-site zoom</h3>
+                    <p><kbd>Ctrl</kbd> + <kbd>+</kbd> or <kbd>−</kbd> is remembered per site by
+                       every browser. The no-code answer to "this text is too small", and the
+                       baseline any tweak should beat.</p>
+                    <p class="verdict">Zero setup · scales everything equally · fixes nothing structural</p>
+                </article>
+            </div>
+
+            <p class="aside">Rolling this out to a team? IT can push a manager and a script list
+               through managed browser policy (<code>ExtensionInstallForcelist</code> plus the
+               extension's managed storage), so nobody has to do the setup steps at all.</p>
+        </div>
+    </section>
+
+    <footer>
+        <div class="wrap">
+            <p>Made at <a href="https://rami.party/">rami.party</a> · everything runs locally ·
+               no tracking, no analytics.</p>
+        </div>
+    </footer>
+
     <script src="data.js"></script>
-    <script src="script.js"></script>
+    <script src="home.js"></script>
 </body>
 </html>

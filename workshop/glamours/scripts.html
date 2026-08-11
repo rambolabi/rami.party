@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#14171c" media="(prefers-color-scheme: dark)">
+
+    <title>All scripts | Glamours | rami.party</title>
+    <meta name="description" content="Every userscript in the Glamours library, searchable. Filter by site, by CSS-only version or by the ones that run from a bookmark. Each entry lists what it does, how it works and where it falls short, with the full source one click away.">
+    <meta name="author" content="rami.party">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/glamours/scripts.html">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="All scripts | Glamours">
+    <meta property="og:description" content="Every userscript in the library, searchable and filterable.">
+    <meta property="og:url" content="https://rami.party/workshop/glamours/scripts.html">
+    <meta property="og:site_name" content="rami.party">
+    <meta property="og:image" content="https://rami.party/workshop/glamours/og-image.svg">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232563eb'/%3E%3Cpath d='M28 34h44M28 50h44M28 66h28' stroke='%23fff' stroke-width='8' stroke-linecap='round'/%3E%3C/svg%3E">
+</head>
+<body>
+    <header class="topbar">
+        <div class="wrap bar">
+            <a class="home" href="./">&#8592; Setup</a>
+            <span class="brand">Glamours</span>
+            <nav class="jump" aria-label="Sections">
+                <a href="./#read-me">Read me first</a>
+                <a href="./#setup">Setup steps</a>
+                <a href="scripts.html" aria-current="page">Scripts</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="wrap">
+        <div class="intro">
+            <h1>All scripts</h1>
+            <p>Search by anything: what it does, the site it runs on, a feature you half remember.
+               New to this? Start with the <a href="./">setup steps</a>.</p>
+        </div>
+
+        <div class="finder">
+            <label class="search" for="q">
+                <span class="visually-hidden">Search scripts</span>
+                <input id="q" type="search" placeholder="Search scripts, press / to jump here"
+                       autocomplete="off" spellcheck="false">
+            </label>
+            <div id="chips" class="chips" role="group" aria-label="Filter scripts"></div>
+            <p id="count" class="count" aria-live="polite"></p>
+        </div>
+
+        <div id="glamour-list"></div>
+
+        <noscript>
+            <p class="aside">Searching needs JavaScript. Every script can still be installed
+                straight from its file:
+                <a href="user-scripts/truesight.user.js">truesight.user.js</a> (page inspector for incident
+                response),
+                <a href="user-scripts/prism.user.js">prism.user.js</a> (reading comfort for any site),
+                <a href="user-scripts/cw-manage-eu.user.js">cw-manage-eu.user.js</a> and
+                <a href="user-scripts/cw-manage-eu.user.css">cw-manage-eu.user.css</a> (ConnectWise Manage
+                comfort glamour), and
+                <a href="user-scripts/cw-manage-autopilot.user.js">cw-manage-autopilot.user.js</a> (ConnectWise
+                ticket autopilot).</p>
+        </noscript>
+
+        <p id="empty" class="empty" hidden>Nothing matches that. Try a shorter word, or clear the filter.</p>
+    </main>
+
+    <footer>
+        <div class="wrap">
+            <p>Made at <a href="https://rami.party/">rami.party</a> &middot; everything runs locally &middot;
+               no tracking, no analytics.</p>
+        </div>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="catalogue.js"></script>
+</body>
+</html>

@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Comfort Glamour
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.8.0
-// @description  Quality-of-life for ConnectWise Manage: four dark themes, a hover ticket preview with pickable columns plus the latest note, stale-ticket highlighting, one-click Change/Change/Change, auto-closing of company status-note popups, a password-manager-friendly login, and true text-only scaling. Every tweak is a toggle — press Alt+Shift+G for the panel.
+// @version      1.9.0
+// @description  Quality-of-life for ConnectWise Manage: six themes, four dark plus a vivid pale one and a soft greyscale, a hover ticket preview with pickable columns plus the latest note, stale-ticket highlighting, one-click Change/Change/Change, a password-manager-friendly login, and true text-only scaling. Every tweak is a toggle; press Alt+Shift+G for the panel.
 // @author       rami.party
 // @license      MIT
 // @match        https://eu.myconnectwise.net/*
@@ -13,8 +13,8 @@
 // @grant        GM_setValue
 // @homepageURL  https://rami.party/workshop/glamours/
 // @supportURL   https://rami.party/workshop/glamours/
-// @downloadURL  https://rami.party/workshop/glamours/cw-manage-eu.user.js
-// @updateURL    https://rami.party/workshop/glamours/cw-manage-eu.user.js
+// @downloadURL  https://rami.party/workshop/glamours/user-scripts/cw-manage-eu.user.js
+// @updateURL    https://rami.party/workshop/glamours/user-scripts/cw-manage-eu.user.js
 // ==/UserScript==
 
 /* --------------------------------------------------------------------------
@@ -23,13 +23,14 @@
    ConnectWise Manage hosts its modules inside same-origin iframes, so this
    script deliberately runs in EVERY frame (no @noframes):
 
-   • Ticket preview, status-note auto-close and text scaling all mount per
-     frame — that is where the grids and dialogs actually live.
-   • The theme filter inverts ONLY the top document. A CSS filter on the top
-     <html> composites over iframe content too; inverting each frame as well
-     would double-invert them back to blinding white.
-   • Images/video get a counter-invert in every frame so photos stay natural,
-     and so do our own overlays.
+   • Ticket preview and text scaling both mount per frame: that is where the
+     grids actually live.
+   • The theme filter is applied to the top document ONLY. A CSS filter on
+     the top <html> composites over iframe content too; filtering each frame
+     as well would apply it twice.
+   • Under an inverting theme, images/video get a counter-invert in every
+     frame so photos stay natural, and so do our own overlays. The pale and
+     greyscale themes do not invert, so they get no counter-invert.
    • The ✨ settings panel mounts only in the top frame. Settings live in the
      userscript manager's storage so one set of preferences covers every
      regional tenant, mirrored into localStorage whose 'storage' event syncs
@@ -40,7 +41,7 @@
     'use strict';
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.8.0';               // keep in step with @version above
+    var VERSION = '1.9.0';               // keep in step with @version above
     var KEY = 'rpGlamourCw.v1';
     var COLS_KEY = 'rpGlamourCw.cols';   // columns of the grid last hovered
     var DEFAULTS = {
@@ -55,7 +56,6 @@
         staleDays: 5,
         staleColour: 'red', // red | amber | violet
         tripleChange: false, // Type = Change → Subtype + Item = Change
-        statusNote: false,  // auto-close the company Status Note popup
         navDark: false,     // keep the left menu bar dark
         login: true,        // login page helper
         loginCompany: '',   // auto-filled into #company
@@ -64,13 +64,19 @@
         pill: true          // show the floating ✨ button
     };
 
-    /* Each theme is a CSS filter recipe applied to the top <html>. */
+    /* Each theme is a CSS filter recipe applied to the top <html>. The four
+       dark ones invert, so photos, the panel and our overlays have to be
+       flipped back; Daylight and Graphite do not, and must not be.
+       Daylight is saturation only: a contrast boost on a light UI crushes the
+       pale greys Manage draws its borders and zebra rows with. */
     var THEMES = [
-        { id: 'none',     label: 'ConnectWise default',     filter: '' },
-        { id: 'midnight', label: 'Midnight · neutral dark', filter: 'invert(.92) hue-rotate(180deg)' },
-        { id: 'obsidian', label: 'Obsidian · deep black',   filter: 'invert(1) hue-rotate(180deg) contrast(.92)' },
-        { id: 'slate',    label: 'Slate · cool blue-grey',  filter: 'invert(.88) hue-rotate(200deg) saturate(.85)' },
-        { id: 'ember',    label: 'Ember · warm amber',      filter: 'invert(.9) hue-rotate(180deg) sepia(.28) saturate(1.15)' }
+        { id: 'none',     label: 'ConnectWise default',      filter: '',                                                                  invert: false },
+        { id: 'midnight', label: 'Midnight · neutral dark',  filter: 'invert(.92) hue-rotate(180deg)',                                     invert: true },
+        { id: 'obsidian', label: 'Obsidian · deep black',    filter: 'invert(1) hue-rotate(180deg) contrast(.92)',                         invert: true },
+        { id: 'slate',    label: 'Slate · cool blue-grey',   filter: 'invert(.88) hue-rotate(200deg) saturate(.85)',                       invert: true },
+        { id: 'ember',    label: 'Ember · warm amber',       filter: 'invert(.9) hue-rotate(180deg) sepia(.28) saturate(1.15)',            invert: true },
+        { id: 'daylight', label: 'Daylight · pale, vivid',   filter: 'saturate(1.6)',                                                     invert: false },
+        { id: 'graphite', label: 'Graphite · soft greyscale', filter: 'grayscale(1) invert(.22) contrast(1.06)',                           invert: false }
     ];
     function themeById(id) {
         for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i];
@@ -169,8 +175,10 @@
         ].join('')
     };
 
-    /* The theme filters keep hue (invert + hue-rotate 180), so a red tint
-       still reads as red once a dark theme is on — just lighter. */
+    /* The dark filters keep hue (invert + hue-rotate 180), so a red tint
+       still reads as red once one is on, just lighter. Graphite is greyscale
+       by definition and turns these into shades of grey; the bar down the
+       side is what marks the row there. */
     var STALE_COLOURS = {
         red: { label: 'Red', bar: '#dc2626', tint: 'rgba(220,38,38,.16)' },
         amber: { label: 'Amber', bar: '#d97706', tint: 'rgba(217,119,6,.18)' },
@@ -281,21 +289,23 @@
     }
 
     /* Top frame only. The filter makes <html> the containing block for
-       position:fixed children — on ConnectWise the shell does not scroll,
-       so nothing drifts. #rpg-root is counter-inverted to keep the panel
-       in its true colours. No background is set here: the page canvas is
-       inverted along with everything else, so painting it dark would light
-       it back up — that was the pale wash behind half-empty screens. */
+       position:fixed children: on ConnectWise the shell does not scroll,
+       so nothing drifts. Under an inverting theme #rpg-root is counter-
+       inverted to keep the panel in its true colours. No background is set
+       here: the page canvas is filtered along with everything else, so
+       painting it dark would light it back up: that was the pale wash
+       behind half-empty screens. */
     function themeRootCSS(t) {
         return 'html{filter:' + t.filter + '!important}' +
-            '#rpg-root{filter:invert(1) hue-rotate(180deg)}';
+            (t.invert ? '#rpg-root{filter:invert(1) hue-rotate(180deg)}' : '');
     }
 
     /* Manage's left menu is the one dark surface it ships (#212121 with #ccc
-       text), so a theme inverts it into a pale column. These colours are
-       written pre-filter: with a theme on, the page filter turns them back
-       into light text on near-black. Only the <svg> gets a fill, never the
-       paths — half of them carry fill="none" and would become solid blocks. */
+       text), so an inverting theme turns it into a pale column. Those colours
+       are written pre-filter: the page filter turns them back into light text
+       on near-black. Themes that do not invert take the direct colours
+       instead. Only the <svg> gets a fill, never the paths: half of them
+       carry fill="none" and would become solid blocks. */
     var NAV_SEL = 'div:has(> .cw-lcm-section)';
 
     function navCSS(themed) {
@@ -313,14 +323,14 @@
     function apply(s) {
         CUR = s;
         var theme = themeById(s.theme);
-        setSheet('rpg-dark-media', theme.filter ? CSS.darkMedia : '');
+        setSheet('rpg-dark-media', theme.invert ? CSS.darkMedia : '');
         if (IS_TOP) setSheet('rpg-dark-root', theme.filter ? themeRootCSS(theme) : '');
-        setSheet('rpg-nav', s.navDark ? navCSS(!!theme.filter) : '');
+        setSheet('rpg-nav', s.navDark ? navCSS(!!theme.invert) : '');
         setSheet('rpg-login', s.login ? CSS.login : '');
         /* Our overlay lives inside the inverted page, so it needs the same
            counter-invert the panel gets. */
         setSheet('rpg-preview-css', s.preview
-            ? CSS.preview + (theme.filter ? '#rpg-preview{filter:invert(1) hue-rotate(180deg)}' : '')
+            ? CSS.preview + (theme.invert ? '#rpg-preview{filter:invert(1) hue-rotate(180deg)}' : '')
             : '');
         if (!s.preview) hidePreview();
         setSheet('rpg-stale', s.stale ? staleCSS(s.staleColour) : '');
@@ -360,7 +370,7 @@
         return out;
     }
 
-    /* Leaf elements carrying text, in document order — Manage renders each
+    /* Leaf elements carrying text, in document order, Manage renders each
        column header as its own <span> inside a header strip. */
     function leafElements(box) {
         var out = [];
@@ -801,7 +811,7 @@
     }
 
     /* Manage only loads the note when you hover the cell its own tooltip is
-       bound to — usually the summary. Hovering any other column produced no
+       bound to: usually the summary. Hovering any other column produced no
        note at all, which read as "slow" when it was really "never", so the
        hover is echoed onto that cell. It runs only once the card is already
        up: echoing a hover can make Manage re-render the row, and the card
@@ -971,128 +981,6 @@
         window.addEventListener('blur', hidePreview);
     }
 
-    /* ---------------- status note auto-close ----------------
-       Opening a ticket on some companies throws up a "Status Note for …"
-       popup that must be dismissed before you can work. This presses its
-       Close button, and ONLY that: the "Don't show this message again" box
-       is never touched, because that is a server-side change for everyone. */
-
-    var SN_TRIES = 3;                  // presses per showing before giving up
-    var snState = new WeakMap();       // dialog element → { title, tries }
-    /* cw-gxt-wnd is Manage's own dialog class and is not obfuscated. */
-    var DIALOG_SEL = '.cw-gxt-wnd,[role="dialog"],[class*="x-window"],[class*="cw-dialog"]';
-
-    function shown(box) {
-        return !!box.getClientRects().length && getComputedStyle(box).visibility !== 'hidden';
-    }
-
-    function findCloseControl(box) {
-        var nodes = box.querySelectorAll('a,button,span,div,td,input[type="button"],input[type="submit"],[role="button"]');
-        var fallback = null;
-        for (var i = 0; i < nodes.length; i++) {
-            var n = nodes[i];
-            if (n.tagName === 'INPUT' && n.type === 'checkbox') continue;
-            var label = pvClean(n.value || n.textContent);
-            if (/^close$/i.test(label) && !n.children.length) return n;
-            if (!fallback && /close/i.test(n.getAttribute('aria-label') || n.getAttribute('title') || '')) fallback = n;
-        }
-        return fallback;
-    }
-
-    /* GWT listens through its own dispatcher, so a bare .click() on a <div>
-       is not always enough — send the whole press, but exactly one click. */
-    function pressControl(node) {
-        ['mousedown', 'mouseup'].forEach(function (type) {
-            node.dispatchEvent(new MouseEvent(type, { bubbles: true, cancelable: true, view: window }));
-        });
-        if (typeof node.click === 'function') { try { node.click(); return; } catch (e) { /* fall through */ } }
-        node.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-    }
-
-    function statusNoteTitle(box) {
-        var label = box.querySelector('[id$="-label"],[class*="header"],[class*="title"]');
-        var text = pvClean((label && label.textContent) || box.textContent).slice(0, 200);
-        return /status note\b/i.test(text) ? text : '';
-    }
-
-    /* Manage reuses ONE window element for every status note, so the guard has
-       to mean "handled this showing" — it is dropped when the box hides or the
-       company changes, or the feature would work exactly once per page load. */
-    function closeStatusNote(box, title) {
-        if (!box) return false;
-        if (!shown(box)) { snState.delete(box); return false; }
-        var st = snState.get(box);
-        if (!st || st.title !== title) { st = { title: title, tries: 0 }; snState.set(box, st); }
-        if (st.tries >= SN_TRIES) return false;
-        var btn = findCloseControl(box);
-        if (!btn) return false;
-        st.tries++;
-        pressControl(btn);
-        return true;
-    }
-
-    function scanStatusNote(root) {
-        var boxes = [];
-        if (root.nodeType === 1 && root.matches && root.matches(DIALOG_SEL)) boxes.push(root);
-        if (root.querySelectorAll) {
-            var found = root.querySelectorAll(DIALOG_SEL);
-            for (var i = 0; i < found.length; i++) boxes.push(found[i]);
-        }
-        var recognised = false;
-        for (var b = 0; b < boxes.length; b++) {
-            var title = statusNoteTitle(boxes[b]);
-            if (!title) continue;
-            recognised = true;
-            closeStatusNote(boxes[b], title);
-        }
-        if (recognised) return;
-
-        /* Unknown dialog markup: fall back to finding the title text itself. */
-        var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
-            acceptNode: function (t) {
-                return /^\s*status note\b/i.test(t.nodeValue || '') && t.nodeValue.length < 120
-                    ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
-            }
-        });
-        var hit = walker.nextNode();
-        if (!hit) return;
-        var text = pvClean(hit.nodeValue).slice(0, 200);
-        for (var box = hit.parentElement, n = 0; box && n < 8; box = box.parentElement, n++) {
-            if (closeStatusNote(box, text)) return;
-        }
-    }
-
-    function initStatusNote() {
-        var pending = 0, queue = [];
-        function sweep(nodes) {
-            queue = queue.concat(nodes);
-            if (pending) return;                 // a batch is already due; these join it
-            pending = setTimeout(function () {
-                pending = 0;
-                var batch = queue;
-                queue = [];
-                if (!CUR.statusNote) return;
-                batch.forEach(function (n) { if (n.isConnected) scanStatusNote(n); });
-            }, 200);
-        }
-        new MutationObserver(function (records) {
-            var fresh = [];
-            records.forEach(function (r) {
-                for (var i = 0; i < r.addedNodes.length; i++) {
-                    if (r.addedNodes[i].nodeType === 1) fresh.push(r.addedNodes[i]);
-                }
-            });
-            if (fresh.length) sweep(fresh);
-        }).observe(document.body, { childList: true, subtree: true });
-
-        /* Manage often builds the dialog once and merely re-shows it, which
-           produces no mutation at all — so also look on a slow timer. */
-        setInterval(function () {
-            if (CUR.statusNote) scanStatusNote(document.body);
-        }, 1000);
-        sweep([document.body]);
-    }
-
     /* ---------------- login page helpers ---------------- */
 
     function setVal(input, v) {
@@ -1102,7 +990,7 @@
     }
 
     /* Keeps a saved value in a field the browser keeps second-guessing.
-       Focus is no signal, and autofill writes .value without firing anything —
+       Focus is no signal, and autofill writes .value without firing anything,
        so instead: re-assert until an edit arrives that we did not make. */
     function keeper(input, wanted) {
         var stop = false, writing = false;
@@ -1242,7 +1130,6 @@
         ['preview', 'Ticket preview on hover'],
         ['stale', 'Highlight stale tickets'],
         ['tripleChange', 'Change change change'],
-        ['statusNote', 'Auto-close status notes'],
         ['login', 'Login helper'],
         ['pill', 'Show the \u2728 button']
     ];
@@ -1284,7 +1171,7 @@
         kids.push(el('div', { id: 'rpg-cols-head' }, [el('span', { text: 'Columns in the card' }), reset]));
         var cols = el('div', { id: 'rpg-cols' });
         kids.push(cols);
-        kids.push(el('p', { 'class': 'rpg-subhint', text: 'Taken from the grid you last hovered \u2014 add a column to your Manage view and it turns up here.' }));
+        kids.push(el('p', { 'class': 'rpg-subhint', text: 'Taken from the grid you last hovered. Add a column to your Manage view and it turns up here.' }));
 
         return { node: el('div', { id: 'rpg-preview-sub', 'class': 'rpg-sub' }, kids), modes: modes, fields: fieldsCb, notes: notes, cols: cols };
     }
@@ -1362,7 +1249,7 @@
         }
         var company = field('Company', 'loginCompany', s.loginCompany);
         var user = field('Username', 'loginUser', s.loginUser);
-        var hint = el('p', { 'class': 'rpg-subhint', text: 'Filled in on the Manage sign-in screen and kept there against whatever your browser remembered. Your password is never stored \u2014 that stays with your password manager.' });
+        var hint = el('p', { 'class': 'rpg-subhint', text: 'Filled in on the Manage sign-in screen and kept there against whatever your browser remembered. Your password is never stored: that stays with your password manager.' });
         var node = el('div', { id: 'rpg-login-sub', 'class': 'rpg-sub' }, [company.row, user.row, hint]);
         return { node: node, company: company.input, user: user.input };
     }
@@ -1429,7 +1316,7 @@
         plus.addEventListener('click', function () { update('zoom', loadSettings().zoom + 5); });
         var zoomRow = el('div', { id: 'rpg-zoom' }, [el('span', { text: 'Text size' }), minus, out, plus]);
         panel.appendChild(zoomRow);
-        panel.appendChild(el('p', { 'class': 'rpg-subhint', text: 'Text only \u2014 buttons, icons and columns keep their size.' }));
+        panel.appendChild(el('p', { 'class': 'rpg-subhint', text: 'Text only: buttons, icons and columns keep their size.' }));
 
         var note = el('p', { id: 'rpg-note' });
         note.appendChild(document.createTextNode('Alt+Shift+G toggles this panel \u00b7 Alt+Shift+D toggles the theme. Settings stay in this browser. '));
@@ -1521,7 +1408,6 @@
         apply(s);                                // body exists now → text scaling
         enhanceLogin(s);
         initPreview();
-        initStatusNote();
         initStale();
         initTripleChange();
         if (IS_TOP) {

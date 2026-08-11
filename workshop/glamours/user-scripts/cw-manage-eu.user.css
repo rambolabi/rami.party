@@ -1,8 +1,8 @@
 /* ==UserStyle==
 @name           ConnectWise Manage · Comfort Glamour (CSS-only)
 @namespace      https://rami.party/workshop/glamours/
-@version        1.2.0
-@description    The CSS-only half of the Comfort Glamour for ConnectWise Manage: a friendlier login form and a readable-text bump that leaves buttons, icons and grid columns alone. Install with the Stylus extension. The optional dark themes are included below, commented out. The hover ticket preview, status-note auto-close and the settings panel need JavaScript — use the userscript for those.
+@version        1.2.2
+@description    The CSS-only half of the Comfort Glamour for ConnectWise Manage: a friendlier login form and a readable-text bump that leaves buttons, icons and grid columns alone. Install with the Stylus extension. The optional dark themes are included below, commented out. The service board grid keeps its own text size, and the hover ticket preview and the settings panel need JavaScript; use the userscript for those.
 @author         rami.party
 @license        MIT
 @homepageURL    https://rami.party/workshop/glamours/
@@ -10,19 +10,22 @@
 
 @-moz-document domain("myconnectwise.net") {
 
-    /* bookmarklet:start — the always-safe comfort rules, also used to build
+    /* bookmarklet:start: the always-safe comfort rules, also used to build
        the one-click bookmarklet on https://rami.party/workshop/glamours/ */
 
     /* Readable text without page zoom: font sizes only, so buttons, icons,
        toolbars and column widths stay exactly where they are. Blunt compared
        with the userscript, which scales every element from its own original
-       size between 80% and 130%. */
+       size between 80% and 130%.
+       The service board grid is the one place this cannot reach: Manage pins
+       its cells with a far more specific !important rule, which no plain
+       selector here can outrank. The userscript wins that one properly. */
     td, th, label, a, span, div, p, li, input, textarea, select, button {
-        font-size: 13px;
+        font-size: 13px !important;
     }
-    h1 { font-size: 20px; }
-    h2 { font-size: 18px; }
-    h3 { font-size: 16px; }
+    h1 { font-size: 20px !important; }
+    h2 { font-size: 18px !important; }
+    h3 { font-size: 16px !important; }
 
     /* Login form: a little bigger, a little calmer. */
     #loginContainer .loginTextBox { font-size: 15px !important; }
@@ -31,17 +34,18 @@
     /* bookmarklet:end */
 
     /* ---------------------------------------------------------------------
-       Dark themes — uncomment the block and keep ONE filter line.
+       Dark themes: uncomment the block and keep ONE filter line.
        Kept off by default: pure CSS cannot skip the iframes the way the
        userscript can, so photos inside frames stay inverted. The userscript
        handles frames properly and ships a four-theme picker; prefer it.
+       Do not add a background colour here. The filter inverts the element's
+       own background too, so a dark one comes back out cream.
 
     html {
         filter: invert(.92) hue-rotate(180deg) !important;                          | midnight
         filter: invert(1) hue-rotate(180deg) contrast(.92) !important;              | obsidian
         filter: invert(.88) hue-rotate(200deg) saturate(.85) !important;            | slate
         filter: invert(.9) hue-rotate(180deg) sepia(.28) saturate(1.15) !important; | ember
-        background: #0b0d12 !important;
     }
     img, video, canvas, embed, object, picture,
     [style*="background-image"] {
