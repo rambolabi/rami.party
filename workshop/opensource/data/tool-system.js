@@ -215,14 +215,15 @@ OST.add('tool', [
     {
         id: 'sysinternals-suite',
         name: 'Sysinternals Suite',
-        subs: ['system'],
+        subs: ['incident', 'system', 'microsoft'],
         type: 'download', cost: 'free',
-        desc: 'Complete suite of advanced system utilities including Process Explorer, Autoruns, and more.',
+        desc: 'Process Explorer, Autoruns, Procmon and Sysmon in one download. Thirty years on, still the first things to install on a suspect machine.',
         links: [
             { t: 'Official Site', u: 'https://learn.microsoft.com/en-us/sysinternals/', g: '🌐' },
-            { t: 'Download', u: 'https://download.sysinternals.com/files/SysinternalsSuite.zip', g: '⬇️' },
+            { t: 'Download the suite', u: 'https://download.sysinternals.com/files/SysinternalsSuite.zip', g: '⬇️' },
+            { t: 'Run a tool without installing', u: 'https://live.sysinternals.com/', g: '⚡' },
         ],
-        tags: 'procmon procexp autoruns psexec microsoft',
+        tags: 'procmon procexp autoruns psexec microsoft sysinternals process explorer sysmon tcpview russinovich windows tools',
     },
     {
         id: 'depends-dependency-walker',

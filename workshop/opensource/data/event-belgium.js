@@ -139,11 +139,11 @@ OST.add('event', [
         id: 'owasp-be-meetings',
         name: 'OWASP Belgium chapter meetings',
         kind: 'meetup', cc: 'be', place: 'Venues around Belgium',
-        subs: ['community'],
+        subs: ['security', 'community', 'belgium'],
         when: 'Roughly four evenings a year', cadence: 'multi', cost: 'free',
-        desc: 'Free application security evenings hosted at Belgian universities and offices, and co-organiser of the OWASP BeNeLux Days.',
+        desc: 'Free application security evenings hosted at Belgian universities and offices, and co-organiser of the OWASP BeNeLux Days. Vendor neutral and free to join, which makes it the easiest way into the local appsec community.',
         links: [{ t: 'Chapter page', u: 'https://owasp.org/www-chapter-belgium/', g: '🌐' }],
-        tags: 'owasp belgium chapter meeting evening free leuven heverlee benelux days appsec',
+        tags: 'owasp belgium chapter meeting evening free leuven heverlee benelux days appsec brussels',
     },
     {
         id: 'coalition-focus',
@@ -185,7 +185,7 @@ OST.add('event', [
         when: 'Year round', cadence: 'multi', cost: 'free',
         desc: 'The Belgian .NET and Azure user group: free evening sessions all year, plus the full day multi track VISUG XL.',
         links: [{ t: 'Main site', u: 'https://www.visug.be', g: '🌐' }],
-        tags: 'visug dotnet .net azure user group belgium antwerp evening session visug xl developers',
+        tags: 'visug dotnet .net azure user group belgium antwerp evening session xl developers',
     },
     {
         id: 'beltug',

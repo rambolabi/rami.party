@@ -256,7 +256,7 @@ OST.add('event', [
         held: '30 and 31 May 2026',
         desc: 'A free software weekend at ENS Lyon, running since 1998, with talks, stands and workshops for over a thousand visitors.',
         links: [{ t: 'Main site', u: 'https://jdll.org', g: '🌐' }],
-        tags: 'jdll journees logiciel libre lyon ens free software libre may weekend france',
+        tags: 'jdll journees logiciel libre lyon ens free software may weekend france',
     },
     {
         id: 'capitole-du-libre',
@@ -267,7 +267,7 @@ OST.add('event', [
         next: '14 and 15 November 2026', nextIso: '2026-11-14',
         desc: 'Free software weekend at ENSEEIHT with over a hundred talks, association stands, an install party and a LAN party.',
         links: [{ t: 'Main site', u: 'https://2026.capitoledulibre.org', g: '🌐' }],
-        tags: 'capitole du libre toulouse enseeiht free software libre install party lan november',
+        tags: 'capitole du libre toulouse enseeiht free software install party lan november',
     },
     {
         id: 'osxp',

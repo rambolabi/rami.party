@@ -50,11 +50,10 @@ OST.add('tool', [
         name: 'Notes',
         subs: ['productivity'],
         type: 'online', cost: 'free',
-        local: true,
-        desc: 'Local storage notes and todo list manager.',
+        desc: 'A notes and to-do app that keeps everything in the browser\u2019s own storage, so nothing is sent anywhere. Built here, now living on its own domain.',
         links: [
             { t: 'Open Tool', u: 'https://note.labidi.eu', g: '🔗' },
         ],
-        tags: 'notes todo list localstorage labidi',
+        tags: 'notes todo list localstorage labidi offline browser own',
     },
 ]);

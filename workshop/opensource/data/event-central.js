@@ -25,7 +25,7 @@ OST.add('event', [
         held: '11 and 12 June 2026',
         desc: 'Purple team conference where red and blue speakers are deliberately programmed against each other. Hybrid and streamed.',
         links: [{ t: 'Main site', u: 'https://x33fcon.com/', g: '🌐' }],
-        tags: 'x33fcon gdynia poland red team blue team purple hybrid streamed june training',
+        tags: 'x33fcon gdynia poland red team blue purple hybrid streamed june training',
     },
     {
         id: 'ohmyhack',

@@ -25,14 +25,14 @@ OST.add('tool', [
     {
         id: 'cve-psirt-database',
         name: 'CVE - PSIRT Database',
-        subs: ['security'],
+        subs: ['security', 'incident', 'learning'],
         type: 'online', cost: 'free',
         gdpr: true, local: true,
-        desc: 'Small personal page with URL\'s to browse psirt\'s; Common Vulnerabilities and exposures database for my own security research.',
+        desc: 'A small page hosted here that gathers the vendor PSIRT pages and pulls the week\u2019s published CVEs, so you can skim them without opening a portal per vendor.',
         links: [
             { t: 'Open Tool', u: '../tools/cve/', g: '🔗' },
         ],
-        tags: 'vulnerability psirt advisory weekly check',
+        tags: 'vulnerability psirt advisory weekly check local hosted rami.party cve digest workbench tool',
     },
     {
         id: '1password',
@@ -142,7 +142,7 @@ OST.add('tool', [
         name: 'AbuseIPDB',
         subs: ['security', 'incident'],
         type: 'online', cost: 'freemium',
-        desc: 'Community-driven IP abuse database for reporting and checking malicious IP addresses.',
+        desc: 'Community-driven database of abusive IP addresses with a confidence score. Checking an address is open to all, while reporting and the API need a free account.',
         links: [
             { t: 'Official Site', u: 'https://www.abuseipdb.com/', g: '🌐' },
         ],
@@ -153,7 +153,8 @@ OST.add('tool', [
         name: 'VirusTotal',
         subs: ['security', 'incident', 'osint'],
         type: 'online', cost: 'freemium',
-        desc: 'Scan files, URLs, domains and IPs against 70+ antivirus engines and get community context. The first stop for checking a suspicious attachment or link.',
+        desc: 'Scan files, URLs, domains and IPs against 70+ antivirus engines and get community context. The first stop for checking a suspicious attachment or link. Reading results is open to all; uploading and the deeper relations need a free account.',
+        note: 'Anything you upload is shared with the security industry, so never submit a file that contains customer or personal data.',
         links: [
             { t: 'Open Tool', u: 'https://www.virustotal.com/', g: '🔗' },
             { t: 'Upload and scan', u: 'https://www.virustotal.com/gui/home/upload', g: '🌐' },

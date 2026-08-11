@@ -284,7 +284,7 @@ OST.add('tool', [
         name: 'SQL Server Management Studio (SSMS)',
         subs: ['development'],
         type: 'download', cost: 'free',
-        desc: 'Integrated environment for managing SQL Server infrastructure and databases. (SQL client)',
+        desc: 'Integrated environment for managing SQL Server infrastructure and databases.',
         links: [
             { t: 'Official Site', u: 'https://learn.microsoft.com/en-us/ssms/sql-server-management-studio-ssms', g: '🌐' },
             { t: 'Download', u: 'https://learn.microsoft.com/en-us/ssms/install/install', g: '⬇️' },
@@ -387,12 +387,11 @@ OST.add('tool', [
         name: 'Project Folder',
         subs: ['development'],
         type: 'online', cost: 'free',
-        local: true,
-        desc: 'Development projects and tools collection.',
+        desc: 'The index of everything else Rami has built, kept on labidi.eu next door.',
         links: [
             { t: 'Open Folder', u: 'https://labidi.eu/#projects', g: '🔗' },
         ],
-        tags: 'labidi projects collection',
+        tags: 'labidi projects collection own sites index',
     },
     {
         id: 'github',

@@ -128,7 +128,7 @@ OST.add('event', [
         next: '29 and 30 September 2026', nextIso: '2026-09-29',
         desc: 'Cyber trade show at Olympia with the Global Cyber Summit stage, co-located with International Security Expo.',
         links: [{ t: 'Main site', u: 'https://www.internationalcyberexpo.com/', g: '🌐' }],
-        tags: 'international cyber expo olympia london global cyber summit free september trade show',
+        tags: 'international cyber expo olympia london global summit free september trade show',
     },
     {
         id: 'hack-glasgow',
@@ -313,7 +313,7 @@ OST.add('event', [
         next: 'Belfast 6 October 2026, London 9 and 10 February 2027', nextIso: '2026-10-06',
         desc: 'OpenUK\u2019s conference on open source, open data and open hardware, now with editions around the United Kingdom.',
         links: [{ t: 'Main site', u: 'https://stateofopencon.com/', g: '🌐' }],
-        tags: 'state of open con openuk london edinburgh belfast open source data hardware policy',
+        tags: 'state of open con openuk london edinburgh belfast source data hardware policy',
     },
     {
         id: 'oggcamp',
@@ -335,6 +335,6 @@ OST.add('event', [
         next: '10 and 11 March 2027', nextIso: '2027-03-10',
         desc: 'The renamed Cloud Expo Europe, co-located with Cloud & Cyber Security Expo, Big Data & AI World and DevOps Live.',
         links: [{ t: 'Main site', u: 'https://www.techshowlondon.co.uk/cloud-ai-infrastructure', g: '🌐' }],
-        tags: 'tech show london cloud expo europe cyber security expo big data ai world devops live excel',
+        tags: 'tech show london cloud expo europe cyber security big data ai world devops live excel',
     },
 ]);

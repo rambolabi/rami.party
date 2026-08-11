@@ -170,7 +170,7 @@ OST.add('read', [
         access: 'open', cost: 'free',
         desc: 'Deep vulnerability research write-ups, published after the 90 day disclosure clock runs out.',
         links: [
-            { t: 'Visit blog', u: 'https://googleprojectzero.blogspot.com/', g: '🌐' },
+            { t: 'Visit blog', u: 'https://projectzero.google/', g: '🌐' },
             { t: 'Issue tracker', u: 'https://project-zero.issues.chromium.org/', g: '🐛' },
         ],
         tags: 'project zero google 0day disclosure deadline exploitation research blog',

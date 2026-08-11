@@ -225,9 +225,9 @@ OST.add('tool', [
         type: 'online', cost: 'free',
         desc: 'Developer tools, documentation, and learning resources for Microsoft technologies.',
         links: [
-            { t: 'Graph Explorer', u: 'https://developer.microsoft.com/en-us/graph/graph-explorer', g: '🔍' },
+            { t: 'Microsoft Learn', u: 'https://learn.microsoft.com/docs/', g: '📖' },
             { t: 'Microsoft Training', u: 'https://learn.microsoft.com/training/', g: '📚' },
-            { t: 'Microsoft Docs', u: 'https://learn.microsoft.com/docs/', g: '📖' },
+            { t: 'Graph Explorer', u: 'https://developer.microsoft.com/en-us/graph/graph-explorer', g: '🔍' },
             { t: 'Visual Studio', u: 'https://my.visualstudio.com/', g: '💻' },
             { t: 'Azure DevOps', u: 'https://dev.azure.com', g: '⚙️' },
             { t: 'Partner Center', u: 'https://partner.microsoft.com/dashboard', g: '🤝' },

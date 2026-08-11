@@ -138,7 +138,7 @@ OST.add('read', [
         access: 'open', cost: 'free',
         desc: 'Regulation 2024/1689. Worth reading the risk tiers yourself before signing off on anyone\u2019s AI feature.',
         links: [{ t: 'Read it on EUR-Lex', u: 'https://eur-lex.europa.eu/eli/reg/2024/1689/oj', g: '📜' }],
-        tags: 'eu ai act 2024 1689 risk tier prohibited high risk general purpose model compliance',
+        tags: 'eu ai act 2024 1689 risk tier prohibited high general purpose model compliance',
     },
     {
         id: 'hackerspaces-be',

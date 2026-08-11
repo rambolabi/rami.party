@@ -136,7 +136,7 @@ OST.add('tool', [
         name: 'Yandex',
         subs: ['search', 'osint'],
         type: 'online', cost: 'free',
-        desc: 'The strongest index for Russian-language and Cyrillic sources, and its image matching beats everything else often enough to be a standard OSINT step.',
+        desc: 'The strongest index for Russian-language and Cyrillic sources, and its image matching is good enough often enough to be a standard OSINT step.',
         links: [
             { t: 'Yandex', u: 'https://yandex.com/', g: '🌐' },
             { t: 'Yandex Images', u: 'https://yandex.com/images/', g: '🖼️' },

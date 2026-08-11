@@ -318,7 +318,7 @@ OST.add('event', [
         held: '10 to 12 March 2026',
         desc: 'The German community Java conference, held inside the Europa-Park theme park, with a separate training day.',
         links: [{ t: 'Main site', u: 'https://www.javaland.eu/en/home/', g: '🌐' }],
-        tags: 'javaland europa park rust germany java jvm ijug community march theme park',
+        tags: 'javaland europa park rust germany java jvm ijug community march theme',
     },
     {
         id: 'fossgis',

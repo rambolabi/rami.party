@@ -109,18 +109,6 @@ OST.add('read', [
         tags: 'mdti riskiq passivetotal passive dns whois infrastructure pivot',
     },
     {
-        id: 'sysinternals',
-        name: 'Sysinternals',
-        subs: ['incident', 'microsoft'],
-        access: 'open', cost: 'free',
-        desc: 'Process Explorer, Autoruns, Procmon and Sysmon. Thirty years on, still the first things to install on a suspect machine.',
-        links: [
-            { t: 'Documentation', u: 'https://learn.microsoft.com/en-us/sysinternals/', g: '🧰' },
-            { t: 'Live share', u: 'https://live.sysinternals.com/', g: '📁' },
-        ],
-        tags: 'sysinternals procmon process explorer autoruns sysmon tcpview russinovich windows tools',
-    },
-    {
         id: 'graph-explorer',
         name: 'Microsoft Graph Explorer',
         subs: ['microsoft'],
@@ -145,7 +133,7 @@ OST.add('read', [
         access: 'open', cost: 'free',
         desc: 'Independent, hands-on Microsoft 365 and Exchange administration writing, usually with the PowerShell attached.',
         links: [{ t: 'Main site', u: 'https://practical365.com/', g: '🌐' }],
-        tags: 'practical 365 exchange online microsoft 365 powershell administration tony redmond guide',
+        tags: 'practical 365 exchange online microsoft powershell administration tony redmond guide',
     },
     {
         id: 'aws-security-bulletins',

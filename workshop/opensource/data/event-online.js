@@ -13,7 +13,7 @@ OST.add('event', [
         when: 'Year round', cadence: 'rolling', cost: 'freemium',
         desc: 'Public jeopardy CTFs running more or less continuously, including university and business cups you can enter as a team.',
         links: [{ t: 'CTF platform', u: 'https://ctf.hackthebox.com/', g: '🚩' }],
-        tags: 'hackthebox htb ctf online jeopardy university cup business cup team continuous',
+        tags: 'hackthebox htb ctf online jeopardy university cup business team continuous',
     },
     {
         id: 'ctftime-calendar',
@@ -29,11 +29,14 @@ OST.add('event', [
         id: 'defcon-group-meetups',
         name: 'DEF CON Group meetups',
         kind: 'meetup', cc: 'online', place: 'Local chapters worldwide',
-        subs: ['community'],
+        subs: ['security', 'community'],
         when: 'Usually monthly', cadence: 'multi', cost: 'free',
-        desc: 'Local chapters that meet all year round. Several are within an easy train ride of Belgium, including DC4420 in London.',
-        links: [{ t: 'Find a group', u: 'https://defcongroups.org/', g: '💬' }],
-        tags: 'defcon groups dc local chapter monthly meetup free worldwide belgium neighbours',
+        desc: 'Local chapters that meet all year round, listed with their region and meeting habit. Several are within an easy train ride of Belgium, including DC4420 in London.',
+        links: [
+            { t: 'Find a group', u: 'https://defcongroups.org/', g: '💬' },
+            { t: 'DEF CON', u: 'https://defcon.org/', g: '🌐' },
+        ],
+        tags: 'defcon groups dc local chapter monthly meetup free worldwide belgium neighbours community directory',
     },
     {
         id: 'sans-summits',

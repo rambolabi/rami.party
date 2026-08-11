@@ -79,15 +79,6 @@ OST.add('read', [
         tags: 'cve program mitre cna identifier record vulnerability numbering',
     },
     {
-        id: 'weekly-cve',
-        name: 'Weekly CVE Checker',
-        subs: ['security', 'learning'],
-        access: 'open', cost: 'free',
-        desc: 'A small local tool on this site that pulls the week\u2019s published CVEs so you can skim them without a vendor portal.',
-        links: [{ t: 'Open the tool', u: '../tools/cve/', g: '🧰' }],
-        tags: 'local hosted rami.party cve weekly digest workbench tool',
-    },
-    {
         id: 'hackthebox',
         name: 'Hack The Box',
         subs: ['learning', 'practice'],
@@ -287,7 +278,7 @@ OST.add('read', [
         access: 'open', cost: 'free',
         desc: 'The Cyber Security Body of Knowledge: 21 free knowledge areas written by academics, and the closest thing to a canon.',
         links: [{ t: 'Main site', u: 'https://www.cybok.org/', g: '📚' }],
-        tags: 'cybok body of knowledge academic knowledge area free pdf curriculum reference uk',
+        tags: 'cybok body of knowledge academic area free pdf curriculum reference uk',
     },
     {
         id: 'cylab-academy',
