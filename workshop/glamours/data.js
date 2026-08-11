@@ -179,7 +179,7 @@ window.GLAMOURS = [
     {
         id: 'cw-manage-autopilot',
         title: 'ConnectWise Manage · Ticket Autopilot',
-        status: 'wip',
+        status: 'complete',
         site: 'myconnectwise.net',
         siteName: 'ConnectWise Manage',
         markName: 'Ticket Autopilot',

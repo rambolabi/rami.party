@@ -273,15 +273,22 @@
         card.appendChild(viewer.node);
         list.appendChild(card);
 
-        cards.push({ node: card, text: haystack(g), site: g.site, kinds: g.kinds || [], bookmarklet: !!g.bookmarklet });
+        cards.push({ node: card, text: haystack(g), site: g.site, kinds: g.kinds || [],
+                     status: g.status, bookmarklet: !!g.bookmarklet });
     });
 
     /* ---------------- search and filters ---------------- */
 
-    var activeChip = 'all';
+    /* Finished scripts are what the page opens on. A deep link or a preset
+       search means somebody asked for something specific, so those start
+       unfiltered instead. */
+    var deepLink = !!(location.hash && String(location.hash).length > 1);
+    var presetSearch = !!new URLSearchParams(location.search).get('q');
+    var activeChip = (deepLink || presetSearch) ? 'all' : 'complete';
 
     function chipMatches(c) {
         if (activeChip === 'all') return true;
+        if (activeChip === 'complete') return c.status === 'complete';
         if (activeChip === 'usercss') return c.kinds.indexOf('usercss') !== -1;
         if (activeChip === 'bookmarklet') return c.bookmarklet;
         return c.site === activeChip;
@@ -308,7 +315,7 @@
     if (chipBar) {
         var sites = [];
         cards.forEach(function (c) { if (sites.indexOf(c.site) === -1) sites.push(c.site); });
-        var chips = [['all', 'All']];
+        var chips = [['all', 'All'], ['complete', 'Completed']];
         sites.forEach(function (s) { chips.push([s, s === 'any site' ? 'Any site' : s]); });
         chips.push(['usercss', 'Has a CSS-only version']);
         chips.push(['bookmarklet', 'Runs from a bookmark']);
@@ -316,7 +323,7 @@
         chips.forEach(function (c) {
             var b = el('button', 'chip', c[1]);
             b.type = 'button';
-            b.setAttribute('aria-pressed', String(c[0] === 'all'));
+            b.setAttribute('aria-pressed', String(c[0] === activeChip));
             b.addEventListener('click', function () {
                 activeChip = c[0];
                 Array.prototype.forEach.call(chipBar.children, function (other) {
