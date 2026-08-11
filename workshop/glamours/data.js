@@ -4,7 +4,7 @@
    One object per glamour. The page renders everything from this array, so
    adding a new site-restyling spell is:
 
-     1. Drop the .user.js (and optionally .user.css) file in this folder.
+     1. Drop the .user.js (and optionally .user.css) file in user-scripts/.
      2. Append one object here. Done: cards, code viewers, install buttons
         and the bookmarklet are generated.
 
@@ -24,9 +24,9 @@
      why: a short paragraph: why this is nice / what problem it solves
      caveats: bullet list of honest limitations (optional)
      markName: label for the bookmarklet button (optional)
-     bookmarklet: 'usercss'  (or true) → build it from the .user.css rules
-                   between the bookmarklet:start/end markers
-, 'userscript' → carry the whole .user.js inside the bookmark
+     bookmarklet: 'usercss' (or true) builds it from the .user.css rules
+                  between the bookmarklet:start/end markers, 'userscript'
+                  carries the whole .user.js inside the bookmark
    ========================================================================== */
 
 window.GLAMOURS = [
@@ -151,7 +151,7 @@ window.GLAMOURS = [
             'A theme is one CSS filter on the root element, so the page backdrop is filtered along with everything else. That means the backdrop has to be left alone rather than painted dark: a dark colour set there comes back out pale, which is why half-empty screens such as a time entry used to sit behind a cream wash.',
             'The four dark themes work by inversion, so photographs, the settings panel and the preview card are flipped back to stay natural. Daylight and Graphite do not invert anything, so they get no counter-flip: Daylight is saturation and contrast on top of the colours ConnectWise already uses, and Graphite drains the colour and pulls white down to a mid grey. Greyscale is one-way, so under Graphite screenshots in a ticket are grey too.',
             'The left menu carries nothing but compiler-generated class names, but the sections inside it do not, so it is found with :has(> .cw-lcm-section). Its colours are written pre-filter, which is what lets one rule land dark under an inverting theme, and the direct colours are used under the themes that do not invert. Only the <svg> element is given a fill, because half the icon paths carry fill="none" and would turn into solid blocks if the rule reached them.',
-            'Manage is a GWT application: every class name is compiler-generated and changes between releases, so nothing here selects one. The few stable hooks it does expose (srboard-grid, cw-ml-row, cw-ml-header, cw-gxt-wnd) are matched loosely by substring, and everything else is generic DOM semantics.',
+            'Manage is a GWT application: every class name is compiler-generated and changes between releases, so nothing here selects one. The few stable hooks it does expose (srboard-grid, cw-ml-row, cw-ml-header, cw-lcm-section, pod-element-row) are matched loosely by substring, and everything else is generic DOM semantics.',
             'Columns are paired to cells by horizontal position, not by counting. Manage draws the header strip as a sibling div rather than a <thead>, and the rows carry a leading checkbox column plus trailing filler cells, so index arithmetic lands one column off; matching each header’s centre against the cell rectangles underneath it does not.',
             'That header lookup is also the guard that keeps the card off the rest of the app: no resolvable header strip, no preview. Manage builds pods, toolbars and page furniture out of tables too, and none of those have one. Hovering 61 pod rows produced zero popups in testing.',
             'The card is built from the row you are already looking at: no request, no navigation, nothing to undo. It waits 180 ms so it never flickers while you sweep the mouse, is pointer-events:none so it can never swallow a click, and vanishes on scroll, click or keypress. Manage recycles grid rows while you scroll and fills their cells a beat later, so the card rebuilds itself a few more times over the next second and a half and keeps whichever version knows the most columns.',
@@ -206,18 +206,18 @@ window.GLAMOURS = [
             'Type, Subtype and Item live in one pod table while Due Date and Priority sit in other sections of the same form, so the lookup climbs from the Type field until it has an ancestor holding both: far enough to see the whole ticket, not so far that a second ticket open beside it on the same screen gets stamped by accident.',
             'A ticket is stamped once. Manage pools and re-uses its pod widgets, so “already done” is keyed to the ticket number rather than to the pod element. That number is read out of the window header above the fields, taking the nearest one so two tickets open side by side stay apart, and it is the one thing on the pod this script never writes: a guard built from the fields it sets would change under its own hand and fire again.',
             'Fields that already have an answer are left alone unless you allow overwriting, and a placeholder does not count as an answer: Manage’s own “(Unassigned)” and friends are treated as empty, and so is “MUST CHANGE”, which is what a ticket arrives with on this board. Anything it does leave alone is named in the log along with the value it kept, so “it only changed one field” is always answerable.',
-            'The option lists are written into the script rather than read out of Manage. They are short, they rarely change, and a fixed list cannot arrive half-loaded the way a dropdown that has not been opened yet can. Priority is the exception: Manage draws it as an icon menu, so it is typed and then matched against the entries as they appear.',
+            'The option lists are written into the script rather than read out of Manage, priority included. They are short, they rarely change, and a fixed list cannot arrive half-loaded the way a dropdown that has not been opened yet can.',
             'The button is put in the ticket\u2019s own action bar, right after Delete. The bar itself carries nothing but compiler-generated class names, so it is found through its buttons instead: Manage names those cw_ToolbarButton_Save, cw_ToolbarButton_Delete and so on. Requiring a Delete or Save button is also what tells a ticket bar apart from the application\u2019s own chrome, which has toolbar buttons too. Which ticket the press applies to is worked out at the moment you press it, because Manage re-uses a ticket window for the next ticket you open. A press ignores the clock and the once-per-ticket guard, because pressing it means \u201cdo it now\u201d.',
             'The clock is stored as an absolute moment, not a duration, so closing the tab, reloading the page or coming back tomorrow cannot resurrect a run that should have ended. Every frame and tab shares it through the storage event.'
         ],
         why: 'Bulk-editing a board is fine when you already know what the tickets are. Triage is the opposite: you open them one at a time, read them, and set the same three fields with the same three clicks, forty times before lunch. That is the work this removes. Not the judgement, just the typing. And it is built around the thing that makes people distrust automation in a PSA: not that it does the wrong thing, but that it keeps doing the right thing long after you stopped wanting it. Hence the countdown, in the largest type on the panel.',
         caveats: [
-            'It writes into live tickets. It is off until you press Start, it only fills empty fields unless you say otherwise, and it logs everything, but read the log the first few times rather than trusting it blindly.',
+            'It writes into live tickets. Nothing happens until you press Run autopilot on a ticket or start the clock, it only fills empty fields unless you say otherwise, and it logs everything, but read the log the first few times rather than trusting it blindly.',
             'Status and Priority are never empty on a real ticket, and neither is the Board, so those need “also overwrite” switched on before they will change. The log says which fields it kept and why, so an unchanged field is never a mystery.',
             'Stamping a full set takes a couple of seconds, because each field waits for Manage to reload the one after it. Nothing is lost if you start typing in the meantime: a field you have already answered is one it leaves alone.',
             'The option lists are this board’s values, written into the script. A board that adds a subtype needs that one line adding too, which is a deliberate trade for a list that is always there and always right.',
             'A field it cannot set is named in the log rather than passed over. Manage refuses a value that is not on the list the field currently holds, which usually means the Board it depends on is not the one you expected.',
-            'The priority menu needs a live Manage to open. That path is written defensively and gives up quietly after a second rather than clicking something else, but it is the one part that could not be exercised against a saved page.',
+            'The priority menu needs a live Manage to open. That path is written defensively and gives up quietly rather than clicking something else, and says so in the log, but it is the one part that can only be proved on the real thing.',
             'A ticket is stamped when it opens. Change your mind about the Subtype afterwards and the ticket keeps yours. It will not be stamped a second time.',
             'Date formats are read off the tenant by looking at a date already on screen. If a board shows nothing dated, the default is day-first; there is a manual override in the panel.',
             'Everything happens in your browser, as your user, with your permissions. It is a faster way to click the fields you can already click, not a way to change anything you could not change by hand.'
