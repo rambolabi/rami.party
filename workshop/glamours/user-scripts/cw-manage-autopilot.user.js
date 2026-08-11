@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Ticket Autopilot
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.0.0
-// @description  Stamp the same fields onto every ticket you open: Type and Subtype for incidents, Type/Subtype/Item for changes, a priority, yourself as ticket owner, a due date. Then have it switch itself off after the time you set. The option lists are read out of Manage's own dropdowns, every change is logged, and the countdown at the bottom means you cannot leave it running by accident. Alt+Shift+A.
+// @version      1.3.0
+// @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, a priority and a due date, applied in that order because each one decides what the next may contain. Then have it switch itself off after the time you set. Every change is logged, and the countdown at the bottom means you cannot leave it running by accident. Alt+Shift+A.
 // @author       rami.party
 // @license      MIT
 // @match        https://eu.myconnectwise.net/*
@@ -20,14 +20,21 @@
    Ticket Autopilot: the fields you set the same way every time
    --------------------------------------------------------------------------
    A morning of triage is the same five keystrokes on every ticket: the same
-   Type, the same Subtype, a priority, your own name in Ticket Owner, a due
-   date. This does them as each ticket opens.
+   board, the same status, the same Type and Subtype, a due date. This does
+   them as each ticket opens.
+
+   Order matters and is not cosmetic. Manage rebuilds each field's option list
+   from the fields before it, so Board is set first, then Status, Type,
+   Subtype, Item, and finally the due date. Every write is read back before the
+   next one is attempted, and retried if it did not stick: a value offered to a
+   list that is still reloading is taken and then quietly cleared.
 
    It writes into a live PSA, so it is built to be timid:
 
    • It runs on a timer you set, shows the countdown, and switches ITSELF off.
      A stamping rule you forgot about is worse than no rule at all, which is
      why the clock is the one control you cannot skip.
+   • Every field is "leave it alone" until you pick something.
    • It fills empty fields. Anything already answered is left alone unless you
      explicitly allow overwriting.
    • Every field it touches is written to the log in the panel, with the ticket
@@ -35,9 +42,9 @@
    • It stamps a ticket once. Manage pools and re-uses its pod widgets, so the
      guard is keyed to the ticket that is in the pod, not to the pod element.
 
-   The option lists (Subtype, Item, Priority, Owner) are not guessed: they are
-   read out of Manage's own dropdown the first time you open one, or on demand
-   with the "pull in" button next to each list.
+   The option lists are the values this tenant uses, listed in CHOICES below.
+   Add to them there rather than teaching the script to read Manage's own
+   dropdowns: the lists are short, and a fixed list cannot arrive half-loaded.
    -------------------------------------------------------------------------- */
 
 (function () {
@@ -47,19 +54,17 @@
     if (window[NS]) { window[NS].toggle(); return; }
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.0.0';
+    var VERSION = '1.3.0';
     var KEY = 'rpGlamourCwAuto.v1';
-    var OPTS_KEY = 'rpGlamourCwAuto.options';
 
     var DEFAULTS = {
-        stamp: 'off',        // off | incident | change
+        board: '',           // every field: '' means leave it alone
+        type: '',
         subtype: '',
         item: '',
+        status: '',
         priority: '',
-        prioOn: false,
-        owner: '',
-        ownerOn: false,
-        due: 'off',          // off | 0 | 1 | 2 | 3 | 5 | 7 | 14  (days from today)
+        due: 'off',          // off | 0–9 days from today | m1 | m2 | m3 | m6
         skipWeekend: true,
         dateFormat: 'auto',  // auto | dmy | mdy | ymd
         overwrite: false,    // touch fields that already have a value
@@ -67,6 +72,25 @@
         until: 0,            // epoch ms; 0 = not running
         pill: true
     };
+
+    /* The values this tenant uses. */
+    var CHOICES = {
+        board: ['IN - Managed', 'IN - Services', 'Internal Change Request', 'Managed Services',
+                'PreSales', 'Projecten', 'SecOps - Managed', 'SecOps - Services'],
+        type: ['Change', 'Incident', 'MUST CHANGE', 'Request', 'Vraag'],
+        subtype: ['Backup', 'Change', 'Digital Workplace', 'MUST CHANGE', 'Office.ONE', 'Renewal'],
+        item: ['Change'],
+        status: ['1-st check', 'Klant heeft gereageerd', 'Open', 'Gepland', 'Wachten op collega',
+                 'Wachten op leverancier', 'Wachten op reactie klant',
+                 'Wachten op reactie klant - do not close', 'Afgewerkt', 'Gesloten'],
+        priority: ['Priority 1 - Critical', 'Priority 2 - High', 'Priority 3 - Medium', 'Priority 4 - Low']
+    };
+
+    var DUE_CHOICES = [['off', 'Leave it alone'], ['0', 'Today'], ['1', 'Tomorrow']];
+    for (var dd = 2; dd <= 9; dd++) DUE_CHOICES.push([String(dd), 'In ' + dd + ' days']);
+    [1, 2, 3, 6].forEach(function (n) {
+        DUE_CHOICES.push(['m' + n, 'In ' + n + (n === 1 ? ' month' : ' months')]);
+    });
 
     /* ---------------- settings ---------------- */
 
@@ -97,23 +121,6 @@
         sync();
     }
 
-    /* Learned dropdown contents, per field, per tenant host. */
-    function options(field) {
-        var all = read(OPTS_KEY);
-        return (all[location.hostname] && all[location.hostname][field]) || [];
-    }
-
-    function rememberOptions(field, list) {
-        if (!list || !list.length) return false;
-        var all = read(OPTS_KEY);
-        if (!all[location.hostname]) all[location.hostname] = {};
-        var old = all[location.hostname][field] || [];
-        if (old.join('|') === list.join('|')) return false;
-        all[location.hostname][field] = list.slice(0, 300);
-        write(OPTS_KEY, all);
-        return true;
-    }
-
     /* ---------------- the clock ----------------
        Stored as an absolute moment, so closing the tab, reloading or coming
        back tomorrow cannot resurrect a run that should have ended. */
@@ -137,13 +144,22 @@
     function clean(s) { return (s || '').replace(/\s+/g, ' ').trim(); }
 
     var FIELDS = {
+        board: { label: 'Board', sel: 'input.cw_serviceBoard', kind: 'combo' },
+        status: { label: 'Status', sel: 'input.cw_status', kind: 'combo' },
         type: { label: 'Type', sel: 'input.cw_type', kind: 'combo' },
         subtype: { label: 'Subtype', sel: 'input.cw_subType', kind: 'combo' },
         item: { label: 'Item', sel: 'input.cw_item', kind: 'combo' },
-        owner: { label: 'Ticket Owner', sel: 'input.cw_ticketOwner', kind: 'combo' },
         due: { label: 'Due Date', sel: '.cw_dueDate input', kind: 'text' },
         priority: { label: 'Priority', sel: '.cw_servicePriority', kind: 'menu' }
     };
+
+    /* Manage reloads each field's options from the ones before it, so this
+       order is load-bearing: Board decides which Statuses and Types exist,
+       Type decides the Subtypes, Subtype decides the Items. */
+    var ORDER = ['board', 'status', 'type', 'subtype', 'item', 'due', 'priority'];
+    var STEP_MS = 500;      // pause after a write before checking it stuck
+    var MENU_MS = 1500;     // the priority menu opens and closes on its own clock
+    var TRIES = 3;          // a dependent list may still have been loading
 
     /* One ticket pod may be one of several open at once, so every lookup is
        scoped to the ticket that raised the event rather than to the document.
@@ -166,8 +182,9 @@
     }
 
     /* Manage writes its own “nothing chosen yet” text into some fields, and a
-       placeholder is not an answer somebody gave. */
-    var BLANKISH = /^\(?\s*(unassigned|none|no one|not assigned|select|choose)[\s.…]*\)?$/i;
+       placeholder is not an answer somebody gave. "MUST CHANGE" is this
+       board's own version of that, so it counts as empty too. */
+    var BLANKISH = /^\(?\s*(unassigned|none|no one|not assigned|select|choose|must change)[\s.…]*\)?$/i;
 
     function blankish(v) { return !v || BLANKISH.test(v); }
 
@@ -196,19 +213,10 @@
         node.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
     }
 
-    /* The arrow that opens a combo is the element after the input. */
-    function triggerFor(input) {
-        var wrap = input && input.parentElement;
-        if (!wrap) return null;
-        return wrap.querySelector('.cwsvg') || input.nextElementSibling;
-    }
-
-    /* ---------------- reading Manage's own dropdowns ----------------
-       An open GXT list is a floating element that was not there a moment ago.
-       Rather than guess at compiler-generated class names, watch for one to
-       appear and take the leaf text out of it. */
-
-    var listWatch = { field: null, started: 0, done: null };
+    /* ---------------- recognising an open menu ----------------
+       Priority is an icon menu, not a combo, so the only way to set it is to
+       open it and click the entry. An open GXT menu is a floating element
+       that was not there a moment ago. */
 
     function floatingItems(node) {
         var items = [], nodes = node.querySelectorAll('*');
@@ -231,67 +239,6 @@
         return items.length >= 2 ? items : false;
     }
 
-    function harvest(node) {
-        if (!listWatch.field || Date.now() - listWatch.started > 6000) return;
-        var items = looksLikeList(node);
-        if (!items) return;
-        var f = listWatch.field;
-        listWatch.field = null;
-        if (rememberOptions(f, items)) log('learned ' + items.length + ' ' + FIELDS[f].label + ' options');
-        if (listWatch.done) { var cb = listWatch.done; listWatch.done = null; cb(items); }
-        sync();
-    }
-
-    function watchLists() {
-        new MutationObserver(function (records) {
-            for (var r = 0; r < records.length; r++) {
-                for (var i = 0; i < records[r].addedNodes.length; i++) {
-                    var n = records[r].addedNodes[i];
-                    if (n.nodeType === 1) { try { harvest(n); } catch (e) { /* never break Manage */ } }
-                }
-            }
-        }).observe(document.body, { childList: true, subtree: true });
-
-        /* Passive learning: whatever list opens while one of our fields has
-           focus belongs to that field. Costs nothing and needs no clicking. */
-        document.addEventListener('focusin', function (e) {
-            var t = e.target;
-            if (!t || t.tagName !== 'INPUT') return;
-            Object.keys(FIELDS).forEach(function (name) {
-                if (FIELDS[name].kind === 'combo' && t.matches(FIELDS[name].sel)) {
-                    listWatch.field = name;
-                    listWatch.started = Date.now();
-                }
-            });
-        }, true);
-    }
-
-    /* Explicit "pull in": open the dropdown, read it, put it back. */
-    function pullOptions(name, done) {
-        var f = FIELDS[name];
-        var scope = document;
-        var node = field(scope, name);
-        if (!node) { done('Open a ticket first: the ' + f.label + ' field is not on screen.'); return; }
-        listWatch.field = name;
-        listWatch.started = Date.now();
-        listWatch.done = function (items) { done(null, items); };
-        try {
-            press(f.kind === 'menu' ? node : triggerFor(node));
-        } catch (e) { /* ignore */ }
-        setTimeout(function () {
-            try {
-                (node.tagName === 'INPUT' ? node : document.body).dispatchEvent(
-                    new KeyboardEvent('keydown', { bubbles: true, key: 'Escape', code: 'Escape' }));
-                press(f.kind === 'menu' ? node : triggerFor(node));
-            } catch (e) { /* ignore */ }
-            if (listWatch.field === name) {
-                listWatch.field = null;
-                listWatch.done = null;
-                done('No list appeared. Open the ' + f.label + ' dropdown yourself once and it will be remembered.');
-            }
-        }, 900);
-    }
-
     /* ---------------- dates ---------------- */
 
     function detectFormat() {
@@ -305,9 +252,19 @@
         return 'dmy';
     }
 
-    function dueDate(days) {
+    /* "In a month" from the 31st has to land on the last day of a short month,
+       not spill into the next one the way setMonth does on its own. */
+    function addMonths(d, n) {
+        var day = d.getDate();
+        d.setDate(1);
+        d.setMonth(d.getMonth() + n);
+        d.setDate(Math.min(day, new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate()));
+    }
+
+    function dueDate(spec) {
         var d = new Date();
-        d.setDate(d.getDate() + days);
+        if (String(spec).charAt(0) === 'm') addMonths(d, parseInt(String(spec).slice(1), 10) || 0);
+        else d.setDate(d.getDate() + (parseInt(spec, 10) || 0));
         if (CUR.skipWeekend) {
             while (d.getDay() === 0 || d.getDay() === 6) d.setDate(d.getDate() + 1);
         }
@@ -336,28 +293,28 @@
        with a different ticket the guard re-arms by itself. */
 
     var stamped = new WeakMap();
+    var busy = new WeakMap();
     var pending = 0;
 
-    function signature(scope) {
-        var bits = [];
-        ['input.cw_company', 'input.cw_status', 'input.cw_serviceBoard'].forEach(function (sel) {
-            var n = scope.querySelector && scope.querySelector(sel);
-            if (n) bits.push(clean(n.value));
-        });
-        var summary = scope.querySelector && scope.querySelector('[class*="summaryHeader"],input.cw_summary');
-        if (summary) bits.push(clean(summary.value || summary.textContent).slice(0, 60));
-        return bits.join('¦');
-    }
+    /* The ticket number is the one thing on the pod this script never writes,
+       so the once-per-ticket guard is built from it. It sits in the window
+       header several levels above the fields, so the search climbs outwards
+       and takes the nearest one: two tickets open side by side stay apart. */
+    var TICKET_RE = /#\s?(\d{4,})/;
 
-    function ticketLabel(scope) {
-        var n = scope.querySelector && scope.querySelector('[class*="summaryHeader"]');
-        var t = n ? clean(n.textContent) : '';
-        var m = /#?(\d{4,})/.exec(t);
-        return m ? '#' + m[1] : (t.slice(0, 28) || 'ticket');
+    function ticketId(scope) {
+        for (var e = scope, i = 0; e && e.tagName !== 'BODY' && i < 10; e = e.parentElement, i++) {
+            var m = TICKET_RE.exec(e.textContent || '');
+            if (m) return '#' + m[1];
+        }
+        for (var p = scope, j = 0; p && p.tagName !== 'BODY' && j < 12; p = p.parentElement, j++) {
+            var c = p.querySelector && p.querySelector('input.cw_company');
+            if (c && clean(c.value)) return clean(c.value);
+        }
+        return 'ticket';
     }
 
     function setMenuValue(button, wanted, done) {
-        listWatch.field = null;
         var picked = false;
         var obs = new MutationObserver(function (records) {
             if (picked) return;
@@ -393,47 +350,91 @@
         }, 1200);
     }
 
-    function fill(scope, name, value, changes) {
-        if (!value) return;
+    function shownValue(scope, name) {
+        var node = field(scope, name);
+        if (!node) return null;
+        return clean(FIELDS[name].kind === 'menu' ? node.textContent : node.value);
+    }
+
+    /* A menu button shows more than the value it holds, so it is matched
+       loosely; a combo has to read back exactly what was asked for. */
+    function holds(name, had, value) {
+        if (had === null) return false;
+        return FIELDS[name].kind === 'menu'
+            ? had.toLowerCase().indexOf(value.toLowerCase()) !== -1
+            : had.toLowerCase() === value.toLowerCase();
+    }
+
+    /* 'done' already right, 'kept' left alone on purpose, 'wrote' a write was
+       attempted and still has to be read back, 'absent' nothing to write to. */
+    function writeField(scope, name, value, changes) {
+        if (!value) return 'done';
         var f = FIELDS[name];
         var node = field(scope, name);
-        if (!node) return;
-        if (f.kind === 'menu') {
-            var shown = clean(node.textContent);
-            if (!CUR.overwrite && !blankish(shown) && shown.toLowerCase().indexOf(value.toLowerCase()) !== -1) return;
-            setMenuValue(node, value, function (ok) {
-                if (ok) log(changes.label + ': ' + f.label + ' → ' + value);
-            });
-            return;
+        if (!node) return 'absent';
+        var had = clean(f.kind === 'menu' ? node.textContent : node.value);
+        if (holds(name, had, value)) return 'done';
+        if (!blankish(had) && !CUR.overwrite) {
+            var note = f.label + ' \u201c' + had + '\u201d';
+            if (changes.kept.indexOf(note) === -1) changes.kept.push(note);
+            return 'kept';
         }
-        var had = clean(node.value);
-        if (!blankish(had) && !CUR.overwrite) return;
-        if (had.toLowerCase() === value.toLowerCase()) return;
-        if (setCombo(node, value)) changes.list.push(f.label + ' → ' + value);
+        if (f.kind === 'menu') { setMenuValue(node, value, function () { /* read back below */ }); return 'wrote'; }
+        return setCombo(node, value) ? 'wrote' : 'absent';
+    }
+
+    function targetValue(name) {
+        if (name === 'due') return CUR.due === 'off' ? '' : dueDate(CUR.due);
+        return CUR[name];
     }
 
     function stamp(scope) {
-        if (!running()) return;
-        var sig = signature(scope);
-        if (!sig) return;
-        if (stamped.get(scope) === sig) return;
-        stamped.set(scope, sig);
+        if (!running() || busy.get(scope)) return;
+        var id = ticketId(scope);
+        if (stamped.get(scope) === id) return;
+        stamped.set(scope, id);
+        busy.set(scope, true);
 
-        var changes = { list: [], label: ticketLabel(scope) };
+        var changes = { list: [], kept: [], failed: [], label: id };
 
-        if (CUR.stamp === 'incident') {
-            fill(scope, 'type', 'Incident', changes);
-            fill(scope, 'subtype', CUR.subtype, changes);
-        } else if (CUR.stamp === 'change') {
-            fill(scope, 'type', 'Change', changes);
-            fill(scope, 'subtype', CUR.subtype, changes);
-            fill(scope, 'item', CUR.item, changes);
-        }
-        if (CUR.ownerOn) fill(scope, 'owner', CUR.owner, changes);
-        if (CUR.due !== 'off') fill(scope, 'due', dueDate(parseInt(CUR.due, 10) || 0), changes);
-        if (CUR.prioOn) fill(scope, 'priority', CUR.priority, changes);
+        /* One field at a time, in ORDER, and every write is read back before
+           moving on. Manage rebuilds the list behind a dependent field after
+           each change, and a value offered to a list that is still loading is
+           taken and then quietly cleared: retrying is what makes Status stick
+           when the Board has just been set under it. */
+        (function step(i, tries) {
+            if (i >= ORDER.length) {
+                busy['delete'](scope);
+                if (changes.list.length) log(changes.label + ': ' + changes.list.join(', '));
+                if (changes.kept.length) {
+                    log(changes.label + ': kept ' + changes.kept.join(', ') +
+                        '. Already filled in, so tick \u201calso overwrite\u201d to replace them.');
+                }
+                if (changes.failed.length) {
+                    log(changes.label + ': could not set ' + changes.failed.join(', ') +
+                        '. Manage would not take the value on this ticket.');
+                }
+                return;
+            }
 
-        if (changes.list.length) log(changes.label + ': ' + changes.list.join(', '));
+            var name = ORDER[i];
+            var value = targetValue(name);
+            var outcome = 'absent';
+            try { outcome = writeField(scope, name, value, changes); } catch (e) { /* one field must not stop the rest */ }
+            if (outcome !== 'wrote') { step(i + 1, 0); return; }
+
+            setTimeout(function () {
+                if (holds(name, shownValue(scope, name), value)) {
+                    changes.list.push(FIELDS[name].label + ' \u2192 ' + value);
+                    step(i + 1, 0);
+                } else if (tries + 1 < TRIES) {
+                    step(i, tries + 1);
+                } else {
+                    changes.failed.push(FIELDS[name].label);
+                    step(i + 1, 0);
+                }
+            }, FIELDS[name].kind === 'menu' ? MENU_MS : STEP_MS);
+        })(0, 0);
     }
 
     function watchTickets() {
@@ -468,14 +469,17 @@
 
     var PANEL_CSS = [
         '#rpg-ap,#rpg-ap *{box-sizing:border-box;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}',
-        '#rpg-ap{position:fixed!important;right:14px;bottom:58px;z-index:2147483500;width:min(330px,calc(100vw - 28px));',
-        'max-height:min(82vh,860px);overflow:auto;padding:14px;border-radius:14px;',
+        /* The Comfort Glamour keeps the bottom-right corner, so this stacks above it. */
+        '#rpg-ap{position:fixed!important;right:14px;bottom:102px;z-index:2147483500;width:min(330px,calc(100vw - 28px));',
+        'max-height:min(78vh,860px);overflow:auto;padding:14px;border-radius:14px;',
         'background:#150a33!important;border:1px solid rgba(168,85,247,.5);color:#ece9ff;font-size:13px;line-height:1.45;',
         'box-shadow:0 18px 46px rgba(0,0,0,.55)}',
         '#rpg-ap[hidden],#rpg-ap-pill[hidden]{display:none!important}',
         '#rpg-ap h2{margin:0 0 2px;font-weight:700;font-size:14px;line-height:1.2;color:#e9d5ff}',
         '#rpg-ap .sub{margin:0 0 10px;font-size:11px;color:#9d92c9}',
-        '#rpg-ap fieldset{border:0;border-top:1px solid rgba(168,85,247,.25);margin:12px 0 0;padding:8px 0 0}',
+        /* fieldset defaults to min-width:min-content, so a long option in one
+           of the selects would otherwise widen the whole panel. */
+        '#rpg-ap fieldset{border:0;border-top:1px solid rgba(168,85,247,.25);margin:12px 0 0;padding:8px 0 0;min-width:0}',
         '#rpg-ap legend{padding:0;font-size:11px;color:#9d92c9;letter-spacing:.04em;text-transform:uppercase}',
         '#rpg-ap label.check{display:flex;align-items:center;gap:8px;margin:7px 0;cursor:pointer;font-size:12.5px}',
         '#rpg-ap input[type=checkbox]{accent-color:#a855f7;width:15px;height:15px;margin:0;flex:0 0 auto}',
@@ -502,7 +506,7 @@
         '#rpg-ap .log time{color:#8f88b8;margin-right:6px}',
         '#rpg-ap .note{margin:10px 0 0;font-size:10.5px;color:#8f88b8}',
         '#rpg-ap .note a{color:#22d3ee;text-decoration:none}',
-        '#rpg-ap-pill{position:fixed!important;right:14px;bottom:14px;z-index:2147483499;display:inline-flex;',
+        '#rpg-ap-pill{position:fixed!important;right:14px;bottom:58px;z-index:2147483499;display:inline-flex;',
         'align-items:center;gap:6px;padding:8px 13px;border-radius:999px;cursor:pointer;opacity:.85;',
         'background:rgba(21,10,51,.94);color:#ece9ff;border:1px solid rgba(168,85,247,.5);',
         'font:600 12.5px/1 system-ui,sans-serif;box-shadow:0 8px 22px rgba(0,0,0,.45)}',
@@ -520,53 +524,40 @@
         node.textContent = css;
     }
 
-    /* A remembered list plus a free-text box: the dropdown may not have been
-       opened yet, and a value Manage accepts is a value you can type. */
-    function optionRow(labelText, name, key) {
-        var select = document.createElement('select');
-        var text = el('input', { type: 'text', spellcheck: 'false', placeholder: 'or type it' });
-        var pull = el('button', { type: 'button', title: 'Open the ' + FIELDS[name].label +
-            ' dropdown on the ticket in front of you and remember what is in it', text: 'pull in' });
-
-        function repaint() {
-            var list = options(name);
-            select.textContent = '';
+    /* A field with a known list gets a dropdown, one without gets a text box.
+       Either way, empty means "leave that field alone". */
+    function optionRow(labelText, name) {
+        var list = CHOICES[name] || [];
+        var input;
+        if (list.length) {
+            input = document.createElement('select');
             var blank = document.createElement('option');
             blank.value = '';
-            blank.textContent = list.length ? ', choose, ' : ', nothing learned yet, ';
-            select.appendChild(blank);
+            blank.textContent = 'Leave it alone';
+            input.appendChild(blank);
             list.forEach(function (v) {
                 var o = document.createElement('option');
                 o.value = v;
                 o.textContent = v;
-                select.appendChild(o);
+                input.appendChild(o);
             });
-            select.value = list.indexOf(CUR[key]) === -1 ? '' : CUR[key];
-            if (document.activeElement !== text) text.value = CUR[key] || '';
+        } else {
+            input = el('input', { type: 'text', spellcheck: 'false', placeholder: 'leave empty to skip' });
         }
 
-        select.addEventListener('change', function () {
-            if (select.value) { var p = {}; p[key] = select.value; update(p); }
-        });
-        text.addEventListener('change', function () {
-            var p = {};
-            p[key] = clean(text.value);
-            update(p);
-        });
-        pull.addEventListener('click', function () {
-            pull.textContent = '…';
-            pullOptions(name, function (err) {
-                pull.textContent = 'pull in';
-                if (err) log(err);
-                repaint();
-            });
+        input.addEventListener('change', function () {
+            var patch = {};
+            patch[name] = clean(input.value);
+            update(patch);
         });
 
-        var node = el('div', null, [
-            el('div', { 'class': 'row' }, [el('span', { text: labelText }), select, pull]),
-            el('div', { 'class': 'row' }, [el('span', { text: '' }), text])
-        ]);
-        return { node: node, repaint: repaint };
+        function repaint() {
+            if (document.activeElement === input) return;
+            input.value = CUR[name] || '';
+        }
+
+        repaint();
+        return { node: el('div', { 'class': 'row' }, [el('span', { text: labelText }), input]), repaint: repaint };
     }
 
     function build() {
@@ -577,62 +568,33 @@
         panel.appendChild(el('h2', { text: '🎯 Ticket Autopilot' }));
         panel.appendChild(el('p', { 'class': 'sub', text: 'Stamps the fields below onto each ticket you open.' }));
 
-        /* --- Options 1 and 2: one Type, or neither --- */
-        var typeSet = el('fieldset');
-        typeSet.appendChild(el('legend', { text: 'What every ticket becomes' }));
-        var stampBoxes = {};
-        [['incident', 'All incidents'], ['change', 'All changes']].forEach(function (o) {
-            var cb = el('input', { type: 'checkbox' });
-            cb.checked = CUR.stamp === o[0];
-            cb.addEventListener('change', function () {
-                update({ stamp: cb.checked ? o[0] : 'off' });
-            });
-            stampBoxes[o[0]] = cb;
-            typeSet.appendChild(el('label', { 'class': 'check' }, [cb, el('span', { text: o[1] })]));
-        });
-        var subRow = optionRow('Subtype', 'subtype', 'subtype');
-        var itemRow = optionRow('Item', 'item', 'item');
-        typeSet.appendChild(subRow.node);
-        typeSet.appendChild(itemRow.node);
-        typeSet.appendChild(el('p', { 'class': 'hint', text: 'Incidents get a Subtype; changes get a Subtype and an Item. Ticking one unticks the other: a ticket only has one Type.' }));
-        panel.appendChild(typeSet);
+        /* --- the fields, in the order they are applied --- */
+        var fieldSet = el('fieldset');
+        fieldSet.appendChild(el('legend', { text: 'What every ticket becomes' }));
+        var rows = [
+            optionRow('Board', 'board'),
+            optionRow('Status', 'status'),
+            optionRow('Type', 'type'),
+            optionRow('Subtype', 'subtype'),
+            optionRow('Item', 'item')
+        ];
+        rows.forEach(function (r) { fieldSet.appendChild(r.node); });
+        fieldSet.appendChild(el('p', { 'class': 'hint', text: 'Applied top to bottom, because the Board decides which Statuses and Types exist and the Type decides the Subtypes. Anything left on "Leave it alone" is not touched.' }));
+        panel.appendChild(fieldSet);
 
-        /* --- Option 3: priority --- */
+        /* --- priority --- */
         var prioSet = el('fieldset');
         prioSet.appendChild(el('legend', { text: 'Priority' }));
-        var prioCb = el('input', { type: 'checkbox' });
-        prioCb.checked = !!CUR.prioOn;
-        prioCb.addEventListener('change', function () { update({ prioOn: prioCb.checked }); });
-        prioSet.appendChild(el('label', { 'class': 'check' }, [prioCb, el('span', { text: 'Set the priority' })]));
-        var prioRow = optionRow('Priority', 'priority', 'priority');
+        var prioRow = optionRow('Priority', 'priority');
+        rows.push(prioRow);
         prioSet.appendChild(prioRow.node);
-        panel.appendChild(prioSet);
+        prioSet.appendChild(el('p', { 'class': 'hint', text: 'Manage draws the priority as a menu rather than a list, so it is opened and the entry is clicked. That takes a moment longer than the others.' }));
 
-        /* --- Option 4: owner --- */
-        var ownerSet = el('fieldset');
-        ownerSet.appendChild(el('legend', { text: 'Ticket owner' }));
-        var ownerCb = el('input', { type: 'checkbox' });
-        ownerCb.checked = !!CUR.ownerOn;
-        ownerCb.addEventListener('change', function () { update({ ownerOn: ownerCb.checked }); });
-        ownerSet.appendChild(el('label', { 'class': 'check' }, [ownerCb, el('span', { text: 'Make me the ticket owner' })]));
-        var ownerRow = optionRow('Name', 'owner', 'owner');
-        ownerSet.appendChild(ownerRow.node);
-        var mine = el('button', { type: 'button', text: 'use the name on screen' });
-        mine.title = 'Copies the name out of a Member field if one is open.';
-        mine.addEventListener('click', function () {
-            var m = document.querySelector('input.cw_member,input.cw_memberIdentifier');
-            if (m && clean(m.value)) { update({ owner: clean(m.value) }); ownerRow.repaint(); }
-            else log('No Member field on screen: type your name as Manage spells it.');
-        });
-        ownerSet.appendChild(el('div', { 'class': 'row' }, [el('span', { text: '' }), mine]));
-        panel.appendChild(ownerSet);
-
-        /* --- Option 5: due date --- */
+        /* --- due date --- */
         var dueSet = el('fieldset');
         dueSet.appendChild(el('legend', { text: 'Due date' }));
         var dueSel = document.createElement('select');
-        [['off', 'Leave it alone'], ['0', 'Today'], ['1', 'Tomorrow'], ['2', 'In 2 days'],
-         ['3', 'In 3 days'], ['5', 'In 5 days'], ['7', 'In a week'], ['14', 'In two weeks']].forEach(function (o) {
+        DUE_CHOICES.forEach(function (o) {
             var opt = document.createElement('option');
             opt.value = o[0];
             opt.textContent = o[1];
@@ -657,6 +619,7 @@
         fmtSel.addEventListener('change', function () { update({ dateFormat: fmtSel.value }); });
         dueSet.appendChild(el('div', { 'class': 'row' }, [fmtSel]));
         panel.appendChild(dueSet);
+        panel.appendChild(prioSet);
 
         /* --- safety --- */
         var safeSet = el('fieldset');
@@ -665,7 +628,7 @@
         overCb.checked = !!CUR.overwrite;
         overCb.addEventListener('change', function () { update({ overwrite: overCb.checked }); });
         safeSet.appendChild(el('label', { 'class': 'check' }, [overCb, el('span', { text: 'Also overwrite fields that already have a value' })]));
-        safeSet.appendChild(el('p', { 'class': 'hint', text: 'Off by default: a field somebody already answered is left as it is.' }));
+        safeSet.appendChild(el('p', { 'class': 'hint', text: 'Off by default: a field somebody already answered is left as it is, and the log says which. Status and Priority almost always hold a value already, so they need this on.' }));
         panel.appendChild(safeSet);
 
         /* --- the clock --- */
@@ -708,8 +671,7 @@
         root.appendChild(panel);
         root.appendChild(pillEl);
 
-        refs = { stampBoxes: stampBoxes, subRow: subRow, itemRow: itemRow, prioCb: prioCb, prioRow: prioRow,
-                 ownerCb: ownerCb, ownerRow: ownerRow, dueSel: dueSel, weekendCb: weekendCb, fmtSel: fmtSel,
+        refs = { rows: rows, dueSel: dueSel, weekendCb: weekendCb, fmtSel: fmtSel,
                  overCb: overCb, minutes: minutes, big: big, small: small, clock: clock, log: logBox };
         sync();
         setInterval(tick, 1000);
@@ -717,17 +679,7 @@
 
     function sync() {
         if (!refs) return;
-        Object.keys(refs.stampBoxes).forEach(function (k) { refs.stampBoxes[k].checked = CUR.stamp === k; });
-        refs.itemRow.node.hidden = CUR.stamp !== 'change';
-        refs.subRow.node.hidden = CUR.stamp === 'off';
-        refs.subRow.repaint();
-        refs.itemRow.repaint();
-        refs.prioCb.checked = !!CUR.prioOn;
-        refs.prioRow.node.hidden = !CUR.prioOn;
-        refs.prioRow.repaint();
-        refs.ownerCb.checked = !!CUR.ownerOn;
-        refs.ownerRow.node.hidden = !CUR.ownerOn;
-        refs.ownerRow.repaint();
+        refs.rows.forEach(function (r) { r.repaint(); });
         if (document.activeElement !== refs.dueSel) refs.dueSel.value = CUR.due;
         refs.weekendCb.checked = !!CUR.skipWeekend;
         refs.fmtSel.value = CUR.dateFormat;
@@ -788,7 +740,6 @@
         CUR = load();
         wasRunning = running();
         if (IS_TOP) build();
-        watchLists();
         watchTickets();
         document.addEventListener('keydown', function (e) {
             if (e.altKey && e.shiftKey && e.code === 'KeyA') { e.preventDefault(); toggle(); }
