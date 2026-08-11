@@ -523,7 +523,7 @@
         if (page.unsafeBlank) {
             add('low', 'target="_blank" without rel="noopener"', page.unsafeBlank + ' link(s) hand the opener window to the destination.');
         }
-        if (page.pixels) add('low', 'Tracking pixels', page.pixels + ' image(s) of 1–2 px.');
+        if (page.pixels) add('low', 'Tracking pixels', page.pixels + ' image(s) of 1 to 2 px.');
         if (page.inlineScripts) {
             add('low', 'Inline script', page.inlineScripts + ' block(s), ' + Math.round(page.inlineBytes / 1024) + ' kB: not covered by a script-src allow-list unless nonced.');
         }

@@ -90,7 +90,7 @@ window.GLAMOURS = [
         what: [
             'Six ways to change the colours: leave them, invert the whole page, or repaint it in dark, sepia, high contrast, or a background, text and link colour you pick yourself.',
             'Text size from 70% to 200%: real text scaling, not browser zoom. The glyphs grow while buttons, icons, toolbars and column widths stay exactly where they were, so a layout does not start wrapping just because you wanted bigger words.',
-            'Line height, letter spacing and line length. Capping paragraphs at 60–80 characters is the single biggest readability win on most sites, and it takes one slider.',
+            'Line height, letter spacing and line length. Capping paragraphs at 60 to 80 characters is the single biggest readability win on most sites, and it takes one slider.',
             'Font override: the page\u2019s own, system sans, serif, monospace, or a high-legibility face for when the site chose something with a thin stroke and tight spacing.',
             'Underline every link, so "which of these grey words is clickable" stops being a guessing game.',
             'Stop animations: carousels, parallax, fade-ins and smooth scrolling all reduced to nothing, for reading, for screenshots, or because they make you queasy.',
@@ -144,7 +144,7 @@ window.GLAMOURS = [
             'Change change change: set Type to “Change” on a ticket and Subtype and Item are set to “Change” for you, because they always were going to be.',
             'Login helper: restores password-manager autofill (Manage sets autocomplete="off" on every field), focuses the first empty field and warns when Caps Lock is on.',
             'Login auto-fill: remembers your company ID and username and keeps them in place against whatever your browser decided to remember instead. Nothing is ever submitted for you, and the password is never stored: that stays with your password manager.',
-            'Text size 80\u2013130%. Real text scaling, not page zoom: the glyphs grow while buttons, icons, toolbars and column widths stay exactly where they are.',
+            'Text size 80 to 130%. Real text scaling, not page zoom: the glyphs grow while buttons, icons, toolbars and column widths stay exactly where they are.',
             'A tiny ✨ panel (bottom-right, Alt+Shift+G) where each tweak can be switched off. One set of settings covers every ConnectWise region, so a tenant on eu., na. or au. gets the same setup rather than one per hostname.'
         ],
         how: [
@@ -170,7 +170,7 @@ window.GLAMOURS = [
             'The card can only show what is already on screen. A column that is not in your Manage view is not in the card either, an empty cell is left out rather than shown blank, and “ticket content” is whatever Manage’s own note tooltip returns: usually the latest note, not the whole discussion, and its text only. Its speed is Manage’s speed: the card can start the lookup early and show the answer instantly, but it cannot make the server reply sooner.',
             'The stale highlight reads dates day-first (30/05/2026). A first number above 12 settles it either way, but a tenant on month-first dates would need that line changed.',
             'Change/Change/Change writes into ConnectWise’s own combo boxes. It is off by default, and if a future Manage build refuses the value you will see the field simply not change. Nothing is saved behind your back.',
-            'Text scaling changes font sizes inside fixed-width boxes, so at 125–130% a very tight cell can clip. Step back down 5% if a screen looks cramped.',
+            'Text scaling changes font sizes inside fixed-width boxes, so at 125 to 130% a very tight cell can clip. Step back down 5% if a screen looks cramped.',
             'Your company ID and username are stored by the userscript manager. Nothing is sent anywhere, but if you have your manager’s cloud backup switched on, its backups include that storage. Leave the fields empty if you would rather they did not.',
             'Developed against the live login page and against saved copies of a real Manage service board. Every tweak has an off switch if a future release breaks one.'
         ],

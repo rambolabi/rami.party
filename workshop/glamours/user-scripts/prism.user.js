@@ -53,9 +53,9 @@
         bg: '#101318',      // used by "custom"
         fg: '#dfe5ee',
         link: '#7cc4ff',
-        text: 100,          // text-only scale, 70–200 %
-        leading: 0,         // extra line-height, 0–100 (→ +0.00–1.00em)
-        spacing: 0,         // letter spacing, 0–100 (→ 0–0.1em)
+        text: 100,          // text-only scale, 70 to 200 %
+        leading: 0,         // extra line-height, 0 to 100 (gives +0.00 to 1.00em)
+        spacing: 0,         // letter spacing, 0 to 100 (gives 0 to 0.1em)
         width: 0,           // max line length in ch, 0 = leave alone
         font: 'page',       // page | sans | serif | mono | legible
         underline: false,

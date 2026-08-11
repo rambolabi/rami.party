@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Ticket Autopilot
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.5.1
+// @version      1.5.2
 // @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, a priority and a due date, applied in that order because each one decides what the next may contain. Press the Run autopilot button in a ticket's toolbar to apply them to that one ticket, or set the clock running to have every ticket you open stamped until it switches itself off. Every change is logged. Alt+Shift+A.
 // @author       rami.party
 // @license      MIT
@@ -56,7 +56,7 @@
     if (window[NS]) { window[NS].toggle(); return; }
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.5.1';
+    var VERSION = '1.5.2';
     var KEY = 'rpGlamourCwAuto.v1';
 
     var DEFAULTS = {
@@ -66,7 +66,7 @@
         item: '',
         status: '',
         priority: '',
-        due: 'off',          // off | 0–9 days from today | m1 | m2 | m3 | m6
+        due: 'off',          // off | 0 to 9 days from today | m1 | m2 | m3 | m6
         skipWeekend: true,
         dateFormat: 'auto',  // auto | dmy | mdy | ymd
         overwrite: false,    // touch fields that already have a value
@@ -464,13 +464,18 @@
        _Delete and so on. So the anchor is a button, not the bar: ours goes in
        beside Delete, in whatever element happens to be holding it. */
 
+    /* Inherits the toolbar's own font and colour rather than bringing its own,
+       so it also follows along when a theme inverts the page. */
     var BUTTON_CSS = [
-        '.rpg-ap-run{display:inline-flex!important;align-items:center;gap:5px;margin:0 6px;',
-        'padding:3px 10px;border-radius:6px;border:1px solid #a855f7;background:#150a33;',
-        'color:#ece9ff!important;font:600 11.5px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif;',
-        'cursor:pointer;vertical-align:middle;white-space:nowrap}',
-        '.rpg-ap-run:hover{background:#241150}',
-        '.rpg-ap-run[disabled]{opacity:.55;cursor:default}'
+        '.rpg-ap-run{appearance:none;-webkit-appearance:none;',
+        'display:inline-block!important;height:20px!important;line-height:18px!important;',
+        'margin:0 5px!important;padding:0 8px!important;',
+        'border:1px solid rgba(0,0,0,.2)!important;border-radius:3px!important;',
+        'background:transparent!important;color:inherit!important;',
+        'font:inherit!important;font-size:12px!important;font-weight:600!important;',
+        'cursor:pointer!important;vertical-align:middle!important;white-space:nowrap!important}',
+        '.rpg-ap-run:hover{background:rgba(0,0,0,.07)!important}',
+        '.rpg-ap-run[disabled]{opacity:.55!important;cursor:default!important}'
     ].join('');
 
     function scopeAbove(node) {
@@ -506,7 +511,7 @@
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'rpg-ap-run';
-        btn.textContent = '\ud83c\udfaf Run autopilot';
+        btn.textContent = 'Run autopilot';
         btn.title = 'Apply the Ticket Autopilot settings to this ticket now.';
         btn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -517,13 +522,38 @@
             var scope = scopeAbove(btn);
             if (!scope) { log('could not find the ticket that button belongs to'); return; }
             btn.disabled = true;
-            btn.textContent = '\ud83c\udfaf Running\u2026';
+            btn.textContent = 'Running...';
             stamp(scope, true, function () {
                 btn.disabled = false;
-                btn.textContent = '\ud83c\udfaf Run autopilot';
+                btn.textContent = 'Run autopilot';
             });
         });
         return btn;
+    }
+
+    /* GXT lays the bar out by coordinates: every button is absolutely
+       positioned with its own left, so a button added to the flow lands on top
+       of the others at the origin. Ours is given a place of its own after the
+       right-most button, and re-placed on every sweep in case the bar has been
+       laid out again. */
+    function placeButton(bar, anchor, btn) {
+        if (getComputedStyle(anchor).position !== 'absolute') return;
+        btn.style.position = 'absolute';
+        btn.style.top = anchor.offsetTop + 'px';
+        var width = btn.offsetWidth || 90;
+        var left = anchor.offsetLeft + anchor.offsetWidth + 10;
+        for (var pass = 0; pass < 8; pass++) {
+            var hit = null;
+            for (var i = 0; i < bar.children.length; i++) {
+                var c = bar.children[i];
+                if (c === btn || getComputedStyle(c).position !== 'absolute') continue;
+                if (c.offsetWidth > 300 || !c.offsetWidth) continue;   // a spacer filling the bar
+                if (c.offsetLeft < left + width + 6 && c.offsetLeft + c.offsetWidth > left - 6) { hit = c; break; }
+            }
+            if (!hit) break;
+            left = hit.offsetLeft + hit.offsetWidth + 10;
+        }
+        btn.style.left = left + 'px';
     }
 
     function syncRunButtons() {
@@ -536,8 +566,12 @@
         var anchors = toolbarAnchors();
         for (var a = 0; a < anchors.length; a++) {
             var bar = anchors[a].parentElement;
-            if (bar.querySelector('.rpg-ap-run')) continue;
-            bar.insertBefore(runButton(), anchors[a].nextSibling);
+            var btn = bar.querySelector('.rpg-ap-run');
+            if (!btn) {
+                btn = runButton();
+                bar.insertBefore(btn, anchors[a].nextSibling);
+            }
+            placeButton(bar, anchors[a], btn);
         }
     }
 
@@ -670,7 +704,7 @@
 
         panel = el('div', { id: 'rpg-ap', role: 'dialog', 'aria-label': 'Ticket Autopilot' });
         panel.hidden = true;
-        panel.appendChild(el('h2', { text: '🎯 Ticket Autopilot' }));
+        panel.appendChild(el('h2', { text: 'Ticket Autopilot' }));
         panel.appendChild(el('p', { 'class': 'sub', text: 'Stamps the fields below onto each ticket you open.' }));
 
         /* --- the fields, in the order they are applied --- */
@@ -779,7 +813,7 @@
         note.appendChild(el('span', { text: '  v' + VERSION }));
         panel.appendChild(note);
 
-        pillEl = el('button', { id: 'rpg-ap-pill', type: 'button', text: '🎯 Autopilot' });
+        pillEl = el('button', { id: 'rpg-ap-pill', type: 'button', text: 'Autopilot' });
         pillEl.addEventListener('click', toggle);
 
         var root = document.body || document.documentElement;
@@ -827,7 +861,7 @@
         }
         if (live) wasRunning = true;
         if (pillEl) {
-            pillEl.textContent = live ? '🎯 Autopilot ' + mmss(remaining()) : '🎯 Autopilot';
+            pillEl.textContent = live ? 'Autopilot ' + mmss(remaining()) : 'Autopilot';
             if (live) pillEl.classList.add('live'); else pillEl.classList.remove('live');
         }
         if (!refs) return;

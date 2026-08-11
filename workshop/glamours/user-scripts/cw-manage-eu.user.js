@@ -60,7 +60,7 @@
         login: true,        // login page helper
         loginCompany: '',   // auto-filled into #company
         loginUser: '',      // auto-filled into #username (the password is NEVER stored)
-        zoom: 100,          // text-only scale %, 80–130
+        zoom: 100,          // text-only scale %, 80 to 130
         pill: true          // show the floating ✨ button
     };
 
