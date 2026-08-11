@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Ticket Autopilot
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.3.0
+// @version      1.4.0
 // @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, a priority and a due date, applied in that order because each one decides what the next may contain. Then have it switch itself off after the time you set. Every change is logged, and the countdown at the bottom means you cannot leave it running by accident. Alt+Shift+A.
 // @author       rami.party
 // @license      MIT
@@ -54,7 +54,7 @@
     if (window[NS]) { window[NS].toggle(); return; }
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.3.0';
+    var VERSION = '1.4.0';
     var KEY = 'rpGlamourCwAuto.v1';
 
     var DEFAULTS = {
@@ -144,21 +144,23 @@
     function clean(s) { return (s || '').replace(/\s+/g, ' ').trim(); }
 
     var FIELDS = {
-        board: { label: 'Board', sel: 'input.cw_serviceBoard', kind: 'combo' },
-        status: { label: 'Status', sel: 'input.cw_status', kind: 'combo' },
-        type: { label: 'Type', sel: 'input.cw_type', kind: 'combo' },
-        subtype: { label: 'Subtype', sel: 'input.cw_subType', kind: 'combo' },
-        item: { label: 'Item', sel: 'input.cw_item', kind: 'combo' },
-        due: { label: 'Due Date', sel: '.cw_dueDate input', kind: 'text' },
-        priority: { label: 'Priority', sel: '.cw_servicePriority', kind: 'menu' }
+        board: { label: 'Board', sel: 'input.cw_serviceBoard', row: 'Board', kind: 'combo' },
+        status: { label: 'Status', sel: 'input.cw_status', row: 'Status', kind: 'combo' },
+        type: { label: 'Type', sel: 'input.cw_type', row: 'Type', kind: 'combo' },
+        subtype: { label: 'Subtype', sel: 'input.cw_subType', row: 'Subtype', kind: 'combo' },
+        item: { label: 'Item', sel: 'input.cw_item', row: 'Item', kind: 'combo' },
+        due: { label: 'Due Date', sel: '.cw_dueDate input', row: 'Due Date', kind: 'text' },
+        priority: { label: 'Priority', sel: '.cw_servicePriority', row: 'Priority', kind: 'menu' }
     };
 
     /* Manage reloads each field's options from the ones before it, so this
        order is load-bearing: Board decides which Statuses and Types exist,
-       Type decides the Subtypes, Subtype decides the Items. */
+       Type decides the Subtypes, Subtype decides the Items. Priority is last:
+       it is a menu rather than a field and depends on nothing. */
     var ORDER = ['board', 'status', 'type', 'subtype', 'item', 'due', 'priority'];
     var STEP_MS = 500;      // pause after a write before checking it stuck
-    var MENU_MS = 1500;     // the priority menu opens and closes on its own clock
+    var MENU_OPEN_MS = 1500; // how long to wait for an icon menu to appear
+    var MENU_MS = 2000;     // and how long before its result is read back
     var TRIES = 3;          // a dependent list may still have been loading
 
     /* One ticket pod may be one of several open at once, so every lookup is
@@ -175,10 +177,27 @@
         return fallback || document;
     }
 
+    /* Every class around a pod row is compiler-generated and changes between
+       releases, but the label beside the field is plain text. It is the way
+       back in when a cw_ class is renamed. */
+    function byRowLabel(scope, label) {
+        if (!label) return null;
+        var rows = (scope || document).querySelectorAll('tr.pod-element-row,[class*="pod-element-row"]');
+        for (var i = 0; i < rows.length; i++) {
+            var lab = rows[i].querySelector('.mm_podElementLabel,[class*="podElementLabel"]') || rows[i].children[0];
+            if (!lab) continue;
+            if (clean(lab.textContent).replace(/:$/, '').toLowerCase() !== label.toLowerCase()) continue;
+            var cells = rows[i].children;
+            var last = cells[cells.length - 1];
+            return last.querySelector('input') || last.firstElementChild || last;
+        }
+        return null;
+    }
+
     function field(scope, name) {
         var f = FIELDS[name];
         if (!f) return null;
-        return (scope || document).querySelector(f.sel);
+        return (scope || document).querySelector(f.sel) || byRowLabel(scope, f.row);
     }
 
     /* Manage writes its own “nothing chosen yet” text into some fields, and a
@@ -211,32 +230,6 @@
         });
         if (typeof node.click === 'function') { try { node.click(); return; } catch (e) { /* fall through */ } }
         node.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, view: window }));
-    }
-
-    /* ---------------- recognising an open menu ----------------
-       Priority is an icon menu, not a combo, so the only way to set it is to
-       open it and click the entry. An open GXT menu is a floating element
-       that was not there a moment ago. */
-
-    function floatingItems(node) {
-        var items = [], nodes = node.querySelectorAll('*');
-        for (var i = 0; i < nodes.length && items.length < 300; i++) {
-            var n = nodes[i];
-            if (n.children.length) continue;
-            var t = clean(n.textContent);
-            if (t && t.length <= 80 && items.indexOf(t) === -1) items.push(t);
-        }
-        return items;
-    }
-
-    function looksLikeList(node) {
-        if (!node || node.nodeType !== 1 || !node.isConnected) return false;
-        if (node.id === 'rpg-ap' || (node.closest && node.closest('#rpg-ap'))) return false;
-        if (node.querySelector('input,textarea')) return false;
-        var pos = getComputedStyle(node).position;
-        if (pos !== 'absolute' && pos !== 'fixed' && node.parentElement !== document.body) return false;
-        var items = floatingItems(node);
-        return items.length >= 2 ? items : false;
     }
 
     /* ---------------- dates ---------------- */
@@ -303,7 +296,7 @@
     var TICKET_RE = /#\s?(\d{4,})/;
 
     function ticketId(scope) {
-        for (var e = scope, i = 0; e && e.tagName !== 'BODY' && i < 10; e = e.parentElement, i++) {
+        for (var e = scope, i = 0; e && e.tagName !== 'BODY' && i < 14; e = e.parentElement, i++) {
             var m = TICKET_RE.exec(e.textContent || '');
             if (m) return '#' + m[1];
         }
@@ -314,40 +307,56 @@
         return 'ticket';
     }
 
+    /* ---------------- the priority menu ----------------
+       Priority is an icon menu, not a combo, so the only way to set it is to
+       open it and click the entry. Two things make that harder than it looks:
+       the wrapper is not the button, and GXT builds a menu once and merely
+       re-shows it afterwards, which produces no mutation at all. So the real
+       button is pressed and the open menu is polled for rather than observed. */
+
+    /* cw_CwIconTextMenuButton wraps the div.mm_button[tabindex=0] that GXT
+       actually listens on; a press on the wrapper never reaches it. */
+    function menuButton(node) {
+        return node.querySelector('.mm_button,[class*="mm_button"],[tabindex]') || node;
+    }
+
+    function floatingPanels() {
+        var out = [], kids = document.body ? document.body.children : [];
+        for (var i = 0; i < kids.length; i++) {
+            var n = kids[i];
+            if (n.nodeType !== 1 || String(n.id).indexOf('rpg-') === 0) continue;
+            if (!n.getClientRects().length) continue;
+            var pos = getComputedStyle(n).position;
+            if (pos === 'absolute' || pos === 'fixed') out.push(n);
+        }
+        return out;
+    }
+
+    /* The entry carries a colour swatch beside its text, so the match is the
+       innermost element whose whole text is the value, not a childless leaf. */
+    function entryWithText(root, text) {
+        var nodes = root.querySelectorAll('*'), hit = null, want = text.toLowerCase();
+        for (var i = 0; i < nodes.length; i++) {
+            if (clean(nodes[i].textContent).toLowerCase() === want) hit = nodes[i];
+        }
+        return hit;
+    }
+
     function setMenuValue(button, wanted, done) {
-        var picked = false;
-        var obs = new MutationObserver(function (records) {
-            if (picked) return;
-            for (var r = 0; r < records.length; r++) {
-                for (var i = 0; i < records[r].addedNodes.length; i++) {
-                    var n = records[r].addedNodes[i];
-                    if (n.nodeType !== 1) continue;
-                    var items = looksLikeList(n);
-                    if (!items) continue;
-                    var leaves = n.querySelectorAll('*');
-                    for (var k = 0; k < leaves.length; k++) {
-                        if (leaves[k].children.length) continue;
-                        if (clean(leaves[k].textContent).toLowerCase() === wanted.toLowerCase()) {
-                            picked = true;
-                            press(leaves[k]);
-                            obs.disconnect();
-                            done(true);
-                            return;
-                        }
-                    }
-                }
+        press(menuButton(button));
+        var deadline = Date.now() + MENU_OPEN_MS;
+        (function look() {
+            var panels = floatingPanels();
+            for (var i = 0; i < panels.length; i++) {
+                var hit = entryWithText(panels[i], wanted);
+                if (hit) { press(hit); done(true); return; }
             }
-        });
-        obs.observe(document.body, { childList: true, subtree: true });
-        press(button);
-        setTimeout(function () {
-            if (picked) return;
-            obs.disconnect();
+            if (Date.now() < deadline) { setTimeout(look, 120); return; }
             try {
                 document.body.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Escape', code: 'Escape' }));
             } catch (e) { /* ignore */ }
             done(false);
-        }, 1200);
+        })();
     }
 
     function shownValue(scope, name) {
