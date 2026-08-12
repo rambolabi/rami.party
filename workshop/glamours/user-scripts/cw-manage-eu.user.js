@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Comfort Glamour
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.9.0
+// @version      1.9.1
 // @description  Quality-of-life for ConnectWise Manage: six themes, four dark plus a vivid pale one and a soft greyscale, a hover ticket preview with pickable columns plus the latest note, stale-ticket highlighting, one-click Change/Change/Change, a password-manager-friendly login, and true text-only scaling. Every tweak is a toggle; press Alt+Shift+G for the panel.
 // @author       rami.party
 // @license      MIT
@@ -41,7 +41,7 @@
     'use strict';
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.9.0';               // keep in step with @version above
+    var VERSION = '1.9.1';               // keep in step with @version above
     var KEY = 'rpGlamourCw.v1';
     var COLS_KEY = 'rpGlamourCw.cols';   // columns of the grid last hovered
     var DEFAULTS = {
@@ -185,10 +185,15 @@
         violet: { label: 'Violet', bar: '#8b5cf6', tint: 'rgba(139,92,246,.18)' }
     };
 
+    /* The attribute is repeated to lift the rule to (0,3,1). Manage paints its
+       own grid cells from long !important selectors, and a single attribute
+       cannot outrank those: the row would be marked and stay uncoloured. */
     function staleCSS(name) {
         var c = STALE_COLOURS[name] || STALE_COLOURS.red;
-        return '[data-rpg-stale]>td{background-color:' + c.tint + '!important}' +
-            '[data-rpg-stale]>td:first-child{box-shadow:inset 3px 0 0 ' + c.bar + '}';
+        var sel = '[data-rpg-stale][data-rpg-stale][data-rpg-stale]';
+        return sel + '>td{background-color:' + c.tint + '!important}' +
+            sel + '>td>div{background-color:transparent!important}' +
+            sel + '>td:first-child{box-shadow:inset 3px 0 0 ' + c.bar + '!important}';
     }
 
     /* ---------------- text-only scaling ----------------
@@ -511,7 +516,8 @@
        full of forgotten tickets shows itself at a glance. */
 
     var STALE_ATTR = 'data-rpg-stale';
-    var STALE_COL = /last\s*upd|updated|last\s*activ|laatste/i;
+    /* Whatever the tenant calls the column, in the languages Manage ships. */
+    var STALE_COL = /last\s*upd|last\s*activ|updated|laatst|bijgewerkt|gewijzigd|zuletzt|aktualis|ge\u00e4ndert|derni|modifi|\u00faltima|actualiz/i;
     var DATE_RE = /(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/;
 
     /* Manage renders dates in the tenant's format; day-first here (30/05/2026),
@@ -531,10 +537,32 @@
         for (var i = 0; i < marked.length; i++) marked[i].removeAttribute(STALE_ATTR);
     }
 
+    /* What the last sweep managed, so the panel can say why nothing is tinted
+       instead of leaving you guessing. Frames without a grid stay quiet rather
+       than overwriting the answer from the frame that has one. */
+    var STALE_STATE_KEY = 'rpGlamourCw.stale';
+
+    function publishStaleState(state, rows) {
+        try {
+            var next = JSON.stringify({ state: state, rows: rows });
+            if (localStorage.getItem(STALE_STATE_KEY) !== next) {
+                localStorage.setItem(STALE_STATE_KEY, next);
+                if (IS_TOP && panelRefs) syncStaleState();
+            }
+        } catch (e) { /* private mode */ }
+    }
+
+    function storedStaleState() {
+        try { return JSON.parse(localStorage.getItem(STALE_STATE_KEY)); } catch (e) { return null; }
+    }
+
     function staleSweep() {
         if (!CUR.stale) return;
         var cutoff = Date.now() - CUR.staleDays * 86400000;
         var strips = document.querySelectorAll(HEADER_SEL);
+        if (!strips.length) return;
+
+        var state = 'nocol', marked = 0;
 
         for (var s = 0; s < strips.length; s++) {
             var heads = leafElements(strips[s]);
@@ -543,8 +571,9 @@
                 if (STALE_COL.test(heads[h].textContent)) { target = heads[h]; break; }
             }
             if (!target) continue;
+            if (state === 'nocol') state = 'hidden';       // the column exists, at least
             var hr = target.getBoundingClientRect();
-            if (!hr.width) continue;
+            if (!hr.width) continue;                       // the grid is not laid out
             var centre = hr.left + hr.width / 2;
 
             /* Find the grid next to this strip, then resolve the column index
@@ -572,15 +601,17 @@
                 }
             }
             if (index < 0) continue;
+            state = 'ok';
 
             for (var k = 0; k < rows.length; k++) {
                 var cell = rows[k].cells[index];
                 if (!cell) continue;
                 var when = parseCellDate(cell.textContent);
-                if (when && when.getTime() < cutoff) rows[k].setAttribute(STALE_ATTR, '');
+                if (when && when.getTime() < cutoff) { rows[k].setAttribute(STALE_ATTR, ''); marked++; }
                 else rows[k].removeAttribute(STALE_ATTR);
             }
         }
+        publishStaleState(state, marked);
     }
 
     function initStale() {
@@ -1197,9 +1228,26 @@
         var node = el('div', { id: 'rpg-stale-sub', 'class': 'rpg-sub' }, [
             el('div', { 'class': 'rpg-field' }, [el('span', { text: 'No update for' }), days, el('span', { text: 'days' })]),
             el('div', { 'class': 'rpg-field' }, [el('span', { text: 'Colour' }), colour]),
-            el('p', { 'class': 'rpg-subhint', text: 'Reads the Last Update column of the grid you are looking at.' })
+            el('p', { 'class': 'rpg-subhint', text: 'Reads the Last Update column of the grid you are looking at.' }),
+            el('p', { 'class': 'rpg-subhint', id: 'rpg-stale-state' })
         ]);
         return { node: node, days: days, colour: colour };
+    }
+
+    function syncStaleState() {
+        var line = document.getElementById('rpg-stale-state');
+        if (!line) return;
+        var s = CUR.stale ? storedStaleState() : null;
+        if (!s) { line.textContent = ''; return; }
+        if (s.state === 'nocol') {
+            line.textContent = 'No Last Update column on the grid you are looking at. Add it to your Manage view and it starts working.';
+        } else if (s.state === 'hidden') {
+            line.textContent = 'Found the column, but that grid is not on screen. Open the service board and it colours itself in.';
+        } else if (!s.rows) {
+            line.textContent = 'Nothing on that grid is older than ' + CUR.staleDays + ' days.';
+        } else {
+            line.textContent = 'Colouring ' + s.rows + (s.rows === 1 ? ' row.' : ' rows.');
+        }
     }
 
     /* Column checkboxes are rebuilt whenever a grid publishes its headers. */
@@ -1375,6 +1423,7 @@
             st.node.hidden = !s.stale;
             if (document.activeElement !== st.days) st.days.value = s.staleDays;
             st.colour.value = s.staleColour;
+            syncStaleState();
         }
         var sub = panelRefs.sub;
         if (sub) {
@@ -1425,5 +1474,6 @@
     window.addEventListener('storage', function (e) {
         if (e.key === KEY) apply(loadSettings());
         if (e.key === COLS_KEY && IS_TOP) syncColumnPicker(storedColumns());
+        if (e.key === STALE_STATE_KEY && IS_TOP) syncStaleState();
     });
 })();
