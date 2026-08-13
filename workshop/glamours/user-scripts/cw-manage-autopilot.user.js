@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Ticket Autopilot
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.6.2
+// @version      1.6.3
 // @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, the Ticket Owner, a priority and a due date, applied in that order because each one decides what the next may contain. The lists it offers are read out of your own Manage and kept in your browser, so nothing about your tenant travels with the script. Press the Run autopilot button in a ticket's toolbar to apply them to that one ticket, or set the clock running to have every ticket you open stamped until it switches itself off. Every change is logged. Alt+Shift+A.
 // @author       rami.party
 // @license      MIT
@@ -59,7 +59,7 @@
     if (window[NS]) { window[NS].toggle(); return; }
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.6.2';
+    var VERSION = '1.6.3';
     var KEY = 'rpGlamourCwAuto.v1';
     var LISTS_KEY = 'rpGlamourCwAuto.lists';
 
@@ -557,7 +557,7 @@
                 }
                 if (changes.failed.length) {
                     log(changes.label + ': could not set ' + changes.failed.join(', ') +
-                        '. Manage would not take the value on this ticket.');
+                        '. CW would not take the value on this ticket.');
                 }
                 if (manual && !changes.list.length && !changes.kept.length && !changes.failed.length) {
                     log(changes.label + ': nothing to do, every field already reads that way.');
@@ -804,7 +804,7 @@
     function optionRow(labelText, name) {
         var sel = document.createElement('select');
         var typed = el('input', { type: 'text', spellcheck: 'false',
-            placeholder: 'or type it, spelled the way Manage spells it' });
+            placeholder: 'or type it, spelled the way CW spells it' });
         var readBtn = el('button', { type: 'button', 'class': 'mini', text: 'Read',
             title: 'Open the ' + labelText + ' dropdown in the ticket on screen and copy what it offers.' });
 
@@ -848,7 +848,7 @@
             readList(name, function (problem, count) {
                 readBtn.disabled = false;
                 readBtn.textContent = 'Read';
-                log(problem || (labelText + ': read ' + count + ' values out of Manage'));
+                log(problem || (labelText + ': read ' + count + ' values out of CW'));
             });
         });
 
@@ -886,7 +886,7 @@
             optionRow('Item', 'item')
         ];
         rows.forEach(function (r) { fieldSet.appendChild(r.node); });
-        fieldSet.appendChild(el('p', { 'class': 'hint', text: 'Applied top to bottom, because the Board decides which Statuses and Types exist and the Type decides the Subtypes. Anything left on “Leave it alone” is not touched. The lists start empty: with a ticket open, press Read beside a field, or just open that dropdown in Manage yourself once and it is read as you do.' }));
+        fieldSet.appendChild(el('p', { 'class': 'hint', text: 'Applied top to bottom, because the Board decides which Statuses and Types exist and the Type decides the Subtypes. Anything left on “Leave it alone” is not touched. The lists start empty: with a ticket open, press Read beside a field, or just open that dropdown in CW yourself once and it is read as you do.' }));
         panel.appendChild(fieldSet);
 
         /* --- assign it to me --- */
@@ -896,7 +896,7 @@
         meCb.checked = !!CUR.assignMe;
         meCb.addEventListener('change', function () { update({ assignMe: meCb.checked }); });
         meSet.appendChild(el('label', { 'class': 'check' }, [meCb, el('span', { text: 'Assign it to me' })]));
-        var meBox = el('input', { type: 'text', spellcheck: 'false', placeholder: 'your name as Manage spells it' });
+        var meBox = el('input', { type: 'text', spellcheck: 'false', placeholder: 'your name as CW spells it' });
         meBox.value = CUR.me || '';
         meBox.addEventListener('change', function () { update({ me: clean(meBox.value) }); });
         meSet.appendChild(el('div', { 'class': 'row' }, [el('span', { text: 'Name' }), meBox]));
@@ -919,7 +919,7 @@
         var prioRow = optionRow('Priority', 'priority');
         rows.push(prioRow);
         prioSet.appendChild(prioRow.node);
-        prioSet.appendChild(el('p', { 'class': 'hint', text: 'Manage draws the priority as a menu rather than a list, so it is opened and the entry is clicked. That takes a moment longer than the others.' }));
+        prioSet.appendChild(el('p', { 'class': 'hint', text: 'CW draws the priority as a menu rather than a list, so it is opened and the entry is clicked. That takes a moment longer than the others.' }));
 
         /* --- due date --- */
         var dueSet = el('fieldset');
