@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Comfort Glamour
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.11.5
+// @version      1.11.6
 // @description  Quality-of-life for ConnectWise Manage: seven themes, three that repaint the app in a full palette and four that filter it, a hover ticket preview with pickable columns plus the latest note, stale-ticket highlighting, one-click Change/Change/Change, a password-manager-friendly login, and true text-only scaling. Every tweak is a toggle; press Alt+Shift+G for the panel.
 // @author       rami.party
 // @license      MIT
@@ -41,7 +41,7 @@
     'use strict';
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.11.5';              // keep in step with @version above
+    var VERSION = '1.11.6';              // keep in step with @version above
     var KEY = 'rpGlamourCw.v1';
     var COLS_KEY = 'rpGlamourCw.cols';   // columns of the grid last hovered
     var DEFAULTS = {
@@ -610,8 +610,58 @@
         document.addEventListener('keyup', function () {
             if (themeById(CUR.theme).paint) schedulePickSweep();
         }, true);
-        setInterval(function () { if (themeById(CUR.theme).paint) pickSweep(); }, 2500);
+        setInterval(function () {
+            if (!themeById(CUR.theme).paint) return;
+            pickSweep();
+            unlitSweep();
+        }, 2500);
         schedulePickSweep();
+    }
+
+    /* ---------------- stray light patches under the painted themes ----------------
+       The classic Today frames paint some cells through ID-heavy !important
+       rules and even inline !important backgrounds, which no stylesheet of
+       ours can outweigh. So the last word is written back inline: an element
+       whose computed background is still light under a dark palette gets an
+       inline important transparent background, and whatever inline value it
+       had is parked in an attribute so switching the theme off restores it. */
+    var UNLIT_ATTR = 'data-rpg-unlit';
+
+    function bgLuminance(c) {
+        var m = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/.exec(c || '');
+        if (!m) return null;
+        if (m[4] !== undefined && parseFloat(m[4]) < 1) return null;   // translucent washes are ours
+        function f(v) { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }
+        return 0.2126 * f(+m[1]) + 0.7152 * f(+m[2]) + 0.0722 * f(+m[3]);
+    }
+
+    function unlitSweep() {
+        if (!themeById(CUR.theme).paint || !document.body) return;
+        var nodes = document.body.querySelectorAll('*');
+        for (var i = 0; i < nodes.length; i++) {
+            var n = nodes[i];
+            if (n.hasAttribute(UNLIT_ATTR)) continue;
+            if (n.id && String(n.id).indexOf('rpg') === 0) continue;
+            var lum = bgLuminance(getComputedStyle(n).backgroundColor);
+            if (lum === null || lum < 0.35) continue;
+            var prior = n.style.getPropertyValue('background-color');
+            var prio = n.style.getPropertyPriority('background-color');
+            n.setAttribute(UNLIT_ATTR, prior ? prior + (prio ? ' !' + prio : '') : '');
+            n.style.setProperty('background-color', 'transparent', 'important');
+        }
+    }
+
+    function relight() {
+        var marked = document.querySelectorAll('[' + UNLIT_ATTR + ']');
+        for (var i = 0; i < marked.length; i++) {
+            var n = marked[i], prior = n.getAttribute(UNLIT_ATTR);
+            n.style.removeProperty('background-color');
+            if (prior) {
+                var imp = / !important$/.test(prior);
+                n.style.setProperty('background-color', prior.replace(/ !important$/, ''), imp ? 'important' : '');
+            }
+            n.removeAttribute(UNLIT_ATTR);
+        }
     }
 
     /* ---------------- apply settings ---------------- */
@@ -627,7 +677,7 @@
         /* The filter is the top frame's business, but a repaint has to reach
            every frame: that is where the grids are. */
         setSheet('rpg-paint', palette ? paintCSS(palette) : '');
-        if (palette) schedulePickSweep(); else clearPicked();
+        if (palette) { schedulePickSweep(); setTimeout(unlitSweep, 80); } else { clearPicked(); relight(); }
         setSheet('rpg-nav', (!palette && s.navDark) ? navCSS(!!theme.invert) : '');
         setSheet('rpg-login', s.login ? CSS.login : '');
         /* Our overlay lives inside the inverted page, so it needs the same
