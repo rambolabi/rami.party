@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Ticket Autopilot
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.5.2
-// @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, a priority and a due date, applied in that order because each one decides what the next may contain. Press the Run autopilot button in a ticket's toolbar to apply them to that one ticket, or set the clock running to have every ticket you open stamped until it switches itself off. Every change is logged. Alt+Shift+A.
+// @version      1.6.1
+// @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, the Ticket Owner, a priority and a due date, applied in that order because each one decides what the next may contain. The lists it offers are read out of your own Manage and kept in your browser, so nothing about your tenant travels with the script. Press the Run autopilot button in a ticket's toolbar to apply them to that one ticket, or set the clock running to have every ticket you open stamped until it switches itself off. Every change is logged. Alt+Shift+A.
 // @author       rami.party
 // @license      MIT
-// @match        https://eu.myconnectwise.net/*
 // @match        https://*.myconnectwise.net/*
+// @exclude      https://sandbox-eu.myconnectwise.net/*
 // @icon         data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d0726'/%3E%3Ccircle cx='50' cy='50' r='28' fill='none' stroke='%2322d3ee' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='9' fill='%23a855f7'/%3E%3Cpath d='M50 8v14M50 78v14M8 50h14M78 50h14' stroke='%23a855f7' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E
 // @run-at       document-start
 // @grant        none
@@ -44,9 +44,12 @@
    • It stamps a ticket once. Manage pools and re-uses its pod widgets, so the
      guard is keyed to the ticket that is in the pod, not to the pod element.
 
-   The option lists are the values this tenant uses, listed in CHOICES below.
-   Add to them there rather than teaching the script to read Manage's own
-   dropdowns: the lists are short, and a fixed list cannot arrive half-loaded.
+   Nothing about anybody's tenant is written in this file. Every dropdown in
+   the panel starts empty and fills from the Manage in front of you: press
+   Read beside a field to open its list and copy it, or simply open that
+   dropdown yourself and it is copied as you do. The lists are kept in
+   localStorage under the hostname they came from, so a second tenant in the
+   next tab keeps its own boards.
    -------------------------------------------------------------------------- */
 
 (function () {
@@ -56,8 +59,9 @@
     if (window[NS]) { window[NS].toggle(); return; }
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.5.2';
+    var VERSION = '1.6.1';
     var KEY = 'rpGlamourCwAuto.v1';
+    var LISTS_KEY = 'rpGlamourCwAuto.lists';
 
     var DEFAULTS = {
         board: '',           // every field: '' means leave it alone
@@ -67,6 +71,8 @@
         status: '',
         priority: '',
         due: 'off',          // off | 0 to 9 days from today | m1 | m2 | m3 | m6
+        assignMe: false,     // put your own name in the ticket's Ticket Owner
+        me: '',              // and the name to put there
         skipWeekend: true,
         dateFormat: 'auto',  // auto | dmy | mdy | ymd
         overwrite: false,    // touch fields that already have a value
@@ -76,18 +82,9 @@
         pill: true
     };
 
-    /* The values this tenant uses. */
-    var CHOICES = {
-        board: ['IN - Managed', 'IN - Services', 'Internal Change Request', 'Managed Services',
-                'PreSales', 'Projecten', 'SecOps - Managed', 'SecOps - Services'],
-        type: ['Change', 'Incident', 'MUST CHANGE', 'Request', 'Vraag'],
-        subtype: ['Backup', 'Change', 'Digital Workplace', 'MUST CHANGE', 'Office.ONE', 'Renewal'],
-        item: ['Change'],
-        status: ['1-st check', 'Klant heeft gereageerd', 'Open', 'Gepland', 'Wachten op collega',
-                 'Wachten op leverancier', 'Wachten op reactie klant',
-                 'Wachten op reactie klant - do not close', 'Afgewerkt', 'Gesloten'],
-        priority: ['Priority 1 - Critical', 'Priority 2 - High', 'Priority 3 - Medium', 'Priority 4 - Low']
-    };
+    /* The fields that carry a list. What is in each list is not shipped here:
+       it is read out of the Manage in front of you and kept in this browser. */
+    var LISTED = ['board', 'status', 'type', 'subtype', 'item', 'priority'];
 
     var DUE_CHOICES = [['off', 'Leave it alone'], ['0', 'Today'], ['1', 'Tomorrow']];
     for (var dd = 2; dd <= 9; dd++) DUE_CHOICES.push([String(dd), 'In ' + dd + ' days']);
@@ -112,6 +109,32 @@
     }
 
     function save(s) { write(KEY, s); }
+
+    /* ---------------- the option lists ----------------
+       Empty until this browser has seen the real thing, and kept per hostname:
+       a sandbox tenant in the next tab has boards of its own. */
+
+    function optionsFor(name) {
+        var host = read(LISTS_KEY)[location.hostname];
+        var list = host && host[name];
+        return (list && list.length) ? list.slice() : [];
+    }
+
+    function rememberOptions(name, list) {
+        var all = read(LISTS_KEY), seen = {}, out = [];
+        list.forEach(function (v) {
+            var t = clean(v);
+            if (!t || t.length > 80 || seen[t.toLowerCase()]) return;
+            seen[t.toLowerCase()] = 1;
+            out.push(t);
+        });
+        if (!out.length) return 0;
+        out.sort(function (a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; });
+        if (!all[location.hostname]) all[location.hostname] = {};
+        all[location.hostname][name] = out;
+        write(LISTS_KEY, all);
+        return out.length;
+    }
 
     var CUR = load();
 
@@ -152,15 +175,17 @@
         type: { label: 'Type', sel: 'input.cw_type', row: 'Type', kind: 'combo' },
         subtype: { label: 'Subtype', sel: 'input.cw_subType', row: 'Subtype', kind: 'combo' },
         item: { label: 'Item', sel: 'input.cw_item', row: 'Item', kind: 'combo' },
+        owner: { label: 'Ticket Owner', sel: 'input.cw_ticketOwner', row: 'Ticket Owner', kind: 'combo' },
         due: { label: 'Due Date', sel: '.cw_dueDate input', row: 'Due Date', kind: 'text' },
         priority: { label: 'Priority', sel: '.cw_servicePriority', row: 'Priority', kind: 'menu' }
     };
 
     /* Manage reloads each field's options from the ones before it, so this
        order is load-bearing: Board decides which Statuses and Types exist,
-       Type decides the Subtypes, Subtype decides the Items. Priority is last:
+       Type decides the Subtypes, Subtype decides the Items, and the Board
+       decides which people the Ticket Owner list will take. Priority is last:
        it is a menu rather than a field and depends on nothing. */
-    var ORDER = ['board', 'status', 'type', 'subtype', 'item', 'due', 'priority'];
+    var ORDER = ['board', 'status', 'type', 'subtype', 'item', 'owner', 'due', 'priority'];
     var STEP_MS = 500;      // pause after a write before checking it stuck
     var MENU_OPEN_MS = 1500; // how long to wait for an icon menu to appear
     var MENU_MS = 2000;     // and how long before its result is read back
@@ -204,8 +229,8 @@
     }
 
     /* Manage writes its own “nothing chosen yet” text into some fields, and a
-       placeholder is not an answer somebody gave. "MUST CHANGE" is this
-       board's own version of that, so it counts as empty too. */
+       placeholder is not an answer somebody gave. Boards that use a shouted
+       “must change” as their unset value are counted as empty too. */
     var BLANKISH = /^\(?\s*(unassigned|none|no one|not assigned|select|choose|must change)[\s.…]*\)?$/i;
 
     function blankish(v) { return !v || BLANKISH.test(v); }
@@ -362,6 +387,101 @@
         })();
     }
 
+    /* ---------------- reading a list out of Manage ----------------
+       A combo is an input with its arrow beside it inside .mm_comboBox, one of
+       the handful of class names in this app that a release does not rename.
+       Pressing the arrow opens a floating list. Whatever was already floating
+       before the press is ignored, so a tooltip that happened to be open
+       cannot be mistaken for the list that was asked for. */
+
+    function comboTrigger(input) {
+        if (!input || input.tagName !== 'INPUT') return input;
+        var arrow = input.nextElementSibling;
+        return (arrow && arrow.getClientRects().length) ? arrow : input;
+    }
+
+    /* Each entry is its own childless element, so the list is the leaves. */
+    function listEntries(root) {
+        var nodes = root.querySelectorAll('*'), seen = {}, out = [];
+        for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].children.length) continue;
+            var t = clean(nodes[i].textContent);
+            if (!t || t.length > 80 || seen[t.toLowerCase()]) continue;
+            seen[t.toLowerCase()] = 1;
+            out.push(t);
+        }
+        return out;
+    }
+
+    function closeList(node) {
+        try {
+            node.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Escape', code: 'Escape' }));
+            document.body.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Escape', code: 'Escape' }));
+            if (node.blur) node.blur();
+        } catch (e) { /* nothing left to close */ }
+    }
+
+    /* Waits for a floating panel that was not there before and keeps what is
+       in it. Both ways of learning a list end up here. */
+    function grabList(name, before, deadline, whenDone) {
+        (function look() {
+            var panels = floatingPanels();
+            for (var i = 0; i < panels.length; i++) {
+                if (before.indexOf(panels[i]) !== -1) continue;
+                var items = listEntries(panels[i]);
+                if (items.length < 2) continue;
+                whenDone(rememberOptions(name, items));
+                return;
+            }
+            if (Date.now() < deadline) { setTimeout(look, 150); return; }
+            whenDone(0);
+        })();
+    }
+
+    /* The Read button beside each field: open that dropdown, copy it, close. */
+    function readList(name, whenDone) {
+        var f = FIELDS[name];
+        var node = document.querySelector(f.sel);
+        if (!node || !node.getClientRects().length) {
+            whenDone('Open a ticket first: there is no ' + f.label + ' field on screen to read.');
+            return;
+        }
+        var before = floatingPanels();
+        press(f.kind === 'menu' ? menuButton(node) : comboTrigger(node));
+        grabList(name, before, Date.now() + MENU_OPEN_MS, function (count) {
+            closeList(node);
+            whenDone(count ? null : 'Nothing opened. Open the ' + f.label +
+                ' dropdown yourself instead: it is read as you do.', count);
+        });
+    }
+
+    /* And the same without pressing anything. Open a dropdown in the course of
+       working and its list is taken, so a board added next year arrives on its
+       own the first time somebody looks at that field. */
+    function watchLists() {
+        /* The arrow you press is a sibling of the field, not its parent, so
+           climbing out of what was clicked would walk straight past it. Once
+           the walk is standing in a combo box it looks inside as well: a combo
+           box holds exactly one field, so that cannot pick the wrong one. */
+        function listedField(target) {
+            for (var e = target, i = 0; e && e.matches && i < 6; e = e.parentElement, i++) {
+                var inBox = String(e.className || '').indexOf('mm_comboBox') !== -1;
+                for (var k = 0; k < LISTED.length; k++) {
+                    var sel = FIELDS[LISTED[k]].sel;
+                    if (e.matches(sel)) return LISTED[k];
+                    if (inBox && e.querySelector(sel)) return LISTED[k];
+                }
+            }
+            return null;
+        }
+        document.addEventListener('mousedown', function (e) {
+            var name = listedField(e.target);
+            if (!name) return;
+            var before = floatingPanels();
+            grabList(name, before, Date.now() + 2500, function (count) { if (count) sync(); });
+        }, true);
+    }
+
     function shownValue(scope, name) {
         var node = field(scope, name);
         if (!node) return null;
@@ -397,6 +517,7 @@
 
     function targetValue(name) {
         if (name === 'due') return CUR.due === 'off' ? '' : dueDate(CUR.due);
+        if (name === 'owner') return CUR.assignMe ? clean(CUR.me) : '';
         return CUR[name];
     }
 
@@ -413,6 +534,9 @@
         busy.set(scope, true);
 
         var changes = { list: [], kept: [], failed: [], label: id };
+        if (CUR.assignMe && !clean(CUR.me)) {
+            log(id + ': assign it to me is on, but there is no name in the panel to assign it to.');
+        }
 
         /* One field at a time, in ORDER, and every write is read back before
            moving on. Manage rebuilds the list behind a dependent field after
@@ -624,12 +748,16 @@
         '#rpg-ap input[type=checkbox]{accent-color:#a855f7;width:15px;height:15px;margin:0;flex:0 0 auto}',
         '#rpg-ap .row{display:flex;align-items:center;gap:6px;margin:7px 0}',
         '#rpg-ap .row>span{min-width:58px;font-size:12px;color:#b9b3d9}',
+        /* the type-it-yourself box, sitting under the list it adds to */
+        '#rpg-ap .row.thin{margin:-2px 0 9px 64px}',
+        '#rpg-ap .row.thin input{font-size:11px;padding:4px 7px}',
         '#rpg-ap select,#rpg-ap input[type=text],#rpg-ap input[type=number]{flex:1;min-width:0;padding:5px 7px;',
         'border-radius:8px;border:1px solid rgba(168,85,247,.45);background:#1e1145;color:#ece9ff;',
         'font:inherit;font-size:12px}',
         '#rpg-ap button{padding:5px 9px;border-radius:8px;border:1px solid rgba(168,85,247,.45);',
         'background:rgba(168,85,247,.14);color:#ece9ff;font:inherit;font-size:11.5px;cursor:pointer;white-space:nowrap}',
         '#rpg-ap button:hover{border-color:#a855f7}',
+        '#rpg-ap button.mini{flex:0 0 auto;padding:4px 8px;font-size:11px}',
         '#rpg-ap button.go{background:#22d3ee;color:#04121f;border-color:#22d3ee;font-weight:700}',
         '#rpg-ap button.stop{background:#f87171;color:#2a0707;border-color:#f87171;font-weight:700}',
         '#rpg-ap .hint{margin:4px 0 0;font-size:10.5px;color:#8f88b8}',
@@ -663,40 +791,75 @@
         node.textContent = css;
     }
 
-    /* A field with a known list gets a dropdown, one without gets a text box.
-       Either way, empty means "leave that field alone". */
+    /* Every list starts empty, because what belongs in it is a fact about your
+       Manage and not about this script. Read opens that field's own dropdown
+       and copies what it offers; the box underneath takes a value typed by
+       hand and keeps it. Either way it is saved in this browser, and empty
+       still means “leave that field alone”. */
     function optionRow(labelText, name) {
-        var list = CHOICES[name] || [];
-        var input;
-        if (list.length) {
-            input = document.createElement('select');
+        var sel = document.createElement('select');
+        var typed = el('input', { type: 'text', spellcheck: 'false',
+            placeholder: 'or type it, spelled the way Manage spells it' });
+        var readBtn = el('button', { type: 'button', 'class': 'mini', text: 'Read',
+            title: 'Open the ' + labelText + ' dropdown in the ticket on screen and copy what it offers.' });
+
+        function fill() {
+            var list = optionsFor(name), cur = clean(CUR[name]);
+            /* a value chosen before the list was read must not vanish from it */
+            if (cur && list.indexOf(cur) === -1) list.unshift(cur);
+            sel.textContent = '';
             var blank = document.createElement('option');
             blank.value = '';
-            blank.textContent = 'Leave it alone';
-            input.appendChild(blank);
+            blank.textContent = list.length ? 'Leave it alone' : 'Nothing read yet';
+            sel.appendChild(blank);
             list.forEach(function (v) {
                 var o = document.createElement('option');
                 o.value = v;
                 o.textContent = v;
-                input.appendChild(o);
+                sel.appendChild(o);
             });
-        } else {
-            input = el('input', { type: 'text', spellcheck: 'false', placeholder: 'leave empty to skip' });
+            sel.value = cur;
         }
 
-        input.addEventListener('change', function () {
+        sel.addEventListener('change', function () {
             var patch = {};
-            patch[name] = clean(input.value);
+            patch[name] = sel.value;
             update(patch);
         });
 
+        typed.addEventListener('change', function () {
+            var v = clean(typed.value);
+            typed.value = '';
+            if (!v) return;
+            rememberOptions(name, optionsFor(name).concat([v]));
+            var patch = {};
+            patch[name] = v;
+            update(patch);
+        });
+
+        readBtn.addEventListener('click', function () {
+            readBtn.disabled = true;
+            readBtn.textContent = '…';
+            readList(name, function (problem, count) {
+                readBtn.disabled = false;
+                readBtn.textContent = 'Read';
+                log(problem || (labelText + ': read ' + count + ' values out of Manage'));
+            });
+        });
+
         function repaint() {
-            if (document.activeElement === input) return;
-            input.value = CUR[name] || '';
+            if (document.activeElement === sel || document.activeElement === typed) return;
+            fill();
         }
 
-        repaint();
-        return { node: el('div', { 'class': 'row' }, [el('span', { text: labelText }), input]), repaint: repaint };
+        fill();
+        return {
+            node: el('div', {}, [
+                el('div', { 'class': 'row' }, [el('span', { text: labelText }), sel, readBtn]),
+                el('div', { 'class': 'row thin' }, [typed])
+            ]),
+            repaint: repaint
+        };
     }
 
     function build() {
@@ -718,8 +881,32 @@
             optionRow('Item', 'item')
         ];
         rows.forEach(function (r) { fieldSet.appendChild(r.node); });
-        fieldSet.appendChild(el('p', { 'class': 'hint', text: 'Applied top to bottom, because the Board decides which Statuses and Types exist and the Type decides the Subtypes. Anything left on "Leave it alone" is not touched.' }));
+        fieldSet.appendChild(el('p', { 'class': 'hint', text: 'Applied top to bottom, because the Board decides which Statuses and Types exist and the Type decides the Subtypes. Anything left on “Leave it alone” is not touched. The lists start empty: with a ticket open, press Read beside a field, or just open that dropdown in Manage yourself once and it is read as you do.' }));
         panel.appendChild(fieldSet);
+
+        /* --- assign it to me --- */
+        var meSet = el('fieldset');
+        meSet.appendChild(el('legend', { text: 'Ticket Owner' }));
+        var meCb = el('input', { type: 'checkbox' });
+        meCb.checked = !!CUR.assignMe;
+        meCb.addEventListener('change', function () { update({ assignMe: meCb.checked }); });
+        meSet.appendChild(el('label', { 'class': 'check' }, [meCb, el('span', { text: 'Assign it to me' })]));
+        var meBox = el('input', { type: 'text', spellcheck: 'false', placeholder: 'your name as Manage spells it' });
+        meBox.value = CUR.me || '';
+        meBox.addEventListener('change', function () { update({ me: clean(meBox.value) }); });
+        meSet.appendChild(el('div', { 'class': 'row' }, [el('span', { text: 'Name' }), meBox]));
+        var meGrab = el('button', { type: 'button', 'class': 'mini', text: 'Take the name off this ticket',
+            title: 'Assign one ticket to yourself by hand, then press this to copy the name out of it.' });
+        meGrab.addEventListener('click', function () {
+            var node = document.querySelector(FIELDS.owner.sel);
+            var v = node ? clean(node.value) : '';
+            if (!v || blankish(v)) { log('no ticket on screen has an owner to copy'); return; }
+            update({ me: v });
+            log('you are ' + v);
+        });
+        meSet.appendChild(el('div', { 'class': 'row thin' }, [meGrab]));
+        meSet.appendChild(el('p', { 'class': 'hint', text: 'Written into the ticket’s own Ticket Owner field, after the Board, because the Board decides which people that field will accept. Only the one name is stored, in this browser.' }));
+        panel.appendChild(meSet);
 
         /* --- priority --- */
         var prioSet = el('fieldset');
@@ -822,7 +1009,7 @@
 
         refs = { rows: rows, dueSel: dueSel, weekendCb: weekendCb, fmtSel: fmtSel,
                  overCb: overCb, btnCb: btnCb, minutes: minutes, big: big, small: small,
-                 clock: clock, log: logBox };
+                 meCb: meCb, meBox: meBox, clock: clock, log: logBox };
         sync();
         setInterval(tick, 1000);
     }
@@ -835,6 +1022,8 @@
         refs.fmtSel.value = CUR.dateFormat;
         refs.overCb.checked = !!CUR.overwrite;
         refs.btnCb.checked = !!CUR.button;
+        refs.meCb.checked = !!CUR.assignMe;
+        if (document.activeElement !== refs.meBox) refs.meBox.value = CUR.me || '';
         refs.minutes.value = String(CUR.minutes);
         drawLog();
         tick();
@@ -892,6 +1081,7 @@
         wasRunning = running();
         if (IS_TOP) build();
         watchTickets();
+        watchLists();
         document.addEventListener('keydown', function (e) {
             if (e.altKey && e.shiftKey && e.code === 'KeyA') { e.preventDefault(); toggle(); }
         }, true);

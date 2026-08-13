@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Comfort Glamour
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.9.1
+// @version      1.9.3
 // @description  Quality-of-life for ConnectWise Manage: six themes, four dark plus a vivid pale one and a soft greyscale, a hover ticket preview with pickable columns plus the latest note, stale-ticket highlighting, one-click Change/Change/Change, a password-manager-friendly login, and true text-only scaling. Every tweak is a toggle; press Alt+Shift+G for the panel.
 // @author       rami.party
 // @license      MIT
-// @match        https://eu.myconnectwise.net/*
 // @match        https://*.myconnectwise.net/*
+// @exclude      https://sandbox-eu.myconnectwise.net/*
 // @icon         data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d0726'/%3E%3Cpath d='M50 18 L57 43 L82 50 L57 57 L50 82 L43 57 L18 50 L43 43 Z' fill='%23a855f7'/%3E%3Ccircle cx='75' cy='25' r='6' fill='%2322d3ee'/%3E%3C/svg%3E
 // @run-at       document-start
 // @grant        GM_getValue
@@ -41,7 +41,7 @@
     'use strict';
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.9.1';               // keep in step with @version above
+    var VERSION = '1.9.3';               // keep in step with @version above
     var KEY = 'rpGlamourCw.v1';
     var COLS_KEY = 'rpGlamourCw.cols';   // columns of the grid last hovered
     var DEFAULTS = {
