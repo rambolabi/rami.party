@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Ticket Autopilot
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.6.1
+// @version      1.6.2
 // @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, the Ticket Owner, a priority and a due date, applied in that order because each one decides what the next may contain. The lists it offers are read out of your own Manage and kept in your browser, so nothing about your tenant travels with the script. Press the Run autopilot button in a ticket's toolbar to apply them to that one ticket, or set the clock running to have every ticket you open stamped until it switches itself off. Every change is logged. Alt+Shift+A.
 // @author       rami.party
 // @license      MIT
@@ -59,7 +59,7 @@
     if (window[NS]) { window[NS].toggle(); return; }
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.6.1';
+    var VERSION = '1.6.2';
     var KEY = 'rpGlamourCwAuto.v1';
     var LISTS_KEY = 'rpGlamourCwAuto.lists';
 
@@ -95,7 +95,11 @@
     /* ---------------- settings ---------------- */
 
     function read(key) {
-        try { return JSON.parse(localStorage.getItem(key)) || {}; } catch (e) { return {}; }
+        /* Only an object survives: `k in 5` throws in load(), outside any catch. */
+        try {
+            var v = JSON.parse(localStorage.getItem(key));
+            return (v && typeof v === 'object') ? v : {};
+        } catch (e) { return {}; }
     }
     function write(key, value) {
         try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private mode */ }
@@ -700,6 +704,7 @@
     }
 
     function watchTickets() {
+        if (!document.body) return;              // placeholder frames have none
         function sweep() {
             try { syncRunButtons(); } catch (e) { /* the button is optional */ }
             if (!running()) return;

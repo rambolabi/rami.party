@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Prism · Reading Comfort
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.0.0
+// @version      1.0.1
 // @description  Make any site readable: invert it, repaint it in a dark, sepia or high-contrast palette (or colours you pick), scale the text without breaking the layout, widen the line spacing, cap the line length, swap the font, calm the animations and dim the images. Settings are remembered per site. Alt+Shift+P for the panel.
 // @author       rami.party
 // @license      MIT
@@ -42,7 +42,7 @@
     if (window[NS]) { window[NS].toggle(); return; }       // re-clicked bookmarklet
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.0.0';
+    var VERSION = '1.0.1';
     var KEY = 'rpgPrism.v1';
     /* Same heuristic as Truesight: running before the page means a userscript
        on every site, so wait behind the pill; running after means a click. */
@@ -94,6 +94,8 @@
     function load() {
         var all = readAll();
         var stored = (all.sites && all.sites[site]) || all.global || {};
+        /* Only an object survives: `k in 5` throws, outside any catch. */
+        if (!stored || typeof stored !== 'object') stored = {};
         var out = {};
         for (var k in DEFAULTS) out[k] = (k in stored) ? stored[k] : DEFAULTS[k];
         out.text = clamp(out.text, 70, 200);

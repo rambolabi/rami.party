@@ -47,6 +47,11 @@ TITLES = {
         "The guidance annex: how the Commission reads and applies Regulation "
         "(EU) 2024/2847 in practice.",
     ),
+    "CELEX_32019L0882_EN_TXT.pdf": (
+        "Directive (EU) 2019/882: European Accessibility Act",
+        "Accessibility requirements for products and services, adopted "
+        "17 April 2019.",
+    ),
 }
 
 
@@ -71,6 +76,17 @@ def js_string(s):
     return json.dumps(s, ensure_ascii=False).replace("</", "<\\/")
 
 
+def previous_added_dates():
+    """file -> 'added' date from the current manifest, so rebuilds keep them."""
+    path = os.path.join(DATA_DIR, "manifest.js")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            match = re.search(r"=\s*(\[.*\]);", fh.read(), re.S)
+        return {d["file"]: d["added"] for d in json.loads(match.group(1))} if match else {}
+    except (OSError, ValueError, KeyError):
+        return {}
+
+
 def build():
     if not os.path.isdir(PDF_DIR):
         sys.exit(f"No pdf folder at {PDF_DIR}")
@@ -82,6 +98,7 @@ def build():
 
     manifest = []
     seen_ids = set()
+    added_dates = previous_added_dates()
 
     for path in pdfs:
         name = os.path.basename(path)
@@ -127,7 +144,7 @@ def build():
             "chars": chars,
             "emptyPages": empty,
             "bytes": os.path.getsize(path),
-            "added": date.today().isoformat(),
+            "added": added_dates.get(name) or date.today().isoformat(),
         })
         flag = f"  ({empty} empty pages — scanned images?)" if empty else ""
         print(f"  {title[:58]:<60} {len(pages):>4} pages  {chars:>8,} chars{flag}")

@@ -37,14 +37,14 @@
        Dark themes: uncomment the block and keep ONE filter line.
        Kept off by default: pure CSS cannot skip the iframes the way the
        userscript can, so photos inside frames stay inverted. The userscript
-       handles frames properly and ships a four-theme picker; prefer it.
+       handles frames properly and ships a seven-theme picker; prefer it. Its
+       three brand themes are not here at all: they repaint ConnectWise surface
+       by surface rather than filtering, which needs the script.
        Do not add a background colour here. The filter inverts the element's
        own background too, so a dark one comes back out cream.
 
     html {
-        filter: invert(.92) hue-rotate(180deg) !important;                          | midnight
         filter: invert(1) hue-rotate(180deg) contrast(.92) !important;              | obsidian
-        filter: invert(.88) hue-rotate(200deg) saturate(.85) !important;            | slate
         filter: invert(.9) hue-rotate(180deg) sepia(.28) saturate(1.15) !important; | ember
     }
     img, video, canvas, embed, object, picture,

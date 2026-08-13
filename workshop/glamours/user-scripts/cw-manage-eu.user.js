@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Comfort Glamour
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.9.3
-// @description  Quality-of-life for ConnectWise Manage: six themes, four dark plus a vivid pale one and a soft greyscale, a hover ticket preview with pickable columns plus the latest note, stale-ticket highlighting, one-click Change/Change/Change, a password-manager-friendly login, and true text-only scaling. Every tweak is a toggle; press Alt+Shift+G for the panel.
+// @version      1.11.5
+// @description  Quality-of-life for ConnectWise Manage: seven themes, three that repaint the app in a full palette and four that filter it, a hover ticket preview with pickable columns plus the latest note, stale-ticket highlighting, one-click Change/Change/Change, a password-manager-friendly login, and true text-only scaling. Every tweak is a toggle; press Alt+Shift+G for the panel.
 // @author       rami.party
 // @license      MIT
 // @match        https://*.myconnectwise.net/*
@@ -41,12 +41,12 @@
     'use strict';
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.9.3';               // keep in step with @version above
+    var VERSION = '1.11.5';              // keep in step with @version above
     var KEY = 'rpGlamourCw.v1';
     var COLS_KEY = 'rpGlamourCw.cols';   // columns of the grid last hovered
     var DEFAULTS = {
         theme: 'none',      // one of THEMES below
-        lastTheme: 'midnight', // restored by the Alt+Shift+D toggle
+        lastTheme: 'goodit', // restored by the Alt+Shift+D toggle
         preview: true,      // hover a grid row → preview card
         previewMode: 'cursor', // 'cursor' (floats by the pointer) | 'inline' (under the row)
         previewFields: true, // list the row's columns in the card
@@ -64,24 +64,33 @@
         pill: true          // show the floating ✨ button
     };
 
-    /* Each theme is a CSS filter recipe applied to the top <html>. The four
-       dark ones invert, so photos, the panel and our overlays have to be
-       flipped back; Daylight and Graphite do not, and must not be.
-       Daylight is saturation only: a contrast boost on a light UI crushes the
-       pale greys Manage draws its borders and zebra rows with. */
+    /* Three of these repaint the app, the rest filter it.
+       A filter is a recipe applied to the top <html>: cheap, and it keeps
+       every hue where it was, which is why a red pill still reads as red.
+       What it cannot do is tint the greys towards a brand colour, because
+       reaching a green or a pink means rotating every hue by 95 or 275
+       degrees, and a red priority that comes out green is worse than no
+       theme at all. So the Good IT pair and Hot Pink take the other road
+       and overwrite ConnectWise's own surfaces, colour by colour; they
+       carry a Beta tag while that beds in.
+       Daylight is saturation only: a contrast boost on a light UI crushes
+       the pale greys Manage draws its borders and zebra rows with. */
     var THEMES = [
-        { id: 'none',     label: 'ConnectWise default',      filter: '',                                                                  invert: false },
-        { id: 'midnight', label: 'Midnight · neutral dark',  filter: 'invert(.92) hue-rotate(180deg)',                                     invert: true },
-        { id: 'obsidian', label: 'Obsidian · deep black',    filter: 'invert(1) hue-rotate(180deg) contrast(.92)',                         invert: true },
-        { id: 'slate',    label: 'Slate · cool blue-grey',   filter: 'invert(.88) hue-rotate(200deg) saturate(.85)',                       invert: true },
-        { id: 'ember',    label: 'Ember · warm amber',       filter: 'invert(.9) hue-rotate(180deg) sepia(.28) saturate(1.15)',            invert: true },
-        { id: 'daylight', label: 'Daylight · pale, vivid',   filter: 'saturate(1.6)',                                                     invert: false },
-        { id: 'graphite', label: 'Graphite · soft greyscale', filter: 'grayscale(1) invert(.22) contrast(1.06)',                           invert: false }
+        { id: 'none',       label: 'ConnectWise default',             filter: '',                                                                  invert: false },
+        { id: 'goodit',     label: 'Good IT · brand green (Beta)',    filter: '',                                                                  invert: false, paint: 'goodit' },
+        { id: 'goodpurple', label: 'Good IT · brand purple (Beta)',   filter: '',                                                                  invert: false, paint: 'goodpurple' },
+        { id: 'obsidian',   label: 'Obsidian · deep black',           filter: 'invert(1) hue-rotate(180deg) contrast(.92)',                         invert: true },
+        { id: 'hotpink',    label: 'Hot Pink · bright rose (Beta)',   filter: '',                                                                  invert: false, paint: 'hotpink' },
+        { id: 'ember',      label: 'Ember · warm amber',              filter: 'invert(.9) hue-rotate(180deg) sepia(.28) saturate(1.15)',            invert: true },
+        { id: 'daylight',   label: 'Daylight · pale, vivid',          filter: 'saturate(1.6)',                                                     invert: false },
+        { id: 'graphite',   label: 'Graphite · soft greyscale',       filter: 'grayscale(1) invert(.22) contrast(1.06)',                           invert: false }
     ];
     function themeById(id) {
         for (var i = 0; i < THEMES.length; i++) if (THEMES[i].id === id) return THEMES[i];
         return THEMES[0];
     }
+
+    var MOVED = { midnight: 'goodit', slate: 'hotpink' };
 
     /* ---------------- settings I/O ----------------
        Regional tenants (eu., na., …) are separate origins, so localStorage on
@@ -108,11 +117,23 @@
         var s = {};
         try {
             var raw = readRaw() || memFallback;
-            if (raw) s = JSON.parse(raw) || {};
+            /* Only an object survives: `k in 5` throws, and this runs outside
+               the catch, so a corrupted blob would kill the whole script. */
+            if (raw) {
+                var parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') s = parsed;
+            }
         } catch (e) { s = {}; }
         var out = {};
         for (var k in DEFAULTS) out[k] = (k in s) ? s[k] : DEFAULTS[k];
-        if (s.dark === true && !('theme' in s)) { out.theme = 'midnight'; out.lastTheme = 'midnight'; } // v1.0 migration
+        if (s.dark === true && !('theme' in s)) { out.theme = 'goodit'; out.lastTheme = 'goodit'; } // v1.0 migration
+        /* v1.10 rebuilt both of those slots; a stored id nobody answers to
+           would otherwise fall back to no theme at all. */
+        if (MOVED[out.theme]) out.theme = MOVED[out.theme];
+        if (MOVED[out.lastTheme]) out.lastTheme = MOVED[out.lastTheme];
+        /* any other unshipped id would leave the panel's theme select blank */
+        if (themeById(out.theme).id !== out.theme) out.theme = DEFAULTS.theme;
+        if (themeById(out.lastTheme).id !== out.lastTheme) out.lastTheme = DEFAULTS.lastTheme;
         if (!Array.isArray(out.previewCols)) out.previewCols = [];
         out.zoom = Math.max(80, Math.min(130, parseInt(out.zoom, 10) || 100));
         out.staleDays = Math.max(1, Math.min(365, parseInt(out.staleDays, 10) || 5));
@@ -287,6 +308,7 @@
                 fsPending = 0;
                 var batch = fsQueue;
                 fsQueue = [];
+                if (fsFactor === 1) return;   // zoom went back to 100% while this batch waited
                 rescale(batch);
             }, 350);
         });
@@ -321,6 +343,277 @@
             NAV_SEL + ' svg{fill:' + fg + '!important}';
     }
 
+    /* ---------------- repainted themes ----------------
+       ConnectWise ships no theming, so these overwrite its colours instead of
+       filtering them. Almost everything in Manage is already transparent and
+       inherits from a handful of surfaces, so the sheet flattens the lot and
+       then lifts those few back out.
+
+       Flatten and lifts are all !important, which means specificity decides
+       rather than order, so they are written to the same weight and the lifts
+       come second. Both carry the same guard: every overlay either script
+       mounts is called rpg-something, and those keep their own colours. */
+
+    var SKIP = ':not([id^="rpg-"]):not([id^="rpg-"] *)';
+    var LIFT = ':not(svg)' + SKIP;              // the extra :not is weight, not meaning
+    var PICK_ATTR = 'data-rpg-picked';          // our own "this row is ticked" mark
+
+    /* Good IT green is the brand sheet: 3302 deep green surfaces, 9222 warm
+       off-white text, 7464 muted teal, with 7452 periwinkle (#9898FF) as THE
+       accent: links, row hover and selection all show it. Good IT purple is
+       the same sheet reversed, periwinkle-dark surfaces with the mint 7478 as
+       accent. Hot Pink is the same shape in rose. Hovering a row always marks
+       it in the theme's accent. */
+    var PALETTES = {
+        goodit: {
+            bg: '#003731', surface: '#0C4840', raised: '#2A524D',
+            fg: '#EAE4DD', muted: '#95B6B5', line: 'rgba(149,182,181,.34)',
+            link: '#9898FF', accent: '#9898FF', hover: 'rgba(152,152,255,.20)',
+            selected: 'rgba(152,152,255,.30)'
+        },
+        goodpurple: {
+            bg: '#181833', surface: '#232349', raised: '#2D2D5A',
+            fg: '#EAE4DD', muted: '#B4B4E5', line: 'rgba(152,152,255,.34)',
+            link: '#95F9A9', accent: '#95F9A9', hover: 'rgba(149,249,169,.16)',
+            selected: 'rgba(149,249,169,.26)'
+        },
+        hotpink: {
+            bg: '#33061F', surface: '#4A0B2C', raised: '#5C1039',
+            fg: '#FFE6F2', muted: '#F7A8CE', line: 'rgba(255,105,180,.34)',
+            link: '#FF69B4', accent: '#FFC2E0', hover: 'rgba(255,194,224,.16)',
+            selected: 'rgba(255,194,224,.28)'
+        }
+    };
+
+    function paintCSS(p) {
+        function sel(list) {
+            var out = [];
+            for (var i = 0; i < list.length; i++) out.push('html body ' + list[i] + LIFT);
+            return out.join(',');
+        }
+        return [
+            /* accent-color inherits, so one declaration reaches every native
+               checkbox and radio in the app. */
+            'html,body{background:' + p.bg + '!important;color:' + p.fg + '!important;',
+            'accent-color:' + p.link + ';scrollbar-color:' + p.muted + ' ' + p.surface + '}',
+            'html body *:not(svg):not(svg *)' + SKIP + '{background-color:transparent!important;',
+            'color:' + p.fg + '!important;border-color:' + p.line + '!important;',
+            'box-shadow:none!important;text-shadow:none!important}',
+            /* Manage paints its pod headers with a pale gradient, which a
+               background COLOUR cannot cover. Two kinds of element keep their
+               image because it IS their content: empty ones (a priority chip
+               or status swatch is a coloured one-pixel gif) and anything
+               check-ish, because the grid checkbox is an &nbsp;-filled div
+               drawn entirely by a sprite, and this rule once deleted every
+               checkbox on the board. Inline backgrounds are real pictures. */
+            'html body *:not(svg):not(svg *):not(:empty):not([class*="check" i]):not([style*="background-image" i])' + SKIP +
+                '{background-image:none!important}',
+            /* GXT mounts every floating layer straight on <body>: the left
+               menu's flyouts, the navigation search results, icon menus,
+               combo dropdown lists, windows. The flatten would turn them all
+               to glass and a hover menu then draws its text over whatever is
+               behind it, so every top-level layer is made opaque again. The
+               ones GXT is stacking carry an inline z-index and read as
+               raised surfaces with depth; the rest (the shell) is the page.
+               The modal mask is an empty div and must stay see-through. */
+            'html body>*:not(svg):not(svg *):not(:empty)' + SKIP +
+                '{background-color:' + p.bg + '!important}',
+            'html body>[style*="z-index"]:not(svg):not(svg *):not(:empty)' + SKIP +
+                '{background-color:' + p.raised + '!important;' +
+                'box-shadow:0 14px 36px rgba(0,0,0,.55)!important;' +
+                'border:1px solid ' + p.line + '!important}',
+            /* things that have to read as a surface rather than as the page;
+               native checkboxes and radios stay native, accent-color already
+               dressed them, and a painted box would only hide their state */
+            sel(['input:not([type="checkbox"]):not([type="radio"])', 'textarea', 'select', '.mm_comboBox', '.mm_button']) +
+                '{background-color:' + p.surface + '!important}',
+            /* The grid tick boxes are sprite-drawn divs made for a white
+               page, so instead of patching the sprite they are redrawn in the
+               palette: an outlined box when clear, the accent with a tick
+               when the row is picked. The tick is two borders rotated 45
+               degrees, in the page colour so it cuts out of the accent. */
+            sel(['.x-grid-row-checker', '.x-grid-hd-checker']) +
+                '{background-image:none!important;background-color:transparent!important;',
+            'border:1.5px solid ' + p.muted + '!important;border-radius:4px!important;',
+            'box-sizing:border-box!important;position:relative!important}',
+            sel(['tr[class*="selected" i] .x-grid-row-checker', 'tr[aria-selected="true"] .x-grid-row-checker',
+                 'tr[' + PICK_ATTR + '] .x-grid-row-checker']) +
+                '{border-color:transparent!important;background-color:transparent!important}',
+            /* raw, not through sel(): a :not() after ::after is invalid and
+               the parser would drop the whole mark */
+            'html body tr[class*="selected" i] .x-grid-row-checker::after,',
+            'html body tr[aria-selected="true"] .x-grid-row-checker::after,',
+            'html body tr[' + PICK_ATTR + '] .x-grid-row-checker::after,',
+            'html body [class*="checker-on"].x-grid-hd-checker::after',
+            '{content:"\\2713";position:absolute;left:50%;top:50%;transform:translate(-50%,-54%);',
+            'font:900 15px/1 system-ui,sans-serif;color:' + p.link + '}',
+            /* Ticked rows: Manage's own selection wash is flattened away, so
+               the row is washed AND boxed in the accent, with the checkmark
+               above replacing the checkbox. The frame is drawn with inset
+               shadows on the cells: a border would move the layout, and a
+               table row cannot reliably carry an outline of its own. */
+            sel(['tr[class*="selected" i]', 'tr[aria-selected="true"]', 'tr[' + PICK_ATTR + ']']) +
+                '{background-color:' + p.selected + '!important}',
+            sel(['tr[class*="selected" i]>td', 'tr[aria-selected="true"]>td', 'tr[' + PICK_ATTR + ']>td']) +
+                '{box-shadow:inset 0 2px 0 ' + p.link + ',inset 0 -2px 0 ' + p.link + '!important}',
+            sel(['tr[class*="selected" i]>td:first-child', 'tr[aria-selected="true"]>td:first-child',
+                 'tr[' + PICK_ATTR + ']>td:first-child']) +
+                '{box-shadow:inset 0 2px 0 ' + p.link + ',inset 0 -2px 0 ' + p.link + ',inset 3px 0 0 ' + p.link + '!important}',
+            sel(['tr[class*="selected" i]>td:last-child', 'tr[aria-selected="true"]>td:last-child',
+                 'tr[' + PICK_ATTR + ']>td:last-child']) +
+                '{box-shadow:inset 0 2px 0 ' + p.link + ',inset 0 -2px 0 ' + p.link + ',inset -3px 0 0 ' + p.link + '!important}',
+            sel(['th', '.cw-ml-header']) + '{background-color:' + p.raised + '!important}',
+            /* GXT floats its windows straight on <body>, over everything */
+            sel(['.cw-gxt-wnd']) + '{background-color:' + p.raised + '!important;' +
+                'border:1px solid ' + p.line + '!important;box-shadow:0 18px 44px rgba(0,0,0,.55)!important}',
+            sel(['a', 'a *']) + '{color:' + p.link + '!important}',
+            sel(['.mm_podElementLabel', '.mm_podElementLabel *']) + '{color:' + p.muted + '!important}',
+            /* No zebra: a row stripe would have to outweigh the flatten, and
+               anything that heavy also outranks the stale highlight. The row
+               borders carry the separation instead. */
+            sel(['tr.cw-ml-row:hover']) + '{background-color:' + p.hover + '!important}',
+            NAV_SEL + '{background:' + p.raised + '!important}',
+            NAV_SEL + ' svg{fill:' + p.muted + '!important}',
+            '::placeholder{color:' + p.muted + '!important;opacity:1!important}',
+            '::selection{background:' + p.accent + '!important;color:' + p.bg + '!important}'
+        ].join('');
+    }
+
+    /* The preview card is ours, so it is not repainted with the page: it is
+       given the palette directly. */
+    function previewTint(p) {
+        return '#rpg-preview{background:' + p.raised + ';color:' + p.fg + ';border-color:' + p.link + '}' +
+            '#rpg-preview b{color:' + p.link + '}' +
+            '#rpg-preview dt,#rpg-preview .rpg-pv-wait{color:' + p.muted + '}' +
+            '#rpg-preview .rpg-pv-notes p{color:' + p.fg + '}' +
+            '#rpg-preview .rpg-pv-notes{border-top-color:' + p.line + '}';
+    }
+
+    /* ---------------- picked rows under the painted themes ----------------
+       When a row is ticked, Manage adds a class to it and swaps the checker
+       sprite, but in this build that class is compiler-generated, so CSS
+       cannot name it, and the flatten wipes the colour it painted. Selection
+       is re-detected instead: the readable hooks are tried first, and beyond
+       those every row's checker is compared against a baseline signature
+       taken once while the whole grid agreed (nothing ticked). A checker
+       that no longer matches the baseline is a ticked one: that reads GXT's
+       own sprite swap without knowing what it is called. Rows are marked
+       with our own attribute, which is what the palette styles. */
+    var pickBaseline = null;
+    var pickChannelLive = false;   // a checker has been seen deviating at least once
+    var pickTimer = 0;
+
+    function checkerSig(node) {
+        var cs = getComputedStyle(node);
+        return node.className + '|' + cs.backgroundImage + '|' + cs.backgroundPosition;
+    }
+
+    /* Our own sheet forces the checker's image off, which also blindfolds the
+       comparison: GXT's checked state can be nothing but a different sprite
+       URL. So the signatures are read with the paint sheet briefly disabled,
+       the same trick the text scaler uses to read original font sizes. */
+    function readSigs(rows) {
+        var sheet = document.getElementById('rpg-paint');
+        var live = sheet && sheet.sheet;
+        var sigs = [], counts = {}, withChecker = 0;
+        if (live) live.disabled = true;
+        try {
+            for (var i = 0; i < rows.length; i++) {
+                var c = rows[i].querySelector('.x-grid-row-checker');
+                var sig = null;
+                if (c) { sig = checkerSig(c); counts[sig] = (counts[sig] || 0) + 1; withChecker++; }
+                sigs.push(sig);
+            }
+        } finally {
+            if (live) live.disabled = false;
+        }
+        return { sigs: sigs, counts: counts, withChecker: withChecker };
+    }
+
+    function pickSweep() {
+        if (!themeById(CUR.theme).paint) return;
+        var rows = document.querySelectorAll('tr[class*="ml-row"]');
+        if (!rows.length) return;
+        var read = readSigs(rows);
+        var sigs = read.sigs, counts = read.counts;
+        if (!pickBaseline && read.withChecker >= 3) {
+            var uniform = null, many = false;
+            for (var k in counts) { if (uniform) { many = true; break; } uniform = k; }
+            var anyStd = false;
+            for (var s = 0; s < rows.length; s++) {
+                if (/selected/i.test(rows[s].className) || rows[s].getAttribute('aria-selected') === 'true') { anyStd = true; break; }
+            }
+            if (uniform && !many && !anyStd) pickBaseline = uniform;
+        }
+        for (var j = 0; j < rows.length; j++) {
+            var row = rows[j];
+            var std = /selected/i.test(row.className) || row.getAttribute('aria-selected') === 'true';
+            if (std) { row.setAttribute(PICK_ATTR, ''); continue; }
+            /* Without a baseline there is nothing to compare against, so the
+               click bookkeeping's marks are left standing rather than wiped. */
+            if (!pickBaseline || !sigs[j]) continue;
+            var deviates = sigs[j] !== pickBaseline;
+            if (deviates) pickChannelLive = true;
+            /* GXT also restyles the checker under the pointer, so a hovered
+               row is only trusted when it was already marked. */
+            var hovered = /over|hover/i.test(row.className) || row.matches(':hover');
+            if (deviates && (!hovered || row.hasAttribute(PICK_ATTR))) row.setAttribute(PICK_ATTR, '');
+            /* An unmark needs proof this build's selection shows on the
+               checker at all, or the sweep would erase the click marks. */
+            else if (!deviates && pickChannelLive && !hovered) row.removeAttribute(PICK_ATTR);
+        }
+    }
+
+    function clearPicked() {
+        var marked = document.querySelectorAll('[' + PICK_ATTR + ']');
+        for (var i = 0; i < marked.length; i++) marked[i].removeAttribute(PICK_ATTR);
+    }
+
+    function schedulePickSweep() {
+        clearTimeout(pickTimer);
+        pickTimer = setTimeout(pickSweep, 150);
+    }
+
+    function initPickWatch() {
+        if (!document.body) return;
+        /* The click is also mirrored directly, so the mark appears the moment
+           the user acts even where the signature channel has no baseline:
+           checker click toggles that row, header checker toggles the board,
+           a plain row click selects that one row, Ctrl keeps the others. */
+        document.addEventListener('click', function (e) {
+            if (!themeById(CUR.theme).paint) return;
+            var t = e.target;
+            if (!t || !t.closest || t.closest('#rpg-root,#rpg-preview')) return;
+            var checker = t.closest('.x-grid-row-checker,.x-grid-hd-checker');
+            var row = t.closest('tr[class*="ml-row"]');
+            if (checker && !row) {
+                var rows = document.querySelectorAll('tr[class*="ml-row"]');
+                var any = document.querySelector('tr[' + PICK_ATTR + ']');
+                for (var i = 0; i < rows.length; i++) {
+                    if (any) rows[i].removeAttribute(PICK_ATTR);
+                    else rows[i].setAttribute(PICK_ATTR, '');
+                }
+            } else if (checker && row) {
+                if (row.hasAttribute(PICK_ATTR)) row.removeAttribute(PICK_ATTR);
+                else row.setAttribute(PICK_ATTR, '');
+            } else if (row && !t.closest('a,button,input,select,textarea')) {
+                if (!e.ctrlKey && !e.metaKey) {
+                    var marked = document.querySelectorAll('tr[' + PICK_ATTR + ']');
+                    for (var m = 0; m < marked.length; m++) {
+                        if (marked[m] !== row) marked[m].removeAttribute(PICK_ATTR);
+                    }
+                }
+                row.setAttribute(PICK_ATTR, '');
+            }
+            schedulePickSweep();               // the sweep reconciles with GXT's own state
+        }, true);
+        document.addEventListener('keyup', function () {
+            if (themeById(CUR.theme).paint) schedulePickSweep();
+        }, true);
+        setInterval(function () { if (themeById(CUR.theme).paint) pickSweep(); }, 2500);
+        schedulePickSweep();
+    }
+
     /* ---------------- apply settings ---------------- */
 
     var CUR = DEFAULTS;                          // hot-path copy, refreshed by apply()
@@ -328,14 +621,21 @@
     function apply(s) {
         CUR = s;
         var theme = themeById(s.theme);
+        var palette = theme.paint ? PALETTES[theme.paint] : null;
         setSheet('rpg-dark-media', theme.invert ? CSS.darkMedia : '');
         if (IS_TOP) setSheet('rpg-dark-root', theme.filter ? themeRootCSS(theme) : '');
-        setSheet('rpg-nav', s.navDark ? navCSS(!!theme.invert) : '');
+        /* The filter is the top frame's business, but a repaint has to reach
+           every frame: that is where the grids are. */
+        setSheet('rpg-paint', palette ? paintCSS(palette) : '');
+        if (palette) schedulePickSweep(); else clearPicked();
+        setSheet('rpg-nav', (!palette && s.navDark) ? navCSS(!!theme.invert) : '');
         setSheet('rpg-login', s.login ? CSS.login : '');
         /* Our overlay lives inside the inverted page, so it needs the same
            counter-invert the panel gets. */
         setSheet('rpg-preview-css', s.preview
-            ? CSS.preview + (theme.invert ? '#rpg-preview{filter:invert(1) hue-rotate(180deg)}' : '')
+            ? CSS.preview
+                + (theme.invert ? '#rpg-preview{filter:invert(1) hue-rotate(180deg)}' : '')
+                + (palette ? previewTint(palette) : '')
             : '');
         if (!s.preview) hidePreview();
         setSheet('rpg-stale', s.stale ? staleCSS(s.staleColour) : '');
@@ -529,7 +829,9 @@
         var day = a, month = b;
         if (a <= 12 && b > 12) { day = b; month = a; }
         var d = new Date(y, month - 1, day);
-        return isNaN(d.getTime()) ? null : d;
+        /* Date rolls 31/02 or a 13th month into the next one: that is a
+           serial number in the cell, not a date, and must not mark the row. */
+        return (d.getFullYear() === y && d.getMonth() === month - 1 && d.getDate() === day) ? d : null;
     }
 
     function clearStaleMarks() {
@@ -542,18 +844,26 @@
        than overwriting the answer from the frame that has one. */
     var STALE_STATE_KEY = 'rpGlamourCw.stale';
 
+    /* A frame that can see the grid owns the answer. Without the guards a
+       module frame that has strips but no Last Update column kept snatching
+       the state back every sweep, and the panel text blinked between the two
+       answers. */
     function publishStaleState(state, rows) {
         try {
-            var next = JSON.stringify({ state: state, rows: rows });
-            if (localStorage.getItem(STALE_STATE_KEY) !== next) {
-                localStorage.setItem(STALE_STATE_KEY, next);
-                if (IS_TOP && panelRefs) syncStaleState();
-            }
+            var cur = storedStaleState();
+            var now = Date.now();
+            if (cur && cur.state === state && cur.rows === rows && now - (cur.at || 0) < 5000) return;
+            if (cur && cur.state === 'ok' && state !== 'ok' && now - (cur.at || 0) < 10000) return;
+            localStorage.setItem(STALE_STATE_KEY, JSON.stringify({ state: state, rows: rows, at: now }));
+            if (IS_TOP && panelRefs) syncStaleState();
         } catch (e) { /* private mode */ }
     }
 
     function storedStaleState() {
-        try { return JSON.parse(localStorage.getItem(STALE_STATE_KEY)); } catch (e) { return null; }
+        try {
+            var v = JSON.parse(localStorage.getItem(STALE_STATE_KEY));
+            return (v && typeof v === 'object') ? v : null;
+        } catch (e) { return null; }
     }
 
     function staleSweep() {
@@ -615,6 +925,7 @@
     }
 
     function initStale() {
+        if (!document.body) return;              // placeholder frames have none
         var pending = 0;
         function schedule() {
             clearTimeout(pending);
@@ -931,9 +1242,19 @@
         clearCard();
     }
 
-    function showPreview(row, mode, x, y) {
+    function showPreview(row, mode, x, y, retry) {
         var card = buildPreview(row);
-        if (!card) { stopNoteHunt(); return; }
+        if (!card) {
+            /* A recycled row can still be empty when the hover lands; look
+               again once, or it stays blank until the row is re-entered.
+               The note hunt survives the wait; a second miss ends it. */
+            if (!retry && pvHoverRow === row) {
+                pvTimer = setTimeout(function () { showPreview(row, mode, x, y, true); }, 450);
+            } else {
+                stopNoteHunt();
+            }
+            return;
+        }
         clearCard();
         pvRow = row;
         pvEl = el('div', { id: 'rpg-preview', 'data-mode': mode });
@@ -1121,6 +1442,8 @@
         '#rpg-panel h2{margin:0 0 10px;font:700 14px/1.2 system-ui,sans-serif;color:#e9d5ff}',
         '#rpg-panel label{display:flex;align-items:center;gap:8px;margin:7px 0;cursor:pointer}',
         '#rpg-panel input[type=checkbox]{accent-color:#a855f7;width:15px;height:15px;margin:0}',
+        '#rpg-panel input[type=checkbox]:disabled{opacity:.4}',
+        '#rpg-panel input[type=checkbox]:disabled~span{opacity:.45}',
         '#rpg-panel input[type=radio]{accent-color:#22d3ee;width:14px;height:14px;margin:0}',
         '#rpg-theme-row{display:flex;align-items:center;gap:8px;margin:8px 0 10px}',
         '#rpg-theme-row select{flex:1;min-width:0;padding:5px 8px;border-radius:8px;',
@@ -1150,6 +1473,13 @@
         '#rpg-zoom button{width:26px;height:26px;border-radius:8px;border:1px solid rgba(168,85,247,.5);',
         'background:rgba(168,85,247,.15);color:#ece9ff;font:700 14px/1 system-ui,sans-serif;cursor:pointer}',
         '#rpg-zoom output{min-width:44px;text-align:center;font-weight:700}',
+        '#rpg-log{margin:10px 0 0;padding-top:8px;border-top:1px solid rgba(168,85,247,.25)}',
+        '#rpg-log summary{cursor:pointer;font:600 11.5px/1.2 system-ui,sans-serif;color:#b9b3d9}',
+        '#rpg-log summary:hover{color:#ece9ff}',
+        '#rpg-log-list{margin:6px 0 0;max-height:130px;overflow:auto}',
+        '#rpg-log-list div{padding:2px 0;border-bottom:1px solid rgba(168,85,247,.16);font-size:10.5px;color:#c9c1e8}',
+        '#rpg-log-list time{color:#8f88b8;margin-right:6px}',
+        '#rpg-log-list .rpg-log-empty{border-bottom:0;color:#8f88b8;font-style:italic}',
         '#rpg-note{margin:10px 0 0;font-size:11px;color:#b9b3d9}',
         '#rpg-note a{color:#22d3ee;text-decoration:none}',
         '#rpg-ver{margin-left:6px;padding:1px 6px;border-radius:999px;',
@@ -1228,25 +1558,31 @@
         var node = el('div', { id: 'rpg-stale-sub', 'class': 'rpg-sub' }, [
             el('div', { 'class': 'rpg-field' }, [el('span', { text: 'No update for' }), days, el('span', { text: 'days' })]),
             el('div', { 'class': 'rpg-field' }, [el('span', { text: 'Colour' }), colour]),
-            el('p', { 'class': 'rpg-subhint', text: 'Reads the Last Update column of the grid you are looking at.' }),
-            el('p', { 'class': 'rpg-subhint', id: 'rpg-stale-state' })
+            el('p', { 'class': 'rpg-subhint', text: 'Reads the Last Update column of the grid you are looking at. What it finds is noted in the Log below.' })
         ]);
         return { node: node, days: days, colour: colour };
     }
 
+    /* What the stale sweep found goes to the log, not the panel body: a line
+       that rewrites itself as frames report in reads as flicker. Keyed on the
+       state, not the row count, so paging a board does not fill the log. */
+    var lastStaleKey = '';
+
     function syncStaleState() {
-        var line = document.getElementById('rpg-stale-state');
-        if (!line) return;
-        var s = CUR.stale ? storedStaleState() : null;
-        if (!s) { line.textContent = ''; return; }
+        if (!CUR.stale) { lastStaleKey = ''; return; }
+        var s = storedStaleState();
+        if (!s) return;
+        var key = s.state + (s.rows ? '+' : '0');
+        if (key === lastStaleKey) return;
+        lastStaleKey = key;
         if (s.state === 'nocol') {
-            line.textContent = 'No Last Update column on the grid you are looking at. Add it to your Manage view and it starts working.';
+            glog('No Last Update column on the grid you are looking at. Add it to your Manage view and the stale highlight starts working.');
         } else if (s.state === 'hidden') {
-            line.textContent = 'Found the column, but that grid is not on screen. Open the service board and it colours itself in.';
+            glog('Stale highlight: found the Last Update column, but that grid is not on screen.');
         } else if (!s.rows) {
-            line.textContent = 'Nothing on that grid is older than ' + CUR.staleDays + ' days.';
+            glog('Stale highlight: nothing on that grid is older than ' + CUR.staleDays + ' days.');
         } else {
-            line.textContent = 'Colouring ' + s.rows + (s.rows === 1 ? ' row.' : ' rows.');
+            glog('Stale highlight: colouring ' + s.rows + (s.rows === 1 ? ' row.' : ' rows.'));
         }
     }
 
@@ -1283,7 +1619,10 @@
     }
 
     function storedColumns() {
-        try { return JSON.parse(localStorage.getItem(COLS_KEY)) || []; } catch (e) { return []; }
+        try {
+            var v = JSON.parse(localStorage.getItem(COLS_KEY));
+            return Array.isArray(v) ? v : [];
+        } catch (e) { return []; }
     }
 
     /* Company / Username, shown right under the Login helper. */
@@ -1300,6 +1639,35 @@
         var hint = el('p', { 'class': 'rpg-subhint', text: 'Filled in on the Manage sign-in screen and kept there against whatever your browser remembered. Your password is never stored: that stays with your password manager.' });
         var node = el('div', { id: 'rpg-login-sub', 'class': 'rpg-sub' }, [company.row, user.row, hint]);
         return { node: node, company: company.input, user: user.input };
+    }
+
+    /* ---------------- the log ----------------
+       Notices used to appear and vanish in the panel body, which read as
+       flicker. They land here instead: a fold at the bottom of the panel,
+       closed by default, keeping the last 15. */
+    var logEntries = [];
+
+    function glog(text) {
+        if (!IS_TOP) return;
+        logEntries.push({ at: new Date(), text: String(text).slice(0, 200) });
+        if (logEntries.length > 15) logEntries.shift();
+        renderLog();
+    }
+
+    function renderLog() {
+        if (!panelRefs || !panelRefs.logList) return;
+        var box = panelRefs.logList;
+        box.textContent = '';
+        if (!logEntries.length) {
+            box.appendChild(el('div', { 'class': 'rpg-log-empty', text: 'Nothing yet.' }));
+            return;
+        }
+        logEntries.slice().reverse().forEach(function (e) {
+            var row = el('div');
+            row.appendChild(el('time', { text: ('0' + e.at.getHours()).slice(-2) + ':' + ('0' + e.at.getMinutes()).slice(-2) }));
+            row.appendChild(document.createTextNode(e.text));
+            box.appendChild(row);
+        });
     }
 
     function buildPanel(s) {
@@ -1366,6 +1734,12 @@
         panel.appendChild(zoomRow);
         panel.appendChild(el('p', { 'class': 'rpg-subhint', text: 'Text only: buttons, icons and columns keep their size.' }));
 
+        var logFold = el('details', { id: 'rpg-log' });
+        logFold.appendChild(el('summary', { text: 'Log' }));
+        var logList = el('div', { id: 'rpg-log-list' });
+        logFold.appendChild(logList);
+        panel.appendChild(logFold);
+
         var note = el('p', { id: 'rpg-note' });
         note.appendChild(document.createTextNode('Alt+Shift+G toggles this panel \u00b7 Alt+Shift+D toggles the theme. Settings stay in this browser. '));
         var home = el('a', { href: 'https://rami.party/workshop/glamours/', target: '_blank', rel: 'noopener', text: 'About this glamour \u2197' });
@@ -1386,7 +1760,7 @@
             if (e.altKey && e.shiftKey && (e.code === 'KeyD')) {
                 e.preventDefault();
                 var cur = loadSettings();
-                updateMany({ theme: cur.theme === 'none' ? (cur.lastTheme || 'midnight') : 'none' });
+                updateMany({ theme: cur.theme === 'none' ? (cur.lastTheme || 'goodit') : 'none' });
             }
             if (e.key === 'Escape' && !panel.hidden) {
                 panel.hidden = true;
@@ -1397,7 +1771,8 @@
         root.appendChild(panel);
         root.appendChild(pill);
         document.body.appendChild(root);
-        panelRefs = { root: root, panel: panel, pill: pill, inputs: inputs, zoomOut: out, themeSel: themeSel, sub: sub, pvSub: pvSub, staleSub: staleSub };
+        panelRefs = { root: root, panel: panel, pill: pill, inputs: inputs, zoomOut: out, themeSel: themeSel, sub: sub, pvSub: pvSub, staleSub: staleSub, logList: logList };
+        renderLog();
         syncPanel(s);
     }
 
@@ -1408,6 +1783,14 @@
         TOGGLES.forEach(function (t) {
             if (panelRefs.inputs[t[0]]) panelRefs.inputs[t[0]].checked = !!s[t[0]];
         });
+        /* The brand themes paint the menu bar themselves, so the toggle would
+           do nothing; saying so beats leaving a dead switch. */
+        var painted = !!themeById(s.theme).paint;
+        var nav = panelRefs.inputs.navDark;
+        if (nav) {
+            nav.disabled = painted;
+            nav.parentElement.title = painted ? 'This theme paints the menu bar itself.' : '';
+        }
         panelRefs.zoomOut.textContent = s.zoom + '%';
         panelRefs.themeSel.value = s.theme;
         var pv = panelRefs.pvSub;
@@ -1455,14 +1838,17 @@
     function onReady() {
         var s = loadSettings();
         apply(s);                                // body exists now → text scaling
-        enhanceLogin(s);
-        initPreview();
-        initStale();
-        initTripleChange();
+        /* The panel goes up before the features do: it is the only way to
+           switch one off, so it must not depend on all of them starting. */
         if (IS_TOP) {
             saveSettings(s);                     // rewrites the blob so settings dropped in an update stop being kept
             buildPanel(s);
         }
+        enhanceLogin(s);
+        initPreview();
+        initStale();
+        initTripleChange();
+        initPickWatch();
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', onReady);
