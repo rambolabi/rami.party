@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Ticket Autopilot
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.6.3
+// @version      1.6.4
 // @description  Stamp the same fields onto every ticket you open: Board, Status, Type, Subtype, Item, the Ticket Owner, a priority and a due date, applied in that order because each one decides what the next may contain. The lists it offers are read out of your own Manage and kept in your browser, so nothing about your tenant travels with the script. Press the Run autopilot button in a ticket's toolbar to apply them to that one ticket, or set the clock running to have every ticket you open stamped until it switches itself off. Every change is logged. Alt+Shift+A.
 // @author       rami.party
 // @license      MIT
@@ -59,7 +59,7 @@
     if (window[NS]) { window[NS].toggle(); return; }
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.6.3';
+    var VERSION = '1.6.4';
     var KEY = 'rpGlamourCwAuto.v1';
     var LISTS_KEY = 'rpGlamourCwAuto.lists';
 
@@ -717,7 +717,20 @@
             if (pending || (!running() && !CUR.button)) return;
             pending = setTimeout(function () { pending = 0; sweep(); }, 700);
         }).observe(document.body, { childList: true, subtree: true });
-        setInterval(sweep, 2500);
+        /* A hidden tab stamps nothing and needs no button upkeep; the sweep
+           on becoming visible catches the tab straight up. */
+        setInterval(function () {
+            if (document.hidden) return;
+            if (!running() && !CUR.button) {
+                /* the option went off in another tab: clear leftovers, then rest */
+                if (document.querySelector('.rpg-ap-run')) { try { syncRunButtons(); } catch (e) { /* optional */ } }
+                return;
+            }
+            sweep();
+        }, 2500);
+        document.addEventListener('visibilitychange', function () {
+            if (!document.hidden) setTimeout(sweep, 300);
+        });
         setTimeout(sweep, 1200);
     }
 

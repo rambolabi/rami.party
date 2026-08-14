@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ConnectWise Manage · Comfort Glamour
 // @namespace    https://rami.party/workshop/glamours/
-// @version      1.11.6
+// @version      1.12.1
 // @description  Quality-of-life for ConnectWise Manage: seven themes, three that repaint the app in a full palette and four that filter it, a hover ticket preview with pickable columns plus the latest note, stale-ticket highlighting, one-click Change/Change/Change, a password-manager-friendly login, and true text-only scaling. Every tweak is a toggle; press Alt+Shift+G for the panel.
 // @author       rami.party
 // @license      MIT
@@ -41,7 +41,7 @@
     'use strict';
 
     var IS_TOP = window.self === window.top;
-    var VERSION = '1.11.6';              // keep in step with @version above
+    var VERSION = '1.12.1';              // keep in step with @version above
     var KEY = 'rpGlamourCw.v1';
     var COLS_KEY = 'rpGlamourCw.cols';   // columns of the grid last hovered
     var DEFAULTS = {
@@ -571,7 +571,10 @@
 
     function schedulePickSweep() {
         clearTimeout(pickTimer);
-        pickTimer = setTimeout(pickSweep, 150);
+        pickTimer = setTimeout(function () {
+            try { pickSweep(); } catch (e) { /* never let a timer throw */ }
+            try { keepSweep(); } catch (e) { /* a week flip redraws the tiles */ }
+        }, 150);
     }
 
     function initPickWatch() {
@@ -610,12 +613,109 @@
         document.addEventListener('keyup', function () {
             if (themeById(CUR.theme).paint) schedulePickSweep();
         }, true);
+        /* Maintenance only: the event-driven sweeps carry the interaction.
+           A hidden tab does no styling work at all. */
         setInterval(function () {
-            if (!themeById(CUR.theme).paint) return;
-            pickSweep();
-            unlitSweep();
-        }, 2500);
+            if (document.hidden || !themeById(CUR.theme).paint) return;
+            try { if (document.querySelector('.x-grid-row-checker')) pickSweep(); } catch (e) { /* never let a timer throw */ }
+            try { keepSweep(); } catch (e) { /* same */ }
+            try { unlitSweep(); } catch (e) { /* same */ }
+        }, 4000);
         schedulePickSweep();
+    }
+
+    /* ---------------- colours that ARE the information ----------------
+       The dispatch scheduler says everything in colour: activity, service,
+       project and conflict tiles each have their own, the capacity strips
+       run blue/red/olive, and those values are tenant-configurable, so no
+       palette can be written into this file. The flatten wipes them. So they
+       are read back: with the paint sheet briefly off, each element's true
+       colours are captured and pinned inline with !important, which nothing
+       outranks. Toolbar sprite icons (.mm_button) get their image back the
+       same way, image only: their labels must keep the theme's light text.
+       Prior inline values are parked in the attribute for the way back. */
+    var KEEP_ATTR = 'data-rpg-keep';
+    /* .appointment.decoration is the hour ruler, not a tile: pinning its grey
+       onto the dark page made every time marker unreadable. */
+    var KEEP_HOSTS = '.appointment:not(.decoration),.day-info-cell';
+    var KEEP_FULL = '.appointment:not(.decoration),.appointment:not(.decoration) *,.day-info-cell,.day-info-cell *';
+    var KEEP_ICON = '.mm_button,.mm_button *';
+
+    function keepSweep() {
+        if (!themeById(CUR.theme).paint || !document.body) return;
+        var fulls = document.querySelectorAll(KEEP_FULL);
+        var icons = document.querySelectorAll(KEEP_ICON);
+        var jobs = [], i, n;
+        for (i = 0; i < fulls.length; i++) {
+            if (!fulls[i].hasAttribute(KEEP_ATTR)) jobs.push({ n: fulls[i], full: true });
+        }
+        for (i = 0; i < icons.length; i++) {
+            n = icons[i];
+            if (!n.hasAttribute(KEEP_ATTR) && !(n.closest && n.closest(KEEP_HOSTS))) {
+                jobs.push({ n: n, full: false });
+            }
+        }
+        if (!jobs.length) return;
+        var sheet = document.getElementById('rpg-paint');
+        var live = sheet && sheet.sheet;
+        if (live) live.disabled = true;
+        try {
+            for (i = 0; i < jobs.length; i++) {
+                var cs = getComputedStyle(jobs[i].n);
+                jobs[i].bg = cs.backgroundColor;
+                jobs[i].col = cs.color;
+                jobs[i].brd = cs.borderTopColor;
+                jobs[i].img = cs.backgroundImage;
+            }
+        } finally {
+            if (live) live.disabled = false;
+        }
+        for (i = 0; i < jobs.length; i++) {
+            var j = jobs[i];
+            n = j.n;
+            var st = n.style;
+            var prior = { b: st.getPropertyValue('background-color'), c: st.getPropertyValue('color'),
+                          d: st.getPropertyValue('border-color'), i: st.getPropertyValue('background-image') };
+            var wrote = false;
+            if (j.full) {
+                var ownBg = j.bg && j.bg !== 'rgba(0, 0, 0, 0)';
+                if (ownBg) { st.setProperty('background-color', j.bg, 'important'); wrote = true; }
+                /* Dark text is only pinned over a pinned surface: kept on the
+                   theme's dark page it would simply vanish. The host check is
+                   "pinned BY US" (inline and important, real colour): Manage
+                   writes its own inline transparent on some cells, and that
+                   must not count as backing. Parents come before children in
+                   document order, so the host's pin is already written. */
+                var host = n.closest ? n.closest(KEEP_HOSTS) : null;
+                var hostPinned = host && host.style.getPropertyPriority('background-color') === 'important' &&
+                    host.style.getPropertyValue('background-color') !== 'transparent';
+                var backed = ownBg || hostPinned;
+                if (j.col && backed) { st.setProperty('color', j.col, 'important'); wrote = true; }
+                if (j.brd && j.brd !== 'rgba(0, 0, 0, 0)' && backed) { st.setProperty('border-color', j.brd, 'important'); wrote = true; }
+            }
+            if (j.img && j.img !== 'none') { st.setProperty('background-image', j.img, 'important'); wrote = true; }
+            if (wrote) n.setAttribute(KEEP_ATTR, JSON.stringify(prior));
+            else n.setAttribute(KEEP_ATTR, '');
+        }
+    }
+
+    function unkeep() {
+        var marked = document.querySelectorAll('[' + KEEP_ATTR + ']');
+        for (var i = 0; i < marked.length; i++) {
+            var n = marked[i], st = n.style;
+            var prior = null;
+            try { prior = JSON.parse(n.getAttribute(KEEP_ATTR) || 'null'); } catch (e) { prior = null; }
+            ['background-color', 'color', 'border-color', 'background-image'].forEach(function (prop) {
+                st.removeProperty(prop);
+            });
+            if (prior) {
+                if (prior.b) st.setProperty('background-color', prior.b);
+                if (prior.c) st.setProperty('color', prior.c);
+                if (prior.d) st.setProperty('border-color', prior.d);
+                if (prior.i) st.setProperty('background-image', prior.i);
+            }
+            n.removeAttribute(KEEP_ATTR);
+        }
     }
 
     /* ---------------- stray light patches under the painted themes ----------------
@@ -626,6 +726,7 @@
        inline important transparent background, and whatever inline value it
        had is parked in an attribute so switching the theme off restores it. */
     var UNLIT_ATTR = 'data-rpg-unlit';
+    var unlitSeen = null;              // elements already inspected this theme
 
     function bgLuminance(c) {
         var m = /rgba?\((\d+), (\d+), (\d+)(?:, ([\d.]+))?\)/.exec(c || '');
@@ -635,12 +736,18 @@
         return 0.2126 * f(+m[1]) + 0.7152 * f(+m[2]) + 0.0722 * f(+m[3]);
     }
 
+    /* getComputedStyle per element is the expensive part, so each element is
+       inspected once per theme and remembered; only nodes that arrived since
+       the last pass cost anything on the next one. */
     function unlitSweep() {
         if (!themeById(CUR.theme).paint || !document.body) return;
+        if (!unlitSeen) unlitSeen = new WeakSet();
         var nodes = document.body.querySelectorAll('*');
         for (var i = 0; i < nodes.length; i++) {
             var n = nodes[i];
-            if (n.hasAttribute(UNLIT_ATTR)) continue;
+            if (unlitSeen.has(n)) continue;
+            unlitSeen.add(n);
+            if (n.hasAttribute(UNLIT_ATTR) || n.hasAttribute(KEEP_ATTR)) continue;
             if (n.id && String(n.id).indexOf('rpg') === 0) continue;
             var lum = bgLuminance(getComputedStyle(n).backgroundColor);
             if (lum === null || lum < 0.35) continue;
@@ -652,6 +759,7 @@
     }
 
     function relight() {
+        unlitSeen = null;
         var marked = document.querySelectorAll('[' + UNLIT_ATTR + ']');
         for (var i = 0; i < marked.length; i++) {
             var n = marked[i], prior = n.getAttribute(UNLIT_ATTR);
@@ -667,6 +775,7 @@
     /* ---------------- apply settings ---------------- */
 
     var CUR = DEFAULTS;                          // hot-path copy, refreshed by apply()
+    var appliedPaint = '';                       // palette id the sweeps last ran for
 
     function apply(s) {
         CUR = s;
@@ -677,7 +786,21 @@
         /* The filter is the top frame's business, but a repaint has to reach
            every frame: that is where the grids are. */
         setSheet('rpg-paint', palette ? paintCSS(palette) : '');
-        if (palette) { schedulePickSweep(); setTimeout(unlitSweep, 80); } else { clearPicked(); relight(); }
+        if (palette) {
+            /* a settings change that keeps the palette must not trigger a
+               full re-inspection of the page */
+            if (appliedPaint !== theme.paint) { appliedPaint = theme.paint; unlitSeen = null; }
+            schedulePickSweep();
+            setTimeout(function () {
+                try { keepSweep(); } catch (e) { /* never let a timer throw */ }
+                try { unlitSweep(); } catch (e) { /* same */ }
+            }, 80);
+        } else if (appliedPaint) {
+            appliedPaint = '';
+            clearPicked();
+            unkeep();
+            relight();
+        }
         setSheet('rpg-nav', (!palette && s.navDark) ? navCSS(!!theme.invert) : '');
         setSheet('rpg-login', s.login ? CSS.login : '');
         /* Our overlay lives inside the inverted page, so it needs the same
@@ -983,7 +1106,7 @@
         }
         new MutationObserver(function () { if (CUR.stale) schedule(); })
             .observe(document.body, { childList: true, subtree: true });
-        setInterval(function () { if (CUR.stale) staleSweep(); }, 4000);
+        setInterval(function () { if (CUR.stale && !document.hidden) staleSweep(); }, 4000);
         schedule();
     }
 
@@ -1906,10 +2029,13 @@
         onReady();
     }
 
-    /* Other frames (and other tabs) follow along live. */
+    /* Other frames (and other tabs) follow along live. A throw here would
+       kill the listener for good, so each branch is fenced. */
     window.addEventListener('storage', function (e) {
-        if (e.key === KEY) apply(loadSettings());
-        if (e.key === COLS_KEY && IS_TOP) syncColumnPicker(storedColumns());
-        if (e.key === STALE_STATE_KEY && IS_TOP) syncStaleState();
+        try {
+            if (e.key === KEY) apply(loadSettings());
+            if (e.key === COLS_KEY && IS_TOP) syncColumnPicker(storedColumns());
+            if (e.key === STALE_STATE_KEY && IS_TOP) syncStaleState();
+        } catch (err) { /* one bad payload must not stop the sync */ }
     });
 })();
