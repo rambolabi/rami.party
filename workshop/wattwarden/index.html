@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="ember">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wattwarden — live P1 smart meter dashboard</title>
+    <meta name="description"
+        content="A live dashboard for your HomeWizard P1 smart meter: current power, today's energy, gas, per-phase detail and long-term graphs kept in your browser. Choose your theme and the tiles you care about.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#12100c">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/wattwarden/">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <a href="#tiles" class="skip-link">Skip to the dashboard</a>
+
+    <div class="wrap">
+        <header class="hero">
+            <a class="back" href="../">← Back to the Workshop</a>
+            <div class="hero-row">
+                <div class="hero-mark" aria-hidden="true">⚡</div>
+                <div class="hero-text">
+                    <h1>Wattwarden</h1>
+                    <p class="lede">Your P1 smart meter, read out live on your own network.
+                        Nothing leaves the house: history lives in this browser.</p>
+                </div>
+            </div>
+            <p class="statusline" role="status">
+                <span class="pill idle" id="connPill">not connected</span>
+                <span class="meterline" id="meterLine"></span>
+            </p>
+            <div class="actions">
+                <button class="btn btn-primary" id="btnSettings" aria-haspopup="dialog">⚙ Settings</button>
+                <button class="btn btn-ghost" id="btnDemo" aria-pressed="false">▶ Try the demo</button>
+            </div>
+        </header>
+
+        <noscript>
+            <p class="note warn">Wattwarden is all JavaScript: it needs scripts enabled to poll the meter.</p>
+        </noscript>
+
+        <section class="empty" id="emptyState">
+            <h2>No meter connected yet</h2>
+            <ol>
+                <li>Enable <strong>Local API</strong> for the meter in the HomeWizard Energy app
+                    (Settings → Meters → your meter).</li>
+                <li>Open <strong>⚙ Settings</strong> and fill in the meter's IP address. The page
+                    first tries to reach the meter <strong>straight from the browser</strong>: on a
+                    tablet, allow the "local network" permission if it asks. Nothing to install.</li>
+                <li>Only if your browser refuses the direct route, run the little relay on a
+                    computer instead:
+                    <pre class="snippet"><code>pip install websockets
+python p1-bridge.py</code></pre>
+                    <a class="btn btn-ghost" href="p1-bridge.py" download>Download p1-bridge.py</a>
+                </li>
+            </ol>
+            <p class="note">No meter at hand? <strong>▶ Try the demo</strong> feeds the dashboard a
+                pretend household so you can kick the tires.</p>
+        </section>
+
+        <main id="tiles" class="tiles" aria-label="Meter dashboard" hidden>
+            <section class="card tile-now" data-tile="now">
+                <h2>Right now</h2>
+                <p class="bignum"><span id="nowW">···</span><span class="unit">W</span></p>
+                <p class="card-note"><span id="nowWord">waiting for the first reading</span>
+                    <span class="badge" id="tariffBadge" hidden></span></p>
+                <canvas id="sparkCanvas" class="spark" role="img"
+                    aria-label="Power over the last ten minutes"></canvas>
+            </section>
+
+            <section class="card" data-tile="today">
+                <h2>Today</h2>
+                <dl class="kv">
+                    <div><dt>Imported</dt><dd><span id="todayImp">···</span> kWh</dd></div>
+                    <div><dt>Exported</dt><dd><span id="todayExp">···</span> kWh</dd></div>
+                    <div id="todayGasRow"><dt>Gas</dt><dd><span id="todayGas">···</span> m³</dd></div>
+                </dl>
+                <p class="card-note" id="todayNote">Counted since midnight, from the meter's own counters.</p>
+            </section>
+
+            <section class="card card-wide" data-tile="day24">
+                <h2>Last 24 hours <span class="h-sub">kWh per hour · import ▲ export ▼</span></h2>
+                <canvas id="day24Canvas" class="chart" role="img"
+                    aria-label="Bar chart of energy import and export per hour over the last 24 hours"></canvas>
+            </section>
+
+            <section class="card card-wide" data-tile="days30">
+                <h2>Last 30 days <span class="h-sub">kWh per day · import ▲ export ▼</span></h2>
+                <canvas id="days30Canvas" class="chart" role="img"
+                    aria-label="Bar chart of energy import and export per day over the last 30 days"></canvas>
+            </section>
+
+            <section class="card" data-tile="gas">
+                <h2>Gas</h2>
+                <p class="bignum small"><span id="gasTotal">···</span><span class="unit">m³</span></p>
+                <p class="card-note">meter total · last update <span id="gasWhen">···</span></p>
+            </section>
+
+            <section class="card" data-tile="totals">
+                <h2>Meter counters</h2>
+                <dl class="kv">
+                    <div><dt>Import T1 (low)</dt><dd><span id="impT1">···</span> kWh</dd></div>
+                    <div><dt>Import T2 (high)</dt><dd><span id="impT2">···</span> kWh</dd></div>
+                    <div><dt>Export T1</dt><dd><span id="expT1">···</span> kWh</dd></div>
+                    <div><dt>Export T2</dt><dd><span id="expT2">···</span> kWh</dd></div>
+                </dl>
+            </section>
+
+            <section class="card" data-tile="phases">
+                <h2>Per phase</h2>
+                <div class="phasebars" id="phaseBars"></div>
+            </section>
+
+            <section class="card" data-tile="lines">
+                <h2>Voltage &amp; current</h2>
+                <dl class="kv" id="lineList"></dl>
+            </section>
+
+            <section class="card" data-tile="peak">
+                <h2>Monthly peak</h2>
+                <p class="bignum small"><span id="peakW">···</span><span class="unit">W</span></p>
+                <p class="card-note">quarter-hour average demand this month
+                    (Belgian capaciteitstarief) · <span id="peakWhen">···</span></p>
+            </section>
+
+            <section class="card" data-tile="water">
+                <h2>Water</h2>
+                <p class="bignum small"><span id="waterTotal">···</span><span class="unit">m³</span></p>
+                <p class="card-note">from the water meter linked to the P1 dongle</p>
+            </section>
+
+            <section class="card" data-tile="quality">
+                <h2>Connection &amp; grid</h2>
+                <dl class="kv">
+                    <div><dt>Wi-Fi</dt><dd><span id="wifi">···</span></dd></div>
+                    <div><dt>Power failures</dt><dd><span id="fails">···</span></dd></div>
+                    <div><dt>Voltage sags / swells</dt><dd><span id="sags">···</span></dd></div>
+                    <div><dt>Smart meter</dt><dd><span id="meterModel">···</span></dd></div>
+                </dl>
+            </section>
+        </main>
+
+        <section class="settings-veil" id="settingsVeil" hidden>
+            <div class="settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+                <div class="settings-head">
+                    <h2 id="settingsTitle">⚙ Settings</h2>
+                    <button class="btn btn-ghost" id="btnCloseSettings" aria-label="Close settings">✕</button>
+                </div>
+
+                <fieldset>
+                    <legend>Meter connection</legend>
+                    <label class="field">Meter address (IP on your network)
+                        <input type="text" id="setHost" inputmode="decimal" placeholder="192.168.1.23"
+                            autocomplete="off" spellcheck="false">
+                    </label>
+                    <label class="field">Refresh every
+                        <select id="setInterval">
+                            <option value="1000">second</option>
+                            <option value="2000">2 seconds</option>
+                            <option value="5000" selected>5 seconds</option>
+                            <option value="10000">10 seconds</option>
+                            <option value="30000">30 seconds</option>
+                        </select>
+                    </label>
+                    <p class="fine" id="connDetail">Direct connection: not tried yet.</p>
+                    <p class="fine" id="bridgeState">Relay: checking…</p>
+                    <button class="btn btn-ghost" id="btnReconnect">Retry connection</button>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Wall tablet mode</legend>
+                    <label class="tiletoggle"><input type="checkbox" id="setAwake"> Keep the screen awake
+                        while this page is open</label>
+                    <p class="fine" id="wakeState">···</p>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Appearance</legend>
+                    <div class="themegrid" id="themeGrid" role="radiogroup" aria-label="Colour theme"></div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Tiles on the dashboard</legend>
+                    <div class="tilegrid" id="tileToggles"></div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Stored history</legend>
+                    <p class="fine" id="histInfo">···</p>
+                    <div class="row">
+                        <button class="btn btn-ghost" id="btnExport">Export history (JSON)</button>
+                        <button class="btn btn-ghost danger" id="btnWipe">Wipe history</button>
+                    </div>
+                </fieldset>
+            </div>
+        </section>
+
+        <section class="explain">
+            <h2>How it works</h2>
+            <ol class="steps">
+                <li>A <strong>P1 meter dongle</strong> (like the HomeWizard P1 Meter) plugs into your
+                    smart meter and exposes the readings as JSON on your Wi-Fi:
+                    <code>http://&lt;meter-ip&gt;/api/v1/data</code>. Enable "Local API" in its app once.</li>
+                <li>The page first fetches the meter <strong>directly from the browser</strong>,
+                    asking for the local-network permission where browsers support it. If yours
+                    blocks secure pages from talking to plain-HTTP LAN devices, a
+                    <strong>tiny relay</strong>, <code>p1-bridge.py</code>, does the same fetch from
+                    <code>ws://127.0.0.1:7101</code> instead. The page picks whichever works and
+                    tells you which one it used.</li>
+                <li>Every reading updates the tiles; counter snapshots are kept in
+                    <strong>localStorage</strong> (hourly for 14 days, daily for 400 days) to draw the
+                    long-term graphs. Nothing is uploaded anywhere.</li>
+            </ol>
+            <p class="note">Works with the HomeWizard P1 Meter's v1 API and anything that mimics it.
+                Tiles for data your meter does not report (gas, phases, water…) simply stay empty:
+                hide them in the settings.</p>
+        </section>
+
+        <footer class="foot">
+            <a href="../">← Back to the Workshop</a> · part of <a href="/">rami.party</a>
+        </footer>
+    </div>
+</body>
+
+</html>
