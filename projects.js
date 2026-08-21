@@ -151,6 +151,17 @@ window.RAMI_REALMS = [
    ========================================================================== */
 window.RAMI_WORKSHOP = [
     {
+        title: 'Wakewand',
+        href: './wakewand/',
+        glyph: '📺',
+        tagline: 'Wake the TVs by wire',
+        description: 'Open the page and every television on the bus is told to wake up, over the HDMI cable itself. Speaks the Pulse-Eight USB-CEC adapter\u2019s serial protocol straight from the browser, or drives a Raspberry Pi through a tiny local bridge.',
+        search: 'Turn on televisions and TVs automatically over HDMI CEC one touch play when a webpage opens. Sends the Image View On and Text View On CEC commands over the HDMI cable to wake TVs from standby, and a broadcast Standby command to switch them all off. Talks to a Pulse-Eight USB CEC adapter directly in the browser using the Web Serial API and the libCEC serial protocol, or to cec-ctl and cec-client on a Raspberry Pi or Linux media PC through a local Python WebSocket bridge. Useful for digital signage, meeting rooms, dashboards and TV walls.',
+        tags: ['hardware', 'tool'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'Glamours',
         href: './glamours/',
         glyph: '🪄',

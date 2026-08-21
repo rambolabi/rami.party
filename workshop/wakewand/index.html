@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wakewand — turn on your TVs over HDMI-CEC</title>
+    <meta name="description"
+        content="Open the page and your televisions wake up: Wakewand sends HDMI-CEC one-touch-play commands over the HDMI cable, through a Pulse-Eight USB-CEC adapter (Web Serial) or a tiny local bridge.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#0b0f14">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/wakewand/">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%93%BA%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <a href="#channels" class="skip-link">Skip to the wake channels</a>
+
+    <div class="wrap">
+        <header class="hero">
+            <a class="back" href="../">← Back to the Workshop</a>
+            <div class="hero-mark" aria-hidden="true">📺</div>
+            <h1>Wakewand</h1>
+            <p class="lede">Open this page and the televisions on your HDMI-CEC hardware are told to
+                <strong>wake up, over the HDMI cable itself</strong>. No remote, no smart-TV app, no cloud:
+                just the CEC pin doing what it was designed for.</p>
+            <p class="autoline" id="autoline" role="status">Reaching for wake channels…</p>
+            <div class="actions">
+                <button class="btn btn-primary" id="btnWake" disabled>🔆 Wake the TVs</button>
+                <button class="btn btn-ghost" id="btnSleep" disabled>🌙 Send everything to sleep</button>
+            </div>
+        </header>
+
+        <noscript>
+            <p class="note warn">Wakewand is all JavaScript: it needs scripts enabled to talk to the hardware.</p>
+        </noscript>
+
+        <section id="channels" class="channels" aria-label="Wake channels">
+            <article class="card" id="serialCard">
+                <h2><span aria-hidden="true">🔌</span> USB-CEC adapter</h2>
+                <p class="card-sub">A <strong>Pulse-Eight USB-CEC adapter</strong> plugged into <em>this</em>
+                    computer, HDMI side into the TV. The page speaks its serial protocol directly through
+                    Web Serial. Pair it once; every later visit wakes the TV the moment the page opens.</p>
+                <p class="status"><span class="pill" id="serialPill">checking…</span></p>
+                <ul class="devlist" id="serialList" hidden></ul>
+                <div class="card-actions">
+                    <button class="btn btn-ghost" id="btnPair" disabled>Pair a USB-CEC adapter</button>
+                </div>
+            </article>
+
+            <article class="card" id="bridgeCard">
+                <h2><span aria-hidden="true">🌉</span> Local CEC bridge</h2>
+                <p class="card-sub">For screens wired to <em>another</em> machine: a Raspberry Pi behind the
+                    TV wall, a signage box, a media PC. Run the tiny bridge next to the hardware and this
+                    page drives it over <code>ws://127.0.0.1:3308</code> (3308 = 0xCEC).</p>
+                <p class="status"><span class="pill" id="bridgePill">connecting…</span></p>
+                <ul class="devlist" id="bridgeList" hidden></ul>
+                <pre class="snippet"><code>pip install websockets
+python cec-bridge.py</code></pre>
+                <div class="card-actions">
+                    <a class="btn btn-ghost" href="cec-bridge.py" download>Download cec-bridge.py</a>
+                    <button class="btn btn-ghost" id="btnBridgeRetry">Retry connection</button>
+                </div>
+            </article>
+        </section>
+
+        <section class="logwrap" aria-label="CEC traffic log">
+            <h2>Traffic log</h2>
+            <div class="log" id="log" role="log" aria-live="polite"></div>
+        </section>
+
+        <section class="explain">
+            <h2>How it works</h2>
+            <ol class="steps">
+                <li><strong>HDMI-CEC</strong> is a one-wire bus inside every HDMI cable. The command
+                    <code>Image View On</code> (opcode <code>0x04</code>) is "one-touch play": a TV in
+                    standby that receives it turns itself on. TVs keep listening on that pin even when
+                    they look off.</li>
+                <li><strong>The adapter channel</strong> talks to the Pulse-Eight adapter's serial protocol
+                    (the same one libCEC uses) and puts <code>f0:04</code> and <code>f0:0d</code> on the
+                    wire. If the transmit is acknowledged, that ack came from the TV itself.</li>
+                <li><strong>The bridge channel</strong> is a ~200 line Python script that binds to
+                    127.0.0.1 only and shells out to <code>cec-ctl</code> (Linux kernel CEC, Raspberry Pi)
+                    or <code>cec-client</code> (libCEC) for every CEC output it finds.</li>
+            </ol>
+            <h3>The honest bit</h3>
+            <p>A browser cannot reach the HDMI port of the machine it runs on: no web API exposes the CEC
+                pin, and laptop HDMI outputs usually do not wire it up at all. That is why Wakewand needs
+                one of the two channels above. Also, the very first adapter pairing needs one click (the
+                browser demands a gesture before granting serial access); every visit after that is
+                hands-free.</p>
+            <p class="note">Web Serial works in Chrome and Edge on desktop. Firefox, Safari and phones can
+                still use the bridge channel.</p>
+        </section>
+
+        <footer class="foot">
+            <a href="../">← Back to the Workshop</a> · part of <a href="/">rami.party</a>
+        </footer>
+    </div>
+</body>
+
+</html>
