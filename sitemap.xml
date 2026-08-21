@@ -165,6 +165,18 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://rami.party/workshop/wattwarden/</loc>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://rami.party/workshop/sunseer/</loc>
+    <lastmod>2026-08-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://rami.party/workshop/decibel/</loc>
     <lastmod>2026-08-06</lastmod>
     <changefreq>monthly</changefreq>

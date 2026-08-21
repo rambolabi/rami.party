@@ -151,6 +151,28 @@ window.RAMI_REALMS = [
    ========================================================================== */
 window.RAMI_WORKSHOP = [
     {
+        title: 'Sunseer',
+        href: './sunseer/',
+        glyph: '☀️',
+        tagline: 'Your solar roof, live',
+        description: 'Reads your Solis inverters right off their own dataloggers and turns them into a living dashboard: solar power now, battery state of charge, grid import and export, house load, and month-deep graphs. All local, nothing to the cloud.',
+        search: 'A live local dashboard for Solis solar inverters such as the Solis 3.6K and 4.6K, S6-GR1P3.6K, S6-GR1P4.6K, RHI-3.6K-48ES and other hybrid and string models. Reads the datalogger stick directly on your own network without SolisCloud: Solarman V5 protocol on port 8899 for Wi-Fi sticks, Modbus TCP on port 502 for LAN sticks, or the stick built-in HTTP status page with admin admin login. Shows current solar power in watt, an animated power flow diagram between panels battery house and grid, battery state of charge SOC SOH voltage and charge discharge power, grid meter import and export, house load, per inverter cards with PV string voltage and current, inverter temperature and status and faults, datalogger serial and Wi-Fi signal, and daily monthly and lifetime generation counters. Stores hourly and daily snapshots in localStorage for 24 hour and 30 day bar charts with JSON export. Includes a local Python WebSocket relay bridge and a demo mode. Zonnepanelen omvormer uitlezen, solar PV monitoring, Ginlong Solis.',
+        tags: ['hardware', 'solar', 'energy', 'tool'],
+        aura: 'gold',
+        status: 'live',
+    },
+    {
+        title: 'Wattwarden',
+        href: './wattwarden/',
+        glyph: '⚡',
+        tagline: 'Your smart meter, live',
+        description: 'Reads the P1 dongle on your smart meter and turns it into a living dashboard: watts right now, today\u2019s energy and gas, per-phase detail and month-deep graphs. Pick a theme, pick your tiles; history stays in your browser.',
+        search: 'A live energy dashboard for the HomeWizard P1 Meter and compatible P1 smart meter dongles, read over the local network API at api v1 data. Shows current power usage in watt, imported and exported electricity in kWh per tariff, gas consumption in m3, water meter, voltage current and power per phase, monthly peak demand for the Belgian capaciteitstarief, Wi-Fi signal and power failures. Stores hourly and daily counter snapshots in localStorage for 24 hour and 30 day bar charts, with JSON export. Settings choose the colour theme and which tiles are visible. Includes a local Python WebSocket relay because browsers block mixed content to LAN devices, and a demo mode with a pretend household. DSMR smart meter, slimme meter uitlezen, energieverbruik.',
+        tags: ['hardware', 'energy', 'tool'],
+        aura: 'gold',
+        status: 'live',
+    },
+    {
         title: 'Wakewand',
         href: './wakewand/',
         glyph: '📺',

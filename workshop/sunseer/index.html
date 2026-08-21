@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="helios">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sunseer · live Solis solar dashboard</title>
+    <meta name="description"
+        content="A live local dashboard for Solis inverters (3.6K, 4.6K, hybrids and string): solar power right now, battery state of charge, grid import and export, house load and long-term graphs. Read straight from your own dataloggers, nothing goes to the cloud.">
+    <meta name="author" content="Rami">
+    <meta name="theme-color" content="#120e08">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://rami.party/workshop/sunseer/">
+    <link rel="icon"
+        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+    <script src="app.js" defer></script>
+</head>
+
+<body>
+    <a href="#tiles" class="skip-link">Skip to the dashboard</a>
+
+    <div class="wrap">
+        <header class="hero">
+            <a class="back" href="../">← Back to the Workshop</a>
+            <div class="hero-row">
+                <div class="hero-mark" aria-hidden="true">☀️</div>
+                <div class="hero-text">
+                    <h1>Sunseer</h1>
+                    <p class="lede">Your Solis inverters, battery and meter, read out live on your own
+                        network. Nothing leaves the house: readings and history stay in this browser.</p>
+                </div>
+            </div>
+            <p class="statusline" role="status">
+                <span class="pill idle" id="connPill">not connected</span>
+                <span class="fleetline" id="fleetLine"></span>
+            </p>
+            <div class="actions">
+                <button class="btn btn-primary" id="btnSettings" aria-haspopup="dialog">⚙ Settings</button>
+                <button class="btn btn-ghost" id="btnDemo" aria-pressed="false">▶ Try the demo</button>
+            </div>
+        </header>
+
+        <noscript>
+            <p class="note warn">Sunseer is all JavaScript: it needs scripts enabled to poll the inverters.</p>
+        </noscript>
+
+        <section class="empty" id="emptyState">
+            <h2>No inverter connected yet</h2>
+            <ol>
+                <li>Find out how your datalogging stick talks. Most Solis Wi-Fi sticks (the ones with a
+                    10-digit serial number) speak <strong>Solarman</strong> on port 8899. LAN sticks and
+                    RS485 gateways speak <strong>Modbus TCP</strong> on port 502. And every stick serves a
+                    small <strong>status page</strong> you can log into with admin / admin: that road always
+                    works, it just carries less data.</li>
+                <li>Run the relay next to this browser:
+                    <pre class="snippet"><code>pip install websockets
+python solis-bridge.py</code></pre>
+                    <a class="btn btn-ghost" href="solis-bridge.py" download>Download solis-bridge.py</a>
+                </li>
+                <li>Open <strong>⚙ Settings</strong> and add each inverter: its stick's IP address, how it
+                    talks, and (for Solarman sticks) the serial number printed on the stick.</li>
+            </ol>
+            <p class="note">No hardware at hand? <strong>▶ Try the demo</strong> feeds the dashboard a
+                pretend rooftop with a 3.6K hybrid, a 4.6K string inverter, a battery and a grid meter.</p>
+        </section>
+
+        <main id="tiles" class="tiles" aria-label="Solar dashboard" hidden>
+
+            <section class="card card-wide" data-tile="flow">
+                <h2>Power flow <span class="h-sub">where the energy is going right now</span></h2>
+                <svg id="flowSvg" class="flow" viewBox="0 0 340 190" role="img"
+                    aria-label="Live power flow between the solar panels, the battery, the house and the grid">
+                    <g id="fPvEdge" class="edge">
+                        <path class="edge-base" d="M78 52 C 120 64, 130 74, 149 87" />
+                        <path class="edge-flow" d="M78 52 C 120 64, 130 74, 149 87" />
+                    </g>
+                    <g id="fGridEdge" class="edge">
+                        <path class="edge-base" d="M262 52 C 220 64, 210 74, 191 87" />
+                        <path class="edge-flow" d="M262 52 C 220 64, 210 74, 191 87" />
+                    </g>
+                    <g id="fBatEdge" class="edge">
+                        <path class="edge-base" d="M78 142 C 115 133, 130 120, 151 104" />
+                        <path class="edge-flow" d="M78 142 C 115 133, 130 120, 151 104" />
+                    </g>
+                    <g class="node">
+                        <circle cx="52" cy="45" r="24" />
+                        <text class="node-ico" x="52" y="51">☀️</text>
+                        <text class="node-val" id="fPvVal" x="52" y="84">···</text>
+                    </g>
+                    <g class="node">
+                        <circle cx="288" cy="45" r="24" />
+                        <text class="node-ico" x="288" y="51">⚡</text>
+                        <text class="node-val" id="fGridVal" x="288" y="84">···</text>
+                    </g>
+                    <g class="node">
+                        <circle cx="52" cy="148" r="24" />
+                        <text class="node-ico" x="52" y="154">🔋</text>
+                        <text class="node-val" id="fBatVal" x="52" y="121">···</text>
+                    </g>
+                    <g class="node node-home">
+                        <circle cx="170" cy="95" r="27" />
+                        <text class="node-ico" x="170" y="92">🏠</text>
+                        <text class="node-home-val" id="fLoadVal" x="170" y="108">···</text>
+                    </g>
+                </svg>
+                <p class="card-note" id="flowNote">solar, battery and grid, seen from the house</p>
+            </section>
+
+            <section class="card tile-solar" data-tile="solar">
+                <h2>Solar now</h2>
+                <p class="bignum"><span id="nowW">···</span><span class="unit">W</span></p>
+                <p class="card-note"><span id="nowWord">waiting for the first reading</span></p>
+                <div class="perinv" id="nowPerInv"></div>
+                <canvas id="sparkCanvas" class="spark" role="img"
+                    aria-label="Solar power over the last ten minutes"></canvas>
+            </section>
+
+            <section class="card" data-tile="today">
+                <h2>Today</h2>
+                <dl class="kv">
+                    <div><dt>Generated</dt><dd><span id="tGen">···</span> kWh</dd></div>
+                    <div class="optrow" id="rowTImp"><dt>From the grid</dt><dd><span id="tImp">···</span> kWh</dd></div>
+                    <div class="optrow" id="rowTExp"><dt>To the grid</dt><dd><span id="tExp">···</span> kWh</dd></div>
+                    <div class="optrow" id="rowTChg"><dt>Into the battery</dt><dd><span id="tChg">···</span> kWh</dd></div>
+                    <div class="optrow" id="rowTDis"><dt>Out of the battery</dt><dd><span id="tDis">···</span> kWh</dd></div>
+                    <div class="optrow" id="rowTLoad"><dt>House used</dt><dd><span id="tLoad">···</span> kWh</dd></div>
+                </dl>
+                <p class="card-note" id="todayPerInv"></p>
+            </section>
+
+            <section class="card" data-tile="battery">
+                <h2>Battery</h2>
+                <p class="bignum small"><span id="socPct">···</span><span class="unit">%</span></p>
+                <div class="socbar"><span id="socFill" class="socfill"></span></div>
+                <p class="card-note" id="batWord">waiting for a hybrid inverter</p>
+                <dl class="kv">
+                    <div><dt>Voltage · current</dt><dd><span id="batVA">···</span></dd></div>
+                    <div><dt>Health (SOH)</dt><dd><span id="batSoh">···</span></dd></div>
+                    <div><dt>Charged today</dt><dd><span id="batChg">···</span> kWh</dd></div>
+                    <div><dt>Discharged today</dt><dd><span id="batDis">···</span> kWh</dd></div>
+                </dl>
+            </section>
+
+            <section class="card" data-tile="grid">
+                <h2>Grid &amp; meter</h2>
+                <p class="bignum small"><span id="gridW">···</span><span class="unit">W</span></p>
+                <p class="card-note" id="gridWord">from the meter wired to the hybrid</p>
+                <dl class="kv">
+                    <div><dt>Today in / out</dt><dd><span id="gToday">···</span></dd></div>
+                    <div><dt>All time in / out</dt><dd><span id="gTotal">···</span></dd></div>
+                    <div><dt>Meter</dt><dd><span id="gMeter">···</span></dd></div>
+                </dl>
+            </section>
+
+            <section class="card" data-tile="house">
+                <h2>House load</h2>
+                <p class="bignum small"><span id="loadW">···</span><span class="unit">W</span></p>
+                <p class="card-note">what the house is drawing right now</p>
+                <dl class="kv">
+                    <div><dt>Backup circuit</dt><dd><span id="backupW">···</span> W</dd></div>
+                    <div><dt>Used today</dt><dd><span id="loadToday">···</span> kWh</dd></div>
+                    <div><dt>Used all time</dt><dd><span id="loadTotal">···</span> kWh</dd></div>
+                </dl>
+            </section>
+
+            <section class="card card-wide" data-tile="inverters">
+                <h2>Inverters <span class="h-sub">one card per machine</span></h2>
+                <div class="invgrid" id="invCards"></div>
+            </section>
+
+            <section class="card card-wide" data-tile="day24">
+                <h2>Last 24 hours <span class="h-sub">kWh per hour · solar ▲ export ▼</span></h2>
+                <canvas id="day24Canvas" class="chart" role="img"
+                    aria-label="Bar chart of solar generation and grid export per hour over the last 24 hours"></canvas>
+            </section>
+
+            <section class="card card-wide" data-tile="days30">
+                <h2>Last 30 days <span class="h-sub">kWh per day · solar ▲ export ▼</span></h2>
+                <canvas id="days30Canvas" class="chart" role="img"
+                    aria-label="Bar chart of solar generation and grid export per day over the last 30 days"></canvas>
+            </section>
+
+            <section class="card" data-tile="totals">
+                <h2>Lifetime counters</h2>
+                <dl class="kv">
+                    <div><dt>Generated</dt><dd><span id="totGen">···</span> kWh</dd></div>
+                    <div class="optrow" id="rowTotGrid"><dt>Grid in / out</dt><dd><span id="totGrid">···</span></dd></div>
+                    <div class="optrow" id="rowTotBat"><dt>Battery in / out</dt><dd><span id="totBat">···</span></dd></div>
+                </dl>
+                <p class="card-note" id="totPerInv"></p>
+            </section>
+
+            <section class="card" data-tile="loggers">
+                <h2>Dataloggers</h2>
+                <dl class="kv" id="loggerList"></dl>
+                <p class="card-note">the sticks doing the talking</p>
+            </section>
+        </main>
+
+        <section class="settings-veil" id="settingsVeil" hidden>
+            <div class="settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+                <div class="settings-head">
+                    <h2 id="settingsTitle">⚙ Settings</h2>
+                    <button class="btn btn-ghost" id="btnCloseSettings" aria-label="Close settings">✕</button>
+                </div>
+
+                <fieldset>
+                    <legend>Inverters &amp; loggers</legend>
+                    <div id="devList"></div>
+                    <div class="row">
+                        <button class="btn btn-ghost" id="btnAddDev">＋ Add an inverter</button>
+                    </div>
+                    <label class="field">Refresh every
+                        <select id="setInterval">
+                            <option value="5000">5 seconds</option>
+                            <option value="10000" selected>10 seconds</option>
+                            <option value="30000">30 seconds</option>
+                            <option value="60000">minute</option>
+                        </select>
+                    </label>
+                    <label class="tiletoggle"><input type="checkbox" id="gridFlip">
+                        Flip the grid sign (my meter counts import as export)</label>
+                    <p class="fine" id="bridgeState">Relay: checking…</p>
+                    <button class="btn btn-ghost" id="btnReconnect">Reconnect relay</button>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Appearance</legend>
+                    <div class="themegrid" id="themeGrid" role="radiogroup" aria-label="Colour theme"></div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Tiles on the dashboard</legend>
+                    <div class="tilegrid" id="tileToggles"></div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Stored history</legend>
+                    <p class="fine" id="histInfo">···</p>
+                    <div class="row">
+                        <button class="btn btn-ghost" id="btnExport">Export history (JSON)</button>
+                        <button class="btn btn-ghost danger" id="btnWipe">Wipe history</button>
+                    </div>
+                </fieldset>
+            </div>
+        </section>
+
+        <section class="explain">
+            <h2>How it works</h2>
+            <ol class="steps">
+                <li>Solis inverters speak <strong>Modbus</strong> over RS485, and the datalogging stick
+                    puts that on your Wi-Fi. Sunseer reads the same registers the SolisCloud app does,
+                    but straight from the stick: Solarman protocol on port 8899 for the common Wi-Fi
+                    sticks, plain Modbus TCP on port 502 for LAN sticks, or the stick's own status page
+                    over HTTP as the simple fallback.</li>
+                <li>A browser cannot open raw sockets and refuses plain-HTTP LAN devices from a secure
+                    page, so a <strong>tiny relay</strong>, <code>solis-bridge.py</code>, runs on your
+                    machine and forwards readings over <code>ws://127.0.0.1:7102</code>. It only accepts
+                    this page, only reaches private addresses, and only ever <em>reads</em>: no register
+                    is ever written to your inverter.</li>
+                <li>Hybrids (RHI / S5-EH1P / S6-EH1P, register map 33000) also report their
+                    <strong>battery</strong> and the <strong>grid meter</strong> wired to them; string
+                    inverters (S5 / S6-GR1P, map 3000) report panels and production. Counter snapshots
+                    are kept in <strong>localStorage</strong> (hourly for 14 days, daily for 400 days)
+                    for the long-term graphs. Nothing is uploaded anywhere.</li>
+            </ol>
+            <p class="note">Built for the Solis 3.6K and 4.6K single-phase machines (S6-GR1P3.6K,
+                S6-GR1P4.6K, RHI-3.6K-48ES and friends), and it should read any Solis that speaks the
+                same maps. Tiles for gear you do not have (battery, meter…) simply stay empty: hide
+                them in the settings.</p>
+        </section>
+
+        <footer class="foot">
+            <a href="../">← Back to the Workshop</a> · part of <a href="/">rami.party</a>
+        </footer>
+    </div>
+</body>
+
+</html>
