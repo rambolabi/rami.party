@@ -19,7 +19,13 @@ your own machine and forwards readings to the page over ws://127.0.0.1:7102.
 Loopback WebSockets are exempt from Chrome's Private Network Access rules:
 same pattern as the ghosttooth, wakewand and wattwarden bridges.
 
-Usage:
+The relay also serves the dashboard itself over plain HTTP, so tablets and
+phones need nothing installed:
+
+    python solis-bridge.py --lan
+    ... then open http://<this-machine>:7102/ on any device in the house.
+
+Usage (this machine only):
     pip install websockets
     python solis-bridge.py
 
@@ -31,11 +37,13 @@ Register maps: the hybrid map follows the Solis ESINV RS485 protocol
 definitions for RHI-(3-6)K-48ES-5G and S6-GR1P4.6K.
 
 Security:
-  * Binds to 127.0.0.1 only (never exposed to the network).
+  * Binds to 127.0.0.1 by default; --lan binds the whole private network
+    (the relay never reaches beyond private addresses either way).
   * Only relays to private / mDNS addresses (192.168.x.x, 10.x, .local, ...),
     so a rogue website cannot use it as a proxy to the internet.
-  * Only accepts WebSocket connections from the Sunseer page or localhost
-    dev servers (Origin allowlist below).
+  * Only accepts WebSocket connections from the Sunseer page, localhost dev
+    servers, or pages served from private-network addresses (the tablet
+    road). Public internet origins are refused.
 """
 
 import asyncio
@@ -45,8 +53,11 @@ import json
 import re
 import socket
 import struct
+import sys
 import urllib.error
+import urllib.parse
 import urllib.request
+from pathlib import Path
 
 try:
     from websockets.asyncio.server import serve
@@ -65,6 +76,28 @@ ALLOWED_ORIGIN_RE = re.compile(
     r"^(https://rami\.party"
     r"|https?://(127\.0\.0\.1|localhost|\[::1\])(:\d+)?)$"
 )
+
+# Files the relay serves so tablets can open the dashboard straight from it
+STATIC_FILES = {
+    "/": "index.html",
+    "/index.html": "index.html",
+    "/app.js": "app.js",
+    "/style.css": "style.css",
+    "/manifest.webmanifest": "manifest.webmanifest",
+    "/sw.js": "sw.js",
+    "/icon.svg": "icon.svg",
+    "/solis-bridge.py": "solis-bridge.py",
+    "/todo-features.md": "todo-features.md",
+}
+CONTENT_TYPES = {
+    ".html": "text/html; charset=utf-8",
+    ".js": "text/javascript; charset=utf-8",
+    ".css": "text/css; charset=utf-8",
+    ".webmanifest": "application/manifest+json",
+    ".svg": "image/svg+xml",
+    ".py": "text/x-python; charset=utf-8",
+    ".md": "text/markdown; charset=utf-8",
+}
 
 _CORS = [
     ("Access-Control-Allow-Origin", "*"),
@@ -88,6 +121,14 @@ def host_is_allowed(host):
         return ip.is_private or ip.is_loopback or ip.is_link_local
     except ValueError:
         return bool(re.fullmatch(r"[a-zA-Z0-9\-]+\.local\.?", host))
+
+
+def origin_is_allowed(origin):
+    """The Sunseer page, localhost dev, or a page served from the LAN itself."""
+    if not origin or ALLOWED_ORIGIN_RE.match(origin):
+        return True
+    parsed = urllib.parse.urlparse(origin)
+    return parsed.scheme in ("http", "https") and host_is_allowed(parsed.hostname or "")
 
 
 # ---- Modbus plumbing -------------------------------------------------------
@@ -449,17 +490,32 @@ async def poll_loop(ws, dev, idx, interval_ms):
 
 
 async def process_request(connection, request):
-    """Plain HTTP GET returns status JSON; WebSocket upgrades are origin-checked."""
-    origin = request.headers.get("Origin", "")
-    if not request.headers.get("Upgrade"):
-        body = json.dumps({"bridge": "sunseer-solis", "version": 1}).encode()
+    """Serve the dashboard files over plain HTTP; origin-check WebSocket upgrades."""
+    if request.headers.get("Upgrade"):
+        origin = request.headers.get("Origin", "")
+        if not origin_is_allowed(origin):
+            print(f"Bridge: refused connection from origin {origin!r}")
+            return Response(403, "Forbidden", Headers([("Content-Length", "0")]), b"")
+        return None  # proceed with the WebSocket upgrade
+
+    path = request.path.split("?", 1)[0]
+    if path == "/status":
+        body = json.dumps({"bridge": "sunseer-solis", "version": 2}).encode()
         headers = Headers([*_CORS, ("Content-Type", "application/json"),
                            ("Content-Length", str(len(body)))])
         return Response(200, "OK", headers, body)
-    if origin and not ALLOWED_ORIGIN_RE.match(origin):
-        print(f"Bridge: refused connection from origin {origin!r}")
-        return Response(403, "Forbidden", Headers([("Content-Length", "0")]), b"")
-    return None
+    name = STATIC_FILES.get(path)
+    if name:
+        file = Path(__file__).resolve().parent / name
+        try:
+            body = file.read_bytes()
+        except OSError:
+            return Response(404, "Not Found", Headers([("Content-Length", "0")]), b"")
+        ctype = CONTENT_TYPES.get(file.suffix, "application/octet-stream")
+        headers = Headers([("Content-Type", ctype), ("Content-Length", str(len(body))),
+                           ("Cache-Control", "no-cache")])
+        return Response(200, "OK", headers, body)
+    return Response(404, "Not Found", Headers([("Content-Length", "0")]), b"")
 
 
 async def ws_handler(ws):
@@ -500,10 +556,29 @@ async def ws_handler(ws):
         print("Bridge: page disconnected.")
 
 
+def lan_ip():
+    """Best-effort primary LAN address (no traffic is actually sent)."""
+    try:
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            s.connect(("192.0.2.1", 80))
+            return s.getsockname()[0]
+    except OSError:
+        return None
+
+
 async def main():
-    async with serve(ws_handler, "127.0.0.1", PORT, process_request=process_request):
-        print(f"SUNSEER relay listening on ws://127.0.0.1:{PORT}")
-        print("Open https://rami.party/workshop/sunseer/ and add your inverters in its settings.")
+    lan = "--lan" in sys.argv[1:]
+    bind = "0.0.0.0" if lan else "127.0.0.1"
+    async with serve(ws_handler, bind, PORT, process_request=process_request):
+        print(f"SUNSEER relay listening on ws://{bind}:{PORT}")
+        if lan:
+            ip = lan_ip()
+            where = f"http://{ip}:{PORT}/" if ip else f"http://<this-machine>:{PORT}/"
+            print(f"Dashboard for every device in the house: {where}")
+        else:
+            print(f"Dashboard on this machine: http://127.0.0.1:{PORT}/")
+            print("(run with --lan to open it from tablets and phones too)")
+        print("Or open https://rami.party/workshop/sunseer/ and add your inverters in its settings.")
         await asyncio.get_running_loop().create_future()  # run forever
 
 

@@ -11,24 +11,28 @@
    pattern as the ghosttooth, wakewand and wattwarden bridges.
 
    History: counter snapshots in localStorage, hourly (14 days) and daily
-   (400 days), drawn as bar charts. Demo mode uses its own storage prefix so
-   pretend data never pollutes real history.
+   (400 days), drawn as bar charts. The live snapshot (last reading per
+   inverter, sparkline, records) is stored too, so a reload paints instantly
+   and marks the data "last seen" until fresh readings arrive. Demo mode uses
+   its own storage so pretend data never pollutes real history.
    ========================================================================= */
 
-const BRIDGE_URL = 'ws://127.0.0.1:7102';
+const BRIDGE_PORT = 7102;
 const HOURLY_KEEP = 14 * 24 + 2;
 const DAILY_KEEP = 400;
 const SPARK_WINDOW_MS = 10 * 60 * 1000;
 const STALE_MS = 5 * 60 * 1000;
 
-const THEMES = [['helios', 'Helios'], ['dawn', 'Dawn'], ['aurora', 'Aurora'], ['contrast', 'Contrast']];
+const THEMES = [['auto', 'Auto'], ['helios', 'Helios'], ['dawn', 'Dawn'], ['aurora', 'Aurora'], ['contrast', 'Contrast']];
 const TILES = [
     ['flow', 'Power flow'], ['solar', 'Solar now'], ['today', 'Today'],
-    ['battery', 'Battery'], ['grid', 'Grid & meter'], ['house', 'House load'],
-    ['inverters', 'Inverters'], ['day24', 'Last 24 hours'], ['days30', 'Last 30 days'],
-    ['totals', 'Lifetime counters'], ['loggers', 'Dataloggers'],
+    ['battery', 'Battery'], ['grid', 'Grid & meter'], ['money', 'Money'],
+    ['self', 'Self-sufficiency'], ['eco', 'CO₂ avoided'], ['records', 'Records'],
+    ['house', 'House load'], ['inverters', 'Inverters'], ['day24', 'Last 24 hours'],
+    ['days30', 'Last 30 days'], ['ledger', 'Daily ledger'], ['totals', 'Lifetime counters'],
+    ['loggers', 'Dataloggers'],
 ];
-const DEFAULT_TILES = ['flow', 'solar', 'today', 'battery', 'grid', 'inverters', 'day24', 'days30'];
+const DEFAULT_TILES = ['flow', 'solar', 'today', 'battery', 'grid', 'money', 'self', 'inverters', 'day24', 'days30'];
 
 const MODES = [['solarman', 'Solarman stick (:8899)'], ['modbus', 'Modbus TCP (:502)'], ['http', 'Status page (HTTP)']];
 const KINDS = [['auto', 'detect the model'], ['hybrid', 'hybrid (has battery)'], ['string', 'string (PV only)']];
@@ -56,11 +60,19 @@ const $ = (id) => document.getElementById(id);
 
 /* ---- settings ------------------------------------------------------------ */
 const settings = Object.assign(
-    { interval: 10000, theme: 'helios', tiles: DEFAULT_TILES.slice(), gridFlip: false, devices: [] },
+    {
+        interval: 10000, theme: 'auto', tiles: DEFAULT_TILES.slice(), gridFlip: false,
+        devices: [], bridgeHost: '', impPrice: '', expPrice: '', co2: '', batKwh: '',
+    },
     JSON.parse(localStorage.getItem('ss_settings') || '{}'));
 
 function saveSettings() {
     localStorage.setItem('ss_settings', JSON.stringify(settings));
+}
+
+function numVal(s) {
+    const v = parseFloat(String(s ?? '').replace(',', '.'));
+    return isFinite(v) && v >= 0 ? v : null;
 }
 
 /* ---- history store (real + demo live under different prefixes) ------------ */
@@ -117,6 +129,36 @@ function recordHistory(store, agg, now) {
 const latest = new Map(); // id -> {data, ts}
 const errors = new Map(); // id -> message
 
+// records: real ones persist in ss_live, demo ones live for the session only
+const records = { maxW: null, maxWhen: null, bestKwh: null, bestDay: null };
+const demoRecords = { maxW: null, maxWhen: null, bestKwh: null, bestDay: null };
+function activeRecords() { return demo.on ? demoRecords : records; }
+
+/* the live snapshot survives reloads: last reading per inverter + spark + records */
+let liveSavedAt = 0;
+function saveLive(force) {
+    if (demo.on) return;
+    if (!force && Date.now() - liveSavedAt < 10000) return;
+    liveSavedAt = Date.now();
+    try {
+        localStorage.setItem('ss_live', JSON.stringify({
+            spark: spark.slice(-150),
+            records,
+            devices: [...latest].filter(([id]) => settings.devices.some((d) => d.id === id)),
+        }));
+    } catch { /* storage full or blocked: live cache is optional */ }
+}
+
+function restoreLive() {
+    let obj;
+    try { obj = JSON.parse(localStorage.getItem('ss_live') || 'null'); } catch { return false; }
+    if (!obj) return false;
+    (obj.devices || []).forEach(([id, v]) => { if (v && v.data) latest.set(id, v); });
+    if (Array.isArray(obj.spark)) spark.push(...obj.spark.filter((p) => p && p.t));
+    Object.assign(records, obj.records || {});
+    return latest.size > 0;
+}
+
 function deviceList() { return demo.on ? demo.devices : settings.devices; }
 function deviceName(id) {
     const d = deviceList().find((x) => x.id === id);
@@ -132,7 +174,7 @@ function aggFleet() {
     const devs = deviceList();
     const rows = devs.map((dev) => {
         const hit = latest.get(dev.id);
-        return hit && Date.now() - hit.ts < STALE_MS ? { dev, d: hit.data } : { dev, d: null };
+        return { dev, d: hit ? hit.data : null, ts: hit ? hit.ts : 0 };
     });
     const live = rows.filter((r) => r.d);
     const hyb = live.filter((r) => r.d.kind === 'hybrid').map((r) => r.d);
@@ -166,7 +208,15 @@ function aggFleet() {
 /* ---- formatting ------------------------------------------------------------ */
 const fmtW = (w) => Math.round(w).toLocaleString('en-GB');
 const fmtKwh = (v) => v == null ? '···' : v.toLocaleString('en-GB', { maximumFractionDigits: v < 10 ? 2 : v < 1000 ? 1 : 0 });
+const fmtEur = (v) => v == null ? '···' : v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const flowFmt = (w) => w == null ? '···' : Math.abs(w) >= 9950 ? (w / 1000).toFixed(1) + ' kW' : fmtW(w) + ' W';
+const fmtClock = (ts) => new Date(ts).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+function fmtDur(hours) {
+    const mins = Math.round(hours * 60);
+    if (mins < 60) return `${mins} m`;
+    return `${Math.floor(mins / 60)} h ${String(mins % 60).padStart(2, '0')} m`;
+}
 
 function statusWord(code) {
     if (code == null) return null;
@@ -224,6 +274,140 @@ function setRow(rowId, valId, value, text) {
     if (value != null) $(valId).textContent = text;
 }
 
+function renderAlerts(a) {
+    const msgs = [];
+    a.rows.forEach(({ dev, d }) => {
+        if (!d) return;
+        if (d.status_code >= 0x1000) msgs.push(`${dev.name}: ${statusWord(d.status_code)}`);
+        if (d.kind === 'logger' && d.alarm && !/^(no|none|normal|f00)/i.test(d.alarm)) {
+            msgs.push(`${dev.name}: alarm ${d.alarm}`);
+        }
+    });
+    const bar = $('alertBar');
+    bar.hidden = !msgs.length;
+    if (msgs.length) bar.textContent = '⚠ ' + msgs.join(' · ');
+}
+
+function moneyFor(gen, exp, impP, expP) {
+    if (gen == null || impP == null) return null;
+    const e = Math.max(0, exp ?? 0);
+    return Math.max(0, gen - e) * impP + e * (expP ?? 0);
+}
+
+function monthDeltas(store) {
+    const prefix = dayKey(new Date()).slice(0, 7);
+    return deltas(store.daily, (s) => s.d).filter((r) => r.key.startsWith(prefix));
+}
+
+function renderMoney(a, store) {
+    const impP = numVal(settings.impPrice), expP = numVal(settings.expPrice);
+    if (impP == null) {
+        $('moneyToday').textContent = '···';
+        $('moneyMonth').textContent = '···';
+        $('moneyTotal').textContent = '···';
+        $('moneyWord').textContent = 'set your prices in ⚙ Settings to see this';
+        return;
+    }
+    $('moneyToday').textContent = fmtEur(moneyFor(a.todayGen, a.todayExp, impP, expP));
+    const month = monthDeltas(store);
+    $('moneyMonth').textContent = month.length
+        ? fmtEur(month.reduce((sum, r) => sum + (moneyFor(r.gen, r.exp, impP, expP) || 0), 0))
+        : '···';
+    $('moneyTotal').textContent = fmtEur(moneyFor(a.totGen, a.totExp, impP, expP));
+    $('moneyWord').textContent = a.todayExp != null
+        ? 'self-used at import price, exported at feed-in price'
+        : 'all solar counted at your import price';
+}
+
+function setStat(pctId, barId, ratio) {
+    const pct = ratio == null ? null : Math.max(0, Math.min(1, ratio)) * 100;
+    $(pctId).textContent = pct == null ? '···' : Math.round(pct) + '%';
+    $(barId).style.width = (pct ?? 0) + '%';
+}
+
+function renderSelf(a) {
+    const gen = a.todayGen;
+    const selfUsed = gen != null ? Math.max(0, gen - (a.todayExp ?? 0)) : null;
+    setStat('selfPct', 'selfBar', gen > 0 && a.todayExp != null ? selfUsed / gen : null);
+    const load = a.todayLoad;
+    $('autRow').style.display = load == null ? 'none' : '';
+    if (load != null) setStat('autPct', 'autBar', load > 0 ? Math.min(1, (selfUsed ?? 0) / load) : null);
+}
+
+function renderEco(a) {
+    const f = numVal(settings.co2) ?? 0.35;
+    $('ecoToday').textContent = a.todayGen == null ? '···' : (a.todayGen * f).toFixed(1);
+    const total = a.totGen == null ? null : a.totGen * f;
+    $('ecoTotal').textContent = total == null ? '···'
+        : total >= 1000 ? (total / 1000).toFixed(2) + ' tonnes' : total.toFixed(0) + ' kg';
+    $('ecoWord').textContent = total == null ? 'versus grey grid power'
+        : `like ${Math.max(1, Math.round(total / 21))} trees at work for a year`;
+}
+
+function updateRecords(a, store, box) {
+    let dirty = false;
+    if (a.solarW != null && (box.maxW == null || a.solarW > box.maxW)) {
+        box.maxW = a.solarW; box.maxWhen = Date.now(); dirty = true;
+    }
+    for (const r of deltas(store.daily, (s) => s.d)) {
+        if (box.bestKwh == null || r.gen > box.bestKwh) {
+            box.bestKwh = r.gen; box.bestDay = r.key; dirty = true;
+        }
+    }
+    return dirty;
+}
+
+function renderRecords(box) {
+    $('recPeak').textContent = box.maxW == null ? '···'
+        : `${fmtW(box.maxW)} W · ${new Date(box.maxWhen).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`;
+    $('recDay').textContent = box.bestKwh == null ? '···'
+        : `${fmtKwh(box.bestKwh)} kWh · ${box.bestDay.slice(5)}`;
+}
+
+function renderLedger(store) {
+    const impP = numVal(settings.impPrice), expP = numVal(settings.expPrice);
+    const table = $('ledgerTable');
+    table.classList.toggle('no-money', impP == null);
+    const today = dayKey(new Date());
+    const rows = deltas(store.daily, (s) => s.d).slice(-14).reverse();
+    const tbody = table.tBodies[0];
+    tbody.innerHTML = '';
+    if (!rows.length) {
+        tbody.innerHTML = '<tr><td colspan="5" class="dim">the first full day of history appears tomorrow</td></tr>';
+        return;
+    }
+    rows.forEach((r) => {
+        const tr = document.createElement('tr');
+        if (r.key === today) tr.className = 'today';
+        const cells = [
+            r.key === today ? 'today' : r.key.slice(5),
+            fmtKwh(r.gen), fmtKwh(r.imp), fmtKwh(r.exp),
+        ];
+        if (impP != null) cells.push('€ ' + fmtEur(moneyFor(r.gen, r.exp, impP, expP)));
+        tr.innerHTML = cells.map((c) => `<td>${c}</td>`).join('');
+        tbody.appendChild(tr);
+    });
+}
+
+function exportCsv() {
+    const impP = numVal(settings.impPrice), expP = numVal(settings.expPrice);
+    const rows = deltas(activeStore().daily, (s) => s.d);
+    const head = ['date', 'solar_kwh', 'import_kwh', 'export_kwh', 'battery_charge_kwh', 'battery_discharge_kwh'];
+    if (impP != null) head.push('value_eur');
+    const lines = [head.join(',')];
+    rows.forEach((r) => {
+        const cols = [r.key, r.gen.toFixed(2), r.imp.toFixed(2), r.exp.toFixed(2), r.chg.toFixed(2), r.dis.toFixed(2)];
+        if (impP != null) cols.push((moneyFor(r.gen, r.exp, impP, expP) || 0).toFixed(2));
+        lines.push(cols.join(','));
+    });
+    const blob = new Blob([lines.join('\r\n') + '\r\n'], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `sunseer-daily-${dayKey(new Date())}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
 function renderFleet() {
     const a = aggFleet();
     lastAgg = a;
@@ -270,10 +454,17 @@ function renderFleet() {
         fill.style.width = (a.bat.soc ?? 0) + '%';
         fill.classList.toggle('low', (a.bat.soc ?? 100) < 20);
         const mode = MODE_WORDS[a.modeCode];
-        const word = a.batW == null ? '···'
+        let word = a.batW == null ? '···'
             : a.batW >= 25 ? `charging at ${flowFmt(a.batW)}`
                 : a.batW <= -25 ? `discharging at ${flowFmt(-a.batW)}`
                     : 'idle';
+        const cap = numVal(settings.batKwh);
+        if (cap && a.bat.soc != null && a.batW != null && Math.abs(a.batW) >= 25) {
+            const hrs = a.batW > 0
+                ? (100 - a.bat.soc) / 100 * cap / (a.batW / 1000)
+                : (a.bat.soc - 10) / 100 * cap / (-a.batW / 1000);
+            if (isFinite(hrs) && hrs >= 0) word += ` · ${a.batW > 0 ? 'full' : 'empty'} in ~${fmtDur(hrs)}`;
+        }
         $('batWord').textContent = word + (mode ? ' · ' + mode + ' mode' : '');
         $('batVA').textContent = a.bat.v != null ? `${a.bat.v.toFixed(1)} V · ${(a.bat.a ?? 0).toFixed(1)} A` : '···';
         $('batSoh').textContent = a.bat.soh != null ? a.bat.soh + '%' : '···';
@@ -304,6 +495,15 @@ function renderFleet() {
 
     renderInvCards(a);
     renderLoggers(a);
+    renderAlerts(a);
+
+    const store = activeStore();
+    renderMoney(a, store);
+    renderSelf(a);
+    renderEco(a);
+    if (updateRecords(a, store, activeRecords())) saveLive(true);
+    renderRecords(activeRecords());
+    renderLedger(store);
 
     // lifetime counters
     $('totGen').textContent = fmtKwh(a.totGen);
@@ -314,6 +514,7 @@ function renderFleet() {
         : '';
 
     drawCharts(activeStore());
+    saveLive();
 }
 
 function esc(s) {
@@ -325,7 +526,7 @@ const KIND_BADGE = { hybrid: 'hybrid', string: 'string', logger: 'stick' };
 function renderInvCards(a) {
     const box = $('invCards');
     box.innerHTML = '';
-    a.rows.forEach(({ dev, d }) => {
+    a.rows.forEach(({ dev, d, ts }) => {
         const card = document.createElement('article');
         card.className = 'invcard';
         const err = errors.get(dev.id);
@@ -365,7 +566,8 @@ function renderInvCards(a) {
                 <span class="invkind">${KIND_BADGE[d.kind] || esc(d.kind)}</span></div>
             <p class="invstatus${bad ? ' bad' : ''}">${status}</p>
             <dl class="kv">${rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('')}</dl>
-            ${pvRows}`;
+            ${pvRows}
+            ${Date.now() - ts > 90000 ? `<p class="invseen">last seen ${fmtClock(ts)}</p>` : ''}`;
         box.appendChild(card);
     });
 }
@@ -467,11 +669,18 @@ function drawBars(canvas, rows, labelOf) {
 }
 
 function deltas(snaps, keyOf) {
+    const sane = (v) => v >= 0 && v < 500 ? v : 0;
     const out = [];
     for (let i = 1; i < snaps.length; i++) {
         const gen = snaps[i].gen - snaps[i - 1].gen;
-        const exp = (snaps[i].exp || 0) - (snaps[i - 1].exp || 0);
-        if (gen >= 0 && gen < 500) out.push({ key: keyOf(snaps[i]), gen, exp: Math.max(0, Math.min(exp, 500)) });
+        if (gen < 0 || gen >= 500) continue; // counter glitch or device swap
+        out.push({
+            key: keyOf(snaps[i]), gen,
+            imp: sane((snaps[i].imp || 0) - (snaps[i - 1].imp || 0)),
+            exp: sane((snaps[i].exp || 0) - (snaps[i - 1].exp || 0)),
+            chg: sane((snaps[i].chg || 0) - (snaps[i - 1].chg || 0)),
+            dis: sane((snaps[i].dis || 0) - (snaps[i - 1].dis || 0)),
+        });
     }
     return out;
 }
@@ -490,15 +699,30 @@ const bridge = { ws: null, open: false, retryTimer: 0 };
 
 function activeStore() { return demo.on ? demoStore : realStore; }
 
+function bridgeUrl() {
+    const custom = (settings.bridgeHost || '').trim();
+    if (custom) {
+        let host = custom.replace(/^wss?:\/\//, '').replace(/\/.*$/, '');
+        if (!/:\d+$/.test(host)) host += ':' + BRIDGE_PORT;
+        return 'ws://' + host;
+    }
+    // page served by the relay itself: talk back to the same host
+    if (location.protocol === 'http:' && location.port === String(BRIDGE_PORT)) {
+        return 'ws://' + location.host;
+    }
+    return 'ws://127.0.0.1:' + BRIDGE_PORT;
+}
+
 function connectBridge() {
     if (bridge.ws && (bridge.ws.readyState === 0 || bridge.ws.readyState === 1)) return;
     clearTimeout(bridge.retryTimer);
+    const url = bridgeUrl();
     let ws;
-    try { ws = new WebSocket(BRIDGE_URL); } catch { bridgeDown(); return; }
+    try { ws = new WebSocket(url); } catch { bridgeDown(); return; }
     bridge.ws = ws;
     ws.onopen = () => {
         bridge.open = true;
-        $('bridgeState').textContent = 'Relay: connected on 127.0.0.1:7102';
+        $('bridgeState').textContent = `Relay: connected (${url})`;
         sendWatch();
         refreshStatus();
     };
@@ -530,6 +754,13 @@ function bridgeDown() {
     bridge.retryTimer = setTimeout(connectBridge, 10000);
 }
 
+function reconnectNow() {
+    clearTimeout(bridge.retryTimer);
+    if (bridge.ws) { try { bridge.ws.close(); } catch { /* already closing */ } bridge.ws = null; }
+    bridge.open = false;
+    setTimeout(connectBridge, 120);
+}
+
 function validDevices() {
     return settings.devices.filter((d) => d.host && d.host.trim());
 }
@@ -550,11 +781,24 @@ function refreshStatus() {
         $('fleetLine').textContent = 'pretend 3.6K hybrid + 4.6K string, stored separately';
         return;
     }
-    if (!bridge.open) { setPill('off', 'relay offline'); $('fleetLine').textContent = 'start solis-bridge.py on this machine'; return; }
     const devs = validDevices();
+    const stamps = devs.map((d) => latest.get(d.id)).filter(Boolean).map((h) => h.ts);
+    const fresh = stamps.filter((ts) => Date.now() - ts < STALE_MS).length;
+    if (!bridge.open) {
+        setPill('off', 'relay offline');
+        $('fleetLine').textContent = stamps.length
+            ? `showing the last readings (${fmtClock(Math.max(...stamps))}) · start solis-bridge.py`
+            : 'start solis-bridge.py on this machine';
+        return;
+    }
     if (!devs.length) { setPill('idle', 'no inverters yet'); $('fleetLine').textContent = 'add your inverters in ⚙ Settings'; return; }
-    const fresh = devs.filter((d) => latest.has(d.id) && Date.now() - latest.get(d.id).ts < STALE_MS).length;
-    if (!fresh) { setPill('idle', 'waiting for readings…'); $('fleetLine').textContent = devs.map((d) => d.host).join(' · '); return; }
+    if (!fresh) {
+        setPill('idle', stamps.length ? 'stale' : 'waiting for readings…');
+        $('fleetLine').textContent = stamps.length
+            ? `last reading ${fmtClock(Math.max(...stamps))}, polling…`
+            : devs.map((d) => d.host).join(' · ');
+        return;
+    }
     setPill('on', 'live');
     $('fleetLine').textContent = `${fresh} of ${devs.length} inverter${devs.length > 1 ? 's' : ''} reporting`;
 }
@@ -692,6 +936,7 @@ function seedDemoHistory() {
 }
 
 function setDemo(on) {
+    if (on) saveLive(true); // park the real snapshot before the demo takes over
     demo.on = on;
     $('btnDemo').setAttribute('aria-pressed', String(on));
     $('btnDemo').textContent = on ? '⏹ Stop the demo' : '▶ Try the demo';
@@ -699,14 +944,23 @@ function setDemo(on) {
     spark.length = 0;
     latest.clear();
     errors.clear();
-    if (on) { seedDemoHistory(); seedDemoToday(new Date()); demoTick(); }
-    else if (realStore.daily.length === 0) { $('tiles').hidden = true; $('emptyState').hidden = false; }
+    if (on) {
+        Object.assign(demoRecords, { maxW: null, maxWhen: null, bestKwh: null, bestDay: null });
+        seedDemoHistory(); seedDemoToday(new Date()); demoTick();
+    } else {
+        restoreLive();
+        if (latest.size || realStore.daily.length) renderFleet();
+        else { $('tiles').hidden = true; $('emptyState').hidden = false; }
+    }
     refreshStatus();
 }
 
 /* ---- settings UI ------------------------------------------------------------------ */
+const darkMq = matchMedia('(prefers-color-scheme: dark)');
+
 function applyTheme() {
-    document.documentElement.dataset.theme = settings.theme;
+    const eff = settings.theme === 'auto' ? (darkMq.matches ? 'helios' : 'dawn') : settings.theme;
+    document.documentElement.dataset.theme = eff;
     document.querySelectorAll('#themeGrid .swatch').forEach((b) =>
         b.setAttribute('aria-checked', String(b.dataset.theme === settings.theme)));
     if (lastAgg) { drawSpark(); drawCharts(activeStore()); }
@@ -854,8 +1108,23 @@ function buildSettings() {
         saveSettings();
         if (lastAgg) renderFleet();
     });
+    $('setBridgeHost').value = settings.bridgeHost || '';
+    $('setBridgeHost').addEventListener('change', () => {
+        settings.bridgeHost = $('setBridgeHost').value.trim();
+        saveSettings(); reconnectNow();
+    });
+    [['setImpPrice', 'impPrice'], ['setExpPrice', 'expPrice'], ['setCo2', 'co2'], ['setBatKwh', 'batKwh']]
+        .forEach(([id, key]) => {
+            $(id).value = settings[key] ?? '';
+            $(id).addEventListener('change', () => {
+                settings[key] = $(id).value.trim();
+                saveSettings();
+                if (lastAgg) renderFleet();
+            });
+        });
 
-    $('btnReconnect').addEventListener('click', connectBridge);
+    $('btnReconnect').addEventListener('click', reconnectNow);
+    $('btnCsv').addEventListener('click', exportCsv);
     $('btnExport').addEventListener('click', () => {
         const blob = new Blob([JSON.stringify({
             exported: new Date().toISOString(),
@@ -879,19 +1148,59 @@ function openSettings(open) {
     if (open) histSummary();
 }
 
+/* ---- kiosk mode (wall tablet) --------------------------------------------------------- */
+let wakeLock = null;
+async function acquireWake() {
+    try { wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* unsupported or denied */ }
+}
+function releaseWake() {
+    try { wakeLock?.release(); } catch { /* already gone */ }
+    wakeLock = null;
+}
+
+function setKiosk(on) {
+    document.body.classList.toggle('kiosk', on);
+    $('btnKiosk').setAttribute('aria-pressed', String(on));
+    $('btnKioskExit').hidden = !on;
+    if (on) {
+        document.documentElement.requestFullscreen?.().catch(() => { /* http or denied: kiosk layout still applies */ });
+        acquireWake();
+    } else {
+        if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+        releaseWake();
+    }
+    if (lastAgg) { drawSpark(); drawCharts(activeStore()); }
+}
+
 /* ---- boot --------------------------------------------------------------------------- */
 function init() {
     applyTheme();
     applyTiles();
     buildSettings();
+    restoreLive();
     refreshStatus();
     connectBridge();
 
     $('btnSettings').addEventListener('click', () => openSettings(true));
     $('btnCloseSettings').addEventListener('click', () => openSettings(false));
     $('settingsVeil').addEventListener('click', (e) => { if (e.target === $('settingsVeil')) openSettings(false); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openSettings(false); });
+    document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        if (!$('settingsVeil').hidden) { openSettings(false); return; }
+        if (document.body.classList.contains('kiosk')) setKiosk(false);
+    });
     $('btnDemo').addEventListener('click', () => setDemo(!demo.on));
+    $('btnKiosk').addEventListener('click', () => setKiosk(!document.body.classList.contains('kiosk')));
+    $('btnKioskExit').addEventListener('click', () => setKiosk(false));
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && document.body.classList.contains('kiosk')) setKiosk(false);
+    });
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) saveLive(true);
+        else if (document.body.classList.contains('kiosk')) acquireWake();
+    });
+    window.addEventListener('pagehide', () => saveLive(true));
+    darkMq.addEventListener?.('change', () => { if (settings.theme === 'auto') applyTheme(); });
 
     let resizeTimer = 0;
     window.addEventListener('resize', () => {
@@ -899,11 +1208,20 @@ function init() {
         resizeTimer = setTimeout(() => { if (lastAgg) { drawSpark(); drawCharts(activeStore()); } }, 150);
     });
 
-    // returning visitor with history: show the dashboard shell immediately
-    if (realStore.daily.length) {
+    // returning visitor: paint the stored snapshot and history immediately
+    if (latest.size) {
+        renderFleet();
+    } else if (realStore.daily.length) {
         $('emptyState').hidden = true;
         $('tiles').hidden = false;
         drawCharts(realStore);
+        renderLedger(realStore);
+        renderRecords(records);
+    }
+
+    // offline shell + install on the https origin (loopback counts as secure)
+    if ('serviceWorker' in navigator && window.isSecureContext) {
+        navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
     }
 }
 

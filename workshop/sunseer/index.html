@@ -13,8 +13,13 @@
     <link rel="canonical" href="https://rami.party/workshop/sunseer/">
     <link rel="icon"
         href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%98%80%EF%B8%8F%3C/text%3E%3C/svg%3E">
-    <link rel="stylesheet" href="style.css">
-    <script src="app.js" defer></script>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icon.svg">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Sunseer">
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="app.js?v=2" defer></script>
 </head>
 
 <body>
@@ -35,8 +40,10 @@
                 <span class="pill idle" id="connPill">not connected</span>
                 <span class="fleetline" id="fleetLine"></span>
             </p>
+            <p class="alertbar" id="alertBar" role="alert" hidden></p>
             <div class="actions">
                 <button class="btn btn-primary" id="btnSettings" aria-haspopup="dialog">⚙ Settings</button>
+                <button class="btn btn-ghost" id="btnKiosk" aria-pressed="false">⛶ Full screen</button>
                 <button class="btn btn-ghost" id="btnDemo" aria-pressed="false">▶ Try the demo</button>
             </div>
         </header>
@@ -58,6 +65,10 @@
 python solis-bridge.py</code></pre>
                     <a class="btn btn-ghost" href="solis-bridge.py" download>Download solis-bridge.py</a>
                 </li>
+                <li><strong>On a tablet or phone?</strong> Run the relay on any PC, Pi or NAS with
+                    <code>python solis-bridge.py --lan</code> and open
+                    <code>http://&lt;that-machine&gt;:7102/</code> in the tablet's browser. The relay
+                    serves this dashboard itself, so the tablet needs nothing installed.</li>
                 <li>Open <strong>⚙ Settings</strong> and add each inverter: its stick's IP address, how it
                     talks, and (for Solarman sticks) the serial number printed on the stick.</li>
             </ol>
@@ -191,6 +202,62 @@ python solis-bridge.py</code></pre>
                 <p class="card-note" id="totPerInv"></p>
             </section>
 
+            <section class="card" data-tile="money">
+                <h2>Money</h2>
+                <p class="bignum small"><span class="unit unit-lead">€</span><span id="moneyToday">···</span></p>
+                <p class="card-note" id="moneyWord">earned by the sun today</p>
+                <dl class="kv">
+                    <div><dt>This month</dt><dd>€ <span id="moneyMonth">···</span></dd></div>
+                    <div><dt>All time</dt><dd>€ <span id="moneyTotal">···</span></dd></div>
+                </dl>
+            </section>
+
+            <section class="card" data-tile="self">
+                <h2>Self-sufficiency</h2>
+                <div class="statrow">
+                    <div class="statlabel"><span>Solar kept at home</span><b id="selfPct">···</b></div>
+                    <div class="statbar"><span class="statfill" id="selfBar"></span></div>
+                </div>
+                <div class="statrow" id="autRow">
+                    <div class="statlabel"><span>House ran on sun</span><b id="autPct">···</b></div>
+                    <div class="statbar"><span class="statfill" id="autBar"></span></div>
+                </div>
+                <p class="card-note">today, from the inverter’s own counters</p>
+            </section>
+
+            <section class="card" data-tile="eco">
+                <h2>CO₂ avoided</h2>
+                <p class="bignum small"><span id="ecoToday">···</span><span class="unit">kg today</span></p>
+                <dl class="kv">
+                    <div><dt>All time</dt><dd><span id="ecoTotal">···</span></dd></div>
+                </dl>
+                <p class="card-note" id="ecoWord">versus grey grid power</p>
+            </section>
+
+            <section class="card" data-tile="records">
+                <h2>Records</h2>
+                <dl class="kv">
+                    <div><dt>Peak power</dt><dd><span id="recPeak">···</span></dd></div>
+                    <div><dt>Best day</dt><dd><span id="recDay">···</span></dd></div>
+                </dl>
+                <p class="card-note">kept in this browser, survives reloads</p>
+            </section>
+
+            <section class="card card-wide" data-tile="ledger">
+                <h2>Daily ledger <span class="h-sub">last 14 days</span></h2>
+                <div class="tablewrap">
+                    <table class="ledger" id="ledgerTable">
+                        <thead>
+                            <tr><th>Day</th><th>Solar</th><th>Import</th><th>Export</th><th class="moneycol">Value</th></tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <div class="row">
+                    <button class="btn btn-ghost btn-mini" id="btnCsv">⤓ Download CSV (all days)</button>
+                </div>
+            </section>
+
             <section class="card" data-tile="loggers">
                 <h2>Dataloggers</h2>
                 <dl class="kv" id="loggerList"></dl>
@@ -221,8 +288,41 @@ python solis-bridge.py</code></pre>
                     </label>
                     <label class="tiletoggle"><input type="checkbox" id="gridFlip">
                         Flip the grid sign (my meter counts import as export)</label>
+                    <label class="field">Relay address (blank = automatic)
+                        <input type="text" id="setBridgeHost" placeholder="127.0.0.1:7102" autocomplete="off"
+                            spellcheck="false">
+                    </label>
+                    <p class="fine">Browsers only allow an https page to reach the relay on this same
+                        machine. From a tablet, open the dashboard from the relay instead:
+                        run <code>python solis-bridge.py --lan</code> and browse to
+                        <code>http://&lt;that-machine&gt;:7102/</code>.</p>
                     <p class="fine" id="bridgeState">Relay: checking…</p>
                     <button class="btn btn-ghost" id="btnReconnect">Reconnect relay</button>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Money &amp; planet</legend>
+                    <div class="fieldpair">
+                        <label class="field">Price per imported kWh (€)
+                            <input type="text" id="setImpPrice" inputmode="decimal" placeholder="0.32"
+                                autocomplete="off">
+                        </label>
+                        <label class="field">Feed-in price per kWh (€)
+                            <input type="text" id="setExpPrice" inputmode="decimal" placeholder="0.04"
+                                autocomplete="off">
+                        </label>
+                        <label class="field">Grid CO₂ (kg per kWh)
+                            <input type="text" id="setCo2" inputmode="decimal" placeholder="0.35"
+                                autocomplete="off">
+                        </label>
+                        <label class="field">Battery capacity (kWh)
+                            <input type="text" id="setBatKwh" inputmode="decimal" placeholder="7.2"
+                                autocomplete="off">
+                        </label>
+                    </div>
+                    <p class="fine">Prices feed the Money tile and the ledger; capacity feeds the
+                        battery's time-to-full estimate. Self-used solar counts at the import price,
+                        exported solar at the feed-in price.</p>
                 </fieldset>
 
                 <fieldset>
@@ -258,12 +358,18 @@ python solis-bridge.py</code></pre>
                     page, so a <strong>tiny relay</strong>, <code>solis-bridge.py</code>, runs on your
                     machine and forwards readings over <code>ws://127.0.0.1:7102</code>. It only accepts
                     this page, only reaches private addresses, and only ever <em>reads</em>: no register
-                    is ever written to your inverter.</li>
+                    is ever written to your inverter. The relay also <strong>serves this dashboard
+                    itself</strong>: run it with <code>--lan</code> on any always-on machine and every
+                    tablet in the house can open <code>http://&lt;that-machine&gt;:7102/</code>, no
+                    install needed. The <strong>⛶ Full screen</strong> button turns a spare tablet
+                    into a wall display that keeps the screen awake.</li>
                 <li>Hybrids (RHI / S5-EH1P / S6-EH1P, register map 33000) also report their
                     <strong>battery</strong> and the <strong>grid meter</strong> wired to them; string
-                    inverters (S5 / S6-GR1P, map 3000) report panels and production. Counter snapshots
-                    are kept in <strong>localStorage</strong> (hourly for 14 days, daily for 400 days)
-                    for the long-term graphs. Nothing is uploaded anywhere.</li>
+                    inverters (S5 / S6-GR1P, map 3000) report panels and production. Every reading,
+                    record and counter snapshot lives in <strong>localStorage</strong> (hourly for
+                    14 days, daily for 400 days), so the dashboard survives reloads and draws the
+                    long-term graphs, the money tile and the ledger without uploading anything
+                    anywhere.</li>
             </ol>
             <p class="note">Built for the Solis 3.6K and 4.6K single-phase machines (S6-GR1P3.6K,
                 S6-GR1P4.6K, RHI-3.6K-48ES and friends), and it should read any Solis that speaks the
@@ -275,6 +381,8 @@ python solis-bridge.py</code></pre>
             <a href="../">← Back to the Workshop</a> · part of <a href="/">rami.party</a>
         </footer>
     </div>
+
+    <button class="kiosk-exit" id="btnKioskExit" aria-label="Leave full screen" hidden>✕</button>
 </body>
 
 </html>
