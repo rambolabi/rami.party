@@ -1,4 +1,4 @@
-# Wattwarden — feature backlog
+# WattWarden — feature backlog
 
 What people actually build and ask for in P1-meter / home-energy dashboards.
 Sources: the Home Assistant energy dashboard and its feature-request forum, Domoticz
@@ -190,3 +190,29 @@ an external paid API or another device are honestly parked in the backlog.
         appearance and data/demo on the other, stacking again on narrow screens
 124. [x] Last 60 minutes chart: full-width power line with import/export shading,
         point-by-point hover, and the readings survive a page reload
+
+## More field requests gathered from the community (2026-08-23, round 2)
+
+What keeps coming up in Home Assistant forums, Tweakers energy threads and
+smart-meter app reviews, still open here:
+
+125. [ ] Picture-in-picture mini window: pop the live wattage into a small
+        always-on-top window while you work (Document Picture-in-Picture)
+126. [ ] Day-by-hour heatmap: a calendar grid coloured by usage, the classic
+        "find your patterns at a glance" view
+127. [ ] Monthly budget: set a kWh or euro target, watch a progress bar and get
+        warned when the pace will overshoot it
+128. [ ] Same month last year comparison once enough history has built up
+129. [ ] Standby hunt mode: pin the current wattage, walk around unplugging
+        things, and see exactly how much each device was sipping
+130. [ ] Water leak watch: warn when water keeps flowing in the small hours
+        (needs the Watermeter feed)
+131. [ ] Cheap hour advisor for dynamic contracts: shift the dishwasher to the
+        cheapest block (pairs with the dynamic price feed, item 11)
+132. [ ] Spoken or chimed announcements for chosen events ("exporting now")
+133. [ ] Cast the dashboard to a Chromecast or smart TV
+134. [ ] Scheduled automatic backups straight into a folder you pick once
+        (File System Access API, Chromium only)
+135. [ ] Backfill old history by importing the grid operator's CSV export
+        (Fluvius, Liander, Enexis portals all offer one)
+136. [ ] Printable monthly report: one tidy page of totals, costs and charts

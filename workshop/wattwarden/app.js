@@ -1,7 +1,7 @@
 'use strict';
 
 /* =========================================================================
-   Wattwarden — a live dashboard for P1 smart meter dongles.
+   WattWarden — a live dashboard for P1 smart meter dongles.
 
    Data path, tried in order:
    1. Direct fetch from this page to http://<meter>/api/v1/data. Works when
@@ -796,7 +796,7 @@ function beep() {
 
 function notify(text) {
     if (!settings.alertNotify || !('Notification' in window) || Notification.permission !== 'granted') return;
-    try { new Notification('Wattwarden', { body: text, icon: 'icon.svg' }); } catch { /* blocked */ }
+    try { new Notification('WattWarden', { body: text, icon: 'icon.svg' }); } catch { /* blocked */ }
 }
 
 function setAlert(id, active, text) {
@@ -1271,7 +1271,7 @@ async function packTransfer() {
 
 async function unpackTransfer(code) {
     const m = /^WW1([gj]):([A-Za-z0-9+/=\s]+)$/.exec(code.trim());
-    if (!m) throw new Error('not a Wattwarden transfer code');
+    if (!m) throw new Error('not a WattWarden transfer code');
     let bytes = b64ToBytes(m[2].replace(/\s+/g, ''));
     if (m[1] === 'g') {
         const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
@@ -1366,7 +1366,7 @@ function importJson(file) {
         try {
             applyImportedData(JSON.parse(reader.result), 'import merged');
         } catch {
-            $('histInfo').textContent = 'That file could not be read as a Wattwarden export.';
+            $('histInfo').textContent = 'That file could not be read as a WattWarden export.';
         }
     };
     reader.readAsText(file);

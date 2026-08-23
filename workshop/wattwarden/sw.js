@@ -1,11 +1,11 @@
-/* Wattwarden service worker: network-first shell so the dashboard opens
+/* WattWarden service worker: network-first shell so the dashboard opens
    instantly on a wall tablet even when the network hiccups, without ever
    freezing visitors on a stale build. Meter traffic is cross-origin and
    never touched. Bump CACHE on every deploy. */
 'use strict';
 
-const CACHE = 'wattwarden-v3';
-const SHELL = ['./', 'index.html', 'style.css?v=3', 'app.js?v=3', 'icon.svg', 'manifest.webmanifest'];
+const CACHE = 'wattwarden-v4';
+const SHELL = ['./', 'index.html', 'style.css?v=4', 'app.js?v=4', 'icon.svg', 'icon.svg?v=4', 'manifest.webmanifest?v=4'];
 
 self.addEventListener('install', (e) => {
     e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

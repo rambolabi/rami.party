@@ -1,4 +1,4 @@
-/* Wattwarden — theme-driven energy dashboard */
+/* WattWarden — theme-driven energy dashboard */
 
 :root, html[data-theme="ember"] {
     --bg: #12100c;
@@ -140,6 +140,7 @@ body {
 .hero-row { display: flex; align-items: center; gap: 1rem; margin-top: .9rem; }
 .hero-mark { font-size: 3rem; line-height: 1; filter: drop-shadow(0 0 16px var(--accent)); }
 h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.4rem); letter-spacing: .03em; }
+h1 .tld { color: var(--muted); font-weight: 400; font-size: .55em; letter-spacing: .02em; }
 .lede { margin: .2rem 0 0; color: var(--muted); max-width: 40rem; }
 
 .statusline {

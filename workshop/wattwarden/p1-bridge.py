@@ -1,5 +1,5 @@
 """
-WATTWARDEN — local P1 meter relay for the Wattwarden webpage.
+WATTWARDEN — local P1 meter relay for the WattWarden webpage.
 https://rami.party/workshop/wattwarden/
 
 The HomeWizard P1 Meter (and compatible dongles) serve their readings as
@@ -17,7 +17,7 @@ Usage:
     pip install websockets
     python p1-bridge.py
 
-Then open the Wattwarden webpage and set the meter's IP in its settings.
+Then open the WattWarden webpage and set the meter's IP in its settings.
 Enable "Local API" for the meter in the HomeWizard Energy app first
 (Settings > Meters > your meter).
 
@@ -25,7 +25,7 @@ Security:
   * Binds to 127.0.0.1 only (never exposed to the network).
   * Only relays to private / mDNS addresses (192.168.x.x, 10.x, .local, ...),
     so a rogue website cannot use it as a proxy to the internet.
-  * Only accepts WebSocket connections from the Wattwarden page or
+  * Only accepts WebSocket connections from the WattWarden page or
     localhost dev servers (Origin allowlist below).
 """
 
