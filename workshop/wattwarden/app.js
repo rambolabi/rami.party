@@ -29,12 +29,12 @@ const THEMES = [
 ];
 const TILES = [
     ['now', 'Right now'], ['today', 'Today'], ['costs', 'Costs'], ['stats', "Today's shape"],
-    ['compare', 'Compare'], ['flow', 'Power flow'], ['day24', 'Last 24 hours'],
-    ['history', 'History'], ['gas', 'Gas'], ['totals', 'Meter counters'],
+    ['compare', 'Compare'], ['flow', 'Power flow'], ['hour60', 'Last 60 minutes'],
+    ['day24', 'Last 24 hours'], ['history', 'History'], ['gas', 'Gas'], ['totals', 'Meter counters'],
     ['phases', 'Per phase'], ['lines', 'Voltage & current'], ['peak', 'Monthly peak'],
     ['water', 'Water'], ['eco', 'Footprint'], ['quality', 'Connection & grid'],
 ];
-const DEFAULT_TILES = ['now', 'today', 'costs', 'stats', 'day24', 'history', 'gas', 'totals'];
+const DEFAULT_TILES = ['now', 'today', 'costs', 'stats', 'hour60', 'day24', 'history', 'gas', 'totals'];
 const CURRENCIES = ['€', '£', '$', 'kr', 'CHF'];
 const VOLT_LOW = 207, VOLT_HIGH = 253; // EN 50160 ±10%
 
@@ -62,6 +62,17 @@ const settings = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('ww
     if (!settings.tiles.length) settings.tiles = DEFAULT_TILES.slice();
     settings.order = (settings.order || []).filter((t) => ids.includes(t));
     ids.forEach((t) => { if (!settings.order.includes(t)) settings.order.push(t); });
+    // one-time: slot the 60-minute chart in front of the 24-hour one for older setups
+    if (!settings.migr60) {
+        settings.migr60 = true;
+        if (settings.tiles.includes('day24') && !settings.tiles.includes('hour60')) {
+            settings.tiles.splice(settings.tiles.indexOf('day24'), 0, 'hour60');
+        }
+        settings.order = settings.order.filter((t) => t !== 'hour60');
+        const oi = settings.order.indexOf('day24');
+        settings.order.splice(oi < 0 ? settings.order.length : oi, 0, 'hour60');
+        saveSettings();
+    }
 })();
 
 function saveSettings() {
@@ -262,7 +273,10 @@ function monthTotals(store, m) {
 }
 
 /* ---- dashboard rendering ---------------------------------------------------- */
-const spark = []; // {t, w}, kept for 60 min regardless of the display window
+// spark: {t, w} samples kept for 60 min; persisted so reloads keep the hour chart
+const spark = JSON.parse(localStorage.getItem('ww_spark') || '[]')
+    .filter((p) => p && typeof p.w === 'number' && p.t >= Date.now() - 60 * 60000);
+let sparkSavedAt = 0;
 let lastMetrics = null;
 let lastRaw = null;
 let lastReadingAt = 0;
@@ -312,7 +326,12 @@ function renderNow(m) {
 
     spark.push({ t: Date.now(), w: m.power });
     while (spark.length && spark[0].t < Date.now() - 60 * 60000) spark.shift();
+    if (!demo.on && Date.now() - sparkSavedAt > 20000) {
+        sparkSavedAt = Date.now();
+        localStorage.setItem('ww_spark', JSON.stringify(spark));
+    }
     drawSpark();
+    drawHour();
 }
 
 function renderToday(m, store) {
@@ -411,6 +430,7 @@ function renderSimple(m) {
         if (p == null) return;
         const row = document.createElement('div');
         row.className = 'phaserow';
+        row.dataset.info = `Power on phase L${i + 1} right now. Negative means this phase is feeding the grid.`;
         row.innerHTML = `<span class="pl">L${i + 1}</span><span class="pbar"><span class="pfill${p < 0 ? ' neg' : ''}" style="width:${Math.min(100, Math.abs(p) / maxP * 100)}%"></span></span><span class="pv">${fmtW(p)} W</span>`;
         bars.appendChild(row);
     });
@@ -428,6 +448,9 @@ function renderSimple(m) {
         zeroQuirk = zeroQuirk || quirk;
         const bad = v != null && !quirk && v !== 0 && (v < VOLT_LOW || v > VOLT_HIGH);
         const div = document.createElement('div');
+        div.dataset.info = quirk
+            ? `The meter reports no voltage on L${i + 1} even though current flows; that is a meter quirk, not a fault.`
+            : `Voltage and current on phase L${i + 1}. A healthy grid stays between 207 and 253 V.`;
         div.innerHTML = `<dt>L${i + 1}</dt><dd${bad ? ' class="bad"' : ''}>${v != null ? v.toFixed(1) + ' V' : ''}${v != null && m.amps[i] != null ? ' · ' : ''}${m.amps[i] != null ? m.amps[i].toFixed(1) + ' A' : ''}</dd>`;
         lines.appendChild(div);
     });
@@ -479,9 +502,13 @@ function drawSpark() {
     if (!c) return;
     const windowMs = settings.sparkMin * 60000;
     const pts = spark.filter((p) => p.t >= Date.now() - windowMs);
+    const sc = $('sparkCanvas');
+    sc._pts = pts;
+    sc._t0 = Date.now() - windowMs;
+    sc._t1 = Date.now();
     if (pts.length < 2) return;
     const { ctx, w, h } = c;
-    const t0 = Date.now() - windowMs, t1 = Date.now();
+    const t0 = sc._t0, t1 = sc._t1;
     const dataMin = Math.min(...pts.map((p) => p.w));
     let min = Math.min(0, dataMin);
     let max = Math.max(100, ...pts.map((p) => p.w));
@@ -500,7 +527,73 @@ function drawSpark() {
     ctx.stroke();
 }
 
+function drawHour() {
+    const canvas = $('hourCanvas');
+    const pts = spark;
+    // young data fills the whole width and grows into a true hour
+    const span = pts.length ? Math.max(5 * 60000, Date.now() - pts[0].t) : 60 * 60000;
+    canvas._pts = pts;
+    canvas._t0 = Date.now() - Math.min(60 * 60000, span);
+    canvas._t1 = Date.now();
+    const c = canvasCtx(canvas);
+    if (!c) return;
+    const { ctx, w, h } = c;
+    ctx.clearRect(0, 0, w, h);
+    ctx.font = '11px system-ui, sans-serif';
+    if (pts.length < 2) {
+        ctx.fillStyle = themeVar('--muted');
+        ctx.textAlign = 'center';
+        ctx.fillText('collecting readings, the hour fills up as you watch…', w / 2, h / 2);
+        return;
+    }
+    const top = 14, bottom = 16;
+    const dataMin = Math.min(...pts.map((p) => p.w));
+    const dataMax = Math.max(...pts.map((p) => p.w));
+    let min = Math.min(0, dataMin);
+    let max = Math.max(100, dataMax);
+    const pad = (max - min) * 0.08 || 50;
+    if (min < 0) min -= pad;
+    max += pad;
+    const x = (t) => (t - canvas._t0) / (canvas._t1 - canvas._t0) * w;
+    const y = (v) => top + (1 - (v - min) / (max - min)) * (h - top - bottom);
+    const y0 = y(0);
+
+    // area fill: import tint above the zero line, export tint below it
+    const area = new Path2D();
+    area.moveTo(x(pts[0].t), y0);
+    pts.forEach((p) => area.lineTo(x(p.t), y(p.w)));
+    area.lineTo(x(pts[pts.length - 1].t), y0);
+    area.closePath();
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, w, y0); ctx.clip();
+    ctx.globalAlpha = 0.18; ctx.fillStyle = themeVar('--chart-imp'); ctx.fill(area);
+    ctx.restore();
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, y0, w, h - y0); ctx.clip();
+    ctx.globalAlpha = 0.22; ctx.fillStyle = themeVar('--chart-exp'); ctx.fill(area);
+    ctx.restore();
+
+    if (dataMin < 0) {
+        ctx.strokeStyle = themeVar('--line'); ctx.setLineDash([3, 4]);
+        ctx.beginPath(); ctx.moveTo(0, y0); ctx.lineTo(w, y0); ctx.stroke(); ctx.setLineDash([]);
+    }
+    ctx.strokeStyle = themeVar('--chart-imp'); ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    pts.forEach((p, i) => { i ? ctx.lineTo(x(p.t), y(p.w)) : ctx.moveTo(x(p.t), y(p.w)); });
+    ctx.stroke();
+
+    ctx.fillStyle = themeVar('--muted');
+    ctx.textAlign = 'left';
+    ctx.fillText(`▲ peak ${fmtPower(dataMax)}`, 4, 11);
+    ctx.fillText(new Date(canvas._t0).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), 4, h - 4);
+    ctx.textAlign = 'right';
+    if (dataMin < 0) ctx.fillText(`▼ export peak ${fmtPower(-dataMin)}`, w - 4, 11);
+    ctx.fillText('now', w - 4, h - 4);
+}
+
 function drawBars(canvas, rows, labelOf) {
+    canvas._rows = rows;
+    canvas._label = labelOf;
     const c = canvasCtx(canvas);
     if (!c) return;
     const { ctx, w, h } = c;
@@ -533,6 +626,29 @@ function drawBars(canvas, rows, labelOf) {
     });
     ctx.strokeStyle = themeVar('--line');
     ctx.beginPath(); ctx.moveTo(0, zeroY); ctx.lineTo(w, zeroY); ctx.stroke();
+
+    // cost overlay on its own scale (feature 32); exact figures sit in the bar tooltips
+    const costs = rows.map((r) => costOfDelta(r));
+    const maxC = Math.max(...costs);
+    if (maxC > 0.005 && rows.length > 1) {
+        const cy = (v) => top + (1 - Math.max(0, v) / maxC) * (h - top - bottom);
+        ctx.strokeStyle = themeVar('--warn');
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        costs.forEach((v, i) => {
+            const cx = slot * i + slot / 2;
+            i ? ctx.lineTo(cx, cy(v)) : ctx.moveTo(cx, cy(v));
+        });
+        ctx.stroke();
+        ctx.fillStyle = themeVar('--warn');
+        costs.forEach((v, i) => {
+            ctx.beginPath();
+            ctx.arc(slot * i + slot / 2, cy(v), 2, 0, 7);
+            ctx.fill();
+        });
+        ctx.textAlign = 'center';
+        ctx.fillText(`cost line · peak ${money(maxC)}`, w / 2, 11);
+    }
 
     ctx.fillStyle = themeVar('--muted');
     ctx.textAlign = 'left';
@@ -576,6 +692,89 @@ function drawCharts(store) {
     drawBars($('historyCanvas'), rows, label);
     document.querySelectorAll('#tiles .chip').forEach((b) =>
         b.classList.toggle('on', b.dataset.period === settings.histPeriod));
+}
+
+/* ---- tooltips: hover or press any stat or chart bar for more info ---------- */
+const tipEl = document.createElement('div');
+tipEl.className = 'tip';
+tipEl.hidden = true;
+let tipTimer = 0;
+
+function showTip(html, x, y) {
+    tipEl.innerHTML = html;
+    tipEl.hidden = false;
+    const r = tipEl.getBoundingClientRect();
+    const left = Math.min(Math.max(8, x + 12), window.innerWidth - r.width - 8);
+    const top = (y + 14 + r.height > window.innerHeight) ? y - r.height - 12 : y + 14;
+    tipEl.style.left = `${left}px`;
+    tipEl.style.top = `${Math.max(8, top)}px`;
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(hideTip, 6000);
+}
+
+function hideTip() {
+    clearTimeout(tipTimer);
+    tipEl.hidden = true;
+}
+
+const escHtml = (s) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+
+function barTipHandler(canvas) {
+    return (e) => {
+        const rows = canvas._rows;
+        if (!rows || !rows.length) { hideTip(); return; }
+        const rect = canvas.getBoundingClientRect();
+        const i = Math.max(0, Math.min(rows.length - 1,
+            Math.floor((e.clientX - rect.left) / (rect.width / rows.length))));
+        const r = rows[i];
+        const parts = [`<b>${escHtml(String(canvas._label(r)))}</b>`, `\u25b2 ${fmtKwh(r.imp)} kWh in`];
+        if (r.exp > 0.0005) parts.push(`\u25bc ${fmtKwh(r.exp)} kWh out`);
+        if (r.gas > 0.0005) parts.push(`${fmtM3(r.gas)} m\u00b3 gas`);
+        parts.push(money(costOfDelta(r)));
+        showTip(parts.join(' \u00b7 '), e.clientX, e.clientY);
+    };
+}
+
+function lineTipHandler(canvas) {
+    return (e) => {
+        const pts = canvas._pts;
+        if (!pts || pts.length < 2) { hideTip(); return; }
+        const rect = canvas.getBoundingClientRect();
+        const t = canvas._t0 + (e.clientX - rect.left) / rect.width * (canvas._t1 - canvas._t0);
+        let best = pts[0];
+        for (const p of pts) if (Math.abs(p.t - t) < Math.abs(best.t - t)) best = p;
+        const dir = best.w < 0 ? ' exporting' : '';
+        showTip(`<b>${new Date(best.t).toLocaleTimeString('en-GB')}</b> \u00b7 ${fmtPower(best.w)}${dir}`, e.clientX, e.clientY);
+    };
+}
+
+function initTips() {
+    document.body.appendChild(tipEl);
+    [$('day24Canvas'), $('historyCanvas')].forEach((c) => {
+        const handler = barTipHandler(c);
+        c.addEventListener('pointermove', handler);
+        c.addEventListener('pointerdown', handler);
+        c.addEventListener('pointerleave', hideTip);
+    });
+    [$('sparkCanvas'), $('hourCanvas')].forEach((c) => {
+        const handler = lineTipHandler(c);
+        c.addEventListener('pointermove', handler);
+        c.addEventListener('pointerdown', handler);
+        c.addEventListener('pointerleave', hideTip);
+    });
+
+    const infoOf = (e) => (e.target.closest ? e.target.closest('[data-info]') : null);
+    document.addEventListener('pointerover', (e) => {
+        const t = infoOf(e);
+        if (t) showTip(escHtml(t.dataset.info), e.clientX, e.clientY);
+    });
+    document.addEventListener('pointerout', (e) => { if (infoOf(e)) hideTip(); });
+    document.addEventListener('pointerdown', (e) => {
+        const t = infoOf(e);
+        if (t) showTip(escHtml(t.dataset.info), e.clientX, e.clientY);
+        else if (!e.target.closest('canvas')) hideTip();
+    });
+    document.addEventListener('scroll', hideTip, true);
 }
 
 /* ---- alerts ------------------------------------------------------------------- */
@@ -926,6 +1125,7 @@ let redrawTimer = 0;
 function redraw() {
     clearTimeout(redrawTimer);
     redrawTimer = setTimeout(() => {
+        drawHour();
         if (lastMetrics) { drawSpark(); drawCharts(activeStore()); }
         else if (activeStore().daily.length) drawCharts(activeStore());
     }, 60);
@@ -1353,7 +1553,10 @@ function buildSettings() {
     });
     $('btnWipe').addEventListener('click', () => {
         if (!confirm('Delete all stored meter history from this browser?')) return;
-        realStore.wipe(); realStore.persist(true); histSummary(); redraw();
+        realStore.wipe(); realStore.persist(true);
+        localStorage.removeItem('ww_spark');
+        spark.length = 0;
+        histSummary(); redraw();
     });
 
     // history period chips
@@ -1392,6 +1595,7 @@ function init() {
     applyClock();
     applyDim();
     buildSettings();
+    initTips();
     refreshStatus();
     updateConnDetail();
     startConnection();
@@ -1420,7 +1624,7 @@ function init() {
     // repaint the moment they get real dimensions
     if ('ResizeObserver' in window) {
         const ro = new ResizeObserver(redraw);
-        ['sparkCanvas', 'day24Canvas', 'historyCanvas'].forEach((id) => ro.observe($(id)));
+        ['sparkCanvas', 'hourCanvas', 'day24Canvas', 'historyCanvas'].forEach((id) => ro.observe($(id)));
     }
     setInterval(watchdogTick, 5000);
     setInterval(applyDim, 30000);

@@ -70,10 +70,10 @@ python p1-bridge.py</code></pre>
         <main id="tiles" class="tiles" aria-label="Meter dashboard" hidden>
             <section class="card tile-now" data-tile="now">
                 <h2>Right now</h2>
-                <p class="bignum"><span id="nowW">···</span><span class="unit" id="nowUnit">W</span></p>
+                <p class="bignum" data-info="Active power right now: what the home draws from the grid, or feeds back when negative."><span id="nowW">···</span><span class="unit" id="nowUnit">W</span></p>
                 <p class="card-note"><span id="nowWord">waiting for the first reading</span>
-                    <span class="badge" id="tariffBadge" hidden></span></p>
-                <div class="powerbar" aria-hidden="true"><span id="powerFill"></span></div>
+                    <span class="badge" id="tariffBadge" data-info="The tariff counter running right now. T1 is usually the cheaper night and weekend rate." hidden></span></p>
+                <div class="powerbar" data-info="How close the current draw sits to the high-usage alert ceiling." aria-hidden="true"><span id="powerFill"></span></div>
                 <canvas id="sparkCanvas" class="spark" role="img"
                     aria-label="Power over the recent past"></canvas>
             </section>
@@ -81,20 +81,20 @@ python p1-bridge.py</code></pre>
             <section class="card" data-tile="today">
                 <h2>Today</h2>
                 <dl class="kv">
-                    <div><dt>Imported</dt><dd><span id="todayImp">···</span> kWh</dd></div>
-                    <div><dt>Exported</dt><dd><span id="todayExp">···</span> kWh</dd></div>
-                    <div id="todayGasRow"><dt>Gas</dt><dd><span id="todayGas">···</span> m³</dd></div>
-                    <div><dt>Net from grid</dt><dd><span id="todayNet">···</span> kWh</dd></div>
+                    <div data-info="Electricity taken from the grid since midnight, from the meter's own counters."><dt>Imported</dt><dd><span id="todayImp">···</span> kWh</dd></div>
+                    <div data-info="Electricity fed back to the grid since midnight, usually solar surplus."><dt>Exported</dt><dd><span id="todayExp">···</span> kWh</dd></div>
+                    <div id="todayGasRow" data-info="Gas burned since midnight."><dt>Gas</dt><dd><span id="todayGas">···</span> m³</dd></div>
+                    <div data-info="Import minus export. Negative means the grid received more than it delivered today."><dt>Net from grid</dt><dd><span id="todayNet">···</span> kWh</dd></div>
                 </dl>
                 <p class="card-note" id="todayNote">Counted since midnight, from the meter's own counters.</p>
             </section>
 
             <section class="card" data-tile="costs">
                 <h2>Costs</h2>
-                <p class="bignum small"><span id="costToday">···</span></p>
+                <p class="bignum small" data-info="Today so far: energy and gas at your prices, plus the daily standing charge."><span id="costToday">···</span></p>
                 <dl class="kv">
-                    <div><dt>This month</dt><dd id="costMonth">···</dd></div>
-                    <div><dt>Month at this pace</dt><dd id="costProject">···</dd></div>
+                    <div data-info="Every day of this calendar month so far, standing charges included."><dt>This month</dt><dd id="costMonth">···</dd></div>
+                    <div data-info="This month's spending stretched to a full month at the current pace."><dt>Month at this pace</dt><dd id="costProject">···</dd></div>
                 </dl>
                 <p class="card-note" id="costNote">today, energy + gas + standing charge</p>
             </section>
@@ -102,33 +102,39 @@ python p1-bridge.py</code></pre>
             <section class="card" data-tile="stats">
                 <h2>Today's shape</h2>
                 <dl class="kv">
-                    <div><dt>Peak</dt><dd><span id="statMax">···</span></dd></div>
-                    <div><dt>Quietest</dt><dd><span id="statMin">···</span></dd></div>
-                    <div><dt>Average</dt><dd><span id="statAvg">···</span></dd></div>
-                    <div><dt>Base load ≈</dt><dd><span id="statBase">···</span></dd></div>
+                    <div data-info="The highest power reading of today and when it happened."><dt>Peak</dt><dd><span id="statMax">···</span></dd></div>
+                    <div data-info="The lowest power reading of today."><dt>Quietest</dt><dd><span id="statMin">···</span></dd></div>
+                    <div data-info="The average of all readings since midnight."><dt>Average</dt><dd><span id="statAvg">···</span></dd></div>
+                    <div data-info="The always-on load: fridge, router, standby devices. Consumption never drops below this."><dt>Base load ≈</dt><dd><span id="statBase">···</span></dd></div>
                 </dl>
-                <p class="card-note" id="baseNote">the quiet minimum costs <span id="baseCost">···</span> a year</p>
+                <p class="card-note" id="baseNote" data-info="What the always-on load costs over a year at your import price.">the quiet minimum costs <span id="baseCost">···</span> a year</p>
             </section>
 
             <section class="card" data-tile="compare">
                 <h2>Compare</h2>
                 <dl class="kv">
-                    <div><dt>Today so far</dt><dd id="cmpToday">···</dd></div>
-                    <div><dt>Yesterday</dt><dd id="cmpYesterday">···</dd></div>
-                    <div><dt>Daily avg (7 d)</dt><dd id="cmpWeek">···</dd></div>
-                    <div><dt>This month</dt><dd id="cmpMonth">···</dd></div>
-                    <div><dt>Last month</dt><dd id="cmpLastMonth">···</dd></div>
+                    <div data-info="Electricity imported so far today."><dt>Today so far</dt><dd id="cmpToday">···</dd></div>
+                    <div data-info="Yesterday's full-day import."><dt>Yesterday</dt><dd id="cmpYesterday">···</dd></div>
+                    <div data-info="Average import per day over the last seven full days."><dt>Daily avg (7 d)</dt><dd id="cmpWeek">···</dd></div>
+                    <div data-info="Import in this calendar month, today included."><dt>This month</dt><dd id="cmpMonth">···</dd></div>
+                    <div data-info="Import in the previous calendar month."><dt>Last month</dt><dd id="cmpLastMonth">···</dd></div>
                 </dl>
             </section>
 
             <section class="card" data-tile="flow">
                 <h2>Power flow</h2>
-                <div class="flow" id="flowBox">
+                <div class="flow" id="flowBox" data-info="Which way energy is moving between the grid and the home right now.">
                     <span class="flow-node">⚡ grid</span>
                     <span class="flow-lane"><span class="flow-dashes" id="flowDashes"></span></span>
                     <span class="flow-node">🏠 home</span>
                 </div>
                 <p class="card-note" id="flowNote">waiting for a reading</p>
+            </section>
+
+            <section class="card card-wide" data-tile="hour60">
+                <h2>Last 60 minutes <span class="h-sub">power · dips under the dashed line = export</span></h2>
+                <canvas id="hourCanvas" class="chart chart-hour" role="img"
+                    aria-label="Line chart of power over the last 60 minutes"></canvas>
             </section>
 
             <section class="card card-wide" data-tile="day24">
@@ -151,17 +157,17 @@ python p1-bridge.py</code></pre>
 
             <section class="card" data-tile="gas">
                 <h2>Gas</h2>
-                <p class="bignum small"><span id="gasTotal">···</span><span class="unit">m³</span></p>
+                <p class="bignum small" data-info="The gas meter's lifetime total reading."><span id="gasTotal">···</span><span class="unit">m³</span></p>
                 <p class="card-note">meter total · last update <span id="gasWhen">···</span></p>
             </section>
 
             <section class="card" data-tile="totals">
                 <h2>Meter counters</h2>
                 <dl class="kv">
-                    <div><dt>Import T1 (low)</dt><dd><span id="impT1">···</span> kWh</dd></div>
-                    <div><dt>Import T2 (high)</dt><dd><span id="impT2">···</span> kWh</dd></div>
-                    <div><dt>Export T1</dt><dd><span id="expT1">···</span> kWh</dd></div>
-                    <div><dt>Export T2</dt><dd><span id="expT2">···</span> kWh</dd></div>
+                    <div data-info="Lifetime import on tariff 1, usually the cheaper night and weekend rate."><dt>Import T1 (low)</dt><dd><span id="impT1">···</span> kWh</dd></div>
+                    <div data-info="Lifetime import on tariff 2, usually the daytime rate."><dt>Import T2 (high)</dt><dd><span id="impT2">···</span> kWh</dd></div>
+                    <div data-info="Lifetime export to the grid on tariff 1."><dt>Export T1</dt><dd><span id="expT1">···</span> kWh</dd></div>
+                    <div data-info="Lifetime export to the grid on tariff 2."><dt>Export T2</dt><dd><span id="expT2">···</span> kWh</dd></div>
                 </dl>
             </section>
 
@@ -180,22 +186,22 @@ python p1-bridge.py</code></pre>
 
             <section class="card" data-tile="peak">
                 <h2>Monthly peak</h2>
-                <p class="bignum small"><span id="peakW">···</span><span class="unit">W</span></p>
+                <p class="bignum small" data-info="The highest quarter-hour average demand this month. Belgian grid fees (capaciteitstarief) are based on this value."><span id="peakW">···</span><span class="unit">W</span></p>
                 <p class="card-note">quarter-hour average demand this month
                     (Belgian capaciteitstarief) · <span id="peakWhen">···</span></p>
             </section>
 
             <section class="card" data-tile="water">
                 <h2>Water</h2>
-                <p class="bignum small"><span id="waterTotal">···</span><span class="unit">m³</span></p>
+                <p class="bignum small" data-info="The water meter's lifetime total."><span id="waterTotal">···</span><span class="unit">m³</span></p>
                 <p class="card-note">from the water meter linked to the P1 dongle</p>
             </section>
 
             <section class="card" data-tile="eco">
                 <h2>Footprint</h2>
                 <dl class="kv">
-                    <div><dt>CO₂ today</dt><dd id="co2Today">···</dd></div>
-                    <div><dt>CO₂ this month</dt><dd id="co2Month">···</dd></div>
+                    <div data-info="Estimated from today's electricity and gas with the factors from the settings."><dt>CO₂ today</dt><dd id="co2Today">···</dd></div>
+                    <div data-info="Estimated for this calendar month."><dt>CO₂ this month</dt><dd id="co2Month">···</dd></div>
                 </dl>
                 <p class="card-note">from your electricity and gas, factors adjustable in settings</p>
             </section>
@@ -203,12 +209,12 @@ python p1-bridge.py</code></pre>
             <section class="card" data-tile="quality">
                 <h2>Connection &amp; grid</h2>
                 <dl class="kv">
-                    <div><dt>Source</dt><dd><span id="srcInfo">···</span></dd></div>
-                    <div><dt>Last reading</dt><dd><span id="ageInfo">···</span></dd></div>
-                    <div><dt>Wi-Fi</dt><dd><span id="wifi">···</span></dd></div>
-                    <div><dt>Power failures</dt><dd><span id="fails">···</span></dd></div>
-                    <div><dt>Voltage sags / swells</dt><dd><span id="sags">···</span></dd></div>
-                    <div><dt>Smart meter</dt><dd><span id="meterModel">···</span></dd></div>
+                    <div data-info="How the page reads the meter right now, and how long the last fetch took."><dt>Source</dt><dd><span id="srcInfo">···</span></dd></div>
+                    <div data-info="Clock time of the newest reading. It should refresh at your polling rate."><dt>Last reading</dt><dd><span id="ageInfo">···</span></dd></div>
+                    <div data-info="The Wi-Fi network and signal strength the meter reports."><dt>Wi-Fi</dt><dd><span id="wifi">···</span></dd></div>
+                    <div data-info="Power failures the smart meter has counted over its lifetime."><dt>Power failures</dt><dd><span id="fails">···</span></dd></div>
+                    <div data-info="Voltage dips and swells counted by the meter, all phases together."><dt>Voltage sags / swells</dt><dd><span id="sags">···</span></dd></div>
+                    <div data-info="The smart meter behind the P1 dongle and its DSMR version."><dt>Smart meter</dt><dd><span id="meterModel">···</span></dd></div>
                 </dl>
             </section>
         </main>
@@ -241,6 +247,9 @@ python p1-bridge.py</code></pre>
                     <p class="fine" id="bridgeState">Relay: checking…</p>
                     <button class="btn btn-ghost" id="btnReconnect">Retry connection</button>
                 </fieldset>
+
+                <div class="settings-cols">
+                <div class="scol">
 
                 <fieldset>
                     <legend>Costs &amp; prices</legend>
@@ -316,6 +325,31 @@ python p1-bridge.py</code></pre>
                 </fieldset>
 
                 <fieldset>
+                    <legend>Wall tablet</legend>
+                    <label class="tiletoggle"><input type="checkbox" id="setAwake"> Keep the screen awake
+                        while this page is open</label>
+                    <p class="fine" id="wakeState">···</p>
+                    <label class="tiletoggle"><input type="checkbox" id="setDimOn"> Dim the screen at
+                        night</label>
+                    <div class="grid3" id="dimRow">
+                        <label class="field">From
+                            <input type="time" id="setDimFrom">
+                        </label>
+                        <label class="field">Until
+                            <input type="time" id="setDimTo">
+                        </label>
+                        <label class="field">Dim strength <span id="dimVal"></span>
+                            <input type="range" id="setDimLevel" min="20" max="90" step="5">
+                        </label>
+                    </div>
+                    <p class="fine">Tip: use ⛶ Fullscreen in the header, and install this page as an app
+                        from the browser menu for a clean kiosk.</p>
+                </fieldset>
+
+                </div>
+                <div class="scol">
+
+                <fieldset>
                     <legend>Appearance</legend>
                     <div class="themegrid" id="themeGrid" role="radiogroup" aria-label="Colour theme"></div>
                     <div class="grid2">
@@ -349,28 +383,6 @@ python p1-bridge.py</code></pre>
                 </fieldset>
 
                 <fieldset>
-                    <legend>Wall tablet</legend>
-                    <label class="tiletoggle"><input type="checkbox" id="setAwake"> Keep the screen awake
-                        while this page is open</label>
-                    <p class="fine" id="wakeState">···</p>
-                    <label class="tiletoggle"><input type="checkbox" id="setDimOn"> Dim the screen at
-                        night</label>
-                    <div class="grid3" id="dimRow">
-                        <label class="field">From
-                            <input type="time" id="setDimFrom">
-                        </label>
-                        <label class="field">Until
-                            <input type="time" id="setDimTo">
-                        </label>
-                        <label class="field">Dim strength <span id="dimVal"></span>
-                            <input type="range" id="setDimLevel" min="20" max="90" step="5">
-                        </label>
-                    </div>
-                    <p class="fine">Tip: use ⛶ Fullscreen in the header, and install this page as an app
-                        from the browser menu for a clean kiosk.</p>
-                </fieldset>
-
-                <fieldset>
                     <legend>Data &amp; demo</legend>
                     <label class="tiletoggle"><input type="checkbox" id="setDemo"> Demo mode: a pretend
                         household, stored separately from real data</label>
@@ -393,6 +405,9 @@ python p1-bridge.py</code></pre>
                         <pre id="rawJson">no reading yet</pre>
                     </details>
                 </fieldset>
+
+                </div>
+                </div>
             </div>
         </section>
 

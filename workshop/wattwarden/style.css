@@ -270,6 +270,7 @@ body.compact .spark { height: 44px; }
 
 .spark { width: 100%; height: 64px; margin-top: .6rem; display: block; }
 .chart { width: 100%; height: 200px; display: block; }
+.chart-hour { height: 170px; }
 
 .chipbar { float: right; display: inline-flex; gap: .3rem; }
 .chip {
@@ -326,8 +327,11 @@ body.compact .spark { height: 44px; }
     border: 1px solid var(--line);
     border-radius: 16px;
     padding: 1rem 1.3rem 1.3rem;
-    width: min(36rem, 100%);
+    width: min(62rem, 100%);
 }
+.settings-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1rem; align-items: start; }
+.scol { min-width: 0; }
+@media (max-width: 46rem) { .settings-cols { grid-template-columns: 1fr; } }
 .settings-head { display: flex; justify-content: space-between; align-items: center; }
 .settings-head h2 { margin: .2rem 0; }
 fieldset { border: 1px solid var(--line); border-radius: 10px; margin: .9rem 0 0; padding: .7rem .9rem .9rem; }
@@ -423,6 +427,24 @@ legend { color: var(--muted); font-size: .85rem; padding: 0 .4rem; letter-spacin
     text-align: center; color: var(--muted); font-size: .9rem;
 }
 .foot a { color: var(--muted); }
+
+/* ---- tooltips ---- */
+[data-info] { cursor: help; }
+.tip {
+    position: fixed;
+    z-index: 60;
+    max-width: 21rem;
+    background: var(--bg-raise);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: .5rem .75rem;
+    font-size: .82rem;
+    line-height: 1.45;
+    color: var(--ink);
+    pointer-events: none;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
+}
+.tip b { color: var(--accent); }
 
 /* ---- night dim overlay ---- */
 .dimveil {

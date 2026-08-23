@@ -50,8 +50,10 @@ an external paid API or another device are honestly parked in the backlog.
 28. [x] 12-month aggregation built from the daily snapshots
 29. [x] Gas shown per day in the history data (stored per snapshot)
 30. [x] Charts redraw in theme colours and on resize
-31. [ ] Hover/tap tooltips with exact values per bar
-32. [ ] Cost overlay drawn on the energy charts
+31. [x] Hover or tap any chart bar for the exact values: time, kWh in and out,
+        gas and the cost of that hour, day or month
+32. [x] Cost overlay drawn on the energy charts (own scale, peak labelled,
+        per-bar figures in the tooltips)
 33. [ ] Average line and trend line on charts
 34. [ ] Save any chart as a PNG image
 35. [ ] Zoom and pan inside a chart
@@ -182,3 +184,9 @@ an external paid API or another device are honestly parked in the backlog.
 119. [ ] Weekly summary as a printable / shareable image
 120. [ ] Language switch (NL, DE, FR)
 121. [ ] Read-only live view for a second device on the LAN (relay would serve it)
+122. [x] Hover or press any statistic for a plain-language explanation of what it
+        means and where it comes from (sparkline included, point by point)
+123. [x] Settings dialog laid out in two columns: prices and alerts on one side,
+        appearance and data/demo on the other, stacking again on narrow screens
+124. [x] Last 60 minutes chart: full-width power line with import/export shading,
+        point-by-point hover, and the readings survive a page reload
