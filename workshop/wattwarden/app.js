@@ -46,6 +46,9 @@ const DEFAULTS = {
     theme: 'ember', accent: '', scale: 100, density: false, unitsKw: true,
     clock: false, sparkMin: 10, histPeriod: '30d', wideScreen: false,
     showSpark: true, bandOn: false, bandW: 1000, bandLow: '#57b8ff', bandHigh: '#e05a5a',
+    simpleOn: false,
+    simpleSlots: { big: 'powerNow', m1: 'todayWater', m2: 'todayGas', r1: 'todayCost', r2: 'todayImp', r3: 'todayExp' },
+    simpleColors: { big: '#8b5cf6', m1: '#38bdf8', m2: '#ec4899' },
     tiles: DEFAULT_TILES.slice(), order: TILES.map(([t]) => t),
     keepAwake: true, dimOn: false, dimFrom: '23:00', dimTo: '06:30', dimLevel: 70,
     currency: '€', dualPrices: false, priceImp: 0.30, priceImpT1: 0.28, priceImpT2: 0.32,
@@ -57,6 +60,8 @@ const DEFAULTS = {
 const settings = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('ww_settings') || '{}'));
 (function migrateSettings() {
     const ids = TILES.map(([t]) => t);
+    settings.simpleSlots = { ...DEFAULTS.simpleSlots, ...(settings.simpleSlots || {}) };
+    settings.simpleColors = { ...DEFAULTS.simpleColors, ...(settings.simpleColors || {}) };
     settings.tiles = (settings.tiles || [])
         .map((t) => (t === 'days30' ? 'history' : t))
         .filter((t) => ids.includes(t));
@@ -132,12 +137,12 @@ function recordHistory(store, m, now) {
         // prefer yesterday's closing counters as today's baseline
         const prev = store.daily[store.daily.length - 2];
         store.base = (prev && m.imp - prev.imp >= 0 && m.imp - prev.imp < 200)
-            ? { d: dKey, imp: prev.imp, exp: prev.exp, gas: prev.gas, it1: prev.it1, it2: prev.it2 }
-            : { d: dKey, imp: m.imp, exp: m.exp || 0, gas: m.gas, it1: m.impT1, it2: m.impT2 };
+            ? { d: dKey, imp: prev.imp, exp: prev.exp, gas: prev.gas, water: prev.water ?? m.water, it1: prev.it1, it2: prev.it2 }
+            : { d: dKey, imp: m.imp, exp: m.exp || 0, gas: m.gas, water: m.water, it1: m.impT1, it2: m.impT2 };
     }
     // counters only ever count up; a regression means the meter was swapped or reset
     if (m.imp < store.base.imp || (m.gas != null && store.base.gas != null && m.gas < store.base.gas)) {
-        store.base = { d: dKey, imp: m.imp, exp: m.exp || 0, gas: m.gas, it1: m.impT1, it2: m.impT2 };
+        store.base = { d: dKey, imp: m.imp, exp: m.exp || 0, gas: m.gas, water: m.water, it1: m.impT1, it2: m.impT2 };
     }
 
     if (m.power != null) {
@@ -293,7 +298,7 @@ function setPill(state, text) {
 function renderReading(m, store) {
     lastMetrics = m;
     $('emptyState').hidden = true;
-    $('tiles').hidden = false;
+    $('tiles').hidden = !!settings.simpleOn;
 
     renderNow(m);
     renderToday(m, store);
@@ -304,6 +309,7 @@ function renderReading(m, store) {
     renderSimple(m);
     renderQuality(m);
     renderEco(m, store);
+    renderSimpleView(m, store);
     drawCharts(store);
     checkAlerts(m);
     if ($('settingsVeil') && !$('settingsVeil').hidden) refreshRawBox();
@@ -800,6 +806,209 @@ function initTips() {
     document.addEventListener('scroll', hideTip, true);
 }
 
+/* ---- simple view: HomeWizard-display style rings + side stats -------------- */
+function weekAvgOf(store, key) {
+    const rows = dailyDeltas(store).slice(-7);
+    if (!rows.length) return null;
+    const sum = rows.reduce((a, r) => a + (r[key] || 0), 0);
+    return sum / rows.length;
+}
+
+function fracVsAvg(v, avg) {
+    if (v == null || !avg) return null;
+    return Math.max(0.02, Math.min(1, v / avg));
+}
+
+const SIMPLE_METRICS = {
+    powerNow: {
+        label: 'Power now', icon: '⚡', info: 'Active power right now; the ring fills toward your high-usage ceiling.',
+        val: (m) => m && m.power != null ? fmtPowerParts(m.power) : ['···', 'W'],
+        frac: (m) => m && m.power != null ? Math.min(1, Math.abs(m.power) / Math.max(settings.alertW || 0, 3000)) : null,
+        sub: (m, s) => { const t = m && todayDelta(s, m); return t ? `↑ ${fmtKwh(t.imp)}  ↓ ${fmtKwh(t.exp)} kWh` : ''; },
+    },
+    todayImp: {
+        label: 'Imported today', icon: '⬇', info: 'Electricity taken from the grid since midnight; ring compares against your 7-day average.',
+        val: (m, s) => { const t = m && todayDelta(s, m); return t ? [fmtKwh(t.imp), 'kWh'] : ['···', 'kWh']; },
+        frac: (m, s) => { const t = m && todayDelta(s, m); return t ? fracVsAvg(t.imp, weekAvgOf(s, 'imp')) : null; },
+    },
+    todayExp: {
+        label: 'Exported today', icon: '☀', info: 'Electricity fed back to the grid since midnight.',
+        val: (m, s) => { const t = m && todayDelta(s, m); return t ? [fmtKwh(t.exp), 'kWh'] : ['···', 'kWh']; },
+        frac: (m, s) => { const t = m && todayDelta(s, m); return t ? fracVsAvg(t.exp, weekAvgOf(s, 'exp')) : null; },
+    },
+    todayNet: {
+        label: 'Net today', icon: '⇅', info: 'Import minus export since midnight.',
+        val: (m, s) => { const t = m && todayDelta(s, m); return t ? [fmtKwh(t.imp - t.exp), 'kWh'] : ['···', 'kWh']; },
+    },
+    todayGas: {
+        label: 'Gas today', icon: '🔥', info: 'Gas burned since midnight; ring compares against your 7-day average.',
+        val: (m, s) => { const t = m && todayDelta(s, m); return t && m.gas != null ? [fmtM3(t.gas), 'm³'] : ['···', 'm³']; },
+        frac: (m, s) => { const t = m && todayDelta(s, m); return t ? fracVsAvg(t.gas, weekAvgOf(s, 'gas')) : null; },
+    },
+    todayWater: {
+        label: 'Water today', icon: '💧', info: 'Water used since midnight, from the meter linked to the P1 dongle.',
+        val: (m, s) => {
+            const b = s.base;
+            return m && m.water != null && b && b.water != null
+                ? [Math.round((m.water - b.water) * 1000).toLocaleString('en-GB'), 'L'] : ['···', 'L'];
+        },
+    },
+    todayCost: {
+        label: 'Cost today', icon: '💶', info: 'Energy, gas and water at your prices plus the standing charge, since midnight.',
+        val: (m, s) => { const t = m && todayDelta(s, m); return t ? [money(costOfDelta(t) + settings.standingDay), ''] : ['···', '']; },
+    },
+    monthCost: {
+        label: 'Cost this month', icon: '📅', info: 'Every day of this calendar month so far, standing charges included.',
+        val: (m, s) => {
+            const cur = monthTotals(s, m).get(dayKey(new Date()).slice(0, 7));
+            return cur ? [money(costOfDelta(cur) + settings.standingDay * new Date().getDate()), ''] : ['···', ''];
+        },
+    },
+    monthImp: {
+        label: 'kWh this month', icon: '🗓', info: 'Electricity imported in this calendar month, today included.',
+        val: (m, s) => { const cur = monthTotals(s, m).get(dayKey(new Date()).slice(0, 7)); return cur ? [fmtKwh(cur.imp), 'kWh'] : ['···', 'kWh']; },
+    },
+    yesterdayImp: {
+        label: 'Yesterday', icon: '↩', info: "Yesterday's full-day import.",
+        val: (m, s) => { const rows = dailyDeltas(s); const y = rows[rows.length - 1]; return y ? [fmtKwh(y.imp), 'kWh'] : ['···', 'kWh']; },
+    },
+    gasTotal: {
+        label: 'Gas meter', icon: '🔥', info: "The gas meter's lifetime total.",
+        val: (m) => m && m.gas != null ? [fmtM3(m.gas), 'm³'] : ['···', 'm³'],
+    },
+    waterTotal: {
+        label: 'Water meter', icon: '💧', info: "The water meter's lifetime total.",
+        val: (m) => m && m.water != null ? [fmtM3(m.water), 'm³'] : ['···', 'm³'],
+    },
+    tariff: {
+        label: 'Tariff', icon: '🏷', info: 'The tariff counter running right now.',
+        val: (m) => m && m.tariff != null ? [`T${m.tariff}`, ''] : ['···', ''],
+    },
+    peakMonth: {
+        label: 'Month peak', icon: '📈', info: 'Highest quarter-hour average this month (Belgian capaciteitstarief).',
+        val: (m) => m && m.peakW != null ? fmtPowerParts(m.peakW) : ['···', 'W'],
+    },
+    voltage: {
+        label: 'Voltage', icon: '🔌', info: 'Highest phase voltage right now.',
+        val: (m) => {
+            const vs = (m ? m.volts : []).filter((v) => v != null && v > 0);
+            return vs.length ? [Math.max(...vs).toFixed(0), 'V'] : ['···', 'V'];
+        },
+    },
+    baseLoad: {
+        label: 'Base load', icon: '🌙', info: "Today's quietest reading: your always-on load.",
+        val: (m, s) => s.stats && s.stats.n ? fmtPowerParts(Math.max(0, s.stats.minW)) : ['···', 'W'],
+    },
+    co2Today: {
+        label: 'CO₂ today', icon: '🌍', info: 'Estimated from electricity and gas with your factors.',
+        val: (m, s) => {
+            const t = m && todayDelta(s, m);
+            return t ? [((t.imp * settings.co2Kwh + Math.max(0, t.gas || 0) * settings.co2Gas) / 1000).toLocaleString('en-GB', { maximumFractionDigits: 1 }), 'kg'] : ['···', 'kg'];
+        },
+    },
+    clock: {
+        label: 'Clock', icon: '🕐', info: 'The time, for a proper wall display.',
+        val: () => [new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }), ''],
+    },
+};
+
+const SIMPLE_TEMPLATES = {
+    display: {
+        label: 'Energy display',
+        slots: { big: 'powerNow', m1: 'todayWater', m2: 'todayGas', r1: 'todayCost', r2: 'todayImp', r3: 'todayExp' },
+        colors: { big: '#8b5cf6', m1: '#38bdf8', m2: '#ec4899' },
+    },
+    solar: {
+        label: 'Solar',
+        slots: { big: 'powerNow', m1: 'todayExp', m2: 'todayImp', r1: 'todayCost', r2: 'todayNet', r3: 'peakMonth' },
+        colors: { big: '#6fd68a', m1: '#38bdf8', m2: '#ffb347' },
+    },
+    costs: {
+        label: 'Costs',
+        slots: { big: 'todayCost', m1: 'monthCost', m2: 'todayImp', r1: 'tariff', r2: 'co2Today', r3: 'baseLoad' },
+        colors: { big: '#ffb347', m1: '#8b5cf6', m2: '#38bdf8' },
+    },
+    minimal: {
+        label: 'Minimal',
+        slots: { big: 'powerNow', m1: 'none', m2: 'none', r1: 'clock', r2: 'none', r3: 'none' },
+        colors: { big: '#8b5cf6', m1: '#38bdf8', m2: '#ec4899' },
+    },
+};
+
+const RING_C = 2 * Math.PI * 45; // r=45 viewBox circle
+
+function buildSimpleView() {
+    const host = $('simpleView');
+    const ring = (slot, cls) => `
+        <div class="sv-cell ${cls}" data-slot="${slot}">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+                <circle class="sv-track" cx="50" cy="50" r="45"></circle>
+                <circle class="sv-arc" cx="50" cy="50" r="45" stroke-dasharray="${RING_C} ${RING_C}"></circle>
+            </svg>
+            <div class="sv-inner">
+                <span class="sv-num"></span><span class="sv-unit"></span>
+                <span class="sv-sub"></span>
+            </div>
+        </div>`;
+    const row = (slot) => `
+        <div class="sv-row" data-slot="${slot}">
+            <span class="sv-ico" aria-hidden="true"></span>
+            <span class="sv-rtext"><span class="sv-rnum"></span> <span class="sv-runit"></span>
+                <span class="sv-rlabel"></span></span>
+        </div>`;
+    host.innerHTML = `
+        ${ring('big', 'sv-big')}
+        <div class="sv-mid">${ring('m1', 'sv-medium')}${ring('m2', 'sv-medium')}</div>
+        <div class="sv-side">${row('r1')}${row('r2')}${row('r3')}</div>`;
+}
+
+function renderSimpleView(m, store) {
+    if (!settings.simpleOn) { $('simpleView').hidden = true; return; }
+    $('simpleView').hidden = false;
+    ['big', 'm1', 'm2'].forEach((slot) => {
+        const cell = document.querySelector(`#simpleView [data-slot="${slot}"]`);
+        const id = settings.simpleSlots[slot];
+        const def = SIMPLE_METRICS[id];
+        cell.style.display = def ? '' : 'none';
+        if (!def) return;
+        const [num, unit] = def.val(m, store);
+        cell.querySelector('.sv-num').textContent = num;
+        cell.querySelector('.sv-unit').textContent = unit;
+        cell.querySelector('.sv-sub').textContent = def.sub ? def.sub(m, store) : '';
+        cell.dataset.info = def.info;
+        const arc = cell.querySelector('.sv-arc');
+        const color = settings.simpleColors[slot] || '#8b5cf6';
+        arc.style.stroke = color;
+        const frac = def.frac ? def.frac(m, store) : null;
+        arc.style.strokeDashoffset = frac == null ? 0 : RING_C * (1 - frac);
+        arc.style.opacity = frac == null ? 0.45 : 1;
+    });
+    ['r1', 'r2', 'r3'].forEach((slot) => {
+        const rowEl = document.querySelector(`#simpleView [data-slot="${slot}"]`);
+        const id = settings.simpleSlots[slot];
+        const def = SIMPLE_METRICS[id];
+        rowEl.style.display = def ? '' : 'none';
+        if (!def) return;
+        const [num, unit] = def.val(m, store);
+        rowEl.querySelector('.sv-ico').textContent = def.icon;
+        rowEl.querySelector('.sv-rnum').textContent = num;
+        rowEl.querySelector('.sv-runit').textContent = unit;
+        rowEl.querySelector('.sv-rlabel').textContent = def.label;
+        rowEl.dataset.info = def.info;
+    });
+}
+
+function applySimple() {
+    document.body.classList.toggle('simpleon', settings.simpleOn);
+    $('btnSimple').textContent = settings.simpleOn ? '▦ Full view' : '◐ Simple view';
+    const hasData = !!lastMetrics || activeStore().daily.length > 0;
+    $('simpleView').hidden = !settings.simpleOn;
+    $('tiles').hidden = settings.simpleOn || !hasData;
+    $('emptyState').hidden = settings.simpleOn || hasData;
+    if (settings.simpleOn) renderSimpleView(lastMetrics, activeStore());
+    else redraw();
+}
+
 /* ---- alerts ------------------------------------------------------------------- */
 const alertState = new Map(); // id -> active bool
 let audioCtx = null;
@@ -1263,6 +1472,7 @@ function setDemo(on) {
         if (realStore.daily.length === 0) { $('tiles').hidden = true; $('emptyState').hidden = false; }
         startConnection();
     }
+    applySimple();
 }
 
 /* ---- transfer between browsers / devices --------------------------------- */
@@ -1569,6 +1779,55 @@ function buildSettings() {
     $('setBandHigh').addEventListener('input', () => { settings.bandHigh = $('setBandHigh').value; saveSettings(); redraw(); });
     bandRowSync();
 
+    // simple view: template buttons + slot pickers + ring colours
+    const tpls = $('svTemplates');
+    Object.entries(SIMPLE_TEMPLATES).forEach(([id, tpl]) => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-ghost';
+        b.textContent = tpl.label;
+        b.addEventListener('click', () => {
+            settings.simpleSlots = { ...tpl.slots };
+            settings.simpleColors = { ...tpl.colors };
+            settings.simpleOn = true;
+            saveSettings();
+            syncSimpleInputs();
+            applySimple();
+        });
+        tpls.appendChild(b);
+    });
+    const slotSelect = (id, allowNone) => {
+        const sel = $(id);
+        if (allowNone) {
+            const o = document.createElement('option');
+            o.value = 'none'; o.textContent = '(empty)';
+            sel.appendChild(o);
+        }
+        Object.entries(SIMPLE_METRICS).forEach(([mid, def]) => {
+            const o = document.createElement('option');
+            o.value = mid; o.textContent = def.label;
+            sel.appendChild(o);
+        });
+    };
+    slotSelect('svBig', false);
+    ['svM1', 'svM2', 'svR1', 'svR2', 'svR3'].forEach((id) => slotSelect(id, true));
+    const SLOT_INPUTS = [['big', 'svBig'], ['m1', 'svM1'], ['m2', 'svM2'], ['r1', 'svR1'], ['r2', 'svR2'], ['r3', 'svR3']];
+    SLOT_INPUTS.forEach(([slot, id]) => {
+        $(id).addEventListener('change', () => {
+            settings.simpleSlots[slot] = $(id).value;
+            saveSettings();
+            renderSimpleView(lastMetrics, activeStore());
+        });
+    });
+    [['big', 'svColBig'], ['m1', 'svColM1'], ['m2', 'svColM2']].forEach(([slot, id]) => {
+        $(id).addEventListener('input', () => {
+            settings.simpleColors[slot] = $(id).value;
+            saveSettings();
+            renderSimpleView(lastMetrics, activeStore());
+        });
+    });
+    bindCheck('setSimpleOn', 'simpleOn', applySimple);
+    syncSimpleInputs();
+
     $('setGraphSpark').addEventListener('change', () => {
         settings.showSpark = $('setGraphSpark').checked;
         saveSettings(); drawSpark();
@@ -1624,6 +1883,19 @@ function buildSettings() {
     });
 }
 
+function syncSimpleInputs() {
+    $('setSimpleOn').checked = !!settings.simpleOn;
+    $('svBig').value = settings.simpleSlots.big;
+    $('svM1').value = settings.simpleSlots.m1;
+    $('svM2').value = settings.simpleSlots.m2;
+    $('svR1').value = settings.simpleSlots.r1;
+    $('svR2').value = settings.simpleSlots.r2;
+    $('svR3').value = settings.simpleSlots.r3;
+    $('svColBig').value = settings.simpleColors.big;
+    $('svColM1').value = settings.simpleColors.m1;
+    $('svColM2').value = settings.simpleColors.m2;
+}
+
 function syncPriceRows() {
     $('singlePriceRow').querySelector('#setPriceImp').parentElement.style.display = settings.dualPrices ? 'none' : '';
     $('dualPriceRow').hidden = !settings.dualPrices;
@@ -1637,7 +1909,7 @@ function syncNotifyState() {
 
 function openSettings(open) {
     $('settingsVeil').hidden = !open;
-    if (open) { histSummary(); refreshRawBox(); syncGraphChecks(); $('setHost').focus(); }
+    if (open) { histSummary(); refreshRawBox(); syncGraphChecks(); syncSimpleInputs(); $('setHost').focus(); }
 }
 
 /* ---- boot --------------------------------------------------------------------------- */
@@ -1649,6 +1921,7 @@ function init() {
     applyTiles();
     applyClock();
     applyDim();
+    buildSimpleView();
     buildSettings();
     initTips();
     refreshStatus();
@@ -1672,6 +1945,11 @@ function init() {
     $('settingsVeil').addEventListener('click', (e) => { if (e.target === $('settingsVeil')) openSettings(false); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openSettings(false); });
     $('btnFull').addEventListener('click', toggleFullscreen);
+    $('btnSimple').addEventListener('click', () => {
+        settings.simpleOn = !settings.simpleOn;
+        saveSettings();
+        applySimple();
+    });
     document.addEventListener('fullscreenchange', applyKiosk);
 
     window.addEventListener('resize', redraw);
@@ -1694,6 +1972,7 @@ function init() {
         $('tiles').hidden = false;
         redraw();
     }
+    applySimple();
 }
 
 document.addEventListener('DOMContentLoaded', init);

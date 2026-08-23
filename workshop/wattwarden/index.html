@@ -39,6 +39,7 @@
             <p class="alertbar" id="alertBar" role="alert" hidden></p>
             <div class="actions">
                 <button class="btn btn-primary" id="btnSettings" aria-haspopup="dialog">⚙ Settings</button>
+                <button class="btn btn-ghost" id="btnSimple">◐ Simple view</button>
                 <button class="btn btn-ghost" id="btnFull" title="Fullscreen kiosk mode"
                     aria-label="Toggle fullscreen">⛶ Fullscreen</button>
             </div>
@@ -47,6 +48,8 @@
         <noscript>
             <p class="note warn">WattWarden is all JavaScript: it needs scripts enabled to poll the meter.</p>
         </noscript>
+
+        <section id="simpleView" class="simpleview" aria-label="Simplified energy display" hidden></section>
 
         <section class="empty" id="emptyState">
             <h2>No meter connected yet</h2>
@@ -394,6 +397,45 @@ python p1-bridge.py</code></pre>
                     <label class="tiletoggle"><input type="checkbox" id="setGraphHour"> Last 60 minutes</label>
                     <label class="tiletoggle"><input type="checkbox" id="setGraphDay"> Last 24 hours</label>
                     <label class="tiletoggle"><input type="checkbox" id="setGraphHist"> History (7 d / 30 d / 12 m)</label>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Simple view</legend>
+                    <label class="tiletoggle"><input type="checkbox" id="setSimpleOn"> Simple display instead of
+                        the tile dashboard (rings and big numbers, like an energy display)</label>
+                    <p class="fine">Templates:</p>
+                    <div class="row" id="svTemplates"></div>
+                    <div class="grid2">
+                        <label class="field">Big ring
+                            <select id="svBig"></select>
+                        </label>
+                        <label class="field">Ring colour
+                            <input type="color" id="svColBig">
+                        </label>
+                        <label class="field">Second ring
+                            <select id="svM1"></select>
+                        </label>
+                        <label class="field">Ring colour
+                            <input type="color" id="svColM1">
+                        </label>
+                        <label class="field">Third ring
+                            <select id="svM2"></select>
+                        </label>
+                        <label class="field">Ring colour
+                            <input type="color" id="svColM2">
+                        </label>
+                    </div>
+                    <div class="grid3">
+                        <label class="field">Side stat 1
+                            <select id="svR1"></select>
+                        </label>
+                        <label class="field">Side stat 2
+                            <select id="svR2"></select>
+                        </label>
+                        <label class="field">Side stat 3
+                            <select id="svR3"></select>
+                        </label>
+                    </div>
                 </fieldset>
 
                 <fieldset>

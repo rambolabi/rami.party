@@ -447,6 +447,58 @@ legend { color: var(--muted); font-size: .85rem; padding: 0 .4rem; letter-spacin
 }
 .tip b { color: var(--accent); }
 
+/* ---- simple view: display-style rings ---- */
+.simpleview {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr 1.1fr;
+    gap: 1.2rem;
+    align-items: center;
+    margin-top: 1.4rem;
+    background: var(--bg-raise);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 1.6rem 1.8rem;
+}
+.sv-cell { position: relative; width: 100%; }
+.sv-cell svg { width: 100%; height: auto; display: block; transform: rotate(-90deg); }
+.sv-track, .sv-arc { fill: none; stroke-width: 7; stroke-linecap: round; }
+.sv-track { stroke: var(--line); opacity: .5; }
+.sv-arc { transition: stroke-dashoffset .6s ease, stroke .3s ease; }
+.sv-inner {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 14%;
+}
+.sv-num {
+    font: 700 clamp(1.6rem, 4.5vw, 3.2rem)/1.05 ui-monospace, "Cascadia Mono", Consolas, monospace;
+    color: var(--ink);
+    word-break: break-word;
+}
+.sv-medium .sv-num { font-size: clamp(1.1rem, 2.6vw, 1.9rem); }
+.sv-unit { color: var(--muted); font-size: .95rem; margin-top: .1rem; }
+.sv-sub { color: var(--muted); font-size: .8rem; margin-top: .35rem; font-family: ui-monospace, Consolas, monospace; }
+.sv-mid { display: grid; gap: 1.2rem; }
+.sv-side { display: grid; gap: 1rem; align-content: center; }
+.sv-row {
+    display: flex; align-items: center; gap: .8rem;
+    border-bottom: 1px dotted var(--line);
+    padding-bottom: .7rem;
+}
+.sv-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.sv-ico { font-size: 1.4rem; }
+.sv-rnum { font: 700 1.5rem/1.1 ui-monospace, Consolas, monospace; color: var(--ink); }
+.sv-runit { color: var(--muted); font-size: .85rem; }
+.sv-rlabel { display: block; color: var(--muted); font-size: .78rem; margin-top: .1rem; }
+
+body.simpleon .explain, body.simpleon .empty { display: none; }
+body.kiosk .simpleview { border: 0; background: transparent; padding: 1rem .5rem; }
+
+@media (max-width: 46rem) {
+    .simpleview { grid-template-columns: 1fr; }
+    .sv-big { max-width: 20rem; margin: 0 auto; }
+    .sv-mid { grid-template-columns: 1fr 1fr; }
+}
+
 /* ---- night dim overlay ---- */
 .dimveil {
     position: fixed; inset: 0; z-index: 50;

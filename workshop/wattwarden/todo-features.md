@@ -221,3 +221,7 @@ smart-meter app reviews, still open here:
         to choose (export keeps the theme's green)
 138. [x] Graph picker in Appearance: tick which graphs you want (live sparkline,
         60 minutes, 24 hours, history) without digging through the tile list
+139. [x] Simple view: an energy-display style screen (big ring gauges plus side
+        stats, like the HomeWizard Energy Display), with templates (Energy
+        display, Solar, Costs, Minimal), free slot assignment from a catalogue
+        of eighteen readings and per-ring colours
