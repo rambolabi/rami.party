@@ -1,0 +1,14 @@
+{
+    "name": "Wattwarden",
+    "short_name": "Wattwarden",
+    "description": "Live P1 smart meter dashboard: power, energy, gas, costs and alerts, all in your browser.",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "any",
+    "background_color": "#12100c",
+    "theme_color": "#12100c",
+    "icons": [
+        { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+    ]
+}

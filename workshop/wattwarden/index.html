@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wattwarden — live P1 smart meter dashboard</title>
     <meta name="description"
-        content="A live dashboard for your HomeWizard P1 smart meter: current power, today's energy, gas, per-phase detail and long-term graphs kept in your browser. Choose your theme and the tiles you care about.">
+        content="A live dashboard for your HomeWizard P1 smart meter: current power, today's energy, gas, costs, alerts and long-term graphs kept in your browser. Seven themes, sixteen tiles, kiosk mode for wall tablets.">
     <meta name="author" content="Rami">
     <meta name="theme-color" content="#12100c">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://rami.party/workshop/wattwarden/">
-    <link rel="icon"
-        href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%A1%3C/text%3E%3C/svg%3E">
-    <link rel="stylesheet" href="style.css">
-    <script src="app.js" defer></script>
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="style.css?v=2">
+    <script src="app.js?v=2" defer></script>
 </head>
 
 <body>
@@ -34,10 +34,13 @@
             <p class="statusline" role="status">
                 <span class="pill idle" id="connPill">not connected</span>
                 <span class="meterline" id="meterLine"></span>
+                <span class="clock" id="clockEl" hidden></span>
             </p>
+            <p class="alertbar" id="alertBar" role="alert" hidden></p>
             <div class="actions">
                 <button class="btn btn-primary" id="btnSettings" aria-haspopup="dialog">⚙ Settings</button>
-                <button class="btn btn-ghost" id="btnDemo" aria-pressed="false">▶ Try the demo</button>
+                <button class="btn btn-ghost" id="btnFull" title="Fullscreen kiosk mode"
+                    aria-label="Toggle fullscreen">⛶ Fullscreen</button>
             </div>
         </header>
 
@@ -60,18 +63,19 @@ python p1-bridge.py</code></pre>
                     <a class="btn btn-ghost" href="p1-bridge.py" download>Download p1-bridge.py</a>
                 </li>
             </ol>
-            <p class="note">No meter at hand? <strong>▶ Try the demo</strong> feeds the dashboard a
-                pretend household so you can kick the tires.</p>
+            <p class="note">No meter at hand? Turn on <strong>Demo mode</strong> in ⚙ Settings and the
+                dashboard runs on a pretend household so you can kick the tires.</p>
         </section>
 
         <main id="tiles" class="tiles" aria-label="Meter dashboard" hidden>
             <section class="card tile-now" data-tile="now">
                 <h2>Right now</h2>
-                <p class="bignum"><span id="nowW">···</span><span class="unit">W</span></p>
+                <p class="bignum"><span id="nowW">···</span><span class="unit" id="nowUnit">W</span></p>
                 <p class="card-note"><span id="nowWord">waiting for the first reading</span>
                     <span class="badge" id="tariffBadge" hidden></span></p>
+                <div class="powerbar" aria-hidden="true"><span id="powerFill"></span></div>
                 <canvas id="sparkCanvas" class="spark" role="img"
-                    aria-label="Power over the last ten minutes"></canvas>
+                    aria-label="Power over the recent past"></canvas>
             </section>
 
             <section class="card" data-tile="today">
@@ -80,8 +84,51 @@ python p1-bridge.py</code></pre>
                     <div><dt>Imported</dt><dd><span id="todayImp">···</span> kWh</dd></div>
                     <div><dt>Exported</dt><dd><span id="todayExp">···</span> kWh</dd></div>
                     <div id="todayGasRow"><dt>Gas</dt><dd><span id="todayGas">···</span> m³</dd></div>
+                    <div><dt>Net from grid</dt><dd><span id="todayNet">···</span> kWh</dd></div>
                 </dl>
                 <p class="card-note" id="todayNote">Counted since midnight, from the meter's own counters.</p>
+            </section>
+
+            <section class="card" data-tile="costs">
+                <h2>Costs</h2>
+                <p class="bignum small"><span id="costToday">···</span></p>
+                <dl class="kv">
+                    <div><dt>This month</dt><dd id="costMonth">···</dd></div>
+                    <div><dt>Month at this pace</dt><dd id="costProject">···</dd></div>
+                </dl>
+                <p class="card-note" id="costNote">today, energy + gas + standing charge</p>
+            </section>
+
+            <section class="card" data-tile="stats">
+                <h2>Today's shape</h2>
+                <dl class="kv">
+                    <div><dt>Peak</dt><dd><span id="statMax">···</span></dd></div>
+                    <div><dt>Quietest</dt><dd><span id="statMin">···</span></dd></div>
+                    <div><dt>Average</dt><dd><span id="statAvg">···</span></dd></div>
+                    <div><dt>Base load ≈</dt><dd><span id="statBase">···</span></dd></div>
+                </dl>
+                <p class="card-note" id="baseNote">the quiet minimum costs <span id="baseCost">···</span> a year</p>
+            </section>
+
+            <section class="card" data-tile="compare">
+                <h2>Compare</h2>
+                <dl class="kv">
+                    <div><dt>Today so far</dt><dd id="cmpToday">···</dd></div>
+                    <div><dt>Yesterday</dt><dd id="cmpYesterday">···</dd></div>
+                    <div><dt>Daily avg (7 d)</dt><dd id="cmpWeek">···</dd></div>
+                    <div><dt>This month</dt><dd id="cmpMonth">···</dd></div>
+                    <div><dt>Last month</dt><dd id="cmpLastMonth">···</dd></div>
+                </dl>
+            </section>
+
+            <section class="card" data-tile="flow">
+                <h2>Power flow</h2>
+                <div class="flow" id="flowBox">
+                    <span class="flow-node">⚡ grid</span>
+                    <span class="flow-lane"><span class="flow-dashes" id="flowDashes"></span></span>
+                    <span class="flow-node">🏠 home</span>
+                </div>
+                <p class="card-note" id="flowNote">waiting for a reading</p>
             </section>
 
             <section class="card card-wide" data-tile="day24">
@@ -90,10 +137,16 @@ python p1-bridge.py</code></pre>
                     aria-label="Bar chart of energy import and export per hour over the last 24 hours"></canvas>
             </section>
 
-            <section class="card card-wide" data-tile="days30">
-                <h2>Last 30 days <span class="h-sub">kWh per day · import ▲ export ▼</span></h2>
-                <canvas id="days30Canvas" class="chart" role="img"
-                    aria-label="Bar chart of energy import and export per day over the last 30 days"></canvas>
+            <section class="card card-wide" data-tile="history">
+                <h2>History <span class="h-sub">import ▲ export ▼</span>
+                    <span class="chipbar" role="group" aria-label="History period">
+                        <button class="chip" data-period="7d">7 days</button>
+                        <button class="chip" data-period="30d">30 days</button>
+                        <button class="chip" data-period="12m">12 months</button>
+                    </span>
+                </h2>
+                <canvas id="historyCanvas" class="chart" role="img"
+                    aria-label="Bar chart of energy import and export over the chosen period"></canvas>
             </section>
 
             <section class="card" data-tile="gas">
@@ -115,11 +168,13 @@ python p1-bridge.py</code></pre>
             <section class="card" data-tile="phases">
                 <h2>Per phase</h2>
                 <div class="phasebars" id="phaseBars"></div>
+                <p class="card-note" id="phaseNote" hidden></p>
             </section>
 
             <section class="card" data-tile="lines">
                 <h2>Voltage &amp; current</h2>
                 <dl class="kv" id="lineList"></dl>
+                <p class="card-note" id="freqNote" hidden></p>
             </section>
 
             <section class="card" data-tile="peak">
@@ -135,9 +190,20 @@ python p1-bridge.py</code></pre>
                 <p class="card-note">from the water meter linked to the P1 dongle</p>
             </section>
 
+            <section class="card" data-tile="eco">
+                <h2>Footprint</h2>
+                <dl class="kv">
+                    <div><dt>CO₂ today</dt><dd id="co2Today">···</dd></div>
+                    <div><dt>CO₂ this month</dt><dd id="co2Month">···</dd></div>
+                </dl>
+                <p class="card-note">from your electricity and gas, factors adjustable in settings</p>
+            </section>
+
             <section class="card" data-tile="quality">
                 <h2>Connection &amp; grid</h2>
                 <dl class="kv">
+                    <div><dt>Source</dt><dd><span id="srcInfo">···</span></dd></div>
+                    <div><dt>Last reading</dt><dd><span id="ageInfo">···</span></dd></div>
                     <div><dt>Wi-Fi</dt><dd><span id="wifi">···</span></dd></div>
                     <div><dt>Power failures</dt><dd><span id="fails">···</span></dd></div>
                     <div><dt>Voltage sags / swells</dt><dd><span id="sags">···</span></dd></div>
@@ -168,35 +234,155 @@ python p1-bridge.py</code></pre>
                             <option value="30000">30 seconds</option>
                         </select>
                     </label>
+                    <label class="tiletoggle"><input type="checkbox" id="setPauseHidden"> Pause polling while
+                        this tab is hidden (saves battery on phones)</label>
                     <p class="fine" id="connDetail">Direct connection: not tried yet.</p>
                     <p class="fine" id="bridgeState">Relay: checking…</p>
                     <button class="btn btn-ghost" id="btnReconnect">Retry connection</button>
                 </fieldset>
 
                 <fieldset>
-                    <legend>Wall tablet mode</legend>
-                    <label class="tiletoggle"><input type="checkbox" id="setAwake"> Keep the screen awake
-                        while this page is open</label>
-                    <p class="fine" id="wakeState">···</p>
+                    <legend>Costs &amp; prices</legend>
+                    <div class="grid2">
+                        <label class="field">Currency
+                            <select id="setCurrency"></select>
+                        </label>
+                        <label class="field">Standing charge / day
+                            <input type="number" id="setStandingDay" min="0" step="0.01" inputmode="decimal">
+                        </label>
+                    </div>
+                    <label class="tiletoggle"><input type="checkbox" id="setDualPrices"> Separate tariff 1 / tariff 2
+                        prices</label>
+                    <div class="grid2" id="singlePriceRow">
+                        <label class="field">Price / kWh import
+                            <input type="number" id="setPriceImp" min="0" step="0.001" inputmode="decimal">
+                        </label>
+                        <label class="field">Compensation / kWh export
+                            <input type="number" id="setPriceExp" min="0" step="0.001" inputmode="decimal">
+                        </label>
+                    </div>
+                    <div class="grid2" id="dualPriceRow" hidden>
+                        <label class="field">Price / kWh tariff 1 (low)
+                            <input type="number" id="setPriceImpT1" min="0" step="0.001" inputmode="decimal">
+                        </label>
+                        <label class="field">Price / kWh tariff 2 (high)
+                            <input type="number" id="setPriceImpT2" min="0" step="0.001" inputmode="decimal">
+                        </label>
+                    </div>
+                    <div class="grid2">
+                        <label class="field">Gas price / m³
+                            <input type="number" id="setPriceGas" min="0" step="0.01" inputmode="decimal">
+                        </label>
+                        <label class="field">Water price / m³
+                            <input type="number" id="setPriceWater" min="0" step="0.01" inputmode="decimal">
+                        </label>
+                    </div>
+                    <div class="grid2">
+                        <label class="field">CO₂ g / kWh electricity
+                            <input type="number" id="setCo2Kwh" min="0" step="1" inputmode="numeric">
+                        </label>
+                        <label class="field">CO₂ g / m³ gas
+                            <input type="number" id="setCo2Gas" min="0" step="10" inputmode="numeric">
+                        </label>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Alerts</legend>
+                    <label class="tiletoggle"><input type="checkbox" id="setAlertsOn"> Alerts enabled</label>
+                    <div class="grid2">
+                        <label class="field">High usage above (W)
+                            <input type="number" id="setAlertW" min="0" step="100" inputmode="numeric">
+                        </label>
+                        <label class="field">Main fuse per phase (A)
+                            <input type="number" id="setFuseA" min="0" step="1" inputmode="numeric">
+                        </label>
+                    </div>
+                    <label class="tiletoggle"><input type="checkbox" id="setAlertOffline"> Warn when the meter
+                        stops answering</label>
+                    <label class="tiletoggle"><input type="checkbox" id="setAlertVolts"> Warn on voltage outside
+                        207-253 V</label>
+                    <label class="tiletoggle"><input type="checkbox" id="setAlertPeakGuard"> Belgian peak guard:
+                        warn when the 15-min average nears this month's peak</label>
+                    <label class="field" id="peakMarginRow">Peak guard margin (%)
+                        <input type="number" id="setPeakMargin" min="1" max="50" step="1" inputmode="numeric">
+                    </label>
+                    <label class="tiletoggle"><input type="checkbox" id="setAlertSound"> Beep on alert</label>
+                    <label class="tiletoggle"><input type="checkbox" id="setAlertNotify"> Browser notification
+                        on alert</label>
+                    <button class="btn btn-ghost" id="btnNotifyPerm">Allow notifications</button>
+                    <p class="fine" id="notifyState"></p>
                 </fieldset>
 
                 <fieldset>
                     <legend>Appearance</legend>
                     <div class="themegrid" id="themeGrid" role="radiogroup" aria-label="Colour theme"></div>
+                    <div class="grid2">
+                        <label class="field">Accent colour
+                            <span class="row"><input type="color" id="setAccent" value="#ffb347">
+                                <button class="btn btn-ghost" id="btnAccentReset">Theme default</button></span>
+                        </label>
+                        <label class="field">Display scale <span id="scaleVal"></span>
+                            <input type="range" id="setScale" min="85" max="140" step="5">
+                        </label>
+                    </div>
+                    <label class="tiletoggle"><input type="checkbox" id="setDensity"> Compact tiles (fit more on
+                        screen)</label>
+                    <label class="tiletoggle"><input type="checkbox" id="setUnitsKw"> Show kilowatts above
+                        1000 W</label>
+                    <label class="tiletoggle"><input type="checkbox" id="setClock"> Clock in the header</label>
+                    <label class="field">Live graph window
+                        <select id="setSparkMin">
+                            <option value="10">10 minutes</option>
+                            <option value="30">30 minutes</option>
+                            <option value="60">60 minutes</option>
+                        </select>
+                    </label>
                 </fieldset>
 
                 <fieldset>
-                    <legend>Tiles on the dashboard</legend>
-                    <div class="tilegrid" id="tileToggles"></div>
+                    <legend>Tiles: show, hide and order</legend>
+                    <div class="tilelist" id="tileToggles"></div>
                 </fieldset>
 
                 <fieldset>
-                    <legend>Stored history</legend>
+                    <legend>Wall tablet</legend>
+                    <label class="tiletoggle"><input type="checkbox" id="setAwake"> Keep the screen awake
+                        while this page is open</label>
+                    <p class="fine" id="wakeState">···</p>
+                    <label class="tiletoggle"><input type="checkbox" id="setDimOn"> Dim the screen at
+                        night</label>
+                    <div class="grid3" id="dimRow">
+                        <label class="field">From
+                            <input type="time" id="setDimFrom">
+                        </label>
+                        <label class="field">Until
+                            <input type="time" id="setDimTo">
+                        </label>
+                        <label class="field">Dim strength <span id="dimVal"></span>
+                            <input type="range" id="setDimLevel" min="20" max="90" step="5">
+                        </label>
+                    </div>
+                    <p class="fine">Tip: use ⛶ Fullscreen in the header, and install this page as an app
+                        from the browser menu for a clean kiosk.</p>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Data &amp; demo</legend>
+                    <label class="tiletoggle"><input type="checkbox" id="setDemo"> Demo mode: a pretend
+                        household, stored separately from real data</label>
                     <p class="fine" id="histInfo">···</p>
                     <div class="row">
-                        <button class="btn btn-ghost" id="btnExport">Export history (JSON)</button>
+                        <button class="btn btn-ghost" id="btnExport">Export JSON</button>
+                        <button class="btn btn-ghost" id="btnExportCsv">Export CSV</button>
+                        <label class="btn btn-ghost filebtn">Import JSON<input type="file" id="importFile"
+                                accept="application/json,.json"></label>
                         <button class="btn btn-ghost danger" id="btnWipe">Wipe history</button>
                     </div>
+                    <details class="rawbox">
+                        <summary>Raw meter reply (last reading)</summary>
+                        <pre id="rawJson">no reading yet</pre>
+                    </details>
                 </fieldset>
             </div>
         </section>
@@ -215,17 +401,20 @@ python p1-bridge.py</code></pre>
                     tells you which one it used.</li>
                 <li>Every reading updates the tiles; counter snapshots are kept in
                     <strong>localStorage</strong> (hourly for 14 days, daily for 400 days) to draw the
-                    long-term graphs. Nothing is uploaded anywhere.</li>
+                    long-term graphs, costs and comparisons. Nothing is uploaded anywhere.</li>
             </ol>
             <p class="note">Works with the HomeWizard P1 Meter's v1 API and anything that mimics it.
                 Tiles for data your meter does not report (gas, phases, water…) simply stay empty:
-                hide them in the settings.</p>
+                hide them in the settings. The full feature wish-list lives in
+                <a href="todo-features.md">todo-features.md</a>.</p>
         </section>
 
         <footer class="foot">
             <a href="../">← Back to the Workshop</a> · part of <a href="/">rami.party</a>
         </footer>
     </div>
+
+    <div class="dimveil" id="dimVeil" hidden></div>
 </body>
 
 </html>

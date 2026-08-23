@@ -14,30 +14,55 @@
       exempt: same pattern as ghosttooth and wakewand.
 
    History: counter snapshots in localStorage, hourly (14 days) and daily
-   (400 days), drawn as bar charts. Demo mode uses its own storage prefix so
-   pretend data never pollutes real history.
+   (400 days), incl. per-tariff counters so costs stay honest. Demo mode
+   uses its own storage prefix so pretend data never pollutes real history.
+   The feature backlog lives in todo-features.md.
    ========================================================================= */
 
 const BRIDGE_URL = 'ws://127.0.0.1:7101';
 const HOURLY_KEEP = 14 * 24 + 2;
 const DAILY_KEEP = 400;
-const SPARK_WINDOW_MS = 10 * 60 * 1000;
 
-const THEMES = [['ember', 'Ember'], ['aurora', 'Aurora'], ['paper', 'Paper'], ['contrast', 'Contrast']];
-const TILES = [
-    ['now', 'Right now'], ['today', 'Today'], ['day24', 'Last 24 hours'],
-    ['days30', 'Last 30 days'], ['gas', 'Gas'], ['totals', 'Meter counters'],
-    ['phases', 'Per phase'], ['lines', 'Voltage & current'], ['peak', 'Monthly peak'],
-    ['water', 'Water'], ['quality', 'Connection & grid'],
+const THEMES = [
+    ['ember', 'Ember'], ['aurora', 'Aurora'], ['paper', 'Paper'], ['contrast', 'Contrast'],
+    ['solar', 'Solar'], ['oled', 'OLED black'], ['nord', 'Nord'],
 ];
-const DEFAULT_TILES = ['now', 'today', 'day24', 'days30', 'gas', 'totals'];
+const TILES = [
+    ['now', 'Right now'], ['today', 'Today'], ['costs', 'Costs'], ['stats', "Today's shape"],
+    ['compare', 'Compare'], ['flow', 'Power flow'], ['day24', 'Last 24 hours'],
+    ['history', 'History'], ['gas', 'Gas'], ['totals', 'Meter counters'],
+    ['phases', 'Per phase'], ['lines', 'Voltage & current'], ['peak', 'Monthly peak'],
+    ['water', 'Water'], ['eco', 'Footprint'], ['quality', 'Connection & grid'],
+];
+const DEFAULT_TILES = ['now', 'today', 'costs', 'stats', 'day24', 'history', 'gas', 'totals'];
+const CURRENCIES = ['€', '£', '$', 'kr', 'CHF'];
+const VOLT_LOW = 207, VOLT_HIGH = 253; // EN 50160 ±10%
 
 const $ = (id) => document.getElementById(id);
 
 /* ---- settings ------------------------------------------------------------ */
-const settings = Object.assign(
-    { host: '', interval: 5000, theme: 'ember', tiles: DEFAULT_TILES.slice(), keepAwake: true },
-    JSON.parse(localStorage.getItem('ww_settings') || '{}'));
+const DEFAULTS = {
+    host: '', interval: 5000, pauseHidden: false,
+    theme: 'ember', accent: '', scale: 100, density: false, unitsKw: true,
+    clock: false, sparkMin: 10, histPeriod: '30d',
+    tiles: DEFAULT_TILES.slice(), order: TILES.map(([t]) => t),
+    keepAwake: true, dimOn: false, dimFrom: '23:00', dimTo: '06:30', dimLevel: 70,
+    currency: '€', dualPrices: false, priceImp: 0.30, priceImpT1: 0.28, priceImpT2: 0.32,
+    priceExp: 0.05, priceGas: 1.20, priceWater: 1.05, standingDay: 0.65,
+    co2Kwh: 300, co2Gas: 1780,
+    alertsOn: true, alertW: 4000, alertOffline: true, alertVolts: true,
+    alertPeakGuard: false, peakMargin: 10, fuseA: 25, alertSound: false, alertNotify: false,
+};
+const settings = Object.assign({}, DEFAULTS, JSON.parse(localStorage.getItem('ww_settings') || '{}'));
+(function migrateSettings() {
+    const ids = TILES.map(([t]) => t);
+    settings.tiles = (settings.tiles || [])
+        .map((t) => (t === 'days30' ? 'history' : t))
+        .filter((t) => ids.includes(t));
+    if (!settings.tiles.length) settings.tiles = DEFAULT_TILES.slice();
+    settings.order = (settings.order || []).filter((t) => ids.includes(t));
+    ids.forEach((t) => { if (!settings.order.includes(t)) settings.order.push(t); });
+})();
 
 function saveSettings() {
     localStorage.setItem('ww_settings', JSON.stringify(settings));
@@ -45,11 +70,12 @@ function saveSettings() {
 
 /* ---- history store (real + demo live under different prefixes) ------------ */
 function makeStore(prefix) {
-    const read = (key) => JSON.parse(localStorage.getItem(prefix + key) || '[]');
+    const read = (key, fb) => JSON.parse(localStorage.getItem(prefix + key) || fb);
     const store = {
-        hourly: read('hourly'), // {t, imp, exp, gas}
-        daily: read('daily'),   // {d, imp, exp, gas, water}
-        base: JSON.parse(localStorage.getItem(prefix + 'base') || 'null'), // first reading of today
+        hourly: read('hourly', '[]'), // {t, imp, exp, gas, water, it1, it2}
+        daily: read('daily', '[]'),   // {d, imp, exp, gas, water, it1, it2}
+        base: read('base', 'null'),   // today's baseline counters
+        stats: read('stats', 'null'), // {d, maxW, maxAt, minW, sum, n}
         lastPersist: 0,
         persist(force) {
             if (!force && Date.now() - store.lastPersist < 20000) return;
@@ -57,10 +83,11 @@ function makeStore(prefix) {
             localStorage.setItem(prefix + 'hourly', JSON.stringify(store.hourly));
             localStorage.setItem(prefix + 'daily', JSON.stringify(store.daily));
             localStorage.setItem(prefix + 'base', JSON.stringify(store.base));
+            localStorage.setItem(prefix + 'stats', JSON.stringify(store.stats));
         },
         wipe() {
-            ['hourly', 'daily', 'base'].forEach((k) => localStorage.removeItem(prefix + k));
-            store.hourly = []; store.daily = []; store.base = null;
+            ['hourly', 'daily', 'base', 'stats'].forEach((k) => localStorage.removeItem(prefix + k));
+            store.hourly = []; store.daily = []; store.base = null; store.stats = null;
         },
     };
     return store;
@@ -73,35 +100,44 @@ function dayKey(date) {
 }
 
 function recordHistory(store, m, now) {
-    const rollover = { hour: false, day: false };
-    if (m.imp == null) return rollover;
-    const snap = { imp: m.imp, exp: m.exp || 0, gas: m.gas, water: m.water };
+    if (m.imp == null) return;
+    const snap = { imp: m.imp, exp: m.exp || 0, gas: m.gas, water: m.water, it1: m.impT1, it2: m.impT2 };
+    let force = false;
 
     const hourT = new Date(now); hourT.setMinutes(0, 0, 0);
     const hLast = store.hourly[store.hourly.length - 1];
     if (hLast && hLast.t === hourT.getTime()) Object.assign(hLast, snap);
-    else { store.hourly.push({ t: hourT.getTime(), ...snap }); rollover.hour = true; }
+    else { store.hourly.push({ t: hourT.getTime(), ...snap }); force = true; }
     if (store.hourly.length > HOURLY_KEEP) store.hourly.splice(0, store.hourly.length - HOURLY_KEEP);
 
     const dKey = dayKey(now);
     const dLast = store.daily[store.daily.length - 1];
     if (dLast && dLast.d === dKey) Object.assign(dLast, snap);
-    else { store.daily.push({ d: dKey, ...snap }); rollover.day = true; }
+    else { store.daily.push({ d: dKey, ...snap }); force = true; }
     if (store.daily.length > DAILY_KEEP) store.daily.splice(0, store.daily.length - DAILY_KEEP);
 
     if (!store.base || store.base.d !== dKey) {
         // prefer yesterday's closing counters as today's baseline
         const prev = store.daily[store.daily.length - 2];
         store.base = (prev && m.imp - prev.imp >= 0 && m.imp - prev.imp < 200)
-            ? { d: dKey, imp: prev.imp, exp: prev.exp, gas: prev.gas }
-            : { d: dKey, imp: m.imp, exp: m.exp || 0, gas: m.gas };
+            ? { d: dKey, imp: prev.imp, exp: prev.exp, gas: prev.gas, it1: prev.it1, it2: prev.it2 }
+            : { d: dKey, imp: m.imp, exp: m.exp || 0, gas: m.gas, it1: m.impT1, it2: m.impT2 };
     }
     // counters only ever count up; a regression means the meter was swapped or reset
     if (m.imp < store.base.imp || (m.gas != null && store.base.gas != null && m.gas < store.base.gas)) {
-        store.base = { d: dKey, imp: m.imp, exp: m.exp || 0, gas: m.gas };
+        store.base = { d: dKey, imp: m.imp, exp: m.exp || 0, gas: m.gas, it1: m.impT1, it2: m.impT2 };
     }
-    store.persist(rollover.hour || rollover.day);
-    return rollover;
+
+    if (m.power != null) {
+        if (!store.stats || store.stats.d !== dKey) {
+            store.stats = { d: dKey, maxW: m.power, maxAt: +now, minW: m.power, sum: 0, n: 0 };
+        }
+        const st = store.stats;
+        if (m.power > st.maxW) { st.maxW = m.power; st.maxAt = +now; }
+        if (m.power < st.minW) st.minW = m.power;
+        st.sum += m.power; st.n++;
+    }
+    store.persist(force);
 }
 
 /* ---- reading normalisation ------------------------------------------------ */
@@ -124,6 +160,8 @@ function normalise(raw) {
     const waterExt = ext.find((e) => e.type === 'water_meter');
     return {
         power: raw.active_power_w ?? null,
+        avgW: raw.active_power_average_w ?? null,
+        freq: raw.active_frequency_hz ?? null,
         imp: raw.total_power_import_kwh
             ?? sumIf(raw.total_power_import_t1_kwh, raw.total_power_import_t2_kwh,
                 raw.total_power_import_t3_kwh, raw.total_power_import_t4_kwh),
@@ -151,9 +189,17 @@ function normalise(raw) {
 
 /* ---- formatting ------------------------------------------------------------ */
 const fmtW = (w) => Math.round(w).toLocaleString('en-GB');
-const fmtKwh = (v) => v == null ? '···' : v.toLocaleString('en-GB', { maximumFractionDigits: v < 10 ? 2 : 1 });
+const fmtKwh = (v) => v == null ? '···' : v.toLocaleString('en-GB', { maximumFractionDigits: Math.abs(v) < 10 ? 2 : 1 });
 const fmtM3 = (v) => v == null ? '···' : v.toLocaleString('en-GB', { maximumFractionDigits: 3 });
 const fmtTime = (d) => d ? d.toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '···';
+const fmtClock = (d) => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+function fmtPowerParts(w) {
+    if (settings.unitsKw && Math.abs(w) >= 1000) return [(w / 1000).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }), 'kW'];
+    return [fmtW(w), 'W'];
+}
+const fmtPower = (w) => w == null ? '···' : fmtPowerParts(w).join(' ');
+const money = (v) => v == null ? '···' : `${settings.currency} ${v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 function powerWord(w) {
     if (w < 0) return 'exporting to the grid ☀';
@@ -163,9 +209,65 @@ function powerWord(w) {
     return 'heavy load right now';
 }
 
+/* ---- costs ------------------------------------------------------------------ */
+function costOfDelta(d) {
+    // d: {imp, exp, gas, it1, it2} deltas; per-tariff when both stored, else blended
+    let c = 0;
+    if (settings.dualPrices && d.it1 != null && d.it2 != null) {
+        c += d.it1 * settings.priceImpT1 + d.it2 * settings.priceImpT2;
+    } else {
+        c += (d.imp || 0) * settings.priceImp;
+    }
+    c -= (d.exp || 0) * settings.priceExp;
+    if (d.gas > 0) c += d.gas * settings.priceGas;
+    if (d.water > 0) c += d.water * settings.priceWater;
+    return c;
+}
+
+function todayDelta(store, m) {
+    const b = store.base;
+    if (!b || m.imp == null) return null;
+    return {
+        imp: m.imp - b.imp, exp: (m.exp || 0) - (b.exp || 0),
+        gas: m.gas != null && b.gas != null ? m.gas - b.gas : 0,
+        it1: m.impT1 != null && b.it1 != null ? m.impT1 - b.it1 : null,
+        it2: m.impT2 != null && b.it2 != null ? m.impT2 - b.it2 : null,
+    };
+}
+
+function dailyDeltas(store) {
+    return deltas(store.daily, (s) => s.d);
+}
+
+function monthTotals(store, m) {
+    // sum of daily deltas grouped per YYYY-MM, current month topped up with today
+    const rows = dailyDeltas(store);
+    const map = new Map();
+    rows.forEach((r) => {
+        const k = r.key.slice(0, 7);
+        const acc = map.get(k) || { key: k, imp: 0, exp: 0, gas: 0, it1: 0, it2: 0, days: 0 };
+        acc.imp += r.imp; acc.exp += r.exp; acc.gas += r.gas || 0;
+        acc.it1 += r.it1 || 0; acc.it2 += r.it2 || 0; acc.days++;
+        map.set(k, acc);
+    });
+    const t = m ? todayDelta(activeStore(), m) : null;
+    if (t) {
+        const k = dayKey(new Date()).slice(0, 7);
+        const acc = map.get(k) || { key: k, imp: 0, exp: 0, gas: 0, it1: 0, it2: 0, days: 0 };
+        acc.imp += t.imp; acc.exp += t.exp; acc.gas += t.gas || 0;
+        acc.it1 += t.it1 || 0; acc.it2 += t.it2 || 0; acc.days++;
+        map.set(k, acc);
+    }
+    return map;
+}
+
 /* ---- dashboard rendering ---------------------------------------------------- */
-const spark = []; // {t, w}
+const spark = []; // {t, w}, kept for 60 min regardless of the display window
 let lastMetrics = null;
+let lastRaw = null;
+let lastReadingAt = 0;
+let lastVia = '';
+let lastLatency = null;
 
 function setPill(state, text) {
     const el = $('connPill');
@@ -178,31 +280,128 @@ function renderReading(m, store) {
     $('emptyState').hidden = true;
     $('tiles').hidden = false;
 
-    if (m.power != null) {
-        $('nowW').textContent = fmtW(m.power);
-        $('nowW').classList.toggle('exporting', m.power < 0);
-        $('nowWord').textContent = powerWord(m.power);
-        spark.push({ t: Date.now(), w: m.power });
-        while (spark.length && spark[0].t < Date.now() - SPARK_WINDOW_MS) spark.shift();
-        drawSpark();
-    }
+    renderNow(m);
+    renderToday(m, store);
+    renderCosts(m, store);
+    renderStats(m, store);
+    renderCompare(m, store);
+    renderFlow(m);
+    renderSimple(m);
+    renderQuality(m);
+    renderEco(m, store);
+    drawCharts(store);
+    checkAlerts(m);
+    if ($('settingsVeil') && !$('settingsVeil').hidden) refreshRawBox();
+}
+
+function renderNow(m) {
+    if (m.power == null) return;
+    const [num, unit] = fmtPowerParts(m.power);
+    $('nowW').textContent = num;
+    $('nowUnit').textContent = unit;
+    $('nowW').classList.toggle('exporting', m.power < 0);
+    $('nowWord').textContent = powerWord(m.power);
     const badge = $('tariffBadge');
     badge.hidden = m.tariff == null;
     if (m.tariff != null) badge.textContent = `tariff T${m.tariff}`;
 
-    if (store.base) {
-        $('todayImp').textContent = fmtKwh(m.imp != null ? m.imp - store.base.imp : null);
-        $('todayExp').textContent = fmtKwh(m.exp != null ? m.exp - store.base.exp : null);
-        $('todayGas').textContent = m.gas != null && store.base.gas != null ? fmtM3(m.gas - store.base.gas) : '···';
-        $('todayGasRow').style.display = m.gas != null ? '' : 'none';
-    }
+    const ceiling = Math.max(settings.alertW || 0, 3000);
+    const fill = $('powerFill');
+    fill.style.width = `${Math.min(100, Math.abs(m.power) / ceiling * 100)}%`;
+    fill.classList.toggle('neg', m.power < 0);
 
+    spark.push({ t: Date.now(), w: m.power });
+    while (spark.length && spark[0].t < Date.now() - 60 * 60000) spark.shift();
+    drawSpark();
+}
+
+function renderToday(m, store) {
+    const t = todayDelta(store, m);
+    if (!t) return;
+    $('todayImp').textContent = fmtKwh(t.imp);
+    $('todayExp').textContent = fmtKwh(t.exp);
+    $('todayGas').textContent = m.gas != null ? fmtM3(t.gas) : '···';
+    $('todayGasRow').style.display = m.gas != null ? '' : 'none';
+    $('todayNet').textContent = fmtKwh(t.imp - t.exp);
+}
+
+function renderCosts(m, store) {
+    const t = todayDelta(store, m);
+    if (!t) return;
+    const today = costOfDelta(t) + settings.standingDay;
+    $('costToday').textContent = money(today);
+
+    const months = monthTotals(store, m);
+    const nowD = new Date();
+    const thisKey = dayKey(nowD).slice(0, 7);
+    const cur = months.get(thisKey);
+    if (cur) {
+        const daysElapsed = nowD.getDate();
+        const monthCost = costOfDelta(cur) + settings.standingDay * daysElapsed;
+        $('costMonth').textContent = money(monthCost);
+        const daysInMonth = new Date(nowD.getFullYear(), nowD.getMonth() + 1, 0).getDate();
+        $('costProject').textContent = `± ${money(monthCost / daysElapsed * daysInMonth)}`;
+    } else {
+        $('costMonth').textContent = '···';
+        $('costProject').textContent = '···';
+    }
+    $('costNote').textContent = `today, incl. ${money(settings.standingDay)} standing charge`;
+}
+
+function renderStats(m, store) {
+    const st = store.stats;
+    if (!st || !st.n) return;
+    $('statMax').textContent = `${fmtPower(st.maxW)} at ${new Date(st.maxAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`;
+    $('statMin').textContent = fmtPower(st.minW);
+    $('statAvg').textContent = fmtPower(st.sum / st.n);
+    const base = Math.max(0, st.minW);
+    $('statBase').textContent = fmtPower(base);
+    $('baseCost').textContent = money(base * 24 * 365 / 1000 * settings.priceImp);
+}
+
+function renderCompare(m, store) {
+    const t = todayDelta(store, m);
+    $('cmpToday').textContent = t ? `${fmtKwh(t.imp)} kWh` : '···';
+    const rows = dailyDeltas(store);
+    const y = rows[rows.length - 1]; // last full day-to-day delta (yesterday)
+    $('cmpYesterday').textContent = y ? `${fmtKwh(y.imp)} kWh` : '···';
+    if (rows.length >= 7) {
+        const wk = rows.slice(-7).reduce((a, r) => a + r.imp, 0) / 7;
+        $('cmpWeek').textContent = `${fmtKwh(wk)} kWh`;
+    } else { $('cmpWeek').textContent = '···'; }
+    const months = monthTotals(store, m);
+    const nowD = new Date();
+    const thisKey = dayKey(nowD).slice(0, 7);
+    const lastD = new Date(nowD.getFullYear(), nowD.getMonth() - 1, 15);
+    const lastKey = dayKey(lastD).slice(0, 7);
+    const cur = months.get(thisKey), prev = months.get(lastKey);
+    $('cmpMonth').textContent = cur ? `${fmtKwh(cur.imp)} kWh` : '···';
+    $('cmpLastMonth').textContent = prev ? `${fmtKwh(prev.imp)} kWh` : '···';
+}
+
+function renderFlow(m) {
+    if (m.power == null) return;
+    const box = $('flowBox');
+    const exporting = m.power < 0;
+    box.classList.toggle('rev', exporting);
+    box.classList.toggle('idle', Math.abs(m.power) < 15);
+    $('flowNote').textContent = Math.abs(m.power) < 15
+        ? 'nearly nothing moving'
+        : exporting
+            ? `feeding ${fmtPower(-m.power)} back to the grid`
+            : `drawing ${fmtPower(m.power)} from the grid`;
+}
+
+function renderSimple(m) {
     $('gasTotal').textContent = fmtM3(m.gas);
     $('gasWhen').textContent = fmtTime(m.gasWhen);
     $('impT1').textContent = fmtKwh(m.impT1);
     $('impT2').textContent = fmtKwh(m.impT2);
     $('expT1').textContent = fmtKwh(m.expT1);
     $('expT2').textContent = fmtKwh(m.expT2);
+    $('peakW').textContent = m.peakW != null ? fmtW(m.peakW) : '···';
+    $('peakWhen').textContent = fmtTime(m.peakWhen);
+    $('waterTotal').textContent = fmtM3(m.water);
 
     const bars = $('phaseBars');
     bars.innerHTML = '';
@@ -215,26 +414,43 @@ function renderReading(m, store) {
         row.innerHTML = `<span class="pl">L${i + 1}</span><span class="pbar"><span class="pfill${p < 0 ? ' neg' : ''}" style="width:${Math.min(100, Math.abs(p) / maxP * 100)}%"></span></span><span class="pv">${fmtW(p)} W</span>`;
         bars.appendChild(row);
     });
+    const hot = m.amps.some((a) => a != null && settings.fuseA > 0 && a >= settings.fuseA * 0.9);
+    $('phaseNote').hidden = !hot;
+    if (hot) $('phaseNote').textContent = `⚠ a phase is near your ${settings.fuseA} A main fuse`;
 
     const lines = $('lineList');
     lines.innerHTML = '';
     m.volts.forEach((v, i) => {
         if (v == null && m.amps[i] == null) return;
+        const bad = v != null && (v < VOLT_LOW || v > VOLT_HIGH);
         const div = document.createElement('div');
-        div.innerHTML = `<dt>L${i + 1}</dt><dd>${v != null ? v.toFixed(1) + ' V' : ''}${v != null && m.amps[i] != null ? ' · ' : ''}${m.amps[i] != null ? m.amps[i].toFixed(1) + ' A' : ''}</dd>`;
+        div.innerHTML = `<dt>L${i + 1}</dt><dd${bad ? ' class="bad"' : ''}>${v != null ? v.toFixed(1) + ' V' : ''}${v != null && m.amps[i] != null ? ' · ' : ''}${m.amps[i] != null ? m.amps[i].toFixed(1) + ' A' : ''}</dd>`;
         lines.appendChild(div);
     });
+    $('freqNote').hidden = m.freq == null;
+    if (m.freq != null) $('freqNote').textContent = `grid frequency ${m.freq.toFixed(2)} Hz`;
+}
 
-    $('peakW').textContent = m.peakW != null ? fmtW(m.peakW) : '···';
-    $('peakWhen').textContent = fmtTime(m.peakWhen);
-    $('waterTotal').textContent = fmtM3(m.water);
-
+function renderQuality(m) {
+    $('srcInfo').textContent = lastVia
+        ? `${lastVia}${lastLatency != null ? ` · ${lastLatency} ms` : ''}`
+        : '···';
+    $('ageInfo').textContent = lastReadingAt
+        ? new Date(lastReadingAt).toLocaleTimeString('en-GB')
+        : '···';
     $('wifi').textContent = m.wifiSsid ? `${m.wifiSsid} (${m.wifiPct ?? '?'}%)` : '···';
     $('fails').textContent = m.failsAny != null ? `${m.failsAny} total · ${m.failsLong ?? 0} long` : '···';
     $('sags').textContent = m.sags != null ? `${m.sags} / ${m.swells ?? 0}` : '···';
     $('meterModel').textContent = m.meterModel ? `${m.meterModel} (DSMR ${(m.smr ?? 0) / 10})` : '···';
+}
 
-    drawCharts(store);
+function renderEco(m, store) {
+    const t = todayDelta(store, m);
+    if (!t) return;
+    const kg = (d) => (d.imp * settings.co2Kwh + (d.gas > 0 ? d.gas * settings.co2Gas : 0)) / 1000;
+    $('co2Today').textContent = `${kg(t).toLocaleString('en-GB', { maximumFractionDigits: 1 })} kg`;
+    const cur = monthTotals(store, m).get(dayKey(new Date()).slice(0, 7));
+    $('co2Month').textContent = cur ? `${kg(cur).toLocaleString('en-GB', { maximumFractionDigits: 0 })} kg` : '···';
 }
 
 /* ---- canvas charts ----------------------------------------------------------- */
@@ -254,12 +470,15 @@ function themeVar(name) {
 
 function drawSpark() {
     const c = canvasCtx($('sparkCanvas'));
-    if (!c || spark.length < 2) return;
+    if (!c) return;
+    const windowMs = settings.sparkMin * 60000;
+    const pts = spark.filter((p) => p.t >= Date.now() - windowMs);
+    if (pts.length < 2) return;
     const { ctx, w, h } = c;
-    const t0 = Date.now() - SPARK_WINDOW_MS, t1 = Date.now();
-    const dataMin = Math.min(...spark.map((p) => p.w));
+    const t0 = Date.now() - windowMs, t1 = Date.now();
+    const dataMin = Math.min(...pts.map((p) => p.w));
     let min = Math.min(0, dataMin);
-    let max = Math.max(100, ...spark.map((p) => p.w));
+    let max = Math.max(100, ...pts.map((p) => p.w));
     const pad = (max - min) * 0.1 || 50; min -= pad; max += pad;
     const x = (t) => (t - t0) / (t1 - t0) * w;
     const y = (v) => h - (v - min) / (max - min) * h;
@@ -271,7 +490,7 @@ function drawSpark() {
     }
     ctx.strokeStyle = themeVar('--chart-imp'); ctx.lineWidth = 2; ctx.lineJoin = 'round';
     ctx.beginPath();
-    spark.forEach((p, i) => { i ? ctx.lineTo(x(p.t), y(p.w)) : ctx.moveTo(x(p.t), y(p.w)); });
+    pts.forEach((p, i) => { i ? ctx.lineTo(x(p.t), y(p.w)) : ctx.moveTo(x(p.t), y(p.w)); });
     ctx.stroke();
 }
 
@@ -323,7 +542,12 @@ function deltas(snaps, keyOf) {
     for (let i = 1; i < snaps.length; i++) {
         const imp = snaps[i].imp - snaps[i - 1].imp;
         const exp = (snaps[i].exp || 0) - (snaps[i - 1].exp || 0);
-        if (imp >= 0 && imp < 500) out.push({ key: keyOf(snaps[i]), imp, exp: Math.max(0, exp) });
+        if (imp >= 0 && imp < 500) {
+            const gas = snaps[i].gas != null && snaps[i - 1].gas != null ? snaps[i].gas - snaps[i - 1].gas : 0;
+            const it1 = snaps[i].it1 != null && snaps[i - 1].it1 != null ? snaps[i].it1 - snaps[i - 1].it1 : null;
+            const it2 = snaps[i].it2 != null && snaps[i - 1].it2 != null ? snaps[i].it2 - snaps[i - 1].it2 : null;
+            out.push({ key: keyOf(snaps[i]), imp, exp: Math.max(0, exp), gas: Math.max(0, gas), it1, it2 });
+        }
     }
     return out;
 }
@@ -332,9 +556,82 @@ function drawCharts(store) {
     drawBars($('day24Canvas'),
         deltas(store.hourly.slice(-25), (s) => s.t).slice(-24),
         (r) => new Date(r.key).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }));
-    drawBars($('days30Canvas'),
-        deltas(store.daily.slice(-31), (s) => s.d).slice(-30),
-        (r) => r.key.slice(5));
+
+    const p = settings.histPeriod;
+    let rows, label;
+    if (p === '12m') {
+        rows = [...monthTotals(store, null).values()].slice(-12);
+        label = (r) => r.key.slice(2);
+    } else {
+        const n = p === '7d' ? 7 : 30;
+        rows = dailyDeltas(store).slice(-n);
+        label = (r) => r.key.slice(5);
+    }
+    drawBars($('historyCanvas'), rows, label);
+    document.querySelectorAll('#tiles .chip').forEach((b) =>
+        b.classList.toggle('on', b.dataset.period === settings.histPeriod));
+}
+
+/* ---- alerts ------------------------------------------------------------------- */
+const alertState = new Map(); // id -> active bool
+let audioCtx = null;
+
+function beep() {
+    if (!settings.alertSound) return;
+    try {
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.frequency.value = 880; o.type = 'sine';
+        g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+        o.connect(g).connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.5);
+    } catch { /* no audio available */ }
+}
+
+function notify(text) {
+    if (!settings.alertNotify || !('Notification' in window) || Notification.permission !== 'granted') return;
+    try { new Notification('Wattwarden', { body: text, icon: 'icon.svg' }); } catch { /* blocked */ }
+}
+
+function setAlert(id, active, text) {
+    const was = alertState.get(id) || false;
+    alertState.set(id, active);
+    if (active && !was) { beep(); notify(text); }
+    if (active) alertState.set(id + ':text', text);
+}
+
+function renderAlerts() {
+    const texts = [];
+    alertState.forEach((v, k) => { if (v === true) texts.push(alertState.get(k + ':text')); });
+    const bar = $('alertBar');
+    bar.hidden = texts.length === 0;
+    bar.textContent = texts.length ? `⚠ ${texts.join(' · ')}` : '';
+}
+
+function checkAlerts(m) {
+    if (!settings.alertsOn) { alertState.clear(); renderAlerts(); return; }
+    if (m) {
+        setAlert('high', settings.alertW > 0 && m.power != null && m.power >= settings.alertW,
+            `high usage: ${fmtPower(m.power)} (limit ${fmtPower(settings.alertW)})`);
+        setAlert('volts', settings.alertVolts && m.volts.some((v) => v != null && (v < VOLT_LOW || v > VOLT_HIGH)),
+            'voltage outside 207-253 V');
+        setAlert('fuse', settings.fuseA > 0 && m.amps.some((a) => a != null && a >= settings.fuseA * 0.9),
+            `a phase is near the ${settings.fuseA} A main fuse`);
+        setAlert('peak', settings.alertPeakGuard && m.avgW != null && m.peakW > 0
+            && m.avgW >= m.peakW * (1 - settings.peakMargin / 100),
+            `15-min average ${fmtW(m.avgW)} W is nearing this month's peak of ${fmtW(m.peakW)} W`);
+    }
+    renderAlerts();
+}
+
+function watchdogTick() {
+    if (settings.alertsOn && settings.alertOffline && settings.host && !demo.on) {
+        const stale = lastReadingAt && Date.now() - lastReadingAt > settings.interval * 3 + 8000;
+        setAlert('offline', !!stale,
+            `no reading since ${lastReadingAt ? new Date(lastReadingAt).toLocaleTimeString('en-GB') : '?'}`);
+        renderAlerts();
+    }
 }
 
 /* ---- connection: direct browser fetch first, loopback relay fallback ------ */
@@ -346,6 +643,7 @@ function activeStore() { return demo.on ? demoStore : realStore; }
 async function directFetch(host) {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), Math.min(4000, settings.interval));
+    const started = performance.now();
     try {
         // targetAddressSpace lets Chromium ask for local-network permission
         // instead of hard-blocking mixed content; other browsers ignore it
@@ -354,7 +652,9 @@ async function directFetch(host) {
         });
         if (res.status === 403) throw new Error('the meter refused: enable Local API in the HomeWizard app');
         if (!res.ok) throw new Error(`meter answered HTTP ${res.status}`);
-        return await res.json();
+        const json = await res.json();
+        lastLatency = Math.round(performance.now() - started);
+        return json;
     } catch (err) {
         if (err.name === 'AbortError') throw new Error(`no reply from ${host}`);
         if (err.name === 'SyntaxError') throw new Error('the reply was not JSON (is this really a P1 meter?)');
@@ -371,6 +671,9 @@ function liveIngest(raw, via) {
     if (demo.on) return;
     setPill('on', 'live');
     $('meterLine').textContent = `${settings.host} · ${raw.wifi_ssid || 'meter online'} · ${via}`;
+    lastRaw = raw;
+    lastVia = via;
+    lastReadingAt = Date.now();
     const m = normalise(raw);
     recordHistory(realStore, m, new Date());
     renderReading(m, realStore);
@@ -400,6 +703,7 @@ async function startConnection() {
     conn.mode = null;
     conn.failStreak = 0;
     if (demo.on || !settings.host) { refreshStatus(); updateConnDetail(); return; }
+    if (settings.pauseHidden && document.visibilityState === 'hidden') return;
     setPill('idle', 'connecting…');
     $('meterLine').textContent = settings.host;
     try {
@@ -443,6 +747,7 @@ function connectBridge() {
         try { msg = JSON.parse(ev.data); } catch { return; }
         if (demo.on || conn.mode !== 'bridge') return;
         if (msg.type === 'data' && msg.data) {
+            lastLatency = null;
             liveIngest(msg.data, 'relay');
         } else if (msg.type === 'error') {
             setPill('off', 'meter unreachable');
@@ -482,7 +787,7 @@ function updateConnDetail() {
         : `Direct connection failed: ${conn.directErr || 'not tried yet'}. Falling back to the relay.`;
 }
 
-/* ---- keep the screen awake (wall tablet mode) ------------------------------ */
+/* ---- kiosk helpers: wake lock, dim, clock, fullscreen ----------------------- */
 const wake = { sentinel: null };
 
 async function applyWakeLock() {
@@ -506,6 +811,86 @@ async function applyWakeLock() {
     $('wakeState').textContent = wake.sentinel
         ? 'The screen will stay awake while this tab is visible.'
         : 'The screen may turn off on its own schedule.';
+}
+
+function inDimWindow(now) {
+    const [fh, fm] = settings.dimFrom.split(':').map(Number);
+    const [th, tm] = settings.dimTo.split(':').map(Number);
+    const mins = now.getHours() * 60 + now.getMinutes();
+    const from = fh * 60 + fm, to = th * 60 + tm;
+    return from <= to ? (mins >= from && mins < to) : (mins >= from || mins < to);
+}
+
+function applyDim() {
+    const veil = $('dimVeil');
+    const on = settings.dimOn && inDimWindow(new Date());
+    veil.hidden = !on;
+    if (on) veil.style.opacity = settings.dimLevel / 100;
+}
+
+let clockTimer = 0;
+function applyClock() {
+    clearInterval(clockTimer);
+    const el = $('clockEl');
+    el.hidden = !settings.clock;
+    if (settings.clock) {
+        const tick = () => { el.textContent = fmtClock(new Date()); };
+        tick();
+        clockTimer = setInterval(tick, 1000);
+    }
+}
+
+function toggleFullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
+    else document.documentElement.requestFullscreen().catch(() => { });
+}
+
+/* ---- appearance -------------------------------------------------------------- */
+function applyTheme() {
+    document.documentElement.dataset.theme = settings.theme;
+    document.querySelectorAll('#themeGrid .swatch').forEach((b) =>
+        b.setAttribute('aria-checked', String(b.dataset.theme === settings.theme)));
+    applyAccent();
+    redraw();
+}
+
+function applyAccent() {
+    const root = document.documentElement.style;
+    if (settings.accent) {
+        root.setProperty('--accent', settings.accent);
+        root.setProperty('--chart-imp', settings.accent);
+    } else {
+        root.removeProperty('--accent');
+        root.removeProperty('--chart-imp');
+    }
+}
+
+function applyScale() {
+    document.documentElement.style.fontSize = `${16 * settings.scale / 100}px`;
+    $('scaleVal').textContent = `${settings.scale}%`;
+    redraw();
+}
+
+function applyDensity() {
+    document.body.classList.toggle('compact', settings.density);
+    redraw();
+}
+
+function applyTiles() {
+    document.querySelectorAll('#tiles [data-tile]').forEach((sec) => {
+        sec.hidden = !settings.tiles.includes(sec.dataset.tile);
+        sec.style.order = settings.order.indexOf(sec.dataset.tile);
+    });
+    redraw();
+}
+
+let redrawTimer = 0;
+function redraw() {
+    clearTimeout(redrawTimer);
+    redrawTimer = setTimeout(() => {
+        if (lastMetrics) { drawSpark(); drawCharts(activeStore()); }
+        else if (activeStore().daily.length) drawCharts(activeStore());
+    }, 60);
 }
 
 /* ---- demo mode ------------------------------------------------------------------ */
@@ -544,6 +929,8 @@ function demoRaw(now) {
         active_voltage_l3_v: 230 + Math.random() * 4,
         active_current_l1_a: Math.abs(l1) / 230, active_current_l2_a: Math.abs(l2) / 230,
         active_current_l3_a: Math.abs(power - l1 - l2) / 230,
+        active_frequency_hz: 49.97 + Math.random() * 0.06,
+        active_power_average_w: 450 + Math.random() * 120,
         any_power_fail_count: 4, long_power_fail_count: 1,
         voltage_sag_l1_count: 2, voltage_swell_l1_count: 0,
         montly_power_peak_w: Math.max(2140, demo.peak),
@@ -557,14 +944,19 @@ function seedDemoHistory() {
     if (demoStore.daily.length > 5) return;
     demoStore.wipe();
     const now = new Date();
-    let imp = demo.imp - 35 * 9, exp = demo.exp - 35 * 4, gas = demo.gas - 35 * 1.1;
-    for (let d = 35; d >= 1; d--) {
+    let imp = demo.imp - 400 * 9, exp = demo.exp, gas = demo.gas - 400 * 1.0;
+    exp = Math.max(0, exp - 400 * 3);
+    for (let d = 400; d >= 1; d--) {
         const day = new Date(now); day.setDate(day.getDate() - d); day.setHours(23, 59, 0, 0);
         const weekend = day.getDay() === 0 || day.getDay() === 6;
-        imp += 7 + Math.random() * 4 + (weekend ? 2 : 0);
-        exp += 2.5 + Math.random() * 3.5;
-        gas += 0.8 + Math.random() * 0.7;
-        demoStore.daily.push({ d: dayKey(day), imp, exp, gas, water: demo.water - d * 0.11 });
+        const winter = [11, 0, 1, 2].includes(day.getMonth());
+        imp += 6 + Math.random() * 4 + (weekend ? 2 : 0) + (winter ? 2 : 0);
+        exp += (winter ? 1 : 4) + Math.random() * 2.5;
+        gas += (winter ? 2.2 : 0.35) + Math.random() * 0.4;
+        demoStore.daily.push({
+            d: dayKey(day), imp, exp, gas, water: demo.water - d * 0.11,
+            it1: imp * 0.44, it2: imp * 0.56,
+        });
     }
     let hImp = imp, hExp = exp, hGas = gas;
     for (let h = 48; h >= 1; h--) {
@@ -573,14 +965,18 @@ function seedDemoHistory() {
         hImp += hr > 6 && hr < 23 ? 0.25 + Math.random() * 0.5 : 0.08;
         hExp += hr > 9 && hr < 17 ? 0.3 + Math.random() * 0.4 : 0;
         hGas += (hr > 6 && hr < 9) || (hr > 17 && hr < 22) ? 0.1 : 0.005;
-        demoStore.hourly.push({ t: t.getTime(), imp: hImp, exp: hExp, gas: hGas });
+        demoStore.hourly.push({ t: t.getTime(), imp: hImp, exp: hExp, gas: hGas, it1: hImp * 0.44, it2: hImp * 0.56 });
     }
     demo.imp = hImp; demo.exp = hExp; demo.gas = hGas;
     demoStore.persist(true);
 }
 
 function demoTick() {
-    const m = normalise(demoRaw(new Date()));
+    const raw = demoRaw(new Date());
+    lastRaw = raw;
+    lastVia = 'demo';
+    lastReadingAt = Date.now();
+    const m = normalise(raw);
     recordHistory(demoStore, m, new Date());
     renderReading(m, demoStore);
     demo.timer = setTimeout(demoTick, Math.min(settings.interval, 5000));
@@ -588,11 +984,12 @@ function demoTick() {
 
 function setDemo(on) {
     demo.on = on;
-    $('btnDemo').setAttribute('aria-pressed', String(on));
-    $('btnDemo').textContent = on ? '⏹ Stop the demo' : '▶ Try the demo';
+    $('setDemo').checked = on;
     clearTimeout(demo.timer);
     spark.length = 0;
     demo.lastAt = 0;
+    alertState.clear();
+    renderAlerts();
     if (on) {
         clearTimeout(conn.pollTimer);
         clearTimeout(conn.reprobeTimer);
@@ -607,18 +1004,62 @@ function setDemo(on) {
     }
 }
 
-/* ---- settings UI ------------------------------------------------------------------ */
-function applyTheme() {
-    document.documentElement.dataset.theme = settings.theme;
-    document.querySelectorAll('#themeGrid .swatch').forEach((b) =>
-        b.setAttribute('aria-checked', String(b.dataset.theme === settings.theme)));
-    if (lastMetrics) { drawSpark(); drawCharts(activeStore()); }
+/* ---- data management --------------------------------------------------------- */
+function download(name, mime, text) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([text], { type: mime }));
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
 }
 
-function applyTiles() {
-    document.querySelectorAll('#tiles [data-tile]').forEach((sec) => {
-        sec.hidden = !settings.tiles.includes(sec.dataset.tile);
-    });
+function exportJson() {
+    download(`wattwarden-history-${dayKey(new Date())}.json`, 'application/json',
+        JSON.stringify({
+            exported: new Date().toISOString(),
+            settings: { ...settings },
+            hourly: realStore.hourly, daily: realStore.daily,
+        }, null, 1));
+}
+
+function exportCsv() {
+    const esc = (v) => v == null ? '' : String(v);
+    const lines = ['type,key,imp_kwh,exp_kwh,gas_m3,water_m3,imp_t1_kwh,imp_t2_kwh'];
+    realStore.hourly.forEach((s) => lines.push(
+        `hour,${new Date(s.t).toISOString()},${esc(s.imp)},${esc(s.exp)},${esc(s.gas)},${esc(s.water)},${esc(s.it1)},${esc(s.it2)}`));
+    realStore.daily.forEach((s) => lines.push(
+        `day,${s.d},${esc(s.imp)},${esc(s.exp)},${esc(s.gas)},${esc(s.water)},${esc(s.it1)},${esc(s.it2)}`));
+    download(`wattwarden-history-${dayKey(new Date())}.csv`, 'text/csv', lines.join('\r\n'));
+}
+
+function importJson(file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            const data = JSON.parse(reader.result);
+            const mergeBy = (mine, theirs, keyOf) => {
+                const map = new Map(mine.map((s) => [keyOf(s), s]));
+                (Array.isArray(theirs) ? theirs : []).forEach((s) => {
+                    if (s && typeof s.imp === 'number' && keyOf(s) != null && !map.has(keyOf(s))) map.set(keyOf(s), s);
+                });
+                return [...map.values()].sort((a, b) => (keyOf(a) < keyOf(b) ? -1 : 1));
+            };
+            realStore.hourly = mergeBy(realStore.hourly, data.hourly, (s) => s.t).slice(-HOURLY_KEEP);
+            realStore.daily = mergeBy(realStore.daily, data.daily, (s) => s.d).slice(-DAILY_KEEP);
+            realStore.persist(true);
+            histSummary();
+            redraw();
+            $('histInfo').textContent += ' · import merged ✔';
+        } catch {
+            $('histInfo').textContent = 'That file could not be read as a Wattwarden export.';
+        }
+    };
+    reader.readAsText(file);
+}
+
+function refreshRawBox() {
+    const box = $('rawJson');
+    if (box && lastRaw) box.textContent = JSON.stringify(lastRaw, null, 1);
 }
 
 function histSummary() {
@@ -626,6 +1067,72 @@ function histSummary() {
         + (localStorage.getItem('ww_hist_daily') || '').length;
     $('histInfo').textContent =
         `${realStore.hourly.length} hourly + ${realStore.daily.length} daily snapshots, ${(bytes / 1024).toFixed(1)} KB of localStorage.`;
+}
+
+/* ---- settings UI ------------------------------------------------------------------ */
+function bindCheck(id, key, after) {
+    const el = $(id);
+    el.checked = !!settings[key];
+    el.addEventListener('change', () => { settings[key] = el.checked; saveSettings(); if (after) after(); });
+}
+
+function bindNum(id, key, after) {
+    const el = $(id);
+    el.value = String(settings[key]);
+    el.addEventListener('change', () => {
+        const v = parseFloat(el.value);
+        if (!Number.isNaN(v)) settings[key] = v;
+        el.value = String(settings[key]);
+        saveSettings(); if (after) after();
+    });
+}
+
+function bindSelect(id, key, numeric, after) {
+    const el = $(id);
+    el.value = String(settings[key]);
+    el.addEventListener('change', () => { settings[key] = numeric ? +el.value : el.value; saveSettings(); if (after) after(); });
+}
+
+function rerenderAll() {
+    if (lastMetrics) renderReading(lastMetrics, activeStore());
+    else redraw();
+}
+
+function buildTileList() {
+    const list = $('tileToggles');
+    list.innerHTML = '';
+    settings.order.forEach((id, idx) => {
+        const label = (TILES.find(([t]) => t === id) || [id, id])[1];
+        const row = document.createElement('div');
+        row.className = 'tilerow';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.id = `tile_${id}`;
+        cb.checked = settings.tiles.includes(id);
+        cb.addEventListener('change', () => {
+            settings.tiles = settings.order.filter((t) => (t === id ? cb.checked : settings.tiles.includes(t)));
+            saveSettings(); applyTiles();
+        });
+        const lb = document.createElement('label');
+        lb.htmlFor = cb.id;
+        lb.textContent = label;
+        const up = document.createElement('button');
+        up.className = 'mini'; up.textContent = '▲'; up.disabled = idx === 0;
+        up.setAttribute('aria-label', `Move ${label} up`);
+        const down = document.createElement('button');
+        down.className = 'mini'; down.textContent = '▼'; down.disabled = idx === settings.order.length - 1;
+        down.setAttribute('aria-label', `Move ${label} down`);
+        const move = (dir) => {
+            const i = settings.order.indexOf(id);
+            settings.order.splice(i, 1);
+            settings.order.splice(i + dir, 0, id);
+            saveSettings(); applyTiles(); buildTileList();
+        };
+        up.addEventListener('click', () => move(-1));
+        down.addEventListener('click', () => move(1));
+        row.append(cb, lb, up, down);
+        list.appendChild(row);
+    });
 }
 
 function buildSettings() {
@@ -641,94 +1148,173 @@ function buildSettings() {
         grid.appendChild(b);
     });
 
-    const toggles = $('tileToggles');
-    TILES.forEach(([id, label]) => {
-        const l = document.createElement('label');
-        l.className = 'tiletoggle';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = settings.tiles.includes(id);
-        cb.addEventListener('change', () => {
-            settings.tiles = TILES.map(([t]) => t).filter((t) =>
-                t === id ? cb.checked : settings.tiles.includes(t));
-            saveSettings(); applyTiles();
-        });
-        l.append(cb, document.createTextNode(' ' + label));
-        toggles.appendChild(l);
+    const cur = $('setCurrency');
+    CURRENCIES.forEach((c) => {
+        const o = document.createElement('option');
+        o.value = c; o.textContent = c;
+        cur.appendChild(o);
     });
 
+    buildTileList();
+
+    // connection
     $('setHost').value = settings.host;
-    $('setInterval').value = String(settings.interval);
     $('setHost').addEventListener('change', () => {
         settings.host = $('setHost').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
         $('setHost').value = settings.host;
         saveSettings(); startConnection();
     });
-    $('setInterval').addEventListener('change', () => {
-        settings.interval = +$('setInterval').value;
-        saveSettings(); startConnection();
-    });
-
-    $('setAwake').checked = !!settings.keepAwake;
-    $('setAwake').addEventListener('change', () => {
-        settings.keepAwake = $('setAwake').checked;
-        saveSettings(); applyWakeLock();
-    });
-
+    bindSelect('setInterval', 'interval', true, startConnection);
+    bindCheck('setPauseHidden', 'pauseHidden');
     $('btnReconnect').addEventListener('click', () => { connectBridge(); startConnection(); });
-    $('btnExport').addEventListener('click', () => {
-        const blob = new Blob([JSON.stringify({
-            exported: new Date().toISOString(),
-            settings: { host: settings.host, interval: settings.interval },
-            hourly: realStore.hourly, daily: realStore.daily,
-        }, null, 1)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `wattwarden-history-${dayKey(new Date())}.json`;
-        a.click();
-        URL.revokeObjectURL(a.href);
+
+    // costs
+    bindSelect('setCurrency', 'currency', false, rerenderAll);
+    bindNum('setStandingDay', 'standingDay', rerenderAll);
+    bindCheck('setDualPrices', 'dualPrices', () => { syncPriceRows(); rerenderAll(); });
+    bindNum('setPriceImp', 'priceImp', rerenderAll);
+    bindNum('setPriceExp', 'priceExp', rerenderAll);
+    bindNum('setPriceImpT1', 'priceImpT1', rerenderAll);
+    bindNum('setPriceImpT2', 'priceImpT2', rerenderAll);
+    bindNum('setPriceGas', 'priceGas', rerenderAll);
+    bindNum('setPriceWater', 'priceWater', rerenderAll);
+    bindNum('setCo2Kwh', 'co2Kwh', rerenderAll);
+    bindNum('setCo2Gas', 'co2Gas', rerenderAll);
+    syncPriceRows();
+
+    // alerts
+    bindCheck('setAlertsOn', 'alertsOn', () => checkAlerts(lastMetrics));
+    bindNum('setAlertW', 'alertW', () => checkAlerts(lastMetrics));
+    bindNum('setFuseA', 'fuseA', () => checkAlerts(lastMetrics));
+    bindCheck('setAlertOffline', 'alertOffline');
+    bindCheck('setAlertVolts', 'alertVolts', () => checkAlerts(lastMetrics));
+    bindCheck('setAlertPeakGuard', 'alertPeakGuard', () => checkAlerts(lastMetrics));
+    bindNum('setPeakMargin', 'peakMargin', () => checkAlerts(lastMetrics));
+    bindCheck('setAlertSound', 'alertSound');
+    bindCheck('setAlertNotify', 'alertNotify', syncNotifyState);
+    $('btnNotifyPerm').addEventListener('click', async () => {
+        if ('Notification' in window) await Notification.requestPermission();
+        syncNotifyState();
+    });
+    syncNotifyState();
+
+    // appearance
+    $('setAccent').value = settings.accent || '#ffb347';
+    $('setAccent').addEventListener('input', () => { settings.accent = $('setAccent').value; saveSettings(); applyAccent(); redraw(); });
+    $('btnAccentReset').addEventListener('click', () => { settings.accent = ''; saveSettings(); applyAccent(); redraw(); });
+    $('setScale').value = String(settings.scale);
+    $('setScale').addEventListener('input', () => { settings.scale = +$('setScale').value; saveSettings(); applyScale(); });
+    $('scaleVal').textContent = `${settings.scale}%`;
+    bindCheck('setDensity', 'density', applyDensity);
+    bindCheck('setUnitsKw', 'unitsKw', rerenderAll);
+    bindCheck('setClock', 'clock', applyClock);
+    bindSelect('setSparkMin', 'sparkMin', true, () => drawSpark());
+
+    // wall tablet
+    bindCheck('setAwake', 'keepAwake', applyWakeLock);
+    bindCheck('setDimOn', 'dimOn', applyDim);
+    $('setDimFrom').value = settings.dimFrom;
+    $('setDimFrom').addEventListener('change', () => { settings.dimFrom = $('setDimFrom').value || '23:00'; saveSettings(); applyDim(); });
+    $('setDimTo').value = settings.dimTo;
+    $('setDimTo').addEventListener('change', () => { settings.dimTo = $('setDimTo').value || '06:30'; saveSettings(); applyDim(); });
+    $('setDimLevel').value = String(settings.dimLevel);
+    $('dimVal').textContent = `${settings.dimLevel}%`;
+    $('setDimLevel').addEventListener('input', () => {
+        settings.dimLevel = +$('setDimLevel').value;
+        $('dimVal').textContent = `${settings.dimLevel}%`;
+        saveSettings(); applyDim();
+    });
+
+    // data & demo
+    $('setDemo').addEventListener('change', () => setDemo($('setDemo').checked));
+    $('btnExport').addEventListener('click', exportJson);
+    $('btnExportCsv').addEventListener('click', exportCsv);
+    $('importFile').addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) importJson(e.target.files[0]);
+        e.target.value = '';
     });
     $('btnWipe').addEventListener('click', () => {
         if (!confirm('Delete all stored meter history from this browser?')) return;
-        realStore.wipe(); realStore.persist(true); histSummary(); drawCharts(activeStore());
+        realStore.wipe(); realStore.persist(true); histSummary(); redraw();
     });
+
+    // history period chips
+    document.querySelectorAll('#tiles .chip').forEach((b) => {
+        b.addEventListener('click', () => {
+            settings.histPeriod = b.dataset.period;
+            saveSettings();
+            drawCharts(activeStore());
+        });
+    });
+}
+
+function syncPriceRows() {
+    $('singlePriceRow').querySelector('#setPriceImp').parentElement.style.display = settings.dualPrices ? 'none' : '';
+    $('dualPriceRow').hidden = !settings.dualPrices;
+}
+
+function syncNotifyState() {
+    const el = $('notifyState');
+    if (!('Notification' in window)) { el.textContent = 'This browser has no notification support.'; return; }
+    el.textContent = `Notification permission: ${Notification.permission}.`;
 }
 
 function openSettings(open) {
     $('settingsVeil').hidden = !open;
-    if (open) { histSummary(); $('setHost').focus(); }
+    if (open) { histSummary(); refreshRawBox(); $('setHost').focus(); }
 }
 
 /* ---- boot --------------------------------------------------------------------------- */
 function init() {
     applyTheme();
+    applyScale();
+    applyDensity();
     applyTiles();
+    applyClock();
+    applyDim();
     buildSettings();
     refreshStatus();
+    updateConnDetail();
     connectBridge();
     startConnection();
     applyWakeLock();
+
     document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') applyWakeLock();
+        if (document.visibilityState === 'visible') {
+            applyWakeLock();
+            if (settings.pauseHidden && !demo.on) startConnection();
+        } else if (settings.pauseHidden && !demo.on) {
+            clearTimeout(conn.pollTimer);
+            clearTimeout(conn.reprobeTimer);
+            bridgeSend({ cmd: 'stop' });
+        }
     });
 
     $('btnSettings').addEventListener('click', () => openSettings(true));
     $('btnCloseSettings').addEventListener('click', () => openSettings(false));
     $('settingsVeil').addEventListener('click', (e) => { if (e.target === $('settingsVeil')) openSettings(false); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openSettings(false); });
-    $('btnDemo').addEventListener('click', () => setDemo(!demo.on));
+    $('btnFull').addEventListener('click', toggleFullscreen);
 
-    let resizeTimer = 0;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(() => { if (lastMetrics) { drawSpark(); drawCharts(activeStore()); } }, 150);
-    });
+    window.addEventListener('resize', redraw);
+    // canvases render blank while a tab is backgrounded (zero layout width);
+    // repaint the moment they get real dimensions
+    if ('ResizeObserver' in window) {
+        const ro = new ResizeObserver(redraw);
+        ['sparkCanvas', 'day24Canvas', 'historyCanvas'].forEach((id) => ro.observe($(id)));
+    }
+    setInterval(watchdogTick, 5000);
+    setInterval(applyDim, 30000);
+
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+        navigator.serviceWorker.register('sw.js', { scope: './', updateViaCache: 'none' }).catch(() => { });
+    }
 
     // returning visitor with history: show the dashboard shell immediately
     if (realStore.daily.length) {
         $('emptyState').hidden = true;
         $('tiles').hidden = false;
-        drawCharts(realStore);
+        redraw();
     }
 }
 
