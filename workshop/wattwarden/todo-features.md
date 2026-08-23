@@ -216,3 +216,8 @@ smart-meter app reviews, still open here:
 135. [ ] Backfill old history by importing the grid operator's CSV export
         (Fluvius, Liander, Enexis portals all offer one)
 136. [ ] Printable monthly report: one tidy page of totals, costs and charts
+137. [x] Import level colours: paint the power line in your own colours per band,
+        for example blue up to 1 kW and red above it, threshold and colours free
+        to choose (export keeps the theme's green)
+138. [x] Graph picker in Appearance: tick which graphs you want (live sparkline,
+        60 minutes, 24 hours, history) without digging through the tile list

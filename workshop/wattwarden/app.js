@@ -45,6 +45,7 @@ const DEFAULTS = {
     host: '', interval: 5000, pauseHidden: false,
     theme: 'ember', accent: '', scale: 100, density: false, unitsKw: true,
     clock: false, sparkMin: 10, histPeriod: '30d', wideScreen: false,
+    showSpark: true, bandOn: false, bandW: 1000, bandLow: '#57b8ff', bandHigh: '#e05a5a',
     tiles: DEFAULT_TILES.slice(), order: TILES.map(([t]) => t),
     keepAwake: true, dimOn: false, dimFrom: '23:00', dimTo: '06:30', dimLevel: 70,
     currency: '€', dualPrices: false, priceImp: 0.30, priceImpT1: 0.28, priceImpT2: 0.32,
@@ -497,12 +498,40 @@ function themeVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 }
 
+/* import bands: user colours per power level make heavy draw obvious at a glance */
+function lineColorFor(w) {
+    if (!settings.bandOn) return themeVar('--chart-imp');
+    if (w < 0) return themeVar('--chart-exp');
+    return w <= settings.bandW ? settings.bandLow : settings.bandHigh;
+}
+
+function strokeSeries(ctx, pts, x, y) {
+    ctx.lineWidth = 2;
+    ctx.lineJoin = 'round';
+    let i = 0;
+    while (i < pts.length - 1) {
+        const color = lineColorFor(pts[i + 1].w);
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x(pts[i].t), y(pts[i].w));
+        let j = i + 1;
+        while (j < pts.length && lineColorFor(pts[j].w) === color) {
+            ctx.lineTo(x(pts[j].t), y(pts[j].w));
+            j++;
+        }
+        ctx.stroke();
+        i = j - 1;
+    }
+}
+
 function drawSpark() {
-    const c = canvasCtx($('sparkCanvas'));
+    const sc = $('sparkCanvas');
+    sc.hidden = !settings.showSpark;
+    if (sc.hidden) return;
+    const c = canvasCtx(sc);
     if (!c) return;
     const windowMs = settings.sparkMin * 60000;
     const pts = spark.filter((p) => p.t >= Date.now() - windowMs);
-    const sc = $('sparkCanvas');
     sc._pts = pts;
     sc._t0 = Date.now() - windowMs;
     sc._t1 = Date.now();
@@ -521,10 +550,7 @@ function drawSpark() {
         ctx.strokeStyle = themeVar('--line'); ctx.setLineDash([3, 4]);
         ctx.beginPath(); ctx.moveTo(0, y(0)); ctx.lineTo(w, y(0)); ctx.stroke(); ctx.setLineDash([]);
     }
-    ctx.strokeStyle = themeVar('--chart-imp'); ctx.lineWidth = 2; ctx.lineJoin = 'round';
-    ctx.beginPath();
-    pts.forEach((p, i) => { i ? ctx.lineTo(x(p.t), y(p.w)) : ctx.moveTo(x(p.t), y(p.w)); });
-    ctx.stroke();
+    strokeSeries(ctx, pts, (t) => x(t), (v) => y(v));
 }
 
 function drawHour() {
@@ -577,10 +603,7 @@ function drawHour() {
         ctx.strokeStyle = themeVar('--line'); ctx.setLineDash([3, 4]);
         ctx.beginPath(); ctx.moveTo(0, y0); ctx.lineTo(w, y0); ctx.stroke(); ctx.setLineDash([]);
     }
-    ctx.strokeStyle = themeVar('--chart-imp'); ctx.lineWidth = 2; ctx.lineJoin = 'round';
-    ctx.beginPath();
-    pts.forEach((p, i) => { i ? ctx.lineTo(x(p.t), y(p.w)) : ctx.moveTo(x(p.t), y(p.w)); });
-    ctx.stroke();
+    strokeSeries(ctx, pts, (t) => x(t), (v) => y(v));
 
     ctx.fillStyle = themeVar('--muted');
     ctx.textAlign = 'left';
@@ -1426,7 +1449,7 @@ function buildTileList() {
         cb.checked = settings.tiles.includes(id);
         cb.addEventListener('change', () => {
             settings.tiles = settings.order.filter((t) => (t === id ? cb.checked : settings.tiles.includes(t)));
-            saveSettings(); applyTiles();
+            saveSettings(); applyTiles(); syncGraphChecks();
         });
         const lb = document.createElement('label');
         lb.htmlFor = cb.id;
@@ -1448,6 +1471,17 @@ function buildTileList() {
         row.append(cb, lb, up, down);
         list.appendChild(row);
     });
+}
+
+const GRAPH_TILES = [['hour60', 'setGraphHour'], ['day24', 'setGraphDay'], ['history', 'setGraphHist']];
+
+function syncGraphChecks() {
+    $('setGraphSpark').checked = !!settings.showSpark;
+    GRAPH_TILES.forEach(([tile, id]) => { $(id).checked = settings.tiles.includes(tile); });
+}
+
+function bandRowSync() {
+    $('bandRow').hidden = !settings.bandOn;
 }
 
 function buildSettings() {
@@ -1526,6 +1560,27 @@ function buildSettings() {
     bindCheck('setClock', 'clock', applyClock);
     bindSelect('setSparkMin', 'sparkMin', true, () => drawSpark());
 
+    // import band colours + which graphs to show
+    bindCheck('setBandOn', 'bandOn', () => { bandRowSync(); redraw(); });
+    bindNum('setBandW', 'bandW', redraw);
+    $('setBandLow').value = settings.bandLow;
+    $('setBandLow').addEventListener('input', () => { settings.bandLow = $('setBandLow').value; saveSettings(); redraw(); });
+    $('setBandHigh').value = settings.bandHigh;
+    $('setBandHigh').addEventListener('input', () => { settings.bandHigh = $('setBandHigh').value; saveSettings(); redraw(); });
+    bandRowSync();
+
+    $('setGraphSpark').addEventListener('change', () => {
+        settings.showSpark = $('setGraphSpark').checked;
+        saveSettings(); drawSpark();
+    });
+    GRAPH_TILES.forEach(([tile, id]) => {
+        $(id).addEventListener('change', () => {
+            settings.tiles = settings.order.filter((t) => (t === tile ? $(id).checked : settings.tiles.includes(t)));
+            saveSettings(); applyTiles(); buildTileList();
+        });
+    });
+    syncGraphChecks();
+
     // wall tablet
     bindCheck('setAwake', 'keepAwake', applyWakeLock);
     bindCheck('setDimOn', 'dimOn', applyDim);
@@ -1582,7 +1637,7 @@ function syncNotifyState() {
 
 function openSettings(open) {
     $('settingsVeil').hidden = !open;
-    if (open) { histSummary(); refreshRawBox(); $('setHost').focus(); }
+    if (open) { histSummary(); refreshRawBox(); syncGraphChecks(); $('setHost').focus(); }
 }
 
 /* ---- boot --------------------------------------------------------------------------- */

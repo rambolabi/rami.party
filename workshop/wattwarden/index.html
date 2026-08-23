@@ -375,6 +375,25 @@ python p1-bridge.py</code></pre>
                             <option value="60">60 minutes</option>
                         </select>
                     </label>
+                    <label class="tiletoggle"><input type="checkbox" id="setBandOn"> Colour imported power by
+                        level on the power graphs</label>
+                    <div class="grid3" id="bandRow" hidden>
+                        <label class="field">Up to (W)
+                            <input type="number" id="setBandW" min="100" step="100" inputmode="numeric">
+                        </label>
+                        <label class="field">Colour up to
+                            <input type="color" id="setBandLow">
+                        </label>
+                        <label class="field">Colour above
+                            <input type="color" id="setBandHigh">
+                        </label>
+                    </div>
+                    <p class="fine">Graphs to show (also in the tile list below):</p>
+                    <label class="tiletoggle"><input type="checkbox" id="setGraphSpark"> Small live graph inside
+                        "Right now"</label>
+                    <label class="tiletoggle"><input type="checkbox" id="setGraphHour"> Last 60 minutes</label>
+                    <label class="tiletoggle"><input type="checkbox" id="setGraphDay"> Last 24 hours</label>
+                    <label class="tiletoggle"><input type="checkbox" id="setGraphHist"> History (7 d / 30 d / 12 m)</label>
                 </fieldset>
 
                 <fieldset>
