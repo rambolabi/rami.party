@@ -179,6 +179,33 @@ h1 { margin: 0; font-size: clamp(1.7rem, 5vw, 2.4rem); letter-spacing: .03em; }
     margin: .5rem 0;
 }
 
+.empty code, .bmbox code {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 4px;
+    padding: 0 .3rem; font-size: .88em; color: var(--accent);
+}
+
+.bmbox {
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: .9rem 1.1rem 1rem;
+    margin: 1.1rem 0 .9rem;
+    background: var(--bg-raise);
+}
+.bmbox h3 { margin: 0 0 .4rem; font-size: 1rem; }
+.bmbox p { margin: .4rem 0; color: var(--muted); font-size: .92rem; }
+.bmbox ol { padding-left: 1.3rem; margin: .5rem 0 0; color: var(--muted); font-size: .9rem; }
+.bmbox li { margin: .35rem 0; }
+.bm {
+    display: inline-block;
+    background: var(--accent); color: var(--on-accent);
+    border-radius: 999px;
+    padding: .55rem 1.1rem;
+    font: 700 .95rem/1 inherit;
+    text-decoration: none;
+    cursor: grab;
+}
+.bm:active { cursor: grabbing; }
+
 /* ---- tiles ---- */
 .tiles {
     display: grid;
@@ -408,7 +435,7 @@ legend { color: var(--muted); font-size: .85rem; padding: 0 .4rem; letter-spacin
 
 /* ---- kiosk mode (wall tablet) ---- */
 body.kiosk .back, body.kiosk .lede, body.kiosk .actions, body.kiosk .empty,
-body.kiosk .explain, body.kiosk .foot, body.kiosk .hero-mark { display: none; }
+body.kiosk .explain, body.kiosk .foot, body.kiosk .hero-mark, body.kiosk .bmbox { display: none; }
 body.kiosk .wrap { max-width: none; padding: .7rem .9rem 1rem; }
 body.kiosk h1 { font-size: 1.15rem; letter-spacing: .06em; }
 body.kiosk .hero-row { margin-top: 0; }

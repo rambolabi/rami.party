@@ -99,3 +99,29 @@ relay script, no cloud, no accounts, no build step.
       (helios in the dark, dawn in the light). New visitors start on Auto.
 - **How**: resolve `auto` via `matchMedia('(prefers-color-scheme: dark)')`
   at apply time and re-apply on its change event.
+
+## 13. S2-WL-ST stick templates
+- [x] One-tap presets in settings for the sticks people actually own:
+      **S2-WL-ST** (status page, port 80, admin / admin), older Solarman
+      sticks (port 8899) and Modbus TCP LAN sticks (port 502). Tap the
+      template once per inverter and fill in the stick's IP; the empty state
+      leads with the S2-WL-ST road.
+- **How**: `STICK_TEMPLATES` in `app.js` spreads the preset over a fresh
+  device row; the add button row is built from the same list.
+
+## 14. Runs completely in the browser (no Python)
+- [x] Two roads that need nothing installed. **Stick View bookmarklet**:
+      injected on the stick's own status page it is same-origin, so it can
+      always read the numbers; it paints a live mini-dashboard (power, today,
+      totals, alarm, Wi-Fi, daily bars) that refreshes every 10 s and keeps
+      its history in localStorage. **Direct polling**: when the relay is not
+      running, the dashboard itself polls every S2-WL-ST status page from the
+      browser; this works wherever the browser permits it (kiosk browsers
+      such as Fully Kiosk with web security off, CORS-friendly firmware) and
+      steps aside with a clear hint where it does not. The relay stays as the
+      optional road for the full register map (battery, meter, strings).
+- **How**: `stick.js` is a self-contained overlay loaded by a one-line
+  bookmarklet; `app.js` gains `directPollOne`/`directTick` (fetch with Basic
+  auth + the same `webdata_*` parser as the relay), started whenever the
+  relay socket is down and stopped when it connects.
+

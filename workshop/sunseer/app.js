@@ -38,6 +38,17 @@ const MODES = [['solarman', 'Solarman stick (:8899)'], ['modbus', 'Modbus TCP (:
 const KINDS = [['auto', 'detect the model'], ['hybrid', 'hybrid (has battery)'], ['string', 'string (PV only)']];
 const DEFAULT_PORTS = { solarman: 8899, modbus: 502, http: 80 };
 
+// one-tap presets for the sticks people actually have
+const STICK_TEMPLATES = [
+    ['S2-WL-ST stick', { mode: 'http', port: 80, user: 'admin', pass: 'admin' }],
+    ['Solarman stick (8899)', { mode: 'solarman', port: 8899 }],
+    ['Modbus TCP / LAN stick', { mode: 'modbus', port: 502 }],
+];
+
+const BOOKMARKLET = "javascript:(function(){var s=document.createElement('script');"
+    + "s.src='https://rami.party/workshop/sunseer/stick.js?v=1';"
+    + "document.documentElement.appendChild(s);})();";
+
 const STATUS_WORDS = {
     0x0: 'waiting for the sun', 0x1: 'generating (open loop)',
     0x2: 'soft start', 0x3: 'generating',
@@ -216,6 +227,32 @@ function fmtDur(hours) {
     const mins = Math.round(hours * 60);
     if (mins < 60) return `${mins} m`;
     return `${Math.floor(mins / 60)} h ${String(mins % 60).padStart(2, '0')} m`;
+}
+
+/* ---- S2-WL-ST status page parsing (same fields the relay's http mode reads) ---- */
+function stickNum(s) {
+    if (!s) return null;
+    const m = String(s).replace(',', '.').match(/-?\d+(?:\.\d+)?/);
+    return m ? parseFloat(m[0]) : null;
+}
+
+function normaliseStick(f) {
+    let rated = stickNum(f.webdata_rate_p);
+    if (rated != null && rated < 100) rated *= 1000; // some firmware reports kW
+    return {
+        kind: 'logger',
+        pac_w: stickNum(f.webdata_now_p),
+        today_kwh: stickNum(f.webdata_today_e),
+        yesterday_kwh: stickNum(f.webdata_yesterday_e),
+        total_kwh: stickNum(f.webdata_total_e),
+        alarm: f.webdata_alarm || '',
+        inv_sn: f.webdata_sn || '',
+        rated_w: rated,
+        logger: {
+            sn: f.cover_mid || '', fw: f.cover_ver || '',
+            ssid: f.cover_sta_ssid || '', rssi: stickNum(f.cover_sta_rssi),
+        },
+    };
 }
 
 function statusWord(code) {
@@ -722,6 +759,7 @@ function connectBridge() {
     bridge.ws = ws;
     ws.onopen = () => {
         bridge.open = true;
+        stopDirect();
         $('bridgeState').textContent = `Relay: connected (${url})`;
         sendWatch();
         refreshStatus();
@@ -749,7 +787,8 @@ function connectBridge() {
 function bridgeDown() {
     bridge.open = false;
     bridge.ws = null;
-    $('bridgeState').textContent = 'Relay: not running (start solis-bridge.py)';
+    $('bridgeState').textContent = 'Relay: not running (optional: the S2-WL-ST road works without it)';
+    startDirect();
     refreshStatus();
     bridge.retryTimer = setTimeout(connectBridge, 10000);
 }
@@ -766,13 +805,78 @@ function validDevices() {
 }
 
 function sendWatch() {
-    if (!bridge.open) return;
+    if (!bridge.open) { restartDirect(); return; }
     const devices = validDevices().map((d) => ({
         id: d.id, mode: d.mode, host: d.host.trim(), port: d.port || undefined,
         serial: d.serial || undefined, unit: d.unit || 1, kind: d.kind,
         user: d.user || undefined, pass: d.pass || undefined,
     }));
     bridge.ws.send(JSON.stringify({ cmd: 'watch', interval: settings.interval, devices }));
+}
+
+/* ---- no-relay road: poll the sticks' status pages straight from this page.
+   Works where the browser lets a page read the stick (kiosk browsers with web
+   security off, CORS-friendly firmware). Silently steps aside otherwise. ---- */
+const direct = { timer: 0, on: false, tried: false, blocked: false };
+
+function httpDevices() { return validDevices().filter((d) => d.mode === 'http'); }
+
+async function directPollOne(dev) {
+    const port = dev.port && +dev.port !== 80 ? ':' + dev.port : '';
+    const auth = 'Basic ' + btoa(`${dev.user || 'admin'}:${dev.pass || 'admin'}`);
+    const found = {};
+    let got = false;
+    for (const path of ['/status.html', '/inverter.html']) {
+        try {
+            const r = await fetch(`http://${dev.host}${port}${path}`, {
+                headers: { 'Authorization': auth },
+                cache: 'no-store',
+                signal: AbortSignal.timeout(6000),
+            });
+            if (!r.ok) continue;
+            for (const m of (await r.text()).matchAll(/var\s+(\w+)\s*=\s*"([^"]*)"/g)) found[m[1]] = m[2];
+            got = true;
+        } catch { /* mixed content, CORS, or the stick is asleep */ }
+    }
+    if (!got) return false;
+    latest.set(dev.id, { data: normaliseStick(found), ts: Date.now() });
+    errors.delete(dev.id);
+    return true;
+}
+
+async function directTick() {
+    direct.tried = true;
+    let ok = 0;
+    for (const dev of httpDevices()) {
+        if (await directPollOne(dev)) ok++;
+    }
+    if (!direct.on) return; // stopped while a poll was in flight
+    direct.blocked = ok === 0;
+    if (ok) {
+        validDevices().forEach((d) => {
+            if (d.mode !== 'http') errors.set(d.id, 'needs the relay (raw Modbus)');
+        });
+        renderFleet();
+        recordHistory(realStore, lastAgg, new Date());
+    }
+    refreshStatus();
+    direct.timer = setTimeout(directTick, Math.max(5000, settings.interval));
+}
+
+function startDirect() {
+    if (direct.on || demo.on || !httpDevices().length) return;
+    direct.on = true;
+    directTick();
+}
+
+function stopDirect() {
+    direct.on = false;
+    clearTimeout(direct.timer);
+}
+
+function restartDirect() {
+    stopDirect();
+    if (!bridge.open && !demo.on) startDirect();
 }
 
 function refreshStatus() {
@@ -782,25 +886,28 @@ function refreshStatus() {
         return;
     }
     const devs = validDevices();
+    if (!devs.length) { setPill('idle', 'no inverters yet'); $('fleetLine').textContent = 'add your inverters in ⚙ Settings'; return; }
     const stamps = devs.map((d) => latest.get(d.id)).filter(Boolean).map((h) => h.ts);
     const fresh = stamps.filter((ts) => Date.now() - ts < STALE_MS).length;
+    if (fresh) {
+        setPill('on', 'live');
+        $('fleetLine').textContent = `${fresh} of ${devs.length} inverter${devs.length > 1 ? 's' : ''} reporting`
+            + (bridge.open ? '' : ' · straight from the stick, no relay');
+        return;
+    }
     if (!bridge.open) {
-        setPill('off', 'relay offline');
-        $('fleetLine').textContent = stamps.length
-            ? `showing the last readings (${fmtClock(Math.max(...stamps))}) · start solis-bridge.py`
-            : 'start solis-bridge.py on this machine';
+        setPill(stamps.length ? 'idle' : 'off', stamps.length ? 'stale' : 'no data road');
+        if (stamps.length) {
+            $('fleetLine').textContent = `showing the last readings (${fmtClock(Math.max(...stamps))})`;
+        } else if (direct.tried && direct.blocked && httpDevices().length) {
+            $('fleetLine').textContent = 'this browser blocks the direct stick read: use the Stick View below or the relay';
+        } else {
+            $('fleetLine').textContent = 'connect a data road: Stick View, kiosk browser, or solis-bridge.py';
+        }
         return;
     }
-    if (!devs.length) { setPill('idle', 'no inverters yet'); $('fleetLine').textContent = 'add your inverters in ⚙ Settings'; return; }
-    if (!fresh) {
-        setPill('idle', stamps.length ? 'stale' : 'waiting for readings…');
-        $('fleetLine').textContent = stamps.length
-            ? `last reading ${fmtClock(Math.max(...stamps))}, polling…`
-            : devs.map((d) => d.host).join(' · ');
-        return;
-    }
-    setPill('on', 'live');
-    $('fleetLine').textContent = `${fresh} of ${devs.length} inverter${devs.length > 1 ? 's' : ''} reporting`;
+    setPill('idle', 'waiting for readings…');
+    $('fleetLine').textContent = devs.map((d) => d.host).join(' · ');
 }
 
 /* ---- demo mode ------------------------------------------------------------------ */
@@ -936,7 +1043,7 @@ function seedDemoHistory() {
 }
 
 function setDemo(on) {
-    if (on) saveLive(true); // park the real snapshot before the demo takes over
+    if (on) { saveLive(true); stopDirect(); } // park the real snapshot before the demo takes over
     demo.on = on;
     $('btnDemo').setAttribute('aria-pressed', String(on));
     $('btnDemo').textContent = on ? '⏹ Stop the demo' : '▶ Try the demo';
@@ -951,6 +1058,7 @@ function setDemo(on) {
         restoreLive();
         if (latest.size || realStore.daily.length) renderFleet();
         else { $('tiles').hidden = true; $('emptyState').hidden = false; }
+        restartDirect();
     }
     refreshStatus();
 }
@@ -1087,14 +1195,32 @@ function buildSettings() {
     });
 
     renderDevList();
-    $('btnAddDev').addEventListener('click', () => {
-        settings.devices.push({
-            id: 'd' + Date.now().toString(36),
-            name: `Inverter ${settings.devices.length + 1}`,
-            mode: 'solarman', host: '', port: '', serial: '', unit: 1,
-            kind: 'auto', user: 'admin', pass: 'admin',
+    const addRow = $('addRow');
+    STICK_TEMPLATES.forEach(([label, tpl]) => {
+        const b = document.createElement('button');
+        b.className = 'btn btn-ghost btn-mini';
+        b.textContent = '＋ ' + label;
+        b.addEventListener('click', () => {
+            settings.devices.push({
+                id: 'd' + Date.now().toString(36),
+                name: `Inverter ${settings.devices.length + 1}`,
+                host: '', serial: '', unit: 1, kind: 'auto', user: 'admin', pass: 'admin',
+                ...tpl,
+            });
+            saveSettings(); renderDevList(); refreshStatus();
         });
-        saveSettings(); renderDevList(); refreshStatus();
+        addRow.appendChild(b);
+    });
+
+    $('bmLink').setAttribute('href', BOOKMARKLET);
+    $('btnCopyBm').addEventListener('click', async () => {
+        try {
+            await navigator.clipboard.writeText(BOOKMARKLET);
+            $('btnCopyBm').textContent = 'Copied ✓';
+        } catch {
+            prompt('Copy the bookmarklet code:', BOOKMARKLET);
+        }
+        setTimeout(() => { $('btnCopyBm').textContent = 'Copy the code'; }, 1600);
     });
 
     $('setInterval').value = String(settings.interval);

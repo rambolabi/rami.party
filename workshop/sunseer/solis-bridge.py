@@ -86,6 +86,7 @@ STATIC_FILES = {
     "/manifest.webmanifest": "manifest.webmanifest",
     "/sw.js": "sw.js",
     "/icon.svg": "icon.svg",
+    "/stick.js": "stick.js",
     "/solis-bridge.py": "solis-bridge.py",
     "/todo-features.md": "todo-features.md",
 }

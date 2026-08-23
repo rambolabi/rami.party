@@ -18,8 +18,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Sunseer">
-    <link rel="stylesheet" href="style.css?v=2">
-    <script src="app.js?v=2" defer></script>
+    <link rel="stylesheet" href="style.css?v=3">
+    <script src="app.js?v=3" defer></script>
 </head>
 
 <body>
@@ -55,23 +55,26 @@
         <section class="empty" id="emptyState">
             <h2>No inverter connected yet</h2>
             <ol>
-                <li>Find out how your datalogging stick talks. Most Solis Wi-Fi sticks (the ones with a
-                    10-digit serial number) speak <strong>Solarman</strong> on port 8899. LAN sticks and
-                    RS485 gateways speak <strong>Modbus TCP</strong> on port 502. And every stick serves a
-                    small <strong>status page</strong> you can log into with admin / admin: that road always
-                    works, it just carries less data.</li>
-                <li>Run the relay next to this browser:
+                <li><strong>Got the S2-WL-ST stick?</strong> (the usual Solis Wi-Fi stick: the model is on
+                    its label). It already serves its numbers on your network at
+                    <code>http://&lt;stick-ip&gt;/</code> behind the login <code>admin</code> /
+                    <code>admin</code>. Open <strong>⚙ Settings</strong>, tap
+                    <strong>＋ S2-WL-ST stick</strong> once per inverter and fill in each stick's IP
+                    address. Older Solarman sticks (port 8899) and Modbus LAN sticks have their own
+                    template buttons.</li>
+                <li><strong>No Python, no installs:</strong> in a kiosk browser that can switch off web
+                    security (Fully Kiosk on a wall tablet, for example) this page then polls the sticks
+                    all by itself. In a normal browser, use the <strong>Stick View</strong> below: it runs
+                    on the stick's own page, so nothing blocks it.</li>
+                <li><strong>Want every register?</strong> The optional relay reads the full Modbus map
+                    (battery, meter, per-string detail) and serves this dashboard to every device in the
+                    house:
                     <pre class="snippet"><code>pip install websockets
-python solis-bridge.py</code></pre>
+python solis-bridge.py --lan</code></pre>
                     <a class="btn btn-ghost" href="solis-bridge.py" download>Download solis-bridge.py</a>
                 </li>
-                <li><strong>On a tablet or phone?</strong> Run the relay on any PC, Pi or NAS with
-                    <code>python solis-bridge.py --lan</code> and open
-                    <code>http://&lt;that-machine&gt;:7102/</code> in the tablet's browser. The relay
-                    serves this dashboard itself, so the tablet needs nothing installed.</li>
-                <li>Open <strong>⚙ Settings</strong> and add each inverter: its stick's IP address, how it
-                    talks, and (for Solarman sticks) the serial number printed on the stick.</li>
             </ol>
+
             <p class="note">No hardware at hand? <strong>▶ Try the demo</strong> feeds the dashboard a
                 pretend rooftop with a 3.6K hybrid, a 4.6K string inverter, a battery and a grid meter.</p>
         </section>
@@ -265,6 +268,25 @@ python solis-bridge.py</code></pre>
             </section>
         </main>
 
+        <div class="bmbox">
+            <h3>☀ Stick View: the no-install dashboard</h3>
+            <p>A bookmarklet that dresses the S2-WL-ST stick's own status page up as a live
+                mini-dashboard. It runs on the stick's page itself, so the browser needs no special
+                permission: pure browser, no Python, tablet-friendly.</p>
+            <p class="row">
+                <a class="bm" id="bmLink" href="#">☀ Sunseer Stick View</a>
+                <button class="btn btn-ghost btn-mini" id="btnCopyBm">Copy the code</button>
+            </p>
+            <ol>
+                <li>On a computer: drag the golden button onto your bookmarks bar. On a tablet or
+                    phone: copy the code, create any bookmark, then edit it and paste the code as its
+                    address.</li>
+                <li>Open <code>http://&lt;stick-ip&gt;/</code> and log in (admin / admin).</li>
+                <li>Open the bookmark while on that page: it becomes a live dashboard with power,
+                    today, totals and its own little history.</li>
+            </ol>
+        </div>
+
         <section class="settings-veil" id="settingsVeil" hidden>
             <div class="settings" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
                 <div class="settings-head">
@@ -275,9 +297,7 @@ python solis-bridge.py</code></pre>
                 <fieldset>
                     <legend>Inverters &amp; loggers</legend>
                     <div id="devList"></div>
-                    <div class="row">
-                        <button class="btn btn-ghost" id="btnAddDev">＋ Add an inverter</button>
-                    </div>
+                    <div class="row" id="addRow"></div>
                     <label class="field">Refresh every
                         <select id="setInterval">
                             <option value="5000">5 seconds</option>
@@ -350,19 +370,19 @@ python solis-bridge.py</code></pre>
             <h2>How it works</h2>
             <ol class="steps">
                 <li>Solis inverters speak <strong>Modbus</strong> over RS485, and the datalogging stick
-                    puts that on your Wi-Fi. Sunseer reads the same registers the SolisCloud app does,
-                    but straight from the stick: Solarman protocol on port 8899 for the common Wi-Fi
-                    sticks, plain Modbus TCP on port 502 for LAN sticks, or the stick's own status page
-                    over HTTP as the simple fallback.</li>
+                    puts that on your Wi-Fi. The <strong>S2-WL-ST</strong> stick serves a status page with
+                    current power, today and total (Sunseer reads it directly where the browser allows,
+                    and the Stick View bookmarklet reads it from the stick's own page). Older Solarman
+                    sticks (port 8899) and Modbus TCP LAN sticks carry the full register map.</li>
                 <li>A browser cannot open raw sockets and refuses plain-HTTP LAN devices from a secure
-                    page, so a <strong>tiny relay</strong>, <code>solis-bridge.py</code>, runs on your
-                    machine and forwards readings over <code>ws://127.0.0.1:7102</code>. It only accepts
-                    this page, only reaches private addresses, and only ever <em>reads</em>: no register
-                    is ever written to your inverter. The relay also <strong>serves this dashboard
-                    itself</strong>: run it with <code>--lan</code> on any always-on machine and every
-                    tablet in the house can open <code>http://&lt;that-machine&gt;:7102/</code>, no
-                    install needed. The <strong>⛶ Full screen</strong> button turns a spare tablet
-                    into a wall display that keeps the screen awake.</li>
+                    page. Three roads around that, pick what fits: the <strong>Stick View
+                    bookmarklet</strong> (pure browser, runs on the stick's page), a <strong>kiosk
+                    browser</strong> with web security off so this page polls the sticks itself, or the
+                    <strong>tiny optional relay</strong> <code>solis-bridge.py</code>, which reads the
+                    full register map, never writes to the inverter, and with <code>--lan</code> serves
+                    this dashboard to every tablet in the house at
+                    <code>http://&lt;that-machine&gt;:7102/</code>. The <strong>⛶ Full screen</strong>
+                    button turns a spare tablet into a wall display that keeps the screen awake.</li>
                 <li>Hybrids (RHI / S5-EH1P / S6-EH1P, register map 33000) also report their
                     <strong>battery</strong> and the <strong>grid meter</strong> wired to them; string
                     inverters (S5 / S6-GR1P, map 3000) report panels and production. Every reading,
