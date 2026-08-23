@@ -851,6 +851,11 @@ async function testDevice(dev, setState, btn) {
             }
             return;
         }
+        if (location.protocol === 'file:') {
+            setState('bad', 'this page was opened from a file, so the browser hides its origin and every road is refused. '
+                + 'Open the dashboard from the relay (http://127.0.0.1:7102/) or from rami.party instead.');
+            return;
+        }
         if (location.protocol === 'https:') {
             setState('bad', 'no relay is connected, and this https page may not call the plain-http stick: '
                 + 'the browser refuses before the password is even sent. Start solis-bridge.py, or use the Stick View.');
@@ -1004,6 +1009,11 @@ function refreshStatus() {
     if (!devs.length) { setPill('idle', 'no inverters yet'); $('fleetLine').textContent = 'add your inverters in ⚙ Settings'; return; }
     const stamps = devs.map((d) => latest.get(d.id)).filter(Boolean).map((h) => h.ts);
     const fresh = stamps.filter((ts) => Date.now() - ts < STALE_MS).length;
+    if (!fresh && location.protocol === 'file:') {
+        setPill('off', 'opened from a file');
+        $('fleetLine').textContent = 'a page opened from a file has no origin, so every road is refused: open http://127.0.0.1:7102/ (the relay serves this dashboard) or rami.party/workshop/sunseer';
+        return;
+    }
     if (fresh) {
         setPill('on', 'live');
         $('fleetLine').textContent = `${fresh} of ${devs.length} inverter${devs.length > 1 ? 's' : ''} reporting`
@@ -1285,6 +1295,8 @@ function renderDevList() {
 }
 
 /* ---- the Stick logins section: saves as you type, and a Test that tells the truth ---- */
+const testResults = new Map(); // device id -> {cls, text}, survives row rebuilds
+
 function renderLoginList() {
     const box = $('loginList');
     box.innerHTML = '';
@@ -1311,10 +1323,14 @@ function renderLoginList() {
 
         const state = document.createElement('p');
         state.className = 'loginstate';
-        state.textContent = 'untested';
+        const remembered = testResults.get(dev.id);
+        state.className = 'loginstate' + (remembered && remembered.cls ? ' ' + remembered.cls : '');
+        state.textContent = remembered ? remembered.text : 'untested';
         const setState = (cls, text) => {
+            testResults.set(dev.id, { cls, text });
             state.className = 'loginstate' + (cls ? ' ' + cls : '');
             state.textContent = text;
+            if (!state.isConnected) renderLoginList(); // the row was rebuilt mid-test
         };
 
         let commitTimer = 0;

@@ -495,7 +495,11 @@ async def process_request(connection, request):
     if request.headers.get("Upgrade"):
         origin = request.headers.get("Origin", "")
         if not origin_is_allowed(origin):
-            print(f"Bridge: refused connection from origin {origin!r}")
+            if origin == "null":
+                print("Bridge: refused a page opened from a file (file://). "
+                      f"Open http://127.0.0.1:{PORT}/ instead: the relay serves the dashboard itself.")
+            else:
+                print(f"Bridge: refused connection from origin {origin!r}")
             return Response(403, "Forbidden", Headers([("Content-Length", "0")]), b"")
         return None  # proceed with the WebSocket upgrade
 
