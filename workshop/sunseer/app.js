@@ -1315,7 +1315,7 @@ function renderLoginList() {
         const head = document.createElement('div');
         head.className = 'loginhead';
         const name = document.createElement('b');
-        name.textContent = dev.name;
+        name.textContent = '☀ ' + (dev.name || 'Unnamed stick');
         const where = document.createElement('span');
         where.textContent = dev.host ? stickBase(dev) : 'no IP address set yet';
         head.append(name, where);

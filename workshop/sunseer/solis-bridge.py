@@ -64,7 +64,9 @@ try:
     from websockets.http11 import Response
     from websockets.datastructures import Headers
 except ImportError:
-    raise SystemExit("Install the required library: pip install websockets")
+    raise SystemExit("Install or update the required library first:\n"
+                     "    pip install -U websockets\n"
+                     "(Sunseer needs websockets 13 or newer.)")
 
 PORT = 7102
 MIN_INTERVAL_MS = 2000
@@ -594,20 +596,52 @@ def lan_ip():
         return None
 
 
+def cli_port():
+    argv = sys.argv[1:]
+    for i, arg in enumerate(argv):
+        value = None
+        if arg == "--port" and i + 1 < len(argv):
+            value = argv[i + 1]
+        elif arg.startswith("--port="):
+            value = arg.split("=", 1)[1]
+        if value is not None:
+            try:
+                port = int(value)
+            except ValueError:
+                port = 0
+            if not 0 < port < 65536:
+                raise SystemExit("--port needs a number between 1 and 65535")
+            return port
+    return PORT
+
+
 async def main():
+    global PORT
+    PORT = cli_port()
     lan = "--lan" in sys.argv[1:]
     bind = "0.0.0.0" if lan else "127.0.0.1"
-    async with serve(ws_handler, bind, PORT, process_request=process_request):
-        print(f"SUNSEER relay listening on ws://{bind}:{PORT}")
-        if lan:
-            ip = lan_ip()
-            where = f"http://{ip}:{PORT}/" if ip else f"http://<this-machine>:{PORT}/"
-            print(f"Dashboard for every device in the house: {where}")
-        else:
-            print(f"Dashboard on this machine: http://127.0.0.1:{PORT}/")
-            print("(run with --lan to open it from tablets and phones too)")
-        print("Or open https://rami.party/workshop/sunseer/ and add your inverters in its settings.")
-        await asyncio.get_running_loop().create_future()  # run forever
+    try:
+        server = serve(ws_handler, bind, PORT, process_request=process_request)
+        async with server:
+            print(f"SUNSEER relay v3 listening on ws://{bind}:{PORT}")
+            if lan:
+                ip = lan_ip()
+                where = f"http://{ip}:{PORT}/" if ip else f"http://<this-machine>:{PORT}/"
+                print(f"Dashboard for every device in the house: {where}")
+            else:
+                print(f"Dashboard on this machine: http://127.0.0.1:{PORT}/")
+                print("(run with --lan to open it from tablets and phones too)")
+            print("Or open https://rami.party/workshop/sunseer/ and add your inverters in its settings.")
+            await asyncio.get_running_loop().create_future()  # run forever
+    except OSError as err:
+        if err.errno in (10048, 48, 98):  # address already in use: Windows / macOS / Linux
+            raise SystemExit(
+                f"Port {PORT} is already taken. Most likely another solis-bridge.py is still\n"
+                "running in some other window; one relay is all you need, so simply use that\n"
+                "one. To really run a second relay, give it a free port:\n"
+                f"    python solis-bridge.py --port {PORT + 1}\n"
+                f"...and put 127.0.0.1:{PORT + 1} in the dashboard's Settings, under 'Relay address'.")
+        raise SystemExit(f"Could not open port {PORT}: {err}")
 
 
 if __name__ == "__main__":

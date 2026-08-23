@@ -391,8 +391,11 @@ legend { color: var(--muted); font-size: .85rem; padding: 0 .4rem; letter-spacin
     border: 1px dashed var(--line); border-radius: 10px;
     padding: .55rem .7rem .7rem; margin: .55rem 0;
 }
-.loginhead { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
-.loginhead b { font-size: .95rem; }
+.loginhead {
+    display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; flex-wrap: wrap;
+    border-bottom: 1px solid var(--line); padding-bottom: .35rem; margin-bottom: .2rem;
+}
+.loginhead b { font-size: 1.02rem; color: var(--accent); letter-spacing: .02em; }
 .loginhead span { color: var(--muted); font-size: .8rem; font-family: ui-monospace, Consolas, monospace; }
 .loginrow .field { margin: .25rem 0; font-size: .82rem; }
 .loginrow .field input { padding: .4rem .55rem; font-size: .9rem; }
