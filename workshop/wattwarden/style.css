@@ -433,6 +433,26 @@ legend { color: var(--muted); font-size: .85rem; padding: 0 .4rem; letter-spacin
     transition: opacity 1s ease;
 }
 
+/* ---- full-width and kiosk (fullscreen) modes ---- */
+body.wide .wrap, body.kiosk .wrap { max-width: none; }
+
+body.kiosk .back,
+body.kiosk .hero-mark,
+body.kiosk .lede,
+body.kiosk .empty,
+body.kiosk .explain,
+body.kiosk .foot { display: none; }
+body.kiosk .wrap { padding: .7rem 1rem 1rem; }
+body.kiosk .hero-row { margin-top: 0; gap: .6rem; }
+body.kiosk h1 { font-size: 1.15rem; letter-spacing: .05em; }
+body.kiosk .statusline { margin: .4rem 0 .4rem; }
+body.kiosk .actions {
+    position: fixed; right: .9rem; bottom: .9rem; z-index: 40;
+    opacity: .25;
+    transition: opacity .2s ease;
+}
+body.kiosk .actions:hover, body.kiosk .actions:focus-within { opacity: 1; }
+
 @media (prefers-reduced-motion: reduce) {
     body { transition: none; }
     .pfill, .powerbar span { transition: none; }

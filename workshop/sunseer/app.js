@@ -767,6 +767,11 @@ function connectBridge() {
     ws.onmessage = (ev) => {
         let msg;
         try { msg = JSON.parse(ev.data); } catch { return; }
+        if (msg.type === 'test') {
+            const done = pendingTests.get(msg.token);
+            if (done) { pendingTests.delete(msg.token); done(msg); }
+            return;
+        }
         if (demo.on) return; // demo has the floor
         if (msg.type === 'data' && msg.data) {
             latest.set(msg.id, { data: msg.data, ts: Date.now() });
@@ -800,6 +805,77 @@ function reconnectNow() {
     setTimeout(connectBridge, 120);
 }
 
+/* ---- one-shot login/read test through the relay ---- */
+const pendingTests = new Map(); // token -> resolve
+
+function bridgeTest(dev) {
+    return new Promise((resolve) => {
+        const token = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+        pendingTests.set(token, resolve);
+        try {
+            bridge.ws.send(JSON.stringify({
+                cmd: 'test', token,
+                device: {
+                    id: dev.id, mode: dev.mode, host: dev.host.trim(), port: dev.port || undefined,
+                    serial: dev.serial || undefined, unit: dev.unit || 1, kind: dev.kind,
+                    user: dev.user || undefined, pass: dev.pass || undefined,
+                },
+            }));
+        } catch {
+            pendingTests.delete(token);
+            resolve({ ok: false, msg: 'the relay connection dropped mid-test: try again' });
+            return;
+        }
+        setTimeout(() => {
+            if (pendingTests.delete(token)) {
+                resolve({ ok: false, msg: 'the relay did not answer the test. An older solis-bridge.py? Download the current one from the front page.' });
+            }
+        }, 12000);
+    });
+}
+
+async function testDevice(dev, setState, btn) {
+    if (!dev.host || !dev.host.trim()) {
+        setState('bad', 'fill in the stick\u2019s IP address first (Inverters & sticks, above)');
+        return;
+    }
+    btn.disabled = true;
+    setState('', 'testing\u2026');
+    try {
+        if (bridge.open) {
+            const r = await bridgeTest(dev);
+            if (r.ok) {
+                setState('ok', `login and reading OK through the relay${r.pac_w != null ? `: ${fmtW(r.pac_w)} W right now` : ''}`);
+            } else {
+                setState('bad', r.msg || 'the relay could not read the stick');
+            }
+            return;
+        }
+        if (location.protocol === 'https:') {
+            setState('bad', 'no relay is connected, and this https page may not call the plain-http stick: '
+                + 'the browser refuses before the password is even sent. Start solis-bridge.py, or use the Stick View.');
+            return;
+        }
+        const r = await classifyDirect(dev);
+        if (r.cls === 'ok') {
+            setState('ok', `login OK, read straight from this browser${r.data.pac_w != null ? `: ${fmtW(r.data.pac_w)} W right now` : ''}`);
+        } else if (r.cls === 'badpass') {
+            setState('bad', 'the stick refused this login. It wants exactly the one from its own web page (factory setting admin / admin).');
+        } else if (r.cls === 'http') {
+            setState('bad', `the stick answered HTTP ${r.code} instead of its status page: is this really the stick's address?`);
+        } else if (r.cls === 'cors') {
+            setState('bad', 'the stick answered, but this browser refuses to hand the reply to the page (CORS), '
+                + 'so the login is probably fine. Working roads: the relay, the Stick View bookmarklet, '
+                + 'or a kiosk browser with web security off.');
+        } else {
+            setState('bad', `nothing answered at ${stickBase(dev)}: wrong IP address, or the stick is asleep `
+                + '(they nap when the inverter is dark).');
+        }
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 function validDevices() {
     return settings.devices.filter((d) => d.host && d.host.trim());
 }
@@ -821,27 +897,57 @@ const direct = { timer: 0, on: false, tried: false, blocked: false };
 
 function httpDevices() { return validDevices().filter((d) => d.mode === 'http'); }
 
-async function directPollOne(dev) {
+function stickBase(dev) {
     const port = dev.port && +dev.port !== 80 ? ':' + dev.port : '';
+    return `http://${dev.host}${port}`;
+}
+
+/* One careful look at a stick, with a verdict a human can act on:
+   ok | badpass | http (wrong answer) | cors (reachable, browser refuses) | dead */
+async function classifyDirect(dev) {
+    const base = stickBase(dev);
     const auth = 'Basic ' + btoa(`${dev.user || 'admin'}:${dev.pass || 'admin'}`);
     const found = {};
-    let got = false;
+    let ok = false, status = 0;
     for (const path of ['/status.html', '/inverter.html']) {
         try {
-            const r = await fetch(`http://${dev.host}${port}${path}`, {
+            const r = await fetch(base + path, {
                 headers: { 'Authorization': auth },
                 cache: 'no-store',
                 signal: AbortSignal.timeout(6000),
             });
+            if (r.status) status = r.status;
             if (!r.ok) continue;
             for (const m of (await r.text()).matchAll(/var\s+(\w+)\s*=\s*"([^"]*)"/g)) found[m[1]] = m[2];
-            got = true;
-        } catch { /* mixed content, CORS, or the stick is asleep */ }
+            ok = true;
+        } catch { /* mixed content, CORS, or no answer: probed below */ }
     }
-    if (!got) return false;
-    latest.set(dev.id, { data: normaliseStick(found), ts: Date.now() });
-    errors.delete(dev.id);
-    return true;
+    if (ok) return { cls: 'ok', data: normaliseStick(found) };
+    if (status === 401) return { cls: 'badpass' };
+    if (status) return { cls: 'http', code: status };
+    try {
+        await fetch(base + '/status.html', { mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(6000) });
+        return { cls: 'cors' }; // opaque reply: the stick is there, the browser hides it
+    } catch {
+        return { cls: 'dead' };
+    }
+}
+
+const DIRECT_FAIL_WORDS = {
+    badpass: 'the stick refused the login: test it under Stick logins in ⚙ Settings',
+    cors: 'the stick answered, but this browser refuses to read it (CORS): relay, Stick View or kiosk browser',
+    dead: 'no reply from the stick',
+};
+
+async function directPollOne(dev) {
+    const r = await classifyDirect(dev);
+    if (r.cls === 'ok') {
+        latest.set(dev.id, { data: r.data, ts: Date.now() });
+        errors.delete(dev.id);
+        return true;
+    }
+    errors.set(dev.id, r.cls === 'http' ? `the stick answered HTTP ${r.code}` : DIRECT_FAIL_WORDS[r.cls]);
+    return false;
 }
 
 async function directTick() {
@@ -856,15 +962,24 @@ async function directTick() {
         validDevices().forEach((d) => {
             if (d.mode !== 'http') errors.set(d.id, 'needs the relay (raw Modbus)');
         });
-        renderFleet();
         recordHistory(realStore, lastAgg, new Date());
     }
+    if (ok || latest.size) renderFleet();
     refreshStatus();
     direct.timer = setTimeout(directTick, Math.max(5000, settings.interval));
 }
 
 function startDirect() {
     if (direct.on || demo.on || !httpDevices().length) return;
+    if (location.protocol === 'https:') {
+        // mixed content: the browser refuses before the password is even sent
+        direct.tried = true;
+        direct.blocked = true;
+        httpDevices().forEach((d) => errors.set(d.id, 'an https page may not call the plain-http stick: relay or Stick View'));
+        if (latest.size) renderFleet();
+        refreshStatus();
+        return;
+    }
     direct.on = true;
     directTick();
 }
@@ -1113,6 +1228,7 @@ function renderDevList() {
             if (!attrs.tag) { el.type = 'text'; el.autocomplete = 'off'; el.spellcheck = false; }
             Object.assign(el, attrs.props || {});
             el.value = dev[prop] ?? '';
+            el.addEventListener('keydown', (e) => { if (e.key === 'Enter') el.blur(); });
             el.addEventListener('change', () => {
                 dev[prop] = attrs.num ? (parseInt(el.value, 10) || '') : el.value.trim();
                 if (prop === 'host') dev.host = dev.host.replace(/^https?:\/\//, '').replace(/[/:].*$/, '');
@@ -1146,8 +1262,10 @@ function renderDevList() {
         if (dev.mode !== 'http') {
             row.appendChild(devField('Modbus unit id', mk('unit', { num: true, props: { placeholder: '1', inputMode: 'numeric' } })));
         } else {
-            row.appendChild(devField('Stick login', mk('user', { props: { placeholder: 'admin' } })));
-            row.appendChild(devField('Stick password', mk('pass', { props: { placeholder: 'admin' } })));
+            const hint = document.createElement('p');
+            hint.className = 'fine';
+            hint.textContent = 'Its login lives under Stick logins, below.';
+            row.appendChild(hint);
         }
         const foot = document.createElement('div');
         foot.className = 'devfoot';
@@ -1161,6 +1279,106 @@ function renderDevList() {
         });
         foot.appendChild(del);
         row.appendChild(foot);
+        box.appendChild(row);
+    });
+    renderLoginList();
+}
+
+/* ---- the Stick logins section: saves as you type, and a Test that tells the truth ---- */
+function renderLoginList() {
+    const box = $('loginList');
+    box.innerHTML = '';
+    const sticks = settings.devices.filter((d) => d.mode === 'http');
+    if (!sticks.length) {
+        const p = document.createElement('p');
+        p.className = 'fine';
+        p.textContent = 'Only sticks read over their status page need a login. Add an S2-WL-ST above and it appears here.';
+        box.appendChild(p);
+        return;
+    }
+    sticks.forEach((dev) => {
+        const row = document.createElement('div');
+        row.className = 'loginrow';
+
+        const head = document.createElement('div');
+        head.className = 'loginhead';
+        const name = document.createElement('b');
+        name.textContent = dev.name;
+        const where = document.createElement('span');
+        where.textContent = dev.host ? stickBase(dev) : 'no IP address set yet';
+        head.append(name, where);
+        row.appendChild(head);
+
+        const state = document.createElement('p');
+        state.className = 'loginstate';
+        state.textContent = 'untested';
+        const setState = (cls, text) => {
+            state.className = 'loginstate' + (cls ? ' ' + cls : '');
+            state.textContent = text;
+        };
+
+        let commitTimer = 0;
+        const bind = (input, prop) => {
+            input.value = dev[prop] ?? '';
+            input.addEventListener('input', () => {
+                clearTimeout(commitTimer);
+                commitTimer = setTimeout(() => {
+                    dev[prop] = input.value.trim();
+                    saveSettings();
+                    setState('', 'saved, untested: hit Test');
+                    sendWatch();
+                }, 350);
+            });
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') runTest(); });
+        };
+
+        const user = document.createElement('input');
+        user.type = 'text'; user.autocomplete = 'off'; user.spellcheck = false; user.placeholder = 'admin';
+        bind(user, 'user');
+
+        const pass = document.createElement('input');
+        pass.type = 'password'; pass.autocomplete = 'off'; pass.placeholder = 'admin';
+        bind(pass, 'pass');
+        const eye = document.createElement('button');
+        eye.type = 'button';
+        eye.className = 'btn btn-ghost btn-mini';
+        eye.textContent = 'show';
+        eye.setAttribute('aria-label', 'Show or hide the password');
+        eye.addEventListener('click', () => {
+            pass.type = pass.type === 'password' ? 'text' : 'password';
+            eye.textContent = pass.type === 'password' ? 'show' : 'hide';
+        });
+
+        const grid = document.createElement('div');
+        grid.className = 'fieldpair';
+        grid.appendChild(devField('Login', user));
+        const pl = document.createElement('label');
+        pl.className = 'field';
+        pl.append('Password');
+        const pwrap = document.createElement('div');
+        pwrap.className = 'passwrap';
+        pwrap.append(pass, eye);
+        pl.appendChild(pwrap);
+        grid.appendChild(pl);
+        row.appendChild(grid);
+
+        const foot = document.createElement('div');
+        foot.className = 'row';
+        const testBtn = document.createElement('button');
+        testBtn.type = 'button';
+        testBtn.className = 'btn btn-ghost btn-mini';
+        testBtn.textContent = '⚡ Test this stick';
+        const runTest = () => {
+            clearTimeout(commitTimer);
+            dev.user = user.value.trim();
+            dev.pass = pass.value.trim();
+            saveSettings();
+            testDevice(dev, setState, testBtn);
+        };
+        testBtn.addEventListener('click', runTest);
+        foot.appendChild(testBtn);
+        row.appendChild(foot);
+        row.appendChild(state);
         box.appendChild(row);
     });
 }

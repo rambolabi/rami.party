@@ -18,8 +18,8 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Sunseer">
-    <link rel="stylesheet" href="style.css?v=3">
-    <script src="app.js?v=3" defer></script>
+    <link rel="stylesheet" href="style.css?v=4">
+    <script src="app.js?v=4" defer></script>
 </head>
 
 <body>
@@ -295,9 +295,21 @@ python solis-bridge.py --lan</code></pre>
                 </div>
 
                 <fieldset>
-                    <legend>Inverters &amp; loggers</legend>
+                    <legend>Inverters &amp; sticks</legend>
                     <div id="devList"></div>
                     <div class="row" id="addRow"></div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Stick logins</legend>
+                    <p class="fine">A stick wants the same login as its own web page (factory setting
+                        <code>admin</code> / <code>admin</code>). <strong>Test</strong> tells you
+                        exactly what works and what is in the way.</p>
+                    <div id="loginList"></div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Connection</legend>
                     <label class="field">Refresh every
                         <select id="setInterval">
                             <option value="5000">5 seconds</option>

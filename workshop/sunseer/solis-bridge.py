@@ -501,7 +501,7 @@ async def process_request(connection, request):
 
     path = request.path.split("?", 1)[0]
     if path == "/status":
-        body = json.dumps({"bridge": "sunseer-solis", "version": 2}).encode()
+        body = json.dumps({"bridge": "sunseer-solis", "version": 3}).encode()
         headers = Headers([*_CORS, ("Content-Type", "application/json"),
                            ("Content-Length", str(len(body)))])
         return Response(200, "OK", headers, body)
@@ -519,9 +519,22 @@ async def process_request(connection, request):
     return Response(404, "Not Found", Headers([("Content-Length", "0")]), b"")
 
 
+async def run_test(ws, dev, token):
+    """One-shot read for the settings screen's Test button."""
+    try:
+        data = await asyncio.to_thread(poll_device, dev, {})
+        await ws.send(json.dumps({"type": "test", "token": token, "ok": True,
+                                  "kind": data.get("kind"), "pac_w": data.get("pac_w")}))
+    except BridgeIssue as err:
+        await ws.send(json.dumps({"type": "test", "token": token, "ok": False, "msg": str(err)}))
+    except Exception as err:
+        await ws.send(json.dumps({"type": "test", "token": token, "ok": False,
+                                  "msg": f"unexpected reply from the device ({err})"}))
+
+
 async def ws_handler(ws):
     print("Bridge: page connected.")
-    await ws.send(json.dumps({"type": "hello", "bridge": "sunseer-solis", "version": 1}))
+    await ws.send(json.dumps({"type": "hello", "bridge": "sunseer-solis", "version": 3}))
     tasks = []
 
     def stop_all():
@@ -535,9 +548,19 @@ async def ws_handler(ws):
                 msg = json.loads(raw)
             except ValueError:
                 continue
-            stop_all()
-            if msg.get("cmd") != "watch":
+            cmd = msg.get("cmd")
+            if cmd == "test":
+                token = str(msg.get("token") or "")[:48]
+                dev, why = clean_device(msg.get("device") or {}, 0)
+                if dev is None:
+                    await ws.send(json.dumps({"type": "test", "token": token, "ok": False, "msg": why}))
+                else:
+                    print(f"Bridge: testing {dev['host']}:{dev['port']} ({dev['mode']})")
+                    asyncio.create_task(run_test(ws, dev, token))
                 continue
+            if cmd != "watch":
+                continue
+            stop_all()
             try:
                 interval = min(MAX_INTERVAL_MS, max(MIN_INTERVAL_MS, int(msg.get("interval", 10000))))
             except (TypeError, ValueError):

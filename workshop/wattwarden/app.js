@@ -44,7 +44,7 @@ const $ = (id) => document.getElementById(id);
 const DEFAULTS = {
     host: '', interval: 5000, pauseHidden: false,
     theme: 'ember', accent: '', scale: 100, density: false, unitsKw: true,
-    clock: false, sparkMin: 10, histPeriod: '30d',
+    clock: false, sparkMin: 10, histPeriod: '30d', wideScreen: false,
     tiles: DEFAULT_TILES.slice(), order: TILES.map(([t]) => t),
     keepAwake: true, dimOn: false, dimFrom: '23:00', dimTo: '06:30', dimLevel: 70,
     currency: '€', dualPrices: false, priceImp: 0.30, priceImpT1: 0.28, priceImpT2: 0.32,
@@ -420,13 +420,19 @@ function renderSimple(m) {
 
     const lines = $('lineList');
     lines.innerHTML = '';
+    let zeroQuirk = false;
     m.volts.forEach((v, i) => {
         if (v == null && m.amps[i] == null) return;
-        const bad = v != null && (v < VOLT_LOW || v > VOLT_HIGH);
+        // exactly 0 V with current flowing = the meter does not report voltage there
+        const quirk = v === 0 && (m.amps[i] || 0) > 0;
+        zeroQuirk = zeroQuirk || quirk;
+        const bad = v != null && !quirk && v !== 0 && (v < VOLT_LOW || v > VOLT_HIGH);
         const div = document.createElement('div');
         div.innerHTML = `<dt>L${i + 1}</dt><dd${bad ? ' class="bad"' : ''}>${v != null ? v.toFixed(1) + ' V' : ''}${v != null && m.amps[i] != null ? ' · ' : ''}${m.amps[i] != null ? m.amps[i].toFixed(1) + ' A' : ''}</dd>`;
         lines.appendChild(div);
     });
+    $('voltNote').hidden = !zeroQuirk;
+    if (zeroQuirk) $('voltNote').textContent = 'a 0.0 V line while current flows means the smart meter does not report voltage on that phase';
     $('freqNote').hidden = m.freq == null;
     if (m.freq != null) $('freqNote').textContent = `grid frequency ${m.freq.toFixed(2)} Hz`;
 }
@@ -614,10 +620,17 @@ function checkAlerts(m) {
     if (m) {
         setAlert('high', settings.alertW > 0 && m.power != null && m.power >= settings.alertW,
             `high usage: ${fmtPower(m.power)} (limit ${fmtPower(settings.alertW)})`);
-        setAlert('volts', settings.alertVolts && m.volts.some((v) => v != null && (v < VOLT_LOW || v > VOLT_HIGH)),
-            'voltage outside 207-253 V');
-        setAlert('fuse', settings.fuseA > 0 && m.amps.some((a) => a != null && a >= settings.fuseA * 0.9),
-            `a phase is near the ${settings.fuseA} A main fuse`);
+        // 0 V readings are a meter reporting quirk, not a grid fault
+        const badVolts = m.volts
+            .map((v, i) => ({ v, i }))
+            .filter(({ v }) => v != null && v !== 0 && (v < VOLT_LOW || v > VOLT_HIGH));
+        setAlert('volts', settings.alertVolts && badVolts.length > 0,
+            `voltage out of band: ${badVolts.map(({ v, i }) => `L${i + 1} at ${v.toFixed(1)} V`).join(', ')} (normal 207-253 V)`);
+        const hotAmps = m.amps
+            .map((a, i) => ({ a, i }))
+            .filter(({ a }) => a != null && settings.fuseA > 0 && a >= settings.fuseA * 0.9);
+        setAlert('fuse', hotAmps.length > 0,
+            `near the ${settings.fuseA} A main fuse: ${hotAmps.map(({ a, i }) => `L${i + 1} at ${a.toFixed(1)} A`).join(', ')}`);
         setAlert('peak', settings.alertPeakGuard && m.avgW != null && m.peakW > 0
             && m.avgW >= m.peakW * (1 - settings.peakMargin / 100),
             `15-min average ${fmtW(m.avgW)} W is nearing this month's peak of ${fmtW(m.peakW)} W`);
@@ -718,6 +731,7 @@ async function startConnection() {
         if (token !== conn.token) return;
         conn.directErr = err.message;
         conn.mode = 'bridge';
+        connectBridge();
         bridgeSend({ cmd: 'watch', host: settings.host, interval: settings.interval });
         refreshStatus();
         // the direct path may start working later (permission granted, meter back online)
@@ -730,7 +744,14 @@ function bridgeSend(obj) {
     if (bridge.open) bridge.ws.send(JSON.stringify(obj));
 }
 
+/* only knock on the relay's door while it would actually be used; a page
+   happily polling direct must not spam the console with WS failures */
+function bridgeUseful() {
+    return !demo.on && !!settings.host && conn.mode !== 'direct';
+}
+
 function connectBridge() {
+    if (!bridgeUseful()) return;
     if (bridge.ws && (bridge.ws.readyState === 0 || bridge.ws.readyState === 1)) return;
     clearTimeout(bridge.retryTimer);
     let ws;
@@ -738,6 +759,7 @@ function connectBridge() {
     bridge.ws = ws;
     ws.onopen = () => {
         bridge.open = true;
+        bridge.attempts = 0;
         $('bridgeState').textContent = 'Relay: connected on 127.0.0.1:7101';
         if (conn.mode === 'bridge') bridgeSend({ cmd: 'watch', host: settings.host, interval: settings.interval });
         refreshStatus();
@@ -763,7 +785,11 @@ function bridgeDown() {
     bridge.ws = null;
     $('bridgeState').textContent = 'Relay: not running (start p1-bridge.py)';
     refreshStatus();
-    bridge.retryTimer = setTimeout(connectBridge, 10000);
+    if (bridgeUseful()) {
+        bridge.attempts = (bridge.attempts || 0) + 1;
+        const delay = Math.min(60000, 15000 * Math.pow(2, Math.min(bridge.attempts - 1, 2)));
+        bridge.retryTimer = setTimeout(connectBridge, delay);
+    }
 }
 
 function refreshStatus() {
@@ -843,6 +869,18 @@ function applyClock() {
 function toggleFullscreen() {
     if (document.fullscreenElement) document.exitFullscreen().catch(() => { });
     else document.documentElement.requestFullscreen().catch(() => { });
+}
+
+function applyKiosk() {
+    const on = !!document.fullscreenElement;
+    document.body.classList.toggle('kiosk', on);
+    $('btnFull').textContent = on ? '⛶ Exit fullscreen' : '⛶ Fullscreen';
+    redraw();
+}
+
+function applyWide() {
+    document.body.classList.toggle('wide', settings.wideScreen);
+    redraw();
 }
 
 /* ---- appearance -------------------------------------------------------------- */
@@ -1004,6 +1042,96 @@ function setDemo(on) {
     }
 }
 
+/* ---- transfer between browsers / devices --------------------------------- */
+function bytesToB64(bytes) {
+    let bin = '';
+    for (let i = 0; i < bytes.length; i += 0x8000) {
+        bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+    }
+    return btoa(bin);
+}
+
+function b64ToBytes(b64) {
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return bytes;
+}
+
+async function packTransfer() {
+    const payload = new TextEncoder().encode(JSON.stringify({
+        w: 1, settings: { ...settings }, hourly: realStore.hourly, daily: realStore.daily,
+    }));
+    if ('CompressionStream' in window) {
+        const stream = new Blob([payload]).stream().pipeThrough(new CompressionStream('gzip'));
+        return 'WW1g:' + bytesToB64(new Uint8Array(await new Response(stream).arrayBuffer()));
+    }
+    return 'WW1j:' + bytesToB64(payload);
+}
+
+async function unpackTransfer(code) {
+    const m = /^WW1([gj]):([A-Za-z0-9+/=\s]+)$/.exec(code.trim());
+    if (!m) throw new Error('not a Wattwarden transfer code');
+    let bytes = b64ToBytes(m[2].replace(/\s+/g, ''));
+    if (m[1] === 'g') {
+        const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+        bytes = new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+    return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function applyImportedData(data, note) {
+    const mergeBy = (mine, theirs, keyOf) => {
+        const map = new Map(mine.map((s) => [keyOf(s), s]));
+        (Array.isArray(theirs) ? theirs : []).forEach((s) => {
+            if (s && typeof s.imp === 'number' && keyOf(s) != null && !map.has(keyOf(s))) map.set(keyOf(s), s);
+        });
+        return [...map.values()].sort((a, b) => (keyOf(a) < keyOf(b) ? -1 : 1));
+    };
+    realStore.hourly = mergeBy(realStore.hourly, data.hourly, (s) => s.t).slice(-HOURLY_KEEP);
+    realStore.daily = mergeBy(realStore.daily, data.daily, (s) => s.d).slice(-DAILY_KEEP);
+    realStore.persist(true);
+    if (data.settings && typeof data.settings === 'object'
+        && confirm('Also apply the settings from this data (meter address, prices, themes, tiles)? The page reloads afterwards.')) {
+        Object.keys(DEFAULTS).forEach((k) => {
+            if (k in data.settings) settings[k] = data.settings[k];
+        });
+        saveSettings();
+        location.reload();
+        return;
+    }
+    histSummary();
+    redraw();
+    $('histInfo').textContent += ` · ${note} ✔`;
+}
+
+async function copyTransfer() {
+    const code = await packTransfer();
+    let done = false;
+    try { await navigator.clipboard.writeText(code); done = true; } catch { /* clipboard blocked */ }
+    if (!done) {
+        const ta = document.createElement('textarea');
+        ta.value = code;
+        document.body.appendChild(ta);
+        ta.select();
+        done = document.execCommand('copy');
+        ta.remove();
+    }
+    $('histInfo').textContent = done
+        ? `Transfer code copied (${(code.length / 1024).toFixed(1)} KB). Paste it on the other device.`
+        : 'Could not reach the clipboard; use Export JSON instead.';
+}
+
+async function pasteTransfer() {
+    const code = prompt('Paste the transfer code from the other device:');
+    if (!code) return;
+    try {
+        applyImportedData(await unpackTransfer(code), 'transfer merged');
+    } catch (err) {
+        $('histInfo').textContent = `That code did not work: ${err.message}`;
+    }
+}
+
 /* ---- data management --------------------------------------------------------- */
 function download(name, mime, text) {
     const a = document.createElement('a');
@@ -1036,20 +1164,7 @@ function importJson(file) {
     const reader = new FileReader();
     reader.onload = () => {
         try {
-            const data = JSON.parse(reader.result);
-            const mergeBy = (mine, theirs, keyOf) => {
-                const map = new Map(mine.map((s) => [keyOf(s), s]));
-                (Array.isArray(theirs) ? theirs : []).forEach((s) => {
-                    if (s && typeof s.imp === 'number' && keyOf(s) != null && !map.has(keyOf(s))) map.set(keyOf(s), s);
-                });
-                return [...map.values()].sort((a, b) => (keyOf(a) < keyOf(b) ? -1 : 1));
-            };
-            realStore.hourly = mergeBy(realStore.hourly, data.hourly, (s) => s.t).slice(-HOURLY_KEEP);
-            realStore.daily = mergeBy(realStore.daily, data.daily, (s) => s.d).slice(-DAILY_KEEP);
-            realStore.persist(true);
-            histSummary();
-            redraw();
-            $('histInfo').textContent += ' · import merged ✔';
+            applyImportedData(JSON.parse(reader.result), 'import merged');
         } catch {
             $('histInfo').textContent = 'That file could not be read as a Wattwarden export.';
         }
@@ -1207,6 +1322,7 @@ function buildSettings() {
     $('scaleVal').textContent = `${settings.scale}%`;
     bindCheck('setDensity', 'density', applyDensity);
     bindCheck('setUnitsKw', 'unitsKw', rerenderAll);
+    bindCheck('setWide', 'wideScreen', applyWide);
     bindCheck('setClock', 'clock', applyClock);
     bindSelect('setSparkMin', 'sparkMin', true, () => drawSpark());
 
@@ -1229,6 +1345,8 @@ function buildSettings() {
     $('setDemo').addEventListener('change', () => setDemo($('setDemo').checked));
     $('btnExport').addEventListener('click', exportJson);
     $('btnExportCsv').addEventListener('click', exportCsv);
+    $('btnCopyTransfer').addEventListener('click', copyTransfer);
+    $('btnPasteTransfer').addEventListener('click', pasteTransfer);
     $('importFile').addEventListener('change', (e) => {
         if (e.target.files && e.target.files[0]) importJson(e.target.files[0]);
         e.target.value = '';
@@ -1269,13 +1387,13 @@ function init() {
     applyTheme();
     applyScale();
     applyDensity();
+    applyWide();
     applyTiles();
     applyClock();
     applyDim();
     buildSettings();
     refreshStatus();
     updateConnDetail();
-    connectBridge();
     startConnection();
     applyWakeLock();
 
@@ -1295,6 +1413,7 @@ function init() {
     $('settingsVeil').addEventListener('click', (e) => { if (e.target === $('settingsVeil')) openSettings(false); });
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openSettings(false); });
     $('btnFull').addEventListener('click', toggleFullscreen);
+    document.addEventListener('fullscreenchange', applyKiosk);
 
     window.addEventListener('resize', redraw);
     // canvases render blank while a tab is backgrounded (zero layout width);

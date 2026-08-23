@@ -387,6 +387,23 @@ legend { color: var(--muted); font-size: .85rem; padding: 0 .4rem; letter-spacin
 .devfoot { grid-column: 1 / -1; display: flex; justify-content: flex-end; }
 .btn-mini { font-size: .8rem; padding: .35rem .7rem; }
 
+.loginrow {
+    border: 1px dashed var(--line); border-radius: 10px;
+    padding: .55rem .7rem .7rem; margin: .55rem 0;
+}
+.loginhead { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.loginhead b { font-size: .95rem; }
+.loginhead span { color: var(--muted); font-size: .8rem; font-family: ui-monospace, Consolas, monospace; }
+.loginrow .field { margin: .25rem 0; font-size: .82rem; }
+.loginrow .field input { padding: .4rem .55rem; font-size: .9rem; }
+.passwrap { display: flex; gap: .4rem; align-items: stretch; margin-top: .3rem; }
+.passwrap input { flex: 1; min-width: 0; margin-top: 0; }
+.loginstate { font-size: .85rem; margin: .5rem 0 0; color: var(--muted); }
+.loginstate.ok { color: var(--good); }
+.loginstate.ok::before { content: '✓ '; }
+.loginstate.bad { color: var(--danger); }
+.loginstate.bad::before { content: '✗ '; }
+
 .themegrid { display: flex; gap: .5rem; flex-wrap: wrap; }
 .swatch {
     display: inline-flex; align-items: center; gap: .45rem;

@@ -4,8 +4,8 @@
    never touched. Bump CACHE on every deploy. */
 'use strict';
 
-const CACHE = 'wattwarden-v2';
-const SHELL = ['./', 'index.html', 'style.css?v=2', 'app.js?v=2', 'icon.svg', 'manifest.webmanifest'];
+const CACHE = 'wattwarden-v3';
+const SHELL = ['./', 'index.html', 'style.css?v=3', 'app.js?v=3', 'icon.svg', 'manifest.webmanifest'];
 
 self.addEventListener('install', (e) => {
     e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

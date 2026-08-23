@@ -3,12 +3,12 @@
 /* Sunseer service worker: network-first shell so a deploy can never freeze
    visitors on a stale build; cache-first for the versioned assets. */
 
-const CACHE = 'sunseer-v3';
+const CACHE = 'sunseer-v4';
 const ASSETS = [
     './',
     'index.html',
-    'style.css?v=3',
-    'app.js?v=3',
+    'style.css?v=4',
+    'app.js?v=4',
     'manifest.webmanifest',
     'icon.svg',
 ];

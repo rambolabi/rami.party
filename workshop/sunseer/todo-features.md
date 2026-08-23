@@ -125,3 +125,20 @@ relay script, no cloud, no accounts, no build step.
   auth + the same `webdata_*` parser as the relay), started whenever the
   relay socket is down and stopped when it connects.
 
+## 15. Stick logins get their own section, with honest failures
+- [x] Settings is split into **Inverters & sticks**, **Stick logins** and
+      **Connection**. Every S2-WL-ST gets its own login row: saves while you
+      type (no more silent blur-to-save), Enter runs the test, a show/hide
+      toggle on the password, and a **⚡ Test this stick** button that answers
+      in plain words: login OK (with the watts it just read), wrong password,
+      "the stick answered but this browser refuses to read it (CORS), the
+      login is probably fine", nothing at that address, or "https cannot call
+      the plain-http stick". The dashboard cards show the same diagnosed
+      reasons instead of failing silently.
+- **How**: `classifyDirect()` stages the diagnosis (authorized fetch, then a
+      `no-cors` probe to tell "browser refuses" apart from "stick is dead");
+      the relay gained a one-shot `test` command that reuses `poll_device`
+      and reports its precise `BridgeIssue` wording (including the 401 text).
+      While fixing this, a relay bug fell out: any message used to cancel all
+      polling tasks; now only `watch` does.
+

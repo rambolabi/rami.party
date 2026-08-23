@@ -153,3 +153,32 @@ an external paid API or another device are honestly parked in the backlog.
 101. [ ] Home Assistant long-term statistics export format
 102. [ ] InfluxDB / Grafana line-protocol export
 103. [ ] PVOutput / EnergyID uploads
+
+## Added after field testing on a real meter (2026-08-23)
+
+104. [x] Alert messages name the exact measurement and phase that tripped them
+        ("L2 at 198.4 V", "L1 at 23.1 A"), so the number is visible without
+        opening any tile
+105. [x] 0.0 V on a phase that carries current is treated as what it is: a smart
+        meter that does not report voltage there (no false alarm, explained in
+        the Voltage & current tile)
+106. [x] Clean console: the page only tries the relay while it would actually be
+        used; a direct connection means zero WebSocket retry noise
+107. [x] Fullscreen is a real kiosk mode: intro, explainer and footer disappear,
+        the header shrinks to one line, the buttons tuck into a corner
+108. [x] Full-screen-width layout option for TVs and big monitors (kiosk mode
+        does this automatically)
+109. [x] Transfer code: one tap copies history plus settings as a compact code,
+        paste it in another browser or on another device to move house
+110. [x] JSON import can also restore the settings from the export
+111. [ ] QR code on screen carrying the transfer code, scan it with the tablet
+112. [ ] Tariff schedule editor (automatic T1/T2 by hour and weekend per region)
+113. [ ] Net-metering (saldering) year balance view for Dutch solar owners
+114. [ ] Gas and water drawn as their own history charts
+115. [ ] Outside temperature overlay for gas context (needs a weather API)
+116. [ ] Auto theme by clock: light theme by day, OLED black at night
+117. [ ] Phase imbalance warning for three-phase homes
+118. [ ] EV charger and home battery tiles on the same dashboard
+119. [ ] Weekly summary as a printable / shareable image
+120. [ ] Language switch (NL, DE, FR)
+121. [ ] Read-only live view for a second device on the LAN (relay would serve it)

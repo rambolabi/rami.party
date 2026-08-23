@@ -13,8 +13,8 @@
     <link rel="canonical" href="https://rami.party/workshop/wattwarden/">
     <link rel="icon" href="icon.svg" type="image/svg+xml">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="stylesheet" href="style.css?v=2">
-    <script src="app.js?v=2" defer></script>
+    <link rel="stylesheet" href="style.css?v=3">
+    <script src="app.js?v=3" defer></script>
 </head>
 
 <body>
@@ -174,6 +174,7 @@ python p1-bridge.py</code></pre>
             <section class="card" data-tile="lines">
                 <h2>Voltage &amp; current</h2>
                 <dl class="kv" id="lineList"></dl>
+                <p class="card-note" id="voltNote" hidden></p>
                 <p class="card-note" id="freqNote" hidden></p>
             </section>
 
@@ -328,6 +329,8 @@ python p1-bridge.py</code></pre>
                     </div>
                     <label class="tiletoggle"><input type="checkbox" id="setDensity"> Compact tiles (fit more on
                         screen)</label>
+                    <label class="tiletoggle"><input type="checkbox" id="setWide"> Use the full screen width
+                        (big monitors and TVs)</label>
                     <label class="tiletoggle"><input type="checkbox" id="setUnitsKw"> Show kilowatts above
                         1000 W</label>
                     <label class="tiletoggle"><input type="checkbox" id="setClock"> Clock in the header</label>
@@ -378,6 +381,12 @@ python p1-bridge.py</code></pre>
                         <label class="btn btn-ghost filebtn">Import JSON<input type="file" id="importFile"
                                 accept="application/json,.json"></label>
                         <button class="btn btn-ghost danger" id="btnWipe">Wipe history</button>
+                    </div>
+                    <p class="fine">Moving to another browser or device? Copy a transfer code here,
+                        paste it there: it carries the history and the settings.</p>
+                    <div class="row">
+                        <button class="btn btn-ghost" id="btnCopyTransfer">Copy transfer code</button>
+                        <button class="btn btn-ghost" id="btnPasteTransfer">Paste transfer code</button>
                     </div>
                     <details class="rawbox">
                         <summary>Raw meter reply (last reading)</summary>
