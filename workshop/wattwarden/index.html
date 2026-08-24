@@ -403,39 +403,7 @@ python p1-bridge.py</code></pre>
                     <legend>Simple view</legend>
                     <label class="tiletoggle"><input type="checkbox" id="setSimpleOn"> Simple display instead of
                         the tile dashboard (rings and big numbers, like an energy display)</label>
-                    <p class="fine">Templates:</p>
-                    <div class="row" id="svTemplates"></div>
-                    <div class="grid2">
-                        <label class="field">Big ring
-                            <select id="svBig"></select>
-                        </label>
-                        <label class="field">Ring colour
-                            <input type="color" id="svColBig">
-                        </label>
-                        <label class="field">Second ring
-                            <select id="svM1"></select>
-                        </label>
-                        <label class="field">Ring colour
-                            <input type="color" id="svColM1">
-                        </label>
-                        <label class="field">Third ring
-                            <select id="svM2"></select>
-                        </label>
-                        <label class="field">Ring colour
-                            <input type="color" id="svColM2">
-                        </label>
-                    </div>
-                    <div class="grid3">
-                        <label class="field">Side stat 1
-                            <select id="svR1"></select>
-                        </label>
-                        <label class="field">Side stat 2
-                            <select id="svR2"></select>
-                        </label>
-                        <label class="field">Side stat 3
-                            <select id="svR3"></select>
-                        </label>
-                    </div>
+                    <button class="btn btn-ghost" id="btnOpenSimpleCfg">Simple view settings…</button>
                 </fieldset>
 
                 <fieldset>
@@ -469,6 +437,59 @@ python p1-bridge.py</code></pre>
 
                 </div>
                 </div>
+            </div>
+        </section>
+
+        <section class="settings-veil" id="simpleVeil" hidden>
+            <div class="settings simple-settings" role="dialog" aria-modal="true" aria-labelledby="simpleCfgTitle">
+                <div class="settings-head">
+                    <h2 id="simpleCfgTitle">◐ Simple view settings</h2>
+                    <button class="btn btn-ghost" id="btnCloseSimpleCfg" aria-label="Close simple view settings">✕</button>
+                </div>
+                <fieldset>
+                    <legend>Templates</legend>
+                    <div class="row" id="svTemplates"></div>
+                    <p class="fine">A template fills every slot below in one tap; adjust freely afterwards.
+                        The electric ones need no gas or water meter and show what you consumed, earned,
+                        or the balance of both.</p>
+                </fieldset>
+                <fieldset>
+                    <legend>Rings</legend>
+                    <div class="grid2">
+                        <label class="field">Big ring
+                            <select id="svBig"></select>
+                        </label>
+                        <label class="field">Ring colour
+                            <input type="color" id="svColBig">
+                        </label>
+                        <label class="field">Second ring
+                            <select id="svM1"></select>
+                        </label>
+                        <label class="field">Ring colour
+                            <input type="color" id="svColM1">
+                        </label>
+                        <label class="field">Third ring
+                            <select id="svM2"></select>
+                        </label>
+                        <label class="field">Ring colour
+                            <input type="color" id="svColM2">
+                        </label>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>Side stats</legend>
+                    <div class="grid3">
+                        <label class="field">Side stat 1
+                            <select id="svR1"></select>
+                        </label>
+                        <label class="field">Side stat 2
+                            <select id="svR2"></select>
+                        </label>
+                        <label class="field">Side stat 3
+                            <select id="svR3"></select>
+                        </label>
+                    </div>
+                </fieldset>
             </div>
         </section>
 

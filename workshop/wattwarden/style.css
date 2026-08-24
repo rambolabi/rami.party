@@ -449,6 +449,7 @@ legend { color: var(--muted); font-size: .85rem; padding: 0 .4rem; letter-spacin
 
 /* ---- simple view: display-style rings ---- */
 .simpleview {
+    position: relative;
     display: grid;
     grid-template-columns: 1.35fr 1fr 1.1fr;
     gap: 1.2rem;
@@ -459,6 +460,15 @@ legend { color: var(--muted); font-size: .85rem; padding: 0 .4rem; letter-spacin
     border-radius: 18px;
     padding: 1.6rem 1.8rem;
 }
+.sv-gear {
+    position: absolute; top: .6rem; right: .7rem; z-index: 2;
+    font: 600 1rem/1 inherit;
+    background: none; border: 0; color: var(--muted);
+    cursor: pointer; padding: .3rem .45rem; border-radius: 8px;
+    opacity: .55;
+}
+.sv-gear:hover, .sv-gear:focus-visible { opacity: 1; color: var(--accent); }
+.simple-settings { width: min(38rem, 100%); }
 .sv-cell { position: relative; width: 100%; }
 .sv-cell svg { width: 100%; height: auto; display: block; transform: rotate(-90deg); }
 .sv-track, .sv-arc { fill: none; stroke-width: 7; stroke-linecap: round; }

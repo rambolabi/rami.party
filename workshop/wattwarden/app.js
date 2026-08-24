@@ -216,7 +216,11 @@ function fmtPowerParts(w) {
     return [fmtW(w), 'W'];
 }
 const fmtPower = (w) => w == null ? '···' : fmtPowerParts(w).join(' ');
-const money = (v) => v == null ? '···' : `${settings.currency} ${v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const money = (v) => {
+    if (v == null) return '···';
+    if (Math.abs(v) < 0.005) v = 0; // never show "-0.00"
+    return `${settings.currency} ${v.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 
 function powerWord(w) {
     if (w < 0) return 'exporting to the grid ☀';
@@ -857,6 +861,24 @@ const SIMPLE_METRICS = {
         label: 'Cost today', icon: '💶', info: 'Energy, gas and water at your prices plus the standing charge, since midnight.',
         val: (m, s) => { const t = m && todayDelta(s, m); return t ? [money(costOfDelta(t) + settings.standingDay), ''] : ['···', '']; },
     },
+    spentToday: {
+        label: 'Electricity spent', icon: '🔌', info: 'What the imported electricity alone cost since midnight, before any feed-in earnings.',
+        val: (m, s) => {
+            const t = m && todayDelta(s, m);
+            return t ? [money(costOfDelta({ imp: t.imp, exp: 0, gas: 0, it1: t.it1, it2: t.it2 })), ''] : ['···', ''];
+        },
+    },
+    earnedToday: {
+        label: 'Earned today', icon: '💰', info: 'What the exported electricity earned since midnight at your compensation price.',
+        val: (m, s) => { const t = m && todayDelta(s, m); return t ? [money(t.exp * settings.priceExp), ''] : ['···', '']; },
+    },
+    balanceToday: {
+        label: 'Balance today', icon: '⚖', info: 'Earned minus spent on electricity since midnight; positive means the sun paid for the day.',
+        val: (m, s) => {
+            const t = m && todayDelta(s, m);
+            return t ? [money(t.exp * settings.priceExp - costOfDelta({ imp: t.imp, exp: 0, gas: 0, it1: t.it1, it2: t.it2 })), ''] : ['···', ''];
+        },
+    },
     monthCost: {
         label: 'Cost this month', icon: '📅', info: 'Every day of this calendar month so far, standing charges included.',
         val: (m, s) => {
@@ -928,6 +950,21 @@ const SIMPLE_TEMPLATES = {
         slots: { big: 'todayCost', m1: 'monthCost', m2: 'todayImp', r1: 'tariff', r2: 'co2Today', r3: 'baseLoad' },
         colors: { big: '#ffb347', m1: '#8b5cf6', m2: '#38bdf8' },
     },
+    elecUse: {
+        label: 'Electric: consumed',
+        slots: { big: 'todayImp', m1: 'spentToday', m2: 'powerNow', r1: 'monthImp', r2: 'yesterdayImp', r3: 'tariff' },
+        colors: { big: '#38bdf8', m1: '#ffb347', m2: '#8b5cf6' },
+    },
+    elecEarn: {
+        label: 'Electric: earned',
+        slots: { big: 'todayExp', m1: 'earnedToday', m2: 'powerNow', r1: 'todayImp', r2: 'balanceToday', r3: 'peakMonth' },
+        colors: { big: '#6fd68a', m1: '#ffb347', m2: '#8b5cf6' },
+    },
+    elecBalance: {
+        label: 'Electric: balance',
+        slots: { big: 'balanceToday', m1: 'todayImp', m2: 'todayExp', r1: 'powerNow', r2: 'spentToday', r3: 'earnedToday' },
+        colors: { big: '#ffb347', m1: '#38bdf8', m2: '#6fd68a' },
+    },
     minimal: {
         label: 'Minimal',
         slots: { big: 'powerNow', m1: 'none', m2: 'none', r1: 'clock', r2: 'none', r3: 'none' },
@@ -957,9 +994,12 @@ function buildSimpleView() {
                 <span class="sv-rlabel"></span></span>
         </div>`;
     host.innerHTML = `
+        <button class="sv-gear" id="btnSimpleCfg" aria-haspopup="dialog"
+            title="Simple view settings" aria-label="Simple view settings">⚙</button>
         ${ring('big', 'sv-big')}
         <div class="sv-mid">${ring('m1', 'sv-medium')}${ring('m2', 'sv-medium')}</div>
         <div class="sv-side">${row('r1')}${row('r2')}${row('r3')}</div>`;
+    $('btnSimpleCfg').addEventListener('click', () => openSimpleSettings(true));
 }
 
 function renderSimpleView(m, store) {
@@ -1826,6 +1866,9 @@ function buildSettings() {
         });
     });
     bindCheck('setSimpleOn', 'simpleOn', applySimple);
+    $('btnOpenSimpleCfg').addEventListener('click', () => openSimpleSettings(true));
+    $('btnCloseSimpleCfg').addEventListener('click', () => openSimpleSettings(false));
+    $('simpleVeil').addEventListener('click', (e) => { if (e.target === $('simpleVeil')) openSimpleSettings(false); });
     syncSimpleInputs();
 
     $('setGraphSpark').addEventListener('change', () => {
@@ -1907,9 +1950,14 @@ function syncNotifyState() {
     el.textContent = `Notification permission: ${Notification.permission}.`;
 }
 
+function openSimpleSettings(open) {
+    $('simpleVeil').hidden = !open;
+    if (open) { openSettings(false); syncSimpleInputs(); }
+}
+
 function openSettings(open) {
     $('settingsVeil').hidden = !open;
-    if (open) { histSummary(); refreshRawBox(); syncGraphChecks(); syncSimpleInputs(); $('setHost').focus(); }
+    if (open) { $('simpleVeil').hidden = true; histSummary(); refreshRawBox(); syncGraphChecks(); syncSimpleInputs(); $('setHost').focus(); }
 }
 
 /* ---- boot --------------------------------------------------------------------------- */
@@ -1943,7 +1991,9 @@ function init() {
     $('btnSettings').addEventListener('click', () => openSettings(true));
     $('btnCloseSettings').addEventListener('click', () => openSettings(false));
     $('settingsVeil').addEventListener('click', (e) => { if (e.target === $('settingsVeil')) openSettings(false); });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') openSettings(false); });
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') { openSettings(false); openSimpleSettings(false); }
+    });
     $('btnFull').addEventListener('click', toggleFullscreen);
     $('btnSimple').addEventListener('click', () => {
         settings.simpleOn = !settings.simpleOn;

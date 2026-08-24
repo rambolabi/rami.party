@@ -225,3 +225,7 @@ smart-meter app reviews, still open here:
         stats, like the HomeWizard Energy Display), with templates (Energy
         display, Solar, Costs, Minimal), free slot assignment from a catalogue
         of eighteen readings and per-ring colours
+140. [x] Simple view got its own settings dialog (gear on the display itself),
+        plus electricity-only templates for homes without gas or water:
+        consumed, earned, and the money balance of both (new readings:
+        electricity spent, earned today, balance today)
