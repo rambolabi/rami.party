@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="aurora">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#0d0726">
+
+    <title>Keyshift · QWERTY to Belgian AZERTY translator for remote consoles | rami.party</title>
+    <meta name="description" content="Paste a command, get the exact text to type so it arrives correctly on a machine with a different keyboard layout. Translates between QWERTY US International and Belgian AZERTY, flags characters you cannot type, and shows the keystrokes. Runs entirely in your browser.">
+    <meta name="keywords" content="qwerty to azerty, azerty to qwerty, belgian azerty, keyboard layout translator, vm keyboard layout wrong, remote console typing wrong characters, us international layout, noVNC keyboard layout, KVM over IP keyboard, azerty backslash">
+    <meta name="author" content="rami.party">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://rami.party/workshop/keyshift/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Keyshift · QWERTY to Belgian AZERTY translator">
+    <meta property="og:description" content="Type on QWERTY, land on AZERTY. Works out what to type so your commands arrive intact on a remote machine with a different keyboard layout.">
+    <meta property="og:url" content="https://rami.party/workshop/keyshift/">
+    <meta property="og:site_name" content="rami.party">
+    <meta property="og:locale" content="en_GB">
+    <meta property="og:image" content="https://rami.party/workshop/keyshift/og-image.svg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Keyshift · QWERTY to Belgian AZERTY translator">
+    <meta name="twitter:description" content="Type on QWERTY, land on AZERTY. Works out what to type so your commands arrive intact on a remote machine with a different keyboard layout.">
+    <meta name="twitter:image" content="https://rami.party/workshop/keyshift/og-image.svg">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d0726'/%3E%3Crect x='16' y='30' width='68' height='42' rx='7' fill='none' stroke='%23a855f7' stroke-width='6'/%3E%3Cg fill='%2322d3ee'%3E%3Crect x='27' y='41' width='9' height='8' rx='2'/%3E%3Crect x='42' y='41' width='9' height='8' rx='2'/%3E%3Crect x='57' y='41' width='16' height='8' rx='2'/%3E%3Crect x='27' y='55' width='31' height='8' rx='2'/%3E%3Crect x='64' y='55' width='9' height='8' rx='2'/%3E%3C/g%3E%3C/svg%3E">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Keyshift",
+      "url": "https://rami.party/workshop/keyshift/",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "description": "Translates text between keyboard layouts by key position, so commands typed on QWERTY US International arrive correctly on a remote machine set to Belgian AZERTY.",
+      "featureList": [
+        "QWERTY US International to Belgian AZERTY and back",
+        "French AZERTY and plain US QWERTY included",
+        "Warns about characters that cannot be typed at all",
+        "Flags dead keys and AltGr combinations",
+        "Per-character keystroke recipe",
+        "Side by side keyboard diagrams",
+        "Runs entirely offline in the browser"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why does my typing come out wrong in a VM console?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Consoles such as noVNC, iDRAC, iLO and VMware Remote Console forward key positions rather than characters. The guest then reads those positions with its own keyboard layout, so pressing the key labelled W on a QWERTY board produces a Z on a Belgian AZERTY guest." }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I type a backslash on a Belgian AZERTY remote session?",
+          "acceptedAnswer": { "@type": "Answer", "text": "On Belgian AZERTY the backslash is AltGr plus the key between the left Shift and the W. A 104 key ANSI keyboard has no key in that position, so it cannot be pressed at all. Use Alt plus 92 on the numeric keypad, paste through the console clipboard, or change the guest layout." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Belgian AZERTY the same as French AZERTY?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. The letters match but the punctuation and the AltGr layer differ, so a mapping built for one comes out wrong on the other. Belgian puts the braces on 9 and 0 while French puts them on 4 and the plus key." }
+        },
+        {
+          "@type": "Question",
+          "name": "Is any text sent to a server?",
+          "acceptedAnswer": { "@type": "Answer", "text": "No. The layout tables and the conversion run in the page itself. Nothing is uploaded, stored or logged." }
+        }
+      ]
+    }
+    </script>
+</head>
+
+<body>
+    <div class="app-bg" aria-hidden="true">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="blob b3"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">⌨</span>
+            <div class="brand-text">
+                <strong>Keyshift</strong>
+                <small>QWERTY ↔ AZERTY · local · private</small>
+            </div>
+        </div>
+        <div class="menu">
+            <button type="button" id="theme-btn" aria-haspopup="true" aria-expanded="false">
+                🎨 <span id="theme-name">Aurora</span>
+            </button>
+            <div class="menu-list" id="theme-menu" role="menu" hidden></div>
+        </div>
+    </header>
+
+    <main>
+        <div class="hero">
+            <h1>Keyshift</h1>
+            <p>
+                Remote consoles forward the <em>position</em> you pressed, not the character you meant. A guest set to
+                Belgian AZERTY reads those positions with its own layout, so <code>hello world</code> lands as
+                <code>hello zorld</code> and a backslash never arrives at all. Keyshift does the position round trip
+                for you, in both directions.
+            </p>
+        </div>
+
+        <section class="card" aria-labelledby="convert-title">
+            <h2 id="convert-title"><span class="ic">⇄</span> Translate</h2>
+
+            <div class="panes">
+                <div class="pane">
+                    <div class="pane-head">
+                        <label for="remote-text">What should appear on the remote machine</label>
+                        <select id="remote-layout" aria-label="Remote keyboard layout"></select>
+                    </div>
+                    <textarea id="remote-text" spellcheck="false" autocapitalize="off" autocomplete="off"
+                        autocorrect="off" rows="6"
+                        placeholder="Paste the command you want the VM to receive.">sudo apt-get update &amp;&amp; sudo apt-get upgrade -y</textarea>
+                    <p class="pane-note" id="remote-note"></p>
+                    <button type="button" class="btn ghost" data-copy="remote-text">Copy</button>
+                </div>
+
+                <button type="button" class="swap" id="swap" title="Swap the two layouts"
+                    aria-label="Swap the two layouts">⇄</button>
+
+                <div class="pane">
+                    <div class="pane-head">
+                        <label for="local-text">What you type on your own keyboard</label>
+                        <select id="local-layout" aria-label="Your keyboard layout"></select>
+                    </div>
+                    <textarea id="local-text" spellcheck="false" autocapitalize="off" autocomplete="off"
+                        autocorrect="off" rows="6"
+                        placeholder="Or paste the garbled text you got here to read it back."></textarea>
+                    <p class="pane-note" id="local-note"></p>
+                    <button type="button" class="btn" data-copy="local-text">Copy this</button>
+                </div>
+            </div>
+
+            <div class="summary" id="summary" role="status" aria-live="polite"></div>
+
+            <div class="examples" id="examples">
+                <span class="lbl">Try:</span>
+                <button type="button" class="chip" data-ex="sudo apt-get update &amp;&amp; sudo apt-get upgrade -y">apt upgrade</button>
+                <button type="button" class="chip" data-ex="C:\Windows\System32\drivers\etc\hosts">Windows path</button>
+                <button type="button" class="chip" data-ex="ssh -i ~/.ssh/id_rsa admin@10.0.0.5">ssh key</button>
+                <button type="button" class="chip" data-ex="curl -sSL https://example.com/install.sh | bash">piped curl</button>
+                <button type="button" class="chip" data-ex="Get-ADUser -Filter * | Select-Object Name,{$_.UserPrincipalName}">PowerShell</button>
+            </div>
+        </section>
+
+        <section class="card" aria-labelledby="warn-title">
+            <h2 id="warn-title"><span class="ic">⚠</span> What to watch for</h2>
+            <ul class="warnings" id="warnings"></ul>
+        </section>
+
+        <details class="card details">
+            <summary>
+                <h2><span class="ic">⌥</span> Keystroke by keystroke</h2>
+                <span class="badge" id="recipe-count"></span>
+            </summary>
+            <div class="table-wrap">
+                <table class="recipe">
+                    <thead>
+                        <tr>
+                            <th class="n">#</th>
+                            <th>Wanted</th>
+                            <th>Press on your keyboard</th>
+                            <th>Note</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recipe-body"></tbody>
+                </table>
+            </div>
+        </details>
+
+        <details class="card details">
+            <summary>
+                <h2><span class="ic">⎔</span> The two keyboards</h2>
+                <span class="badge">same positions, different legends</span>
+            </summary>
+            <p class="kb-intro">
+                Keys used by your current text are lit on both boards. They are the same physical keys, which is the
+                whole trick. A greyed key does not exist on that keyboard at all.
+            </p>
+            <div class="kb-block">
+                <h3>Remote: <span id="kb-remote-name"></span></h3>
+                <div class="keyboard" id="kb-remote"></div>
+            </div>
+            <div class="kb-block">
+                <h3>Yours: <span id="kb-local-name"></span></h3>
+                <div class="keyboard" id="kb-local"></div>
+            </div>
+            <p class="kb-legend">
+                <span><u>x</u> Shift</span><span><b>x</b> plain</span><span><i>x</i> AltGr</span>
+            </p>
+        </details>
+
+        <section class="card info-card" aria-labelledby="about-title">
+            <h2 id="about-title"><span class="ic">?</span> Why this happens</h2>
+            <div class="info-grid">
+                <div>
+                    <h3>Characters versus positions</h3>
+                    <p>
+                        A normal clipboard paste moves characters and is safe. A console that emulates hardware moves
+                        scancodes. Proxmox noVNC, iDRAC, iLO, VMware Remote Console and most KVM over IP devices fall
+                        in the second group, which is why the same paste works in one window and fails in another.
+                    </p>
+                </div>
+                <div>
+                    <h3>The unreachable backslash</h3>
+                    <p>
+                        Belgian AZERTY hides the backslash behind AltGr on the extra key next to the left Shift. That
+                        key only exists on 105 key ISO boards. From a 104 key ANSI keyboard there is no position to
+                        press, so no amount of remapping helps. Keyshift marks these in red rather than pretending.
+                    </p>
+                </div>
+                <div>
+                    <h3>Dead keys bite twice</h3>
+                    <p>
+                        US International turns the apostrophe, quote, backtick, tilde and caret into dead keys, and
+                        Belgian does the same for the caret, diaeresis and tilde. They print nothing until the next
+                        keystroke, then quietly accent it. Press <kbd>Space</kbd> after one to get the bare character.
+                    </p>
+                </div>
+                <div>
+                    <h3>The real fix</h3>
+                    <p>
+                        Setting the guest layout to match your own keyboard solves this permanently:
+                        <code>localectl set-keymap us</code> on systemd, <code>setxkbmap us</code> for a session, or
+                        the region panel on Windows. Keyshift is for the machines you cannot change, or cannot log in
+                        to yet because the password has a backslash in it.
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <p>Everything runs in this page. No text leaves your browser.</p>
+    </footer>
+
+    <script src="layouts.js"></script>
+    <script src="script.js"></script>
+    <script src="/backlink.js" defer></script>
+</body>
+
+</html>

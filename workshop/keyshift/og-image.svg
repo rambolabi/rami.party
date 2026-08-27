@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img"
+    aria-label="Keyshift — QWERTY to Belgian AZERTY translator">
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#150c33" />
+            <stop offset="1" stop-color="#0d0726" />
+        </linearGradient>
+        <linearGradient id="ink" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#a855f7" />
+            <stop offset="1" stop-color="#22d3ee" />
+        </linearGradient>
+        <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="#a855f7" stop-opacity="0.55" />
+            <stop offset="1" stop-color="#a855f7" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+
+    <rect width="1200" height="630" fill="url(#bg)" />
+    <circle cx="180" cy="120" r="320" fill="url(#glow)" />
+    <circle cx="1040" cy="540" r="300" fill="#22d3ee" opacity="0.16" />
+
+    <g stroke="#a855f7" stroke-opacity="0.14" stroke-width="1">
+        <path d="M0 90h1200M0 180h1200M0 270h1200M0 360h1200M0 450h1200M0 540h1200" />
+        <path d="M90 0v630M180 0v630M270 0v630M360 0v630M450 0v630M540 0v630M630 0v630M720 0v630M810 0v630M900 0v630M990 0v630M1080 0v630" />
+    </g>
+
+    <text x="80" y="212" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="86" font-weight="700"
+        fill="url(#ink)">Keyshift</text>
+    <text x="80" y="272" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="32" fill="#a99fd4">
+        Type on QWERTY, land on AZERTY.
+    </text>
+
+    <g font-family="Cascadia Code, Consolas, monospace" font-size="30">
+        <rect x="80" y="330" width="470" height="72" rx="14" fill="#0a051a" stroke="#a855f7" stroke-opacity="0.45" />
+        <text x="106" y="376" fill="#ece9ff">hello world</text>
+        <text x="470" y="376" fill="#6d5f9c" font-size="20">US</text>
+
+        <text x="583" y="378" fill="#22d3ee" font-size="40">→</text>
+
+        <rect x="650" y="330" width="470" height="72" rx="14" fill="#0a051a" stroke="#22d3ee" stroke-opacity="0.45" />
+        <text x="676" y="376" fill="#ece9ff">hello <tspan fill="#fb7185">z</tspan>orld</text>
+        <text x="1040" y="376" fill="#6d5f9c" font-size="20">BE</text>
+    </g>
+
+    <g font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="24" fill="#a99fd4">
+        <text x="80" y="480">Works out exactly what to type so commands arrive intact</text>
+        <text x="80" y="516">on a remote console with a different keyboard layout.</text>
+    </g>
+
+    <text x="80" y="580" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" fill="#6d5f9c"
+        letter-spacing="2">RAMI.PARTY / WORKSHOP</text>
+</svg>

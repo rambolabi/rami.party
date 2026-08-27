@@ -228,6 +228,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Keyshift',
+        href: './keyshift/',
+        glyph: '⌨️',
+        tagline: 'QWERTY ↔ AZERTY',
+        description: 'Paste a command, get the exact text to type so it survives a remote console with a different keyboard layout. Translates by key position between QWERTY US International and Belgian AZERTY, marks the characters your keyboard simply cannot reach, and spells out every keystroke.',
+        search: 'A keyboard layout translator and converter for remote consoles and virtual machines. Converts text between QWERTY US International, plain US QWERTY, Belgian AZERTY and French AZERTY by mapping each character to its physical ISO key position and reading it back on the other layout. Fixes the problem where a console forwards scancodes instead of characters, so typing on a QWERTY keyboard into a guest set to AZERTY turns w into z, a into q, m into a semicolon and digits into accented letters. Works in both directions: work out what to type so a command arrives intact, or paste the garbled result and read back what was meant. Warns about characters that cannot be typed at all, such as the Belgian backslash on AltGr plus the extra ISO key that a 104 key ANSI keyboard does not have, and gives the Alt plus numeric keypad fallback. Flags dead keys on US International (apostrophe, quote, backtick, tilde, caret) and on Belgian (caret, diaeresis, tilde) that silently accent the next letter, and lists every AltGr combination. Includes a per character keystroke recipe and side by side keyboard diagrams with the used keys lit. Useful for Proxmox noVNC, VMware Remote Console, iDRAC, iLO, KVM over IP, Hyper-V and any VM console where typing comes out wrong. Belgisch toetsenbord, clavier belge, azerty naar qwerty.',
+        tags: ['tool', 'sysadmin', 'text'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'Rami\u2019s Open Source Toolkit',
         href: './opensource/',
         glyph: '🧭',
