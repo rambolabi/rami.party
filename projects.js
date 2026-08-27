@@ -239,6 +239,17 @@ window.RAMI_WORKSHOP = [
         status: 'live',
     },
     {
+        title: 'Beyond Passwords',
+        href: './beyond-passwords/',
+        glyph: '🔐',
+        tagline: 'Passkeys, explained to humans',
+        description: 'A slide deck for the big screen that walks any audience through why passwords fail, why MFA matters, why SMS codes stopped being safe, and how passkeys and FIDO security keys end phishing. Drive it with a keyboard, clicker or touch; a reading mode turns it into one scrollable page.',
+        search: 'A plain language presentation, slide deck and guide that explains the difference between passwords, multi factor authentication, one time codes, SMS 2FA, authenticator apps, push prompts, FIDO2 security keys and passkeys. Covers why passwords fail through phishing, credential stuffing, password reuse and data breaches, why MFA is needed, why SMS and phone call verification codes are no longer secure due to SIM swapping, SIM swap fraud, number recycling and SS7 network interception, and how adversary in the middle AiTM real time phishing proxies such as Evilginx relay one time codes and steal session cookies, plus MFA fatigue push bombing attacks like the 2022 Uber breach. Explains public key cryptography with key pairs, WebAuthn origin binding that makes phishing stop working, hardware security keys such as YubiKey Google Titan and Nitrokey, synced passkeys in iCloud Keychain Google Password Manager Bitwarden and 1Password, device bound passkeys, QR code and Bluetooth cross device sign in, NIST SP 800-63B guidance, and practical rollout advice. Present fullscreen with keyboard, presenter clicker or touch, with reading mode, wake lock, print support and three themes. Security awareness training, tweestapsverificatie, meervoudige verificatie, wachtwoorden.',
+        tags: ['guide', 'security', 'presentation'],
+        aura: 'cyan',
+        status: 'live',
+    },
+    {
         title: 'Rami\u2019s Open Source Toolkit',
         href: './opensource/',
         glyph: '🧭',

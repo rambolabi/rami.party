@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img"
+    aria-label="Beyond Passwords — passwords, MFA and passkeys explained">
+    <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#150c33" />
+            <stop offset="1" stop-color="#0d0726" />
+        </linearGradient>
+        <linearGradient id="ink" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#a855f7" />
+            <stop offset="1" stop-color="#22d3ee" />
+        </linearGradient>
+        <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+            <stop offset="0" stop-color="#a855f7" stop-opacity="0.5" />
+            <stop offset="1" stop-color="#a855f7" stop-opacity="0" />
+        </radialGradient>
+    </defs>
+
+    <rect width="1200" height="630" fill="url(#bg)" />
+    <circle cx="1000" cy="140" r="340" fill="url(#glow)" />
+    <circle cx="150" cy="560" r="280" fill="#22d3ee" opacity="0.14" />
+
+    <g stroke="#a855f7" stroke-opacity="0.12" stroke-width="1">
+        <path d="M0 90h1200M0 180h1200M0 270h1200M0 360h1200M0 450h1200M0 540h1200" />
+        <path d="M100 0v630M200 0v630M300 0v630M400 0v630M500 0v630M600 0v630M700 0v630M800 0v630M900 0v630M1000 0v630M1100 0v630" />
+    </g>
+
+    <!-- padlock -->
+    <g transform="translate(950,300)">
+        <rect x="-85" y="-10" width="170" height="130" rx="26" fill="none" stroke="url(#ink)" stroke-width="14" />
+        <path d="M-52 -10 v-32 a52 52 0 0 1 104 0 v32" fill="none" stroke="#22d3ee" stroke-width="14" />
+        <circle cx="0" cy="48" r="16" fill="#22d3ee" />
+        <path d="M0 58 v30" stroke="#22d3ee" stroke-width="14" stroke-linecap="round" />
+    </g>
+
+    <text x="80" y="200" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="76" font-weight="700"
+        fill="url(#ink)">Beyond Passwords</text>
+    <text x="80" y="262" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="30" fill="#a99fd4">
+        Passwords · MFA · SMS risks · security keys · passkeys
+    </text>
+
+    <g font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="26" fill="#ece9ff">
+        <text x="80" y="352">✗ Why passwords keep failing</text>
+        <text x="80" y="400">✗ Why SMS codes stopped being safe</text>
+        <text x="80" y="448">✓ How passkeys make phishing stop working</text>
+    </g>
+
+    <text x="80" y="560" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="22" fill="#6d5f9c"
+        letter-spacing="2">RAMI.PARTY / WORKSHOP · A SLIDE DECK FOR THE BIG SCREEN</text>
+</svg>

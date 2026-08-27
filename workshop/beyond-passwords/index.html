@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="dark light">
+    <meta name="theme-color" content="#0d0726">
+
+    <title>Beyond Passwords · passwords, MFA and passkeys explained | rami.party</title>
+    <meta name="description" content="A plain-language slide deck to show on a screen: why passwords fail, why MFA is needed, why SMS codes are no longer safe (SIM swapping, SS7, real-time phishing), and how passkeys and FIDO security keys end phishing. Accurate, sourced and jargon-free.">
+    <meta name="keywords" content="passkeys explained, passkey vs password, FIDO2 security key, WebAuthn, why MFA, SMS 2FA not secure, SIM swapping, SS7 attack, phishing resistant MFA, adversary in the middle, MFA fatigue, security awareness presentation">
+    <meta name="author" content="rami.party">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <link rel="canonical" href="https://rami.party/workshop/beyond-passwords/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Beyond Passwords · passwords, MFA and passkeys explained">
+    <meta property="og:description" content="A slide deck for the big screen: why passwords fail, why SMS codes stopped being safe, and how passkeys and security keys end phishing.">
+    <meta property="og:url" content="https://rami.party/workshop/beyond-passwords/">
+    <meta property="og:site_name" content="rami.party">
+    <meta property="og:locale" content="en_GB">
+    <meta property="og:image" content="https://rami.party/workshop/beyond-passwords/og-image.svg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Beyond Passwords · passwords, MFA and passkeys explained">
+    <meta name="twitter:description" content="A slide deck for the big screen: why passwords fail, why SMS codes stopped being safe, and how passkeys and security keys end phishing.">
+    <meta name="twitter:image" content="https://rami.party/workshop/beyond-passwords/og-image.svg">
+
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230d0726'/%3E%3Crect x='26' y='44' width='48' height='36' rx='9' fill='none' stroke='%23a855f7' stroke-width='7'/%3E%3Cpath d='M34 44 v-8 a16 16 0 0 1 32 0 v8' fill='none' stroke='%2322d3ee' stroke-width='7'/%3E%3Ccircle cx='50' cy='60' r='5' fill='%2322d3ee'/%3E%3Cpath d='M50 63 v9' stroke='%2322d3ee' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Beyond Passwords",
+      "url": "https://rami.party/workshop/beyond-passwords/",
+      "applicationCategory": "EducationalApplication",
+      "operatingSystem": "Any (web browser)",
+      "browserRequirements": "Requires JavaScript",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+      "description": "A plain-language slide deck that explains the difference between passwords, MFA codes, FIDO security keys and passkeys, why SMS verification is no longer considered secure, and how phishing-resistant sign-in works.",
+      "featureList": [
+        "Fifteen presentation slides in plain language",
+        "Keyboard, presenter-clicker and touch navigation",
+        "Reading mode showing the whole guide as one page",
+        "Dark, light and high-contrast themes",
+        "Screen wake lock while presenting",
+        "Runs entirely offline in the browser"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Why is SMS two-factor authentication no longer considered secure?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Three reasons. SIM swapping: an attacker convinces the phone carrier to move your number to their SIM, so your codes are delivered to them. Network interception: SMS travels over the SS7 carrier network, designed in the 1970s without authentication between carriers, and criminals have used SS7 access to intercept bank codes in documented attacks. Real-time relay: a phishing proxy can forward a fresh SMS code to the real site within seconds. NIST SP 800-63B has classified phone-based codes as a restricted authenticator since 2017." }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between a password and a passkey?",
+          "acceptedAnswer": { "@type": "Answer", "text": "A password is a shared secret: you and the website both hold it, so it can be phished, reused, guessed or stolen in a breach. A passkey is a FIDO2/WebAuthn key pair: the private key never leaves your device and the website stores only the public key, which can verify a signature but never sign in. The browser binds every request to the website's real domain, so a lookalike phishing site cannot use the credential at all." }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between a passkey and a FIDO security key?",
+          "acceptedAnswer": { "@type": "Answer", "text": "They use the same FIDO2/WebAuthn standard and offer the same phishing resistance. A security key is a dedicated piece of hardware (such as a YubiKey or Google Titan) that keeps device-bound credentials in a tamper-resistant chip. A passkey is usually a synced credential stored on a phone or laptop and backed up through iCloud Keychain, Google Password Manager or a password manager, unlocked locally with a fingerprint, face or device PIN." }
+        },
+        {
+          "@type": "Question",
+          "name": "Does MFA really make a difference?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Microsoft reported in 2019 that accounts with MFA enabled blocked over 99.9 percent of automated account-takeover attempts, and Google's 2019 research with NYU found hardware security keys stopped 100 percent of the automated bots, bulk phishing and targeted attacks studied. However, codes and simple push prompts can still be relayed by real-time phishing kits, which is why phishing-resistant MFA (security keys and passkeys) is recommended for valuable accounts." }
+        }
+      ]
+    }
+    </script>
+</head>
+
+<body data-mode="present">
+    <div class="app-bg" aria-hidden="true">
+        <div class="blob b1"></div>
+        <div class="blob b2"></div>
+        <div class="grid-overlay"></div>
+    </div>
+
+    <header class="topbar">
+        <div class="brand">
+            <span class="brand-mark" aria-hidden="true">🔐</span>
+            <div class="brand-text">
+                <strong>Beyond Passwords</strong>
+                <small>a plain-language security briefing</small>
+            </div>
+        </div>
+        <div class="controls">
+            <span class="counter" id="counter" aria-live="polite"></span>
+            <button type="button" id="mode-btn" title="Switch between slides and a single readable page">📖 Read</button>
+            <button type="button" id="theme-btn" title="Cycle theme">🎨 <span id="theme-name">Dark</span></button>
+            <button type="button" id="fs-btn" title="Fullscreen (F)">⛶</button>
+        </div>
+    </header>
+
+    <main class="deck" id="deck" aria-label="Presentation slides">
+
+        <!-- 1 ─ Title -->
+        <section class="slide title-slide" aria-label="Slide 1">
+            <p class="kicker">✧ A plain-language security briefing ✧</p>
+            <h1>Beyond Passwords</h1>
+            <p class="lead">Why passwords fail, why MFA matters, why SMS codes stopped being safe,
+                and how <strong>passkeys</strong> and <strong>security keys</strong> fix it.</p>
+            <p class="hint">
+                <kbd>→</kbd> or <kbd>Space</kbd> next · <kbd>←</kbd> back · <kbd>F</kbd> fullscreen ·
+                <kbd>B</kbd> blank screen · presenter clickers work too
+            </p>
+        </section>
+
+        <!-- 2 ─ What a password is -->
+        <section class="slide" aria-label="Slide 2">
+            <h2>A password is a shared secret</h2>
+            <p class="lead">You know it. The website keeps a copy (scrambled, if you are lucky).
+                <strong>Anyone who learns it, becomes you.</strong></p>
+            <ul class="points">
+                <li>It can be <strong>tricked out of you</strong>: a fake page, an urgent mail, a phone call.</li>
+                <li>It can be <strong>stolen from the website</strong>: you cannot control how well every site guards it.</li>
+                <li>It can be <strong>guessed by machines</strong> that never get tired.</li>
+                <li>Nobody can memorise a hundred strong secrets, so <strong>passwords get reused</strong>.
+                    One leak then opens many doors.</li>
+            </ul>
+        </section>
+
+        <!-- 3 ─ How accounts get taken -->
+        <section class="slide" aria-label="Slide 3">
+            <h2>How accounts actually get taken</h2>
+            <div class="cards four">
+                <div class="mini-card">
+                    <span class="mc-glyph">🎣</span>
+                    <h3>Phishing</h3>
+                    <p>A convincing copy of a login page. You type, they collect. Still the number one way in.</p>
+                </div>
+                <div class="mini-card">
+                    <span class="mc-glyph">♻️</span>
+                    <h3>Credential stuffing</h3>
+                    <p>Passwords leaked from one site get tried on every other site by bots. Reuse turns one breach
+                        into many.</p>
+                </div>
+                <div class="mini-card">
+                    <span class="mc-glyph">🤖</span>
+                    <h3>Guessing at scale</h3>
+                    <p>Not your dog's name. Automated lists: <code>Summer2026!</code>, <code>Azerty123</code>…</p>
+                </div>
+                <div class="mini-card">
+                    <span class="mc-glyph">🦠</span>
+                    <h3>Malware</h3>
+                    <p>A keylogger on an infected machine records everything typed, passwords included.</p>
+                </div>
+            </div>
+            <p class="foot-note">Almost none of this is aimed at you personally. It is automation, running at
+                internet scale, looking for the easiest doors.</p>
+        </section>
+
+        <!-- 4 ─ What is MFA -->
+        <section class="slide" aria-label="Slide 4">
+            <h2>MFA: one proof is not enough</h2>
+            <p class="lead">Multi-factor authentication means proving who you are with two
+                <strong>different kinds</strong> of proof.</p>
+            <div class="cards three">
+                <div class="mini-card">
+                    <span class="mc-glyph">🧠</span>
+                    <h3>Something you know</h3>
+                    <p>Password, PIN</p>
+                </div>
+                <div class="mini-card">
+                    <span class="mc-glyph">📱</span>
+                    <h3>Something you have</h3>
+                    <p>Phone, security key</p>
+                </div>
+                <div class="mini-card">
+                    <span class="mc-glyph">👤</span>
+                    <h3>Something you are</h3>
+                    <p>Fingerprint, face</p>
+                </div>
+            </div>
+            <p class="foot-note">A password plus a security question is <em>not</em> MFA: that is the same kind twice.
+                The point of MFA: a stolen password alone no longer opens the account.</p>
+            <div class="stats">
+                <div class="stat">
+                    <strong>&gt;99.9%</strong>
+                    <span>of automated account-takeover attempts are blocked by having MFA on
+                        <em>(Microsoft, 2019)</em></span>
+                </div>
+                <div class="stat">
+                    <strong>100%</strong>
+                    <span>of automated bots, bulk phishing and targeted attacks in Google's study were stopped by
+                        security keys <em>(Google &amp; NYU, 2019)</em></span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5 ─ Ladder -->
+        <section class="slide" aria-label="Slide 5">
+            <h2>Not every second factor is equal</h2>
+            <div class="ladder">
+                <div class="rung top">
+                    <span class="rung-glyph">🔐</span>
+                    <div>
+                        <h3>Security keys &amp; passkeys</h3>
+                        <p>Phishing-resistant by design. The domain check is done by cryptography, not by your eyes.</p>
+                    </div>
+                </div>
+                <div class="rung mid">
+                    <span class="rung-glyph">🔢</span>
+                    <div>
+                        <h3>App codes (TOTP) &amp; push prompts</h3>
+                        <p>No phone-network risk. But codes and prompts can still be phished and relayed in real
+                            time.</p>
+                    </div>
+                </div>
+                <div class="rung low">
+                    <span class="rung-glyph">📩</span>
+                    <div>
+                        <h3>SMS &amp; voice-call codes</h3>
+                        <p>Better than nothing. But the number can be stolen, the network can be tapped, and the code
+                            can be relayed.</p>
+                    </div>
+                </div>
+            </div>
+            <p class="foot-note">Every rung beats no MFA at all. The jump that matters is the top one.</p>
+        </section>
+
+        <!-- 6 ─ SIM swap -->
+        <section class="slide" aria-label="Slide 6">
+            <h2>SIM swap: your number can be taken over</h2>
+            <p class="lead">A phone number is not really <em>something you have</em>. It is something the phone company
+                lends you. And they can be talked into lending it to someone else.</p>
+            <ol class="flow">
+                <li><strong>Collect.</strong> The attacker gathers your details from leaks and social media.</li>
+                <li><strong>Impersonate.</strong> They call your carrier: “Lost my phone, please move my number to this
+                    new SIM.” Sometimes it is a bribed insider instead.</li>
+                <li><strong>Take over.</strong> Your phone drops to “no service”. Theirs now receives your calls and
+                    texts.</li>
+                <li><strong>Cash in.</strong> “Reset password via SMS”. Every code now flows to the attacker.</li>
+            </ol>
+            <p class="foot-note">Also: cancelled numbers get recycled and handed to strangers, along with any account
+                still tied to them.</p>
+        </section>
+
+        <!-- 7 ─ SS7 -->
+        <section class="slide" aria-label="Slide 7">
+            <h2>The network behind SMS was never built for secrets</h2>
+            <ul class="points">
+                <li>Text messages ride on <strong>SS7</strong>, the routing system carriers use between each other,
+                    designed in the 1970s. Its security model: <em>carriers trust carriers.</em></li>
+                <li>That access leaks. It has repeatedly been rented, resold and abused. With it, texts can be
+                    silently rerouted from anywhere on earth.</li>
+                <li><strong>It has happened:</strong> in 2017, criminals rerouted SMS banking codes through SS7 and
+                    emptied the accounts of German bank customers.</li>
+                <li>Since 2017, <strong>NIST</strong> (the US standards body) classifies SMS codes as a
+                    <em>restricted</em> sign-in method: to be used only when nothing better is available
+                    (SP 800-63B).</li>
+            </ul>
+            <p class="foot-note">SMS still beats having no MFA at all. But it is the floor, not the goal.</p>
+        </section>
+
+        <!-- 8 ─ AiTM -->
+        <section class="slide" aria-label="Slide 8">
+            <h2>The attack that beats most MFA: the live relay</h2>
+            <div class="relay" role="img"
+                aria-label="Diagram: you connect to a fake site, which silently forwards everything to and from the real site">
+                <div class="relay-box you"><span>🧑</span>You</div>
+                <div class="relay-arrow">⇄</div>
+                <div class="relay-box evil"><span>😈</span>Fake site<br><small>login-yourbank.example</small></div>
+                <div class="relay-arrow">⇄</div>
+                <div class="relay-box real"><span>🏦</span>Real site<br><small>yourbank.be</small></div>
+            </div>
+            <p class="relay-caption">Everything is forwarded live, in both directions.</p>
+            <ul class="points">
+                <li>The fake page is a <strong>proxy</strong>. Your password: forwarded. Your fresh SMS or app code:
+                    forwarded within seconds. The login succeeds. But the attacker keeps the
+                    <strong>logged-in session</strong>, not you.</li>
+                <li>This defeats SMS codes, app codes <strong>and</strong> simple push approvals. Off-the-shelf kits
+                    (Evilginx and friends) have made it a routine, rentable attack.</li>
+                <li>Cousin attack, <strong>push bombing</strong>: hammer someone with “Approve sign-in?” prompts until
+                    a tired human taps approve. That is how attackers got into Uber in 2022.</li>
+            </ul>
+        </section>
+
+        <!-- 9 ─ Key pair -->
+        <section class="slide" aria-label="Slide 9">
+            <h2>The fix: stop sending secrets at all</h2>
+            <p class="lead">Security keys and passkeys use a <strong>key pair</strong> instead of a shared secret.</p>
+            <div class="cards two">
+                <div class="mini-card keycard">
+                    <span class="mc-glyph">🔑</span>
+                    <h3>Private key</h3>
+                    <p>Created and kept <strong>inside your device</strong>. It never leaves. Not even you can read it
+                        out.</p>
+                </div>
+                <div class="mini-card keycard">
+                    <span class="mc-glyph">🔓</span>
+                    <h3>Public key</h3>
+                    <p>Given to the website. It can only <strong>verify</strong>, never sign in. Like a bouncer holding
+                        a photo of your face: enough to recognise you, useless for becoming you.</p>
+                </div>
+            </div>
+            <ol class="flow slim">
+                <li>The site sends a fresh, one-time <strong>challenge</strong>.</li>
+                <li>Your device <strong>signs</strong> it with the private key.</li>
+                <li>The site checks the signature with the public key. Done.</li>
+            </ol>
+            <p class="foot-note">Nothing reusable crosses the wire. Nothing secret sits on the server. A breached site
+                spills keys that can only ever <em>check</em>, never open.</p>
+        </section>
+
+        <!-- 10 ─ Origin binding -->
+        <section class="slide" aria-label="Slide 10">
+            <h2>Why phishing simply stops working</h2>
+            <ul class="points">
+                <li>When you sign in, the <strong>browser itself</strong> stamps the website's true domain into the
+                    request, and that stamp is part of what gets signed.</li>
+                <li>A passkey created for <code>yourbank.be</code> <strong>does not exist</strong> for
+                    <code>yourbank-login.be</code>. The fake site cannot borrow it. It cannot even ask for it.</li>
+            </ul>
+            <p class="punch">Phishing works because humans check domains with tired eyes.<br>
+                Passkeys check them with cryptography, which never skims, never rushes, and is not impressed by a
+                convincing logo.</p>
+        </section>
+
+        <!-- 11 ─ Security keys -->
+        <section class="slide" aria-label="Slide 11">
+            <h2>Security keys: the dedicated tool</h2>
+            <ul class="points">
+                <li>A small USB or NFC device that keeps private keys in <strong>tamper-resistant hardware</strong>.
+                    YubiKey, Google Titan, Nitrokey…</li>
+                <li>A <strong>touch</strong> proves a human is physically present. A PIN or a fingerprint on the key
+                    can be required on top.</li>
+                <li>The keys <strong>cannot be copied out</strong>: not by malware on the computer, not by the vendor,
+                    not by you.</li>
+                <li>Built on the open <strong>FIDO2 / WebAuthn</strong> standard: supported by every modern browser and
+                    operating system.</li>
+                <li>Ideal for mailboxes, admin accounts, finance, and anyone likely to be targeted.
+                    <strong>Buy two</strong>: register both, keep one as the backup.</li>
+            </ul>
+        </section>
+
+        <!-- 12 ─ Passkeys -->
+        <section class="slide" aria-label="Slide 12">
+            <h2>Passkeys: the same protection, no extra hardware</h2>
+            <ul class="points">
+                <li>The <strong>same FIDO2 cryptography</strong>, built into the phone or laptop you already own.</li>
+                <li>Unlocked with your fingerprint, face or device PIN. <strong>Biometrics never leave your
+                        device</strong>: the website receives a signature, never your face.</li>
+                <li>There is <strong>no password at all</strong>: nothing to invent, remember, reuse or phish.</li>
+                <li><strong>Synced passkeys</strong> are backed up through iCloud Keychain, Google Password Manager,
+                    Bitwarden, 1Password… Lose the phone, keep the keys. The sync account becomes the crown jewel, so
+                    protect <em>it</em> with a security key.</li>
+                <li><strong>Device-bound passkeys</strong> live only on a security key. Nothing in any cloud.</li>
+                <li>On another computer: scan a QR code with your phone. A <strong>Bluetooth proximity check</strong>
+                    proves your phone is really next to that screen, so the QR cannot be relayed to the other side of
+                    the world.</li>
+            </ul>
+        </section>
+
+        <!-- 13 ─ Comparison -->
+        <section class="slide" aria-label="Slide 13">
+            <h2>Side by side</h2>
+            <div class="table-wrap">
+                <table class="compare">
+                    <thead>
+                        <tr>
+                            <th>Method</th>
+                            <th>Phishing-resistant</th>
+                            <th>No shared secret on the server</th>
+                            <th>Immune to SIM swap &amp; SS7</th>
+                            <th>Nothing to remember</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Password only</td>
+                            <td class="no">✗</td>
+                            <td class="no">✗</td>
+                            <td class="na">n/a</td>
+                            <td class="no">✗</td>
+                        </tr>
+                        <tr>
+                            <td>+ SMS code</td>
+                            <td class="no">✗</td>
+                            <td class="no">✗</td>
+                            <td class="no">✗</td>
+                            <td class="no">✗</td>
+                        </tr>
+                        <tr>
+                            <td>+ App code (TOTP)</td>
+                            <td class="no">✗</td>
+                            <td class="no">✗</td>
+                            <td class="yes">✓</td>
+                            <td class="no">✗</td>
+                        </tr>
+                        <tr>
+                            <td>+ Push prompt</td>
+                            <td class="no">✗ **</td>
+                            <td class="no">✗</td>
+                            <td class="yes">✓</td>
+                            <td class="no">✗</td>
+                        </tr>
+                        <tr>
+                            <td>+ Security key</td>
+                            <td class="yes">✓</td>
+                            <td class="part">~ *</td>
+                            <td class="yes">✓</td>
+                            <td class="no">✗</td>
+                        </tr>
+                        <tr class="hero-row">
+                            <td>Passkey (no password)</td>
+                            <td class="yes">✓</td>
+                            <td class="yes">✓</td>
+                            <td class="yes">✓</td>
+                            <td class="yes">✓</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="foot-note">* the account still has a password: useless alone, but it remains phishable and
+                crackable. &nbsp; ** number matching stops push bombing, but not the live relay.</p>
+        </section>
+
+        <!-- 14 ─ What to do -->
+        <section class="slide" aria-label="Slide 14">
+            <h2>What to do, starting today</h2>
+            <ol class="flow todo">
+                <li><strong>Turn on MFA everywhere.</strong> Any MFA beats none. Attackers pick unlocked doors
+                    first.</li>
+                <li><strong>Prefer passkeys</strong> wherever they are offered: Google, Microsoft, Apple, GitHub,
+                    PayPal…</li>
+                <li>No passkey option? <strong>Use an authenticator app</strong>, not SMS.</li>
+                <li>Keep <strong>SMS as a last resort</strong> only, and where possible remove your phone number as a
+                    <em>recovery</em> method. Recovery is the back door.</li>
+                <li><strong>Password manager</strong> plus a unique password for every site that still needs one.</li>
+                <li><strong>Protect the mailbox above everything.</strong> Email resets all other accounts. It deserves
+                    a passkey or a security key.</li>
+                <li>Admins and likely targets: <strong>two hardware security keys</strong> and phishing-resistant MFA
+                    as policy, not as a suggestion.</li>
+            </ol>
+            <p class="foot-note">Honest limit: passkeys stop phishing, they do not stop malware already on your
+                machine. Updates still matter.</p>
+        </section>
+
+        <!-- 15 ─ Recap -->
+        <section class="slide" aria-label="Slide 15">
+            <h2>The whole story in three lines</h2>
+            <ul class="points recap">
+                <li><strong>Passwords</strong> are shared secrets: they get phished, reused and breached.</li>
+                <li><strong>MFA is essential</strong>, but codes can be relayed live, and SMS can be stolen at the
+                    carrier.</li>
+                <li><strong>Passkeys and security keys</strong> share no secret and check the domain cryptographically.
+                    Phishing stops working.</li>
+            </ul>
+            <p class="punch">Questions?</p>
+            <p class="sources">Sources: Microsoft identity security research (2019) · Google &amp; NYU account-hygiene
+                study (2019) · NIST SP 800-63B · documented SS7 banking attacks, Germany (2017) · Uber breach
+                post-mortems (2022) · FIDO Alliance / W3C WebAuthn specifications.</p>
+        </section>
+    </main>
+
+    <footer class="bottombar">
+        <button type="button" id="prev-btn" aria-label="Previous slide">←</button>
+        <div class="progress" aria-hidden="true">
+            <div class="progress-fill" id="progress-fill"></div>
+        </div>
+        <button type="button" id="next-btn" aria-label="Next slide">→</button>
+    </footer>
+
+    <div class="blackout" id="blackout" hidden></div>
+
+    <script src="script.js"></script>
+    <script src="/backlink.js" defer></script>
+</body>
+
+</html>

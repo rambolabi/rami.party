@@ -78,6 +78,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://rami.party/workshop/beyond-passwords/</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://rami.party/workshop/dm-screen/</loc>
     <lastmod>2026-07-27</lastmod>
     <changefreq>monthly</changefreq>
