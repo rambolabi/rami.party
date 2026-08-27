@@ -139,6 +139,7 @@ window.BP_T = {
         s12_p6: 'Op een andere computer: scan een qr-code met je telefoon. Een <strong>bluetooth-nabijheidscontrole</strong> bewijst dat je telefoon écht naast dat scherm ligt, zodat de qr-code niet naar de andere kant van de wereld doorgespeeld kan worden.',
 
         s13_h: 'Naast elkaar',
+        s13_lead: 'Rijen die met <strong>+</strong> beginnen, houden het wachtwoord en voegen er een tweede factor aan toe. Alleen de onderste rij schaft het wachtwoord volledig af.',
         s13_th0: 'Methode',
         s13_th1: 'Phishingbestendig',
         s13_th2: 'Geen gedeeld geheim op de server',
@@ -150,7 +151,7 @@ window.BP_T = {
         s13_r4: '+ push-melding',
         s13_r5: '+ beveiligingssleutel',
         s13_r6: 'Passkey (geen wachtwoord)',
-        s13_foot: '* het account heeft nog altijd een wachtwoord: alleen volstaat het niet meer, maar het blijft phishbaar en kraakbaar. &nbsp; ** nummervergelijking stopt push bombing, niet de live relay.',
+        s13_foot: '* niet de schuld van de sleutel: een beveiligingssleutel deelt zelf geen geheim. De ~ slaat op het wachtwoord dat er op de server nog naast ligt. Gebruik dezelfde sleutel zonder wachtwoord (hij draagt dan een passkey) en de onderste rij geldt. &nbsp; ** nummervergelijking stopt push bombing, niet de live relay.',
 
         s14_h: 'Wat je vandaag nog doet',
         s14_f1: '<strong>Zet MFA overal aan.</strong> Eender welke MFA verslaat geen MFA. Aanvallers kiezen eerst de onafgesloten deuren.',
@@ -277,6 +278,7 @@ window.BP_T = {
         s12_p6: 'Sur un autre ordinateur&nbsp;: scannez un QR code avec votre téléphone. Un <strong>contrôle de proximité Bluetooth</strong> prouve que votre téléphone est réellement à côté de cet écran&nbsp;: le QR ne peut pas être relayé à l’autre bout du monde.',
 
         s13_h: 'Côte à côte',
+        s13_lead: 'Les lignes commençant par <strong>+</strong> gardent le mot de passe et y ajoutent un second facteur. Seule la dernière ligne supprime complètement le mot de passe.',
         s13_th0: 'Méthode',
         s13_th1: 'Résiste au phishing',
         s13_th2: 'Aucun secret partagé sur le serveur',
@@ -288,7 +290,7 @@ window.BP_T = {
         s13_r4: '+ notification push',
         s13_r5: '+ clé de sécurité',
         s13_r6: 'Passkey (sans mot de passe)',
-        s13_foot: '* le compte garde un mot de passe&nbsp;: inutile seul, mais toujours hameçonnable et cassable. &nbsp; ** la correspondance de numéro stoppe le push bombing, pas le relais en direct.',
+        s13_foot: '* ce n’est pas la clé&nbsp;: une clé de sécurité ne partage aucun secret elle-même. Le ~ vise le mot de passe qui reste à côté sur le serveur. Utilisez la même clé sans mot de passe (elle porte alors une passkey) et la dernière ligne s’applique. &nbsp; ** la correspondance de numéro stoppe le push bombing, pas le relais en direct.',
 
         s14_h: 'Quoi faire, dès aujourd’hui',
         s14_f1: '<strong>Activez la MFA partout.</strong> N’importe quelle MFA vaut mieux qu’aucune. Les attaquants choisissent d’abord les portes non verrouillées.',

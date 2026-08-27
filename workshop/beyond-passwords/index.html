@@ -372,6 +372,8 @@
         <!-- 13 ─ Comparison -->
         <section class="slide" aria-label="Slide 13">
             <h2 data-i18n="s13_h">Side by side</h2>
+            <p class="table-intro" data-i18n="s13_lead">Rows starting with <strong>+</strong> keep the password and add a
+                second factor on top. Only the last row removes the password entirely.</p>
             <div class="table-wrap">
                 <table class="compare">
                     <thead>
@@ -429,8 +431,10 @@
                     </tbody>
                 </table>
             </div>
-            <p class="foot-note" data-i18n="s13_foot">* the account still has a password: useless alone, but it remains phishable and
-                crackable. &nbsp; ** number matching stops push bombing, but not the live relay.</p>
+            <p class="foot-note" data-i18n="s13_foot">* not the key's doing: a security key shares no secret itself. The ~
+                points at the password still sitting next to it on the server. Use the same key without a password (it
+                then holds a passkey) and the bottom row applies. &nbsp; ** number matching stops push bombing, but not
+                the live relay.</p>
         </section>
 
         <!-- 14 ─ What to do -->
