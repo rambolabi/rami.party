@@ -617,11 +617,12 @@ h2 {
     border-radius: var(--radius);
 }
 
-.relay-box span {
+.relay-box .rb-glyph {
     font-size: clamp(1.5rem, 3vw, 2rem);
 }
 
 .relay-box small {
+    display: block;
     font-family: var(--font-mono);
     font-weight: 400;
     font-size: .72em;

@@ -11,11 +11,9 @@
     'use strict';
 
     var K_THEME = 'beyond-passwords:theme';
-    var THEMES = [
-        { id: 'dark', name: 'Dark' },
-        { id: 'light', name: 'Light' },
-        { id: 'contrast', name: 'Contrast' }
-    ];
+    var K_LANG = 'beyond-passwords:lang';
+    var THEMES = ['dark', 'light', 'contrast'];
+    var LANGS = ['en', 'nl', 'fr'];
 
     var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
     var counter = document.getElementById('counter');
@@ -25,9 +23,44 @@
     var themeBtn = document.getElementById('theme-btn');
     var themeName = document.getElementById('theme-name');
     var fsBtn = document.getElementById('fs-btn');
+    var langBtn = document.getElementById('lang-btn');
+    var langName = document.getElementById('lang-name');
 
     var current = 0;
     var presenting = true;
+    var lang = 'en';
+
+    /* ------------------------------------------------------------ language */
+    /* English is snapshotted from the markup itself, so it can never drift. */
+
+    var i18nEls = Array.prototype.slice.call(document.querySelectorAll('[data-i18n]'));
+    var EN = {};
+    i18nEls.forEach(function (el) { EN[el.dataset.i18n] = el.innerHTML; });
+
+    function ui() {
+        return window.BP_UI[lang] || window.BP_UI.en;
+    }
+
+    function applyLang(id) {
+        lang = LANGS.indexOf(id) !== -1 ? id : 'en';
+        var dict = lang === 'en' ? EN : (window.BP_T[lang] || {});
+        i18nEls.forEach(function (el) {
+            var k = el.dataset.i18n;
+            el.innerHTML = dict[k] !== undefined ? dict[k] : EN[k];
+        });
+        document.documentElement.lang = lang;
+        document.title = ui().title;
+        langName.textContent = lang.toUpperCase();
+        langBtn.title = ui().lang_title;
+        refreshModeBtn();
+        refreshThemeBtn();
+        fsBtn.title = ui().fs_title;
+        try { localStorage.setItem(K_LANG, lang); } catch (err) { /* private mode */ }
+    }
+
+    function cycleLang() {
+        applyLang(LANGS[(LANGS.indexOf(lang) + 1) % LANGS.length]);
+    }
 
     /* ------------------------------------------------------------- slides */
 
@@ -53,13 +86,15 @@
 
     /* --------------------------------------------------------------- mode */
 
+    function refreshModeBtn() {
+        modeBtn.textContent = presenting ? ui().read : ui().present;
+        modeBtn.title = presenting ? ui().read_title : ui().present_title;
+    }
+
     function setMode(present) {
         presenting = present;
         document.body.dataset.mode = present ? 'present' : 'read';
-        modeBtn.textContent = present ? '📖 Read' : '🎬 Present';
-        modeBtn.title = present
-            ? 'Switch to a single readable page'
-            : 'Switch back to slides';
+        refreshModeBtn();
         if (present) {
             go(current);
             requestWakeLock();
@@ -159,24 +194,22 @@
 
     /* --------------------------------------------------------------- theme */
 
+    function refreshThemeBtn() {
+        var cur = document.documentElement.getAttribute('data-theme') || 'dark';
+        themeName.textContent = ui()['theme_' + cur] || cur;
+        themeBtn.title = ui().theme_title;
+    }
+
     function applyTheme(id) {
-        var t = null;
-        for (var i = 0; i < THEMES.length; i++) {
-            if (THEMES[i].id === id) { t = THEMES[i]; break; }
-        }
-        if (!t) t = THEMES[0];
-        document.documentElement.setAttribute('data-theme', t.id);
-        themeName.textContent = t.name;
-        try { localStorage.setItem(K_THEME, t.id); } catch (err) { /* private mode */ }
+        var t = THEMES.indexOf(id) !== -1 ? id : THEMES[0];
+        document.documentElement.setAttribute('data-theme', t);
+        refreshThemeBtn();
+        try { localStorage.setItem(K_THEME, t); } catch (err) { /* private mode */ }
     }
 
     function cycleTheme() {
         var cur = document.documentElement.getAttribute('data-theme');
-        var idx = 0;
-        for (var i = 0; i < THEMES.length; i++) {
-            if (THEMES[i].id === cur) { idx = i; break; }
-        }
-        applyTheme(THEMES[(idx + 1) % THEMES.length].id);
+        applyTheme(THEMES[(THEMES.indexOf(cur) + 1) % THEMES.length]);
     }
 
     /* ----------------------------------------------------------------- boot */
@@ -185,15 +218,24 @@
     document.getElementById('prev-btn').addEventListener('click', prev);
     modeBtn.addEventListener('click', function () { setMode(!presenting); });
     themeBtn.addEventListener('click', cycleTheme);
+    langBtn.addEventListener('click', cycleLang);
     fsBtn.addEventListener('click', toggleFullscreen);
     blackout.addEventListener('click', function () { blackout.hidden = true; });
     document.addEventListener('keydown', onKey);
     window.addEventListener('hashchange', fromHash);
     window.addEventListener('beforeprint', function () { setMode(false); });
 
-    var saved = 'dark';
-    try { saved = localStorage.getItem(K_THEME) || 'dark'; } catch (err) { /* private mode */ }
-    applyTheme(saved);
+    var savedTheme = 'dark';
+    try { savedTheme = localStorage.getItem(K_THEME) || 'dark'; } catch (err) { /* private mode */ }
+    applyTheme(savedTheme);
+
+    var savedLang = '';
+    try { savedLang = localStorage.getItem(K_LANG) || ''; } catch (err) { /* private mode */ }
+    if (LANGS.indexOf(savedLang) === -1) {
+        var nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
+        savedLang = LANGS.indexOf(nav) !== -1 ? nav : 'en';
+    }
+    applyLang(savedLang);
 
     fromHash();
     requestWakeLock();

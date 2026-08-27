@@ -8,8 +8,8 @@
     <meta name="theme-color" content="#0d0726">
 
     <title>Beyond Passwords · passwords, MFA and passkeys explained | rami.party</title>
-    <meta name="description" content="A plain-language slide deck to show on a screen: why passwords fail, why MFA is needed, why SMS codes are no longer safe (SIM swapping, SS7, real-time phishing), and how passkeys and FIDO security keys end phishing. Accurate, sourced and jargon-free.">
-    <meta name="keywords" content="passkeys explained, passkey vs password, FIDO2 security key, WebAuthn, why MFA, SMS 2FA not secure, SIM swapping, SS7 attack, phishing resistant MFA, adversary in the middle, MFA fatigue, security awareness presentation">
+    <meta name="description" content="A plain-language slide deck to show on a screen, in English, Dutch or French: why passwords fail, why MFA is needed, why SMS codes are no longer safe (SIM swapping, SS7, real-time phishing), and how passkeys and FIDO security keys end phishing. Accurate, sourced and jargon-free.">
+    <meta name="keywords" content="passkeys explained, passkey vs password, FIDO2 security key, WebAuthn, why MFA, SMS 2FA not secure, SIM swapping, SS7 attack, phishing resistant MFA, adversary in the middle, MFA fatigue, security awareness presentation, passkeys uitgelegd, passkeys expliqués">
     <meta name="author" content="rami.party">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="https://rami.party/workshop/beyond-passwords/">
@@ -43,6 +43,7 @@
       "description": "A plain-language slide deck that explains the difference between passwords, MFA codes, FIDO security keys and passkeys, why SMS verification is no longer considered secure, and how phishing-resistant sign-in works.",
       "featureList": [
         "Fifteen presentation slides in plain language",
+        "Full English, Dutch and French versions",
         "Keyboard, presenter-clicker and touch navigation",
         "Reading mode showing the whole guide as one page",
         "Dark, light and high-contrast themes",
@@ -93,11 +94,13 @@
             <span class="brand-mark" aria-hidden="true">🔐</span>
             <div class="brand-text">
                 <strong>Beyond Passwords</strong>
-                <small>a plain-language security briefing</small>
+                <small data-i18n="top_tag">a plain-language security briefing</small>
             </div>
         </div>
         <div class="controls">
             <span class="counter" id="counter" aria-live="polite"></span>
+            <button type="button" id="lang-btn" title="Language / Taal / Langue">🌐 <span
+                    id="lang-name">EN</span></button>
             <button type="button" id="mode-btn" title="Switch between slides and a single readable page">📖 Read</button>
             <button type="button" id="theme-btn" title="Cycle theme">🎨 <span id="theme-name">Dark</span></button>
             <button type="button" id="fs-btn" title="Fullscreen (F)">⛶</button>
@@ -108,11 +111,11 @@
 
         <!-- 1 ─ Title -->
         <section class="slide title-slide" aria-label="Slide 1">
-            <p class="kicker">✧ A plain-language security briefing ✧</p>
+            <p class="kicker" data-i18n="s1_kicker">✧ A plain-language security briefing ✧</p>
             <h1>Beyond Passwords</h1>
-            <p class="lead">Why passwords fail, why MFA matters, why SMS codes stopped being safe,
+            <p class="lead" data-i18n="s1_lead">Why passwords fail, why MFA matters, why SMS codes stopped being safe,
                 and how <strong>passkeys</strong> and <strong>security keys</strong> fix it.</p>
-            <p class="hint">
+            <p class="hint" data-i18n="s1_hint">
                 <kbd>→</kbd> or <kbd>Space</kbd> next · <kbd>←</kbd> back · <kbd>F</kbd> fullscreen ·
                 <kbd>B</kbd> blank screen · presenter clickers work too
             </p>
@@ -120,81 +123,81 @@
 
         <!-- 2 ─ What a password is -->
         <section class="slide" aria-label="Slide 2">
-            <h2>A password is a shared secret</h2>
-            <p class="lead">You know it. The website keeps a copy (scrambled, if you are lucky).
+            <h2 data-i18n="s2_h">A password is a shared secret</h2>
+            <p class="lead" data-i18n="s2_lead">You know it. The website keeps a copy (scrambled, if you are lucky).
                 <strong>Anyone who learns it, becomes you.</strong></p>
             <ul class="points">
-                <li>It can be <strong>tricked out of you</strong>: a fake page, an urgent mail, a phone call.</li>
-                <li>It can be <strong>stolen from the website</strong>: you cannot control how well every site guards it.</li>
-                <li>It can be <strong>guessed by machines</strong> that never get tired.</li>
-                <li>Nobody can memorise a hundred strong secrets, so <strong>passwords get reused</strong>.
+                <li data-i18n="s2_p1">It can be <strong>tricked out of you</strong>: a fake page, an urgent mail, a phone call.</li>
+                <li data-i18n="s2_p2">It can be <strong>stolen from the website</strong>: you cannot control how well every site guards it.</li>
+                <li data-i18n="s2_p3">It can be <strong>guessed by machines</strong> that never get tired.</li>
+                <li data-i18n="s2_p4">Nobody can memorise a hundred strong secrets, so <strong>passwords get reused</strong>.
                     One leak then opens many doors.</li>
             </ul>
         </section>
 
         <!-- 3 ─ How accounts get taken -->
         <section class="slide" aria-label="Slide 3">
-            <h2>How accounts actually get taken</h2>
+            <h2 data-i18n="s3_h">How accounts actually get taken</h2>
             <div class="cards four">
                 <div class="mini-card">
                     <span class="mc-glyph">🎣</span>
-                    <h3>Phishing</h3>
-                    <p>A convincing copy of a login page. You type, they collect. Still the number one way in.</p>
+                    <h3 data-i18n="s3_c1h">Phishing</h3>
+                    <p data-i18n="s3_c1p">A convincing copy of a login page. You type, they collect. Still the number one way in.</p>
                 </div>
                 <div class="mini-card">
                     <span class="mc-glyph">♻️</span>
-                    <h3>Credential stuffing</h3>
-                    <p>Passwords leaked from one site get tried on every other site by bots. Reuse turns one breach
+                    <h3 data-i18n="s3_c2h">Credential stuffing</h3>
+                    <p data-i18n="s3_c2p">Passwords leaked from one site get tried on every other site by bots. Reuse turns one breach
                         into many.</p>
                 </div>
                 <div class="mini-card">
                     <span class="mc-glyph">🤖</span>
-                    <h3>Guessing at scale</h3>
-                    <p>Not your dog's name. Automated lists: <code>Summer2026!</code>, <code>Azerty123</code>…</p>
+                    <h3 data-i18n="s3_c3h">Guessing at scale</h3>
+                    <p data-i18n="s3_c3p">Not your dog's name. Automated lists: <code>Summer2026!</code>, <code>Azerty123</code>…</p>
                 </div>
                 <div class="mini-card">
                     <span class="mc-glyph">🦠</span>
-                    <h3>Malware</h3>
-                    <p>A keylogger on an infected machine records everything typed, passwords included.</p>
+                    <h3 data-i18n="s3_c4h">Malware</h3>
+                    <p data-i18n="s3_c4p">A keylogger on an infected machine records everything typed, passwords included.</p>
                 </div>
             </div>
-            <p class="foot-note">Almost none of this is aimed at you personally. It is automation, running at
+            <p class="foot-note" data-i18n="s3_foot">Almost none of this is aimed at you personally. It is automation, running at
                 internet scale, looking for the easiest doors.</p>
         </section>
 
         <!-- 4 ─ What is MFA -->
         <section class="slide" aria-label="Slide 4">
-            <h2>MFA: one proof is not enough</h2>
-            <p class="lead">Multi-factor authentication means proving who you are with two
+            <h2 data-i18n="s4_h">MFA: one proof is not enough</h2>
+            <p class="lead" data-i18n="s4_lead">Multi-factor authentication means proving who you are with two
                 <strong>different kinds</strong> of proof.</p>
             <div class="cards three">
                 <div class="mini-card">
                     <span class="mc-glyph">🧠</span>
-                    <h3>Something you know</h3>
-                    <p>Password, PIN</p>
+                    <h3 data-i18n="s4_c1h">Something you know</h3>
+                    <p data-i18n="s4_c1p">Password, PIN</p>
                 </div>
                 <div class="mini-card">
                     <span class="mc-glyph">📱</span>
-                    <h3>Something you have</h3>
-                    <p>Phone, security key</p>
+                    <h3 data-i18n="s4_c2h">Something you have</h3>
+                    <p data-i18n="s4_c2p">Phone, security key</p>
                 </div>
                 <div class="mini-card">
                     <span class="mc-glyph">👤</span>
-                    <h3>Something you are</h3>
-                    <p>Fingerprint, face</p>
+                    <h3 data-i18n="s4_c3h">Something you are</h3>
+                    <p data-i18n="s4_c3p">Fingerprint, face</p>
                 </div>
             </div>
-            <p class="foot-note">A password plus a security question is <em>not</em> MFA: that is the same kind twice.
+            <p class="foot-note" data-i18n="s4_foot">A password plus a security question is <em>not</em> MFA: that is the same kind twice.
                 The point of MFA: a stolen password alone no longer opens the account.</p>
             <div class="stats">
                 <div class="stat">
-                    <strong>&gt;99.9%</strong>
-                    <span>of automated account-takeover attempts are blocked by having MFA on
+                    <strong data-i18n="s4_stat1n">&gt;99.9%</strong>
+                    <span data-i18n="s4_stat1">of automated account-takeover attempts are blocked by having MFA on
                         <em>(Microsoft, 2019)</em></span>
                 </div>
                 <div class="stat">
-                    <strong>100%</strong>
-                    <span>of automated bots, bulk phishing and targeted attacks in Google's study were stopped by
+                    <strong data-i18n="s4_stat2n">100%</strong>
+                    <span data-i18n="s4_stat2">of automated bots, bulk phishing and targeted attacks in Google's study were stopped by
                         security keys <em>(Google &amp; NYU, 2019)</em></span>
                 </div>
             </div>
@@ -202,163 +205,165 @@
 
         <!-- 5 ─ Ladder -->
         <section class="slide" aria-label="Slide 5">
-            <h2>Not every second factor is equal</h2>
+            <h2 data-i18n="s5_h">Not every second factor is equal</h2>
             <div class="ladder">
                 <div class="rung top">
                     <span class="rung-glyph">🔐</span>
                     <div>
-                        <h3>Security keys &amp; passkeys</h3>
-                        <p>Phishing-resistant by design. The domain check is done by cryptography, not by your eyes.</p>
+                        <h3 data-i18n="s5_r1h">Security keys &amp; passkeys</h3>
+                        <p data-i18n="s5_r1p">Phishing-resistant by design. The domain check is done by cryptography, not by your eyes.</p>
                     </div>
                 </div>
                 <div class="rung mid">
                     <span class="rung-glyph">🔢</span>
                     <div>
-                        <h3>App codes (TOTP) &amp; push prompts</h3>
-                        <p>No phone-network risk. But codes and prompts can still be phished and relayed in real
+                        <h3 data-i18n="s5_r2h">App codes (TOTP) &amp; push prompts</h3>
+                        <p data-i18n="s5_r2p">No phone-network risk. But codes and prompts can still be phished and relayed in real
                             time.</p>
                     </div>
                 </div>
                 <div class="rung low">
                     <span class="rung-glyph">📩</span>
                     <div>
-                        <h3>SMS &amp; voice-call codes</h3>
-                        <p>Better than nothing. But the number can be stolen, the network can be tapped, and the code
+                        <h3 data-i18n="s5_r3h">SMS &amp; voice-call codes</h3>
+                        <p data-i18n="s5_r3p">Better than nothing. But the number can be stolen, the network can be tapped, and the code
                             can be relayed.</p>
                     </div>
                 </div>
             </div>
-            <p class="foot-note">Every rung beats no MFA at all. The jump that matters is the top one.</p>
+            <p class="foot-note" data-i18n="s5_foot">Every rung beats no MFA at all. The jump that matters is the top one.</p>
         </section>
 
         <!-- 6 ─ SIM swap -->
         <section class="slide" aria-label="Slide 6">
-            <h2>SIM swap: your number can be taken over</h2>
-            <p class="lead">A phone number is not really <em>something you have</em>. It is something the phone company
+            <h2 data-i18n="s6_h">SIM swap: your number can be taken over</h2>
+            <p class="lead" data-i18n="s6_lead">A phone number is not really <em>something you have</em>. It is something the phone company
                 lends you. And they can be talked into lending it to someone else.</p>
             <ol class="flow">
-                <li><strong>Collect.</strong> The attacker gathers your details from leaks and social media.</li>
-                <li><strong>Impersonate.</strong> They call your carrier: “Lost my phone, please move my number to this
+                <li data-i18n="s6_f1"><strong>Collect.</strong> The attacker gathers your details from leaks and social media.</li>
+                <li data-i18n="s6_f2"><strong>Impersonate.</strong> They call your carrier: “Lost my phone, please move my number to this
                     new SIM.” Sometimes it is a bribed insider instead.</li>
-                <li><strong>Take over.</strong> Your phone drops to “no service”. Theirs now receives your calls and
+                <li data-i18n="s6_f3"><strong>Take over.</strong> Your phone drops to “no service”. Theirs now receives your calls and
                     texts.</li>
-                <li><strong>Cash in.</strong> “Reset password via SMS”. Every code now flows to the attacker.</li>
+                <li data-i18n="s6_f4"><strong>Cash in.</strong> “Reset password via SMS”. Every code now flows to the attacker.</li>
             </ol>
-            <p class="foot-note">Also: cancelled numbers get recycled and handed to strangers, along with any account
+            <p class="foot-note" data-i18n="s6_foot">Also: cancelled numbers get recycled and handed to strangers, along with any account
                 still tied to them.</p>
         </section>
 
         <!-- 7 ─ SS7 -->
         <section class="slide" aria-label="Slide 7">
-            <h2>The network behind SMS was never built for secrets</h2>
+            <h2 data-i18n="s7_h">The network behind SMS was never built for secrets</h2>
             <ul class="points">
-                <li>Text messages ride on <strong>SS7</strong>, the routing system carriers use between each other,
+                <li data-i18n="s7_p1">Text messages ride on <strong>SS7</strong>, the routing system carriers use between each other,
                     designed in the 1970s. Its security model: <em>carriers trust carriers.</em></li>
-                <li>That access leaks. It has repeatedly been rented, resold and abused. With it, texts can be
+                <li data-i18n="s7_p2">That access leaks. It has repeatedly been rented, resold and abused. With it, texts can be
                     silently rerouted from anywhere on earth.</li>
-                <li><strong>It has happened:</strong> in 2017, criminals rerouted SMS banking codes through SS7 and
+                <li data-i18n="s7_p3"><strong>It has happened:</strong> in 2017, criminals rerouted SMS banking codes through SS7 and
                     emptied the accounts of German bank customers.</li>
-                <li>Since 2017, <strong>NIST</strong> (the US standards body) classifies SMS codes as a
+                <li data-i18n="s7_p4">Since 2017, <strong>NIST</strong> (the US standards body) classifies SMS codes as a
                     <em>restricted</em> sign-in method: to be used only when nothing better is available
                     (SP 800-63B).</li>
             </ul>
-            <p class="foot-note">SMS still beats having no MFA at all. But it is the floor, not the goal.</p>
+            <p class="foot-note" data-i18n="s7_foot">SMS still beats having no MFA at all. But it is the floor, not the goal.</p>
         </section>
 
         <!-- 8 ─ AiTM -->
         <section class="slide" aria-label="Slide 8">
-            <h2>The attack that beats most MFA: the live relay</h2>
+            <h2 data-i18n="s8_h">The attack that beats most MFA: the live relay</h2>
             <div class="relay" role="img"
                 aria-label="Diagram: you connect to a fake site, which silently forwards everything to and from the real site">
-                <div class="relay-box you"><span>🧑</span>You</div>
+                <div class="relay-box you"><span class="rb-glyph">🧑</span><span data-i18n="s8_you">You</span></div>
                 <div class="relay-arrow">⇄</div>
-                <div class="relay-box evil"><span>😈</span>Fake site<br><small>login-yourbank.example</small></div>
+                <div class="relay-box evil"><span class="rb-glyph">😈</span><span data-i18n="s8_fake">Fake
+                        site</span><small data-i18n="s8_fake_d">login-yourbank.example</small></div>
                 <div class="relay-arrow">⇄</div>
-                <div class="relay-box real"><span>🏦</span>Real site<br><small>yourbank.be</small></div>
+                <div class="relay-box real"><span class="rb-glyph">🏦</span><span data-i18n="s8_real">Real
+                        site</span><small data-i18n="s8_real_d">yourbank.be</small></div>
             </div>
-            <p class="relay-caption">Everything is forwarded live, in both directions.</p>
+            <p class="relay-caption" data-i18n="s8_cap">Everything is forwarded live, in both directions.</p>
             <ul class="points">
-                <li>The fake page is a <strong>proxy</strong>. Your password: forwarded. Your fresh SMS or app code:
+                <li data-i18n="s8_p1">The fake page is a <strong>proxy</strong>. Your password: forwarded. Your fresh SMS or app code:
                     forwarded within seconds. The login succeeds. But the attacker keeps the
                     <strong>logged-in session</strong>, not you.</li>
-                <li>This defeats SMS codes, app codes <strong>and</strong> simple push approvals. Off-the-shelf kits
+                <li data-i18n="s8_p2">This defeats SMS codes, app codes <strong>and</strong> simple push approvals. Off-the-shelf kits
                     (Evilginx and friends) have made it a routine, rentable attack.</li>
-                <li>Cousin attack, <strong>push bombing</strong>: hammer someone with “Approve sign-in?” prompts until
+                <li data-i18n="s8_p3">Cousin attack, <strong>push bombing</strong>: hammer someone with “Approve sign-in?” prompts until
                     a tired human taps approve. That is how attackers got into Uber in 2022.</li>
             </ul>
         </section>
 
         <!-- 9 ─ Key pair -->
         <section class="slide" aria-label="Slide 9">
-            <h2>The fix: stop sending secrets at all</h2>
-            <p class="lead">Security keys and passkeys use a <strong>key pair</strong> instead of a shared secret.</p>
+            <h2 data-i18n="s9_h">The fix: stop sending secrets at all</h2>
+            <p class="lead" data-i18n="s9_lead">Security keys and passkeys use a <strong>key pair</strong> instead of a shared secret.</p>
             <div class="cards two">
                 <div class="mini-card keycard">
                     <span class="mc-glyph">🔑</span>
-                    <h3>Private key</h3>
-                    <p>Created and kept <strong>inside your device</strong>. It never leaves. Not even you can read it
+                    <h3 data-i18n="s9_c1h">Private key</h3>
+                    <p data-i18n="s9_c1p">Created and kept <strong>inside your device</strong>. It never leaves. Not even you can read it
                         out.</p>
                 </div>
                 <div class="mini-card keycard">
                     <span class="mc-glyph">🔓</span>
-                    <h3>Public key</h3>
-                    <p>Given to the website. It can only <strong>verify</strong>, never sign in. Like a bouncer holding
+                    <h3 data-i18n="s9_c2h">Public key</h3>
+                    <p data-i18n="s9_c2p">Given to the website. It can only <strong>verify</strong>, never sign in. Like a bouncer holding
                         a photo of your face: enough to recognise you, useless for becoming you.</p>
                 </div>
             </div>
             <ol class="flow slim">
-                <li>The site sends a fresh, one-time <strong>challenge</strong>.</li>
-                <li>Your device <strong>signs</strong> it with the private key.</li>
-                <li>The site checks the signature with the public key. Done.</li>
+                <li data-i18n="s9_f1">The site sends a fresh, one-time <strong>challenge</strong>.</li>
+                <li data-i18n="s9_f2">Your device <strong>signs</strong> it with the private key.</li>
+                <li data-i18n="s9_f3">The site checks the signature with the public key. Done.</li>
             </ol>
-            <p class="foot-note">Nothing reusable crosses the wire. Nothing secret sits on the server. A breached site
+            <p class="foot-note" data-i18n="s9_foot">Nothing reusable crosses the wire. Nothing secret sits on the server. A breached site
                 spills keys that can only ever <em>check</em>, never open.</p>
         </section>
 
         <!-- 10 ─ Origin binding -->
         <section class="slide" aria-label="Slide 10">
-            <h2>Why phishing simply stops working</h2>
+            <h2 data-i18n="s10_h">Why phishing simply stops working</h2>
             <ul class="points">
-                <li>When you sign in, the <strong>browser itself</strong> stamps the website's true domain into the
+                <li data-i18n="s10_p1">When you sign in, the <strong>browser itself</strong> stamps the website's true domain into the
                     request, and that stamp is part of what gets signed.</li>
-                <li>A passkey created for <code>yourbank.be</code> <strong>does not exist</strong> for
+                <li data-i18n="s10_p2">A passkey created for <code>yourbank.be</code> <strong>does not exist</strong> for
                     <code>yourbank-login.be</code>. The fake site cannot borrow it. It cannot even ask for it.</li>
             </ul>
-            <p class="punch">Phishing works because humans check domains with tired eyes.<br>
+            <p class="punch" data-i18n="s10_punch">Phishing works because humans check domains with tired eyes.<br>
                 Passkeys check them with cryptography, which never skims, never rushes, and is not impressed by a
                 convincing logo.</p>
         </section>
 
         <!-- 11 ─ Security keys -->
         <section class="slide" aria-label="Slide 11">
-            <h2>Security keys: the dedicated tool</h2>
+            <h2 data-i18n="s11_h">Security keys: the dedicated tool</h2>
             <ul class="points">
-                <li>A small USB or NFC device that keeps private keys in <strong>tamper-resistant hardware</strong>.
+                <li data-i18n="s11_p1">A small USB or NFC device that keeps private keys in <strong>tamper-resistant hardware</strong>.
                     YubiKey, Google Titan, Nitrokey…</li>
-                <li>A <strong>touch</strong> proves a human is physically present. A PIN or a fingerprint on the key
+                <li data-i18n="s11_p2">A <strong>touch</strong> proves a human is physically present. A PIN or a fingerprint on the key
                     can be required on top.</li>
-                <li>The keys <strong>cannot be copied out</strong>: not by malware on the computer, not by the vendor,
+                <li data-i18n="s11_p3">The keys <strong>cannot be copied out</strong>: not by malware on the computer, not by the vendor,
                     not by you.</li>
-                <li>Built on the open <strong>FIDO2 / WebAuthn</strong> standard: supported by every modern browser and
+                <li data-i18n="s11_p4">Built on the open <strong>FIDO2 / WebAuthn</strong> standard: supported by every modern browser and
                     operating system.</li>
-                <li>Ideal for mailboxes, admin accounts, finance, and anyone likely to be targeted.
+                <li data-i18n="s11_p5">Ideal for mailboxes, admin accounts, finance, and anyone likely to be targeted.
                     <strong>Buy two</strong>: register both, keep one as the backup.</li>
             </ul>
         </section>
 
         <!-- 12 ─ Passkeys -->
         <section class="slide" aria-label="Slide 12">
-            <h2>Passkeys: the same protection, no extra hardware</h2>
+            <h2 data-i18n="s12_h">Passkeys: the same protection, no extra hardware</h2>
             <ul class="points">
-                <li>The <strong>same FIDO2 cryptography</strong>, built into the phone or laptop you already own.</li>
-                <li>Unlocked with your fingerprint, face or device PIN. <strong>Biometrics never leave your
+                <li data-i18n="s12_p1">The <strong>same FIDO2 cryptography</strong>, built into the phone or laptop you already own.</li>
+                <li data-i18n="s12_p2">Unlocked with your fingerprint, face or device PIN. <strong>Biometrics never leave your
                         device</strong>: the website receives a signature, never your face.</li>
-                <li>There is <strong>no password at all</strong>: nothing to invent, remember, reuse or phish.</li>
-                <li><strong>Synced passkeys</strong> are backed up through iCloud Keychain, Google Password Manager,
+                <li data-i18n="s12_p3">There is <strong>no password at all</strong>: nothing to invent, remember, reuse or phish.</li>
+                <li data-i18n="s12_p4"><strong>Synced passkeys</strong> are backed up through iCloud Keychain, Google Password Manager,
                     Bitwarden, 1Password… Lose the phone, keep the keys. The sync account becomes the crown jewel, so
                     protect <em>it</em> with a security key.</li>
-                <li><strong>Device-bound passkeys</strong> live only on a security key. Nothing in any cloud.</li>
-                <li>On another computer: scan a QR code with your phone. A <strong>Bluetooth proximity check</strong>
+                <li data-i18n="s12_p5"><strong>Device-bound passkeys</strong> live only on a security key. Nothing in any cloud.</li>
+                <li data-i18n="s12_p6">On another computer: scan a QR code with your phone. A <strong>Bluetooth proximity check</strong>
                     proves your phone is really next to that screen, so the QR cannot be relayed to the other side of
                     the world.</li>
             </ul>
@@ -366,56 +371,56 @@
 
         <!-- 13 ─ Comparison -->
         <section class="slide" aria-label="Slide 13">
-            <h2>Side by side</h2>
+            <h2 data-i18n="s13_h">Side by side</h2>
             <div class="table-wrap">
                 <table class="compare">
                     <thead>
                         <tr>
-                            <th>Method</th>
-                            <th>Phishing-resistant</th>
-                            <th>No shared secret on the server</th>
-                            <th>Immune to SIM swap &amp; SS7</th>
-                            <th>Nothing to remember</th>
+                            <th data-i18n="s13_th0">Method</th>
+                            <th data-i18n="s13_th1">Phishing-resistant</th>
+                            <th data-i18n="s13_th2">No shared secret on the server</th>
+                            <th data-i18n="s13_th3">Immune to SIM swap &amp; SS7</th>
+                            <th data-i18n="s13_th4">Nothing to remember</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td>Password only</td>
+                            <td data-i18n="s13_r1">Password only</td>
                             <td class="no">✗</td>
                             <td class="no">✗</td>
                             <td class="na">n/a</td>
                             <td class="no">✗</td>
                         </tr>
                         <tr>
-                            <td>+ SMS code</td>
+                            <td data-i18n="s13_r2">+ SMS code</td>
                             <td class="no">✗</td>
                             <td class="no">✗</td>
                             <td class="no">✗</td>
                             <td class="no">✗</td>
                         </tr>
                         <tr>
-                            <td>+ App code (TOTP)</td>
+                            <td data-i18n="s13_r3">+ App code (TOTP)</td>
                             <td class="no">✗</td>
                             <td class="no">✗</td>
                             <td class="yes">✓</td>
                             <td class="no">✗</td>
                         </tr>
                         <tr>
-                            <td>+ Push prompt</td>
+                            <td data-i18n="s13_r4">+ Push prompt</td>
                             <td class="no">✗ **</td>
                             <td class="no">✗</td>
                             <td class="yes">✓</td>
                             <td class="no">✗</td>
                         </tr>
                         <tr>
-                            <td>+ Security key</td>
+                            <td data-i18n="s13_r5">+ Security key</td>
                             <td class="yes">✓</td>
                             <td class="part">~ *</td>
                             <td class="yes">✓</td>
                             <td class="no">✗</td>
                         </tr>
                         <tr class="hero-row">
-                            <td>Passkey (no password)</td>
+                            <td data-i18n="s13_r6">Passkey (no password)</td>
                             <td class="yes">✓</td>
                             <td class="yes">✓</td>
                             <td class="yes">✓</td>
@@ -424,43 +429,43 @@
                     </tbody>
                 </table>
             </div>
-            <p class="foot-note">* the account still has a password: useless alone, but it remains phishable and
+            <p class="foot-note" data-i18n="s13_foot">* the account still has a password: useless alone, but it remains phishable and
                 crackable. &nbsp; ** number matching stops push bombing, but not the live relay.</p>
         </section>
 
         <!-- 14 ─ What to do -->
         <section class="slide" aria-label="Slide 14">
-            <h2>What to do, starting today</h2>
+            <h2 data-i18n="s14_h">What to do, starting today</h2>
             <ol class="flow todo">
-                <li><strong>Turn on MFA everywhere.</strong> Any MFA beats none. Attackers pick unlocked doors
+                <li data-i18n="s14_f1"><strong>Turn on MFA everywhere.</strong> Any MFA beats none. Attackers pick unlocked doors
                     first.</li>
-                <li><strong>Prefer passkeys</strong> wherever they are offered: Google, Microsoft, Apple, GitHub,
+                <li data-i18n="s14_f2"><strong>Prefer passkeys</strong> wherever they are offered: Google, Microsoft, Apple, GitHub,
                     PayPal…</li>
-                <li>No passkey option? <strong>Use an authenticator app</strong>, not SMS.</li>
-                <li>Keep <strong>SMS as a last resort</strong> only, and where possible remove your phone number as a
+                <li data-i18n="s14_f3">No passkey option? <strong>Use an authenticator app</strong>, not SMS.</li>
+                <li data-i18n="s14_f4">Keep <strong>SMS as a last resort</strong> only, and where possible remove your phone number as a
                     <em>recovery</em> method. Recovery is the back door.</li>
-                <li><strong>Password manager</strong> plus a unique password for every site that still needs one.</li>
-                <li><strong>Protect the mailbox above everything.</strong> Email resets all other accounts. It deserves
+                <li data-i18n="s14_f5"><strong>Password manager</strong> plus a unique password for every site that still needs one.</li>
+                <li data-i18n="s14_f6"><strong>Protect the mailbox above everything.</strong> Email resets all other accounts. It deserves
                     a passkey or a security key.</li>
-                <li>Admins and likely targets: <strong>two hardware security keys</strong> and phishing-resistant MFA
+                <li data-i18n="s14_f7">Admins and likely targets: <strong>two hardware security keys</strong> and phishing-resistant MFA
                     as policy, not as a suggestion.</li>
             </ol>
-            <p class="foot-note">Honest limit: passkeys stop phishing, they do not stop malware already on your
+            <p class="foot-note" data-i18n="s14_foot">Honest limit: passkeys stop phishing, they do not stop malware already on your
                 machine. Updates still matter.</p>
         </section>
 
         <!-- 15 ─ Recap -->
         <section class="slide" aria-label="Slide 15">
-            <h2>The whole story in three lines</h2>
+            <h2 data-i18n="s15_h">The whole story in three lines</h2>
             <ul class="points recap">
-                <li><strong>Passwords</strong> are shared secrets: they get phished, reused and breached.</li>
-                <li><strong>MFA is essential</strong>, but codes can be relayed live, and SMS can be stolen at the
+                <li data-i18n="s15_p1"><strong>Passwords</strong> are shared secrets: they get phished, reused and breached.</li>
+                <li data-i18n="s15_p2"><strong>MFA is essential</strong>, but codes can be relayed live, and SMS can be stolen at the
                     carrier.</li>
-                <li><strong>Passkeys and security keys</strong> share no secret and check the domain cryptographically.
+                <li data-i18n="s15_p3"><strong>Passkeys and security keys</strong> share no secret and check the domain cryptographically.
                     Phishing stops working.</li>
             </ul>
-            <p class="punch">Questions?</p>
-            <p class="sources">Sources: Microsoft identity security research (2019) · Google &amp; NYU account-hygiene
+            <p class="punch" data-i18n="s15_q">Questions?</p>
+            <p class="sources" data-i18n="s15_src">Sources: Microsoft identity security research (2019) · Google &amp; NYU account-hygiene
                 study (2019) · NIST SP 800-63B · documented SS7 banking attacks, Germany (2017) · Uber breach
                 post-mortems (2022) · FIDO Alliance / W3C WebAuthn specifications.</p>
         </section>
@@ -476,6 +481,7 @@
 
     <div class="blackout" id="blackout" hidden></div>
 
+    <script src="i18n.js"></script>
     <script src="script.js"></script>
     <script src="/backlink.js" defer></script>
 </body>
