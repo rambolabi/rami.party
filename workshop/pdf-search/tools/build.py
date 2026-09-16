@@ -52,6 +52,17 @@ TITLES = {
         "Accessibility requirements for products and services, adopted "
         "17 April 2019.",
     ),
+    "Detecting and mitigating Active Directory compromises (September 2026).pdf": (
+        "Detecting and mitigating Active Directory compromises",
+        "Joint Five Eyes guidance led by the Australian Signals Directorate: "
+        "the common AD attack techniques, and how to detect and mitigate each "
+        "one. September 2026 edition.",
+    ),
+    "NIST.IR.8587.pdf": (
+        "NIST IR 8587 — Protecting Tokens and Assertions from Forgery, Theft, and Misuse",
+        "Implementation recommendations for agencies and cloud service "
+        "providers on keeping authentication tokens and assertions safe.",
+    ),
 }
 
 

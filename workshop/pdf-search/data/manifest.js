@@ -34,6 +34,28 @@ window.PDF_SEARCH_MANIFEST = [
     "added": "2026-08-06"
   },
   {
+    "id": "detecting-and-mitigating-active-directory-compromises-septem",
+    "file": "Detecting and mitigating Active Directory compromises (September 2026).pdf",
+    "title": "Detecting and mitigating Active Directory compromises",
+    "blurb": "Joint Five Eyes guidance led by the Australian Signals Directorate: the common AD attack techniques, and how to detect and mitigate each one. September 2026 edition.",
+    "pages": 74,
+    "chars": 193212,
+    "emptyPages": 1,
+    "bytes": 1536625,
+    "added": "2026-09-16"
+  },
+  {
+    "id": "nist-ir-8587",
+    "file": "NIST.IR.8587.pdf",
+    "title": "NIST IR 8587 — Protecting Tokens and Assertions from Forgery, Theft, and Misuse",
+    "blurb": "Implementation recommendations for agencies and cloud service providers on keeping authentication tokens and assertions safe.",
+    "pages": 55,
+    "chars": 144788,
+    "emptyPages": 0,
+    "bytes": 1192223,
+    "added": "2026-09-16"
+  },
+  {
     "id": "oj-l-202402847-en-txt",
     "file": "OJ_L_202402847_EN_TXT.pdf",
     "title": "Regulation (EU) 2024/2847 — Cyber Resilience Act",
