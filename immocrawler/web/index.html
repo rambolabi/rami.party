@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Immo Crawler — Belgian property search</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --card: #1a1d24;
+    --text: #e6e6e6;
+    --muted: #9aa0aa;
+    --accent: #4ea1ff;
+    --border: #2a2f3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    padding: 2rem 1rem 1rem;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 .25rem; font-size: 1.6rem; }
+  header p { margin: 0; color: var(--muted); font-size: .95rem; }
+  main { max-width: 860px; margin: 0 auto; padding: 1rem; }
+  form {
+    display: flex;
+    gap: .5rem;
+    margin-bottom: 1.5rem;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: .75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 1rem;
+  }
+  button {
+    padding: .75rem 1.5rem;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #08111e;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .5; cursor: wait; }
+  .hint { color: var(--muted); font-size: .85rem; margin: -.75rem 0 1.5rem; }
+  .result {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: .75rem;
+  }
+  .result a { color: var(--accent); text-decoration: none; font-weight: 600; }
+  .result a:hover { text-decoration: underline; }
+  .meta { color: var(--muted); font-size: .85rem; margin-top: .35rem; }
+  .badge {
+    display: inline-block;
+    background: #26324a;
+    color: var(--accent);
+    border-radius: 999px;
+    padding: .1rem .6rem;
+    font-size: .75rem;
+    margin-right: .35rem;
+  }
+  .status { color: var(--muted); text-align: center; padding: 1rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏠 Immo Crawler</h1>
+  <p>Search Belgian property sites (Immoweb, Zimmo, Immovlan) for your own terms.</p>
+</header>
+<main>
+  <form id="searchForm">
+    <input type="text" id="keywords" placeholder='e.g. magazijn, loods, grote garage, shed' autofocus>
+    <button type="submit" id="searchBtn">Search</button>
+  </form>
+  <p class="hint">Separate multiple search terms with commas. Matching listings are returned with link, source and info.</p>
+  <div id="results"></div>
+</main>
+<script>
+const form = document.getElementById('searchForm');
+const input = document.getElementById('keywords');
+const btn = document.getElementById('searchBtn');
+const results = document.getElementById('results');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const q = input.value.trim();
+  if (!q) return;
+  btn.disabled = true;
+  results.innerHTML = '<p class="status">Crawling sources… this can take a few seconds.</p>';
+  try {
+    const resp = await fetch('/api/search?q=' + encodeURIComponent(q));
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    render(data);
+  } catch (err) {
+    results.innerHTML = '<p class="status">Error: ' + escapeHtml(String(err)) + '</p>';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function render(data) {
+  const listings = data.results || [];
+  if (listings.length === 0) {
+    results.innerHTML = '<p class="status">No listings matched your terms.</p>';
+    return;
+  }
+  results.innerHTML = listings.map(l => `
+    <div class="result">
+      <a href="${escapeAttr(l.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.title)}</a>
+      <div class="meta">
+        <span class="badge">${escapeHtml(l.source)}</span>
+        ${(l.matched || []).map(m => '<span class="badge">' + escapeHtml(m) + '</span>').join('')}
+      </div>
+      ${l.info ? '<div class="meta">' + escapeHtml(l.info) + '</div>' : ''}
+      <div class="meta"><a href="${escapeAttr(l.link)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.link)}</a></div>
+    </div>`).join('');
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function escapeAttr(s) {
+  return escapeHtml(s);
+}
+</script>
+</body>
+</html>
